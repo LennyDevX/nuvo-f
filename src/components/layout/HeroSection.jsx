@@ -1,8 +1,8 @@
 // eslint-disable-next-line
 
 import React, { useContext } from 'react';
-import { ThemeContext } from './ThemeContext';
-import '../Styles/HeroSection.css'
+import { ThemeContext } from '../context/ThemeContext';
+import '../../Styles/HeroSection.css'
 
 const HeroSection = () => {
   const { isDarkMode } = useContext(ThemeContext);

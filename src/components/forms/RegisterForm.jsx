@@ -2,8 +2,8 @@ import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import { faUser, faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { ThemeContext } from './ThemeContext';
-import '../Styles/Forms.css';
+import { ThemeContext } from '../context/ThemeContext';
+import '../../Styles/Forms.css';
 
 const RegistrationForm = () => {
   const { isDarkMode } = useContext(ThemeContext);

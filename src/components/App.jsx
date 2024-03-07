@@ -1,11 +1,11 @@
 import React from 'react';
-import Navbar from './Navbar';
-import HeroSection from './HeroSection';
-import RegistrationForm from './RegisterForm';
-import LoginForm from './LoginForm';
-import Home from './Home';
-import { AuthProvider } from './AuthContext';
-import { ThemeProvider } from './ThemeContext';
+import Navbar from './header/Navbar';
+import HeroSection from './layout/HeroSection';
+import RegistrationForm from './forms/RegisterForm';
+import LoginForm from './forms/LoginForm';
+import Home from './layout/Home';
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import "../Styles/App.css"
 

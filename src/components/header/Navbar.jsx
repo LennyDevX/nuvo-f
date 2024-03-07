@@ -1,12 +1,12 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ThemeContext } from './ThemeContext';
-import "../Styles/Navbar.css"
+import { ThemeContext } from '../context/ThemeContext';
+import "../../Styles/Navbar.css"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
-import WebWallet from  './WebWallet'; // Importa el componente de conexión a la wallet
-import { AuthContext } from './AuthContext'; // Importa el contexto de autenticación
-import LogoutButton from './LogOut'; // Importa el componente LogoutButton
+import WebWallet from  '../web3/WebWallet'; // Importa el componente de conexión a la wallet
+import { AuthContext } from '../context/AuthContext'; // Importa el contexto de autenticación
+import LogoutButton from '../forms/LogOut'; // Importa el componente LogoutButton
 
 const Navbar = () => {
   const [isActive, setIsActive] = useState(false);
