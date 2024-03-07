@@ -7,23 +7,23 @@ import Home from './layout/Home';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import "../Styles/App.css"
+import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
+import "../Styles/App.css";
 
 const App = () => {
   return (
     <Router>
       <AuthProvider>
         <ThemeProvider>
-
+        <WalletProvider>
           <Navbar />
-
-          {/* Aquí se maneja las rutas */}
-          <Routes>
-            <Route path="/" element={ <HeroSection /> } />
-            <Route path="/signup" element={ <RegistrationForm /> } />
-            <Route path="/login" element={ <LoginForm /> } />
-            <Route path="/home" element={ <Home /> } />
-          </Routes>
+            <Routes>
+              <Route path="/" element={<HeroSection />} />
+              <Route path="/signup" element={<RegistrationForm />} />
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/home" element={<Home />} />
+            </Routes>
+          </WalletProvider>
 
         </ThemeProvider>
       </AuthProvider>

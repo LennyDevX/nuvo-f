@@ -7,10 +7,9 @@ const LogoutButton = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Actualiza el estado de autenticación para indicar que el usuario está desconectado
+    localStorage.removeItem('token');
     setIsLoggedIn(false);
-    // Redirige al usuario a la página de inicio de sesión o a la ruta deseada después de cerrar sesión
-    navigate('/login');
+    navigate('/'); // Redirigir al usuario a la ruta principal
   };
 
   return (

@@ -1,10 +1,12 @@
-import React, { useState, useContext, useEffect } from 'react';
+// LoginForm.js
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ThemeContext } from '../context/ThemeContext';  
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import LoginButton from './LoginButton'; // Importa el componente LoginButton
 
 const LoginForm = () => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -17,16 +19,8 @@ const LoginForm = () => {
     email: '',
     password: ''
   });
-  const [successMessage, setSuccessMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // Nuevo estado para controlar la visibilidad del loader
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsLoggedIn(true);
-    }
-  }, [setIsLoggedIn]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -57,13 +51,12 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      setIsLoading(true); // Mostrar el loader al enviar el formulario
+      setIsLoading(true);
       try {
         const response = await axios.post('http://localhost:3002/login', formData);
         const { token } = response.data;
-        setIsLoggedIn(true);
         localStorage.setItem('token', token);
-        setSuccessMessage('Login successful.');
+        setIsLoggedIn(true);
         navigate('/home');
       } catch (error) {
         console.error('Login error:', error);
@@ -73,7 +66,7 @@ const LoginForm = () => {
           setErrors({ ...errors, email: '', password: 'An unexpected error occurred. Please try again later.' });
         }
       } finally {
-        setIsLoading(false); // Ocultar el loader al finalizar el proceso de inicio de sesión
+        setIsLoading(false);
       }
     }
   };
@@ -113,22 +106,7 @@ const LoginForm = () => {
           </div>
           {errors.password && <p className="help is-danger">{errors.password}</p>}
         </div>
-        <div className="field">
-          <div className="control">
-            {/* Usar el operador ternario para mostrar el loader si isLoading es true */}
-            {isLoading ? (
-              <button className="button is-fullwidth is-loading" type="submit">Loading</button>
-            ) : (
-              <button className="button is-outlined is-fullwidth" type="submit">Login</button>
-            )}
-          </div>
-        </div>
-        {successMessage && (
-          <div className="notification is-success">
-            {successMessage}
-            <button className="delete" onClick={() => setSuccessMessage('')}></button>
-          </div>
-        )}
+        <LoginButton isLoading={isLoading} formData={formData} setIsLoading={setIsLoading} setIsLoggedIn={setIsLoggedIn} navigate={navigate} />
       </form>
     </div>
   );

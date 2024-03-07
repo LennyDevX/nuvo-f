@@ -1,27 +1,27 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
-import "../../Styles/Navbar.css"
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
-import WebWallet from  '../web3/WebWallet'; // Importa el componente de conexión a la wallet
-import { AuthContext } from '../context/AuthContext'; // Importa el contexto de autenticación
-import LogoutButton from '../forms/LogOut'; // Importa el componente LogoutButton
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import WalletConnect from '../web3/WalletConnect';
+import { AuthContext } from '../context/AuthContext';
+import LogoutButton from '../forms/LogoutButton';
 
 const Navbar = () => {
   const [isActive, setIsActive] = useState(false);
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
-  const { isLoggedIn } = useContext(AuthContext); // Obtiene el estado de inicio de sesión desde el contexto de autenticación
+  const { isLoggedIn } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isDarkMode) {
-        document.body.classList.add("is-dark");
-        document.body.classList.remove("is-light");
+      document.body.classList.add("is-dark");
+      document.body.classList.remove("is-light");
     } else {
-        document.body.classList.add("is-light");
-        document.body.classList.remove("is-dark");
+      document.body.classList.add("is-light");
+      document.body.classList.remove("is-dark");
     }
-}, [isDarkMode]);
+  }, [isDarkMode]);
 
   const toggleMenu = () => {
     setIsActive(!isActive);
@@ -29,6 +29,12 @@ const Navbar = () => {
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const handleLogout = () => {
+    // Cerrar sesión
+    localStorage.removeItem('token');
+    navigate('/'); // Redirigir al usuario a la ruta principal
   };
 
   return (
@@ -51,7 +57,7 @@ const Navbar = () => {
       </div>
 
       <div id="navbarBasicExample" className={`navbar-menu ${isActive ? 'is-active' : ''}`}>
-        <div className="navbar-start" >
+        <div className="navbar-start">
           <Link to="/" className="navbar-item" onClick={toggleMenu}>
             Home
           </Link>
@@ -73,11 +79,9 @@ const Navbar = () => {
         </div>
 
         <div className="navbar-end">
-          <div className="navbar-item" >
-            <div>
-              
-            </div>
-            
+          <div className="navbar-item">
+            <div></div>
+
             <div className="buttons">
               {/* Oculta los botones Sign Up y Log in si el usuario está logueado */}
               {!isLoggedIn ? (
@@ -85,15 +89,14 @@ const Navbar = () => {
                   <Link to="/signup" className="button is-primary is-outlined" onClick={toggleMenu}>
                     <strong>Sign Up</strong>
                   </Link>
-                  <Link to="/login" className="button is-danger is-outlined" onClick={toggleMenu}>
-                    <strong>Log in</strong>
+                  <Link to="/login" className="button is-light" onClick={toggleMenu}>
+                    Log in
                   </Link>
                 </>
               ) : (
                 <>
-                  <WebWallet /> {/* Muestra el componente WebWallet solo si el usuario está logueado */}
-                  <LogoutButton />   {/* Muestra el botón de cierre de sesión solo si el usuario está logueado */}
-
+                  <WalletConnect />
+                  <LogoutButton onClick={handleLogout} /> {/* Agrega el componente LogoutButton con el onClick para cerrar sesión y redirigir */}
                 </>
               )}
             </div>
