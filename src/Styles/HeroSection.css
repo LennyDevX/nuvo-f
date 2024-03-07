@@ -1,0 +1,7 @@
+.hero.is-dark {
+    background-color: #000 !important; /* Negro puro para el modo oscuro */
+}
+
+.hero.is-light {
+    background-color: #e0dede;
+}
