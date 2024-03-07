@@ -1,4 +1,3 @@
-// LoginForm.js
 import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { faEnvelope, faLock } from '@fortawesome/free-solid-svg-icons';
@@ -6,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ThemeContext } from '../context/ThemeContext';  
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import LoginButton from './LoginButton'; // Importa el componente LoginButton
 
 const LoginForm = () => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -106,7 +104,13 @@ const LoginForm = () => {
           </div>
           {errors.password && <p className="help is-danger">{errors.password}</p>}
         </div>
-        <LoginButton isLoading={isLoading} formData={formData} setIsLoading={setIsLoading} setIsLoggedIn={setIsLoggedIn} navigate={navigate} />
+        <div className="field">
+          <div className="control">
+            <button className={`button is-outlined is-fullwidth ${isLoading ? 'is-loading' : ''}`} type="submit" disabled={isLoading}>
+              Login
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );

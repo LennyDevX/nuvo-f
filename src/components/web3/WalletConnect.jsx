@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import Web3 from 'web3';
 import { WalletContext } from '../context/WalletContext'; // Importa el contexto WalletContext
 import WalletUtils from "../web3/WalletUtils"; // Importa el componente WalletUtils
+import MetaMaskLogo from '/metamask-logo.png'; // Importa el logo de MetaMask
 
 const WalletConnect = () => {
   const { setAccount, setNetwork } = useContext(WalletContext); // Usa useContext para acceder al contexto
@@ -53,7 +54,10 @@ const WalletConnect = () => {
           {isLoading ? (
             <span>Conectando...</span>
           ) : (
-            <span>Wallet</span>
+            <>
+              <span>Wallet</span>
+              <img src={MetaMaskLogo} alt="MetaMask Logo" style={{ marginLeft: '5px' }} />
+            </>
           )}
         </button>
       )}

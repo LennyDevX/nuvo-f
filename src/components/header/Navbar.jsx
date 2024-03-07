@@ -89,8 +89,8 @@ const Navbar = () => {
                   <Link to="/signup" className="button is-primary is-outlined" onClick={toggleMenu}>
                     <strong>Sign Up</strong>
                   </Link>
-                  <Link to="/login" className="button is-light" onClick={toggleMenu}>
-                    Log in
+                  <Link to="/login" className="button is-danger is-outlined" onClick={toggleMenu}>
+                    <strong>Log in</strong>
                   </Link>
                 </>
               ) : (
