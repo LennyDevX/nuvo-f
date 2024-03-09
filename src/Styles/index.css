@@ -1,54 +1,78 @@
 @import "https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css";
 
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen','Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+ margin: 0;
+ padding: 1rem;
+ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen','Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+ -webkit-font-smoothing: antialiased;
+ -moz-osx-font-smoothing: grayscale;
+
 }
 
+
+
 body.is-light {
-  background-color: #d1cece;
+  background-color: whitesmoke;
+  
+
 }
 
 body.is-dark {
-  background-color: #000;
+ background-color: #000;
+ color: whitesmoke;
+
+
 }
 
 /* Estilo de san serif normal */
-body code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-}
 
 /* Estilo de inputs */
 body .input {
-  border: 1px solid #ccc; 
-  padding: 10px; 
-  border-radius: 5px; 
+ border: 1px solid #ccc; 
+ padding: 10px; 
+ border-radius: 5px; 
 }
 
 body .input::placeholder {
-  color: #999; 
+ color: #999; 
 }
 
 /* Estilo de botones */
 body.is-light .button {
-  border: 1px solid;
-  background-color: #000;
-  color: #fff;
+ border: 1px solid;
+ background-color: #000;
+ color: #fff;
+
 }
 
 body.is-dark .button {
-  border:1px solid;
-  background-color: #222;
-  color: #fff; 
+ border:1px solid;
+ background-color: #222;
+ color: #fff; 
+
+
 }
 
 /* Estilo de la barra de navegación según el tema */
 body.is-light .navbar {
-  background-color: #f7f7f7;
+ background-color: #f7f7f7;
+ border-radius: 10px;
+
+
 }
 
 body.is-dark .navbar {
-  background-color: #161616;
+ background-color: #000000;
+ border-radius: 10px;
+
+ 
 }
+
+
+
+
+
+
+
+
+

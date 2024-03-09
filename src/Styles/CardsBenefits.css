@@ -1,0 +1,31 @@
+
+
+@media screen and (max-width: 768px) {
+    /* Centra las tarjetas horizontalmente si su ancho es menor que su contenedor */
+    
+
+    .card {
+        /* Agrega un poco de espacio alrededor de las tarjetas en dispositivos móviles */
+        display: flex;
+        padding: 1.2rem;
+        background-color: whitesmoke;
+        max-width: 80%; /* Da un poco de espacio a los lados */
+      }
+
+      .column {
+        padding: 1.5rem;
+      }
+}
+    
+
+     
+
+      
+
+
+      
+
+  
+  
+  
+  

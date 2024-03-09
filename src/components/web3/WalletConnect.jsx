@@ -50,7 +50,7 @@ const WalletConnect = () => {
           <span><strong> {WalletUtils.censorAccount(accounts[0])} </strong>Conectado</span>
         </button>
       ) : (
-        <button className={`button mr-2 ${isLoading && 'is-loading'}`} onClick={connectToWallet}>
+        <button className={`button is-info mr-2 ${isLoading && 'is-loading'}`} onClick={connectToWallet}>
           {isLoading ? (
             <span>Conectando...</span>
           ) : (

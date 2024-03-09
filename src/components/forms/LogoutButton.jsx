@@ -15,7 +15,7 @@ const LogoutButton = () => {
   };
 
   return (
-    <button className="button is-danger is-outlined" onClick={handleLogout}>
+    <button className="button is-danger " onClick={handleLogout}>
       <strong className='pr-2'>Logout</strong>
       <FontAwesomeIcon  icon={faSignOutAlt} /> {/* Agrega el icono de Font Awesome */}
 

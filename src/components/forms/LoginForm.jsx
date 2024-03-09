@@ -70,7 +70,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className={`container ${isDarkMode ? 'is-dark' : 'is-light'}`}>
+    <div className="container">
       <form onSubmit={handleSubmit}>
         <div className="field">
           <div className="control has-icons-left">

@@ -1,43 +1,64 @@
-// eslint-disable-next-line
-
-import React, { useContext } from 'react';
-import { ThemeContext } from '../context/ThemeContext';
-import '../../Styles/HeroSection.css'
+import React, { useEffect } from 'react';
+import '../../Styles/HeroSection.css';
+import CardsBenefits from './CardsBenefits';
 
 const HeroSection = () => {
-  const { isDarkMode } = useContext(ThemeContext);
-  
+  useEffect(() => {
+    // Código adicional si es necesario
+  }, []);
+
+  const InfoTexts = () => (
+    <div className="has-text-left">
+      <h1 className="title is-size-1 fade">
+        <span className="title-gradient">
+           <br /> Nuvo NFT
+        </span>
+      </h1>
+      <h2 className="subtitle texto fade  is-size-4 has-text-black">
+        Mint your Nuvo Bot and embrace the future of digital art! 
+        Earn income from NFT sales, auto-trading, passive income and much more...
+      </h2>
+      <p className="subtitle texto fade is-size-6 has-text-black">
+        Join our platform to gain access to a wide range of 
+        financial products, allowing you to diversify 
+        your investment portfolio and maximize your returns.
+      </p>
+      <button className="button is-info is-medium fade">View Collection</button>
+    </div>
+  );  
+
   return (
-    <section className={`hero is-fullheight-with-navbar ${isDarkMode ? 'is-dark' : 'is-light'}`}>
-      <div className="hero-body">
-        <div className="container">
-          <div className="columns is-vcentered">
-            <div className="column is-half">
-              <div className="has-text-left">
-                <h1 className="title is-size-1 has-text-primary">
-                  Acquire a unique collection of AI-generated NFTs, exclusively yours.
-                </h1>
-                <h2 className="subtitle is-size-3 has-text-info">
-                  Mint NFTs and embrace the future of digital art! Earn income from NFT sales and revenue from our portfolio.
-                </h2>
-                <p className='subtitle is-size-5 has-text-grey'>
-                  Join our platform to gain access to a wide range of financial products, allowing you to diversify your investment portfolio and maximize your returns.
-                </p>
-                <button className="button is-primary is-medium is-outlined">
-                  View Collection
-                </button>
+    <>
+      <section className="hero is-fullheight-with-navbar">
+        <div id='bg-img' className="hero-section fade">
+          <div className="container">
+            <div className="columns is-vcentered">
+              <div className="column is-half">
+                <InfoTexts />
               </div>
-            </div>
-            <div className="column is-half">
-              <video className="background-video" autoPlay loop muted>
-                <source src="/nftLogo.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              <div className="column is-half">
+              {/* Aquí se puede agregar alguna imagen u otro elemento si es necesario */}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+      <section className="hero">
+        <div className="hero-body fade">
+          <div className="container">
+            <div className="columns is-vcentered">
+              <div className="column is-half">
+                <CardsBenefits />
+                
+              </div>
+              <div className="column is-half">
+              {/* Aquí se puede agregar alguna imagen u otro elemento si es necesario */}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   );
 };
 

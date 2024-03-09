@@ -2,10 +2,11 @@ import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
+import { faSun, faMoon, faSignInAlt, faUserPlus } from '@fortawesome/free-solid-svg-icons';
 import WalletConnect from '../web3/WalletConnect';
 import { AuthContext } from '../context/AuthContext';
 import LogoutButton from '../forms/LogoutButton';
+import '../../Styles/Navbar.css'
 
 const Navbar = () => {
   const [isActive, setIsActive] = useState(false);
@@ -14,14 +15,13 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add("is-dark");
-      document.body.classList.remove("is-light");
-    } else {
-      document.body.classList.add("is-light");
-      document.body.classList.remove("is-dark");
-    }
+    const className = isDarkMode ? 'is-dark' : 'is-light';
+    document.body.classList.add(className);
+  
+    // Limpieza de la clase anterior en el siguiente render (opcional)
+    return () => document.body.classList.remove(className);
   }, [isDarkMode]);
+  
 
   const toggleMenu = () => {
     setIsActive(!isActive);
@@ -38,10 +38,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className={`navbar ${isDarkMode ? 'is-dark' : 'is-light'}`} role="navigation" aria-label="main navigation">
+    <nav className={`navbar   ${isDarkMode ? 'is-dark' : 'is-light'}`} role="navigation" aria-label="main navigation">
       <div className="navbar-brand">
-        <Link to="/" className="navbar-item">
-          <img src="/IluminatiNFT.png" width="40" alt="Logo" className='Logo' />
+        <Link to="/" className="navbar-item" >
+          <img id='NuvoLogo' src="/NuvoLogo.avif" alt="Placeholder image" />
         </Link>
 
         <button
@@ -56,7 +56,7 @@ const Navbar = () => {
         </button>
       </div>
 
-      <div id="navbarBasicExample" className={`navbar-menu ${isActive ? 'is-active' : ''}`}>
+      <div id="navbarBasicExample" className={`navbar-menu ${isActive ? 'is-active' : ''} ${isDarkMode ? 'is-dark' : 'is-light'}`}>
         <div className="navbar-start">
           <Link to="/" className="navbar-item" onClick={toggleMenu}>
             Home
@@ -86,11 +86,17 @@ const Navbar = () => {
               {/* Oculta los botones Sign Up y Log in si el usuario está logueado */}
               {!isLoggedIn ? (
                 <>
-                  <Link to="/signup" className="button is-primary is-outlined" onClick={toggleMenu}>
+                  <Link to="/signup" className="button is-primary" onClick={toggleMenu}>
                     <strong>Sign Up</strong>
+                    <span className="icon">
+                      <FontAwesomeIcon icon={faUserPlus} />
+                    </span>
                   </Link>
-                  <Link to="/login" className="button is-danger is-outlined" onClick={toggleMenu}>
+                  <Link to="/login" className="button is-danger" onClick={toggleMenu}>
                     <strong>Log in</strong>
+                    <span className="icon">
+                      <FontAwesomeIcon icon={faSignInAlt} />
+                    </span>
                   </Link>
                 </>
               ) : (
