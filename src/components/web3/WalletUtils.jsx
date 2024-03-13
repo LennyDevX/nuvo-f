@@ -27,6 +27,7 @@ const getNetworkName = (networkId) => {
   }
 };
 
+
 const censorAccount = (account) => {
   return account ? `${account.substring(0, 6)}...${account.substring(account.length - 6)}` : '';
 };
@@ -34,6 +35,7 @@ const censorAccount = (account) => {
 const NetworkUtils = {
   getNetworkName,
   censorAccount
+
 };
 
 export default NetworkUtils;

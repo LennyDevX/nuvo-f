@@ -1,26 +1,29 @@
-// WalletContext.jsx
+import React, { createContext, useState, } from 'react';
 
-import React, { createContext, useState } from 'react';
-
-// Creamos el contexto para la billetera
+// Create the context
 export const WalletContext = createContext({
   account: null,
+  balance: null,
   network: null,
+  walletConnected: false,  // New state for tracking whether the wallet is connected
   setAccount: () => {},
+  setBalance: () => {},
   setNetwork: () => {},
+  setWalletConnected: () => {},  // New setter function for walletConnected
 });
 
-// Proveedor del contexto de la billetera
 export const WalletProvider = ({ children }) => {
-  // Definimos el estado para la cuenta y la red
   const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState(null);
   const [network, setNetwork] = useState(null);
+  const [walletConnected, setWalletConnected] = useState(false);  // walletConnected state and setter function
 
-  // Valor del contexto
-  const value = { account, network, setAccount, setNetwork };
+  // Update the number of purchases when 'account' changes
+
+
+  const value = { balance, setBalance, account, setAccount, network, setNetwork, walletConnected, setWalletConnected };
 
   return (
-    // Proporcionamos el valor del contexto a los componentes hijos
     <WalletContext.Provider value={value}>
       {children}
     </WalletContext.Provider>

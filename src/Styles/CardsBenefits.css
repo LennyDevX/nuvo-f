@@ -1,31 +1,25 @@
-
-
-@media screen and (max-width: 768px) {
-    /* Centra las tarjetas horizontalmente si su ancho es menor que su contenedor */
-    
-
-    .card {
-        /* Agrega un poco de espacio alrededor de las tarjetas en dispositivos móviles */
-        display: flex;
-        padding: 1.2rem;
-        background-color: whitesmoke;
-        max-width: 80%; /* Da un poco de espacio a los lados */
-      }
-
-      .column {
-        padding: 1.5rem;
-      }
+.has-light-background  {
+  background-color: black;
+  color: rgb(222, 208, 246);
 }
-    
 
-     
+.has-light-background .title {
+  color: rgb(222, 208, 246);
+}
 
-      
+.has-light-background .subtitle {
+  color: rgb(249, 71, 71);
+}
 
+.has-dark-background { 
+  background-color: rgb(231, 222, 246);
+}
 
-      
+.has-dark-background .title {
+  color: rgb(35, 34, 34);
+}
 
-  
-  
-  
-  
+.has-dark-background .subtitle {
+  color: rgb(249, 71, 71);
+}
+

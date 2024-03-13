@@ -1,29 +1,30 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { WalletContext } from '../context/WalletContext'; 
+import { WalletContext } from '../context/WalletContext';
+import WalletUtils from '../web3/WalletUtils';
 
 const Home = () => {
-  const { account, network } = useContext(WalletContext);
+  const { account, network, balance } = useContext(WalletContext);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    // Verifica si hay una cuenta y una red conectadas
-    if (account && network) {
+    if (account && network && balance !== null) {
       setIsConnected(true);
     } else {
       setIsConnected(false);
     }
-  }, [account, network]);
+  }, [account, network, balance]);
 
   return (
     <div>
-      <h1>¡Conectado!</h1>
+      <h1>Welcome to Nuvo, here is your Dashboard!</h1>
       {isConnected ? (
         <>
-          <p>Cuenta conectada: {account}</p>
-          <p>Red: {network}</p>
+          <p>Your Wallet: {WalletUtils.censorAccount(account)}</p>
+          <p>Connected Blockchain: {network}</p>
+          <p>Your Balance: {balance} cryptos</p>
         </>
       ) : (
-        <p>Conéctate a tu wallet para ver la información.</p>
+        <p>Connect to your wallet to view information.</p>
       )}
     </div>
   );

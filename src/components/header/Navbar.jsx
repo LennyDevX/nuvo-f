@@ -61,8 +61,8 @@ const Navbar = () => {
           <Link to="/" className="navbar-item" onClick={toggleMenu}>
             Home
           </Link>
-          <Link to="/documentation" className="navbar-item" onClick={toggleMenu}>
-            Documentation
+          <Link to="/dashboard" className="navbar-item" onClick={toggleMenu}>
+            Dashboard
           </Link>
           <Link to="/about" className="navbar-item" onClick={toggleMenu}>
             About

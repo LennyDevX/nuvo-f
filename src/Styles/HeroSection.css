@@ -4,6 +4,7 @@
 
   background-size: cover;
   background-position: center;
+  min-height: auto;
 }
 
 
@@ -15,6 +16,8 @@
 .is-dark .texto {
   -webkit-background-clip: text;
   -webkit-text-fill-color: whitesmoke;
+  background-clip: text;
+
 }
 
 .is-light .title-gradient {
@@ -65,7 +68,6 @@
   h1.title,
   h2.subtitle,
   p {
-    margin-top: 10px;
-    font-size: 1.2rem;
+    margin: 10px;
   }
 }

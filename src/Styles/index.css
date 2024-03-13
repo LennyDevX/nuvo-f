@@ -6,23 +6,17 @@ body {
  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen','Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
  -webkit-font-smoothing: antialiased;
  -moz-osx-font-smoothing: grayscale;
-
-}
-
-
-
-body.is-light {
-  background-color: whitesmoke;
-  
-
-}
-
-body.is-dark {
- background-color: #000;
- color: whitesmoke;
+ color: var(--light-foreground);
 
 
 }
+
+:root {
+  --light-foreground: #333; /* Color del texto en modo claro */
+  --dark-foreground: #ddd; /* Color del texto en modo oscuro */
+}
+
+/* Establece el color predeterminado de texto para la página entera en modo claro */
 
 /* Estilo de san serif normal */
 

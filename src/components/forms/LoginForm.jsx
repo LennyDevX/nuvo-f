@@ -55,7 +55,7 @@ const LoginForm = () => {
         const { token } = response.data;
         localStorage.setItem('token', token);
         setIsLoggedIn(true);
-        navigate('/home');
+        navigate('/dashboard');
       } catch (error) {
         console.error('Login error:', error);
         if (error.response && error.response.status === 401) {
