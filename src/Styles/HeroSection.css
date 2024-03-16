@@ -34,18 +34,7 @@
   background-clip: text;
 }
 
-.fade {
-  animation: fadeAnimation 2s ease-in-out;
-}
 
-@keyframes fadeAnimation {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
 
 #nuvo-nft {
   margin-top: 50px;

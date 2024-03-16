@@ -1,3 +1,14 @@
 .image-size {
-  max-width: 200cpx;
+  max-width: 200px;
+}
+.card-image {
+  width: 100%;  /* Asume que quieres que la imagen ocupe todo el ancho en pantallas grandes */
+  height: auto; /* Esto mantiene la relación de aspecto de la imagen */
+}
+
+/* Esto se aplica solo en pantallas con un ancho máximo de 768px, que generalmente incluye smartphones */
+@media (max-width: 768px) {
+  .card-image {
+    display: none; /* Hace que la imagen ocupe la mitad del ancho en pantallas pequeñas */
+  }
 }

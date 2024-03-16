@@ -1,5 +1,6 @@
 import React from 'react';
-import Card from '../layout/CardProp';
+import Card from './CardProp';
+import '../../Styles/CardNft.css'
 
 const App = () => {
   return (

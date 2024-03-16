@@ -70,8 +70,8 @@ const Navbar = () => {
           <Link to="/nft" className="navbar-item" onClick={toggleMenu}>
             NFT
           </Link>
-          <Link to="/portfolio" className="navbar-item" onClick={toggleMenu}>
-            Portfolio
+          <Link to="/swaptoken" className="navbar-item" onClick={toggleMenu}>
+            Swap Token
           </Link>
           <a className="navbar-item" onClick={toggleTheme} style={{ marginRight: '1rem' }}>
             <FontAwesomeIcon icon={isDarkMode ? faSun : faMoon} />

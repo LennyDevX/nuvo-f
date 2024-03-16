@@ -1,0 +1,6 @@
+.is-dark .texto {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: whitesmoke;
+    background-clip: text;
+  
+  }

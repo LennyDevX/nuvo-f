@@ -4,7 +4,7 @@
 }
 
 .has-light-background .title {
-  color: rgb(222, 208, 246);
+  color: whitesmoke;
 }
 
 .has-light-background .subtitle {
@@ -12,9 +12,9 @@
 }
 
 .has-dark-background { 
-  background-color: rgb(231, 222, 246);
+  background-color: rgb(223, 221, 221);
 }
-
+c
 .has-dark-background .title {
   color: rgb(35, 34, 34);
 }
@@ -23,3 +23,9 @@
   color: rgb(249, 71, 71);
 }
 
+@media (max-width: 768px) {
+  .card {
+    width: 85%;
+  }
+
+}

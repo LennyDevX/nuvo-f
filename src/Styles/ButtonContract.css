@@ -1,0 +1,59 @@
+.dark-mode-button {
+  /* Color de fondo azul y texto negro para el modo oscuro */
+  background-color: rgb(109, 109, 250);
+  transition: ease-in-out 1.5s;
+
+}
+
+.light-mode-button {
+  /* Color de fondo negro y texto blanco para el modo claro */
+  background-color: black;
+  color: rgb(218, 20, 20);
+  transition: ease-in-out 1.5s;
+
+}
+
+/* ... existing styles ... */
+
+/* For dark mode */
+.dark-mode-input {
+  color: blue; /* colour of user-entered numbers */
+}
+
+.dark-mode-input {
+  background-color: #000000; /* dark grey colour for placeholder */
+  transition: ease-in-out 1.5s;
+
+}
+
+/* For light mode */
+.light-mode-input {
+  color: black; /* colour of user-entered numbers and placeholder */
+  transition: ease-in-out 1.5s;
+
+
+}
+
+.light-mode-input::placeholder {
+  color: black;
+  transition: ease-in-out 1.5s;
+}
+
+.light-mode-input:focus::placeholder {
+  color: transparent;
+}
+/* Resto del código existente */
+
+
+.fade {
+  animation: fadeAnimation 1.5s ease-in-out;
+}
+
+@keyframes fadeAnimation {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

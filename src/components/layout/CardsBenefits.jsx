@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import '../../Styles/CardsBenefits.css';
 
-const BulmaCard = () => {
+const CardBenefits = () => {
   const { isDarkMode } = useContext(ThemeContext);
 
   const getCardColorClass = () => {
@@ -17,7 +17,7 @@ const BulmaCard = () => {
       <div id='card-one' className="column  is-half-desktop is-full-mobile">
         <div className="card card-benefits ">
           <div className="card-image">
-            <figure className="image is-3by4">
+            <figure className="image is-4by3">
               <img src="/Holograma4.avif" type="image/png" alt="Placeholder image" />
             </figure>
           </div>
@@ -48,7 +48,7 @@ const BulmaCard = () => {
       <div className="column is-half-desktop is-full-mobile">
         <div className="card card-benefits ">
           <div className="card-image">
-            <figure className="image is-3by4">
+            <figure className="image is-4by3">
               <img src="/Holograma4.avif" type="image/png" alt="Placeholder image" />
             </figure>
           </div>
@@ -83,7 +83,7 @@ const BulmaCard = () => {
       <div className="column is-half-desktop is-full-mobile">
         <div className="card card-benefits ">
           <div className="card-image">
-            <figure className="image is-3by4">
+            <figure className="image is-4by3">
               <img src="/Holograma4.avif" type="image/png" alt="Placeholder image" />
             </figure>
           </div>
@@ -114,7 +114,7 @@ const BulmaCard = () => {
       <div className="column is-half-desktop is-full-mobile">
         <div className="card card-benefits ">
           <div className="card-image">
-            <figure className="image is-3by4">
+            <figure className="image is-4by3">
               <img src="/Holograma4.avif" type="image/png" alt="Placeholder image" />
             </figure>
           </div>
@@ -145,4 +145,4 @@ const BulmaCard = () => {
   );
 };
 
-export default BulmaCard;
+export default CardBenefits;
