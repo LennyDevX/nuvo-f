@@ -1,6 +1,71 @@
-.is-dark .texto {
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: whitesmoke;
-    background-clip: text;
-  
-  }
+.main-container {
+  position: absolute; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: flex-start; 
+  align-items: center; 
+  top: 10vh; 
+  right: 0; 
+  bottom: 0; 
+  left: 0; 
+  transition: background-color 1.6s ease-in-out;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+}
+
+.columns {
+    margin: 10px 0;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.button-container {
+    display: flex;
+    padding: 1rem;
+    gap: 1rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.light-mode {
+  background-color: whitesmoke;
+  color: black;
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  transition: background-color 2s ease-in-out;
+}
+
+.dark-mode {
+  transition: background-color 2s ease-in-out;
+  background-color: black;
+  color: whitesmoke; /* Cambiado de 'red' a 'whitesmoke' */
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+}
+
+.dark-mode strong {
+  color: blueviolet;
+}
+
+.light-mode strong {
+  color: blue;
+}
+
+.is-light .title-gradient {
+  background: linear-gradient(to right, #2d2b2b, #5a446e, #55dfc8, #d2d257);
+   -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.is-dark .title-gradient {
+  background: linear-gradient(to right, whitesmoke, #5a446e, #55dfc8, #d2d257);
+   -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

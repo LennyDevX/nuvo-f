@@ -3,7 +3,6 @@ import Navbar from './header/Navbar';
 import HeroSection from './layout/HeroSection';
 import RegistrationForm from './forms/RegisterForm';
 import LoginForm from './forms/LoginForm';
-import Home from './layout/Home';
 import CardNft from './layout/CardNft';
 import SwapToken from './layout/SwapToken';
 
@@ -13,6 +12,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
 import "../Styles/App.css";
+import InfoAccount from './layout/InfoAccount';
 
 const App = () => {
   return (
@@ -25,7 +25,7 @@ const App = () => {
               <Route path="/" element={<HeroSection />} />
               <Route path="/signup" element={<RegistrationForm />} />
               <Route path="/login" element={<LoginForm />} />
-              <Route path="/dashboard" element={<Home />} />
+              <Route path="/dashboard" element={<InfoAccount />} />
               <Route path="/swaptoken" element={<SwapToken />} />
               <Route path="/nft" element={<CardNft />} />
 

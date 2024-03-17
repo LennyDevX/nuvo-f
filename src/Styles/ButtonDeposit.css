@@ -17,11 +17,11 @@
 
 /* For dark mode */
 .dark-mode-input {
-  color: blue; /* colour of user-entered numbers */
+  color: black; /* colour of user-entered numbers */
 }
 
 .dark-mode-input {
-  background-color: #000000; /* dark grey colour for placeholder */
+  background-color: whitesmoke; /* dark grey colour for placeholder */
   transition: ease-in-out 1.5s;
 
 }

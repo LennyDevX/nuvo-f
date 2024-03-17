@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import Web3 from 'web3';
-import ABI from '../../Abi/Verify.json';
+import ABI from '../../Abi/StakingContract.json';
 import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
-import '../../Styles/ButtonContract.css';
+import '../../Styles/ButtonDeposit.css';
 
-const CONTRACT_ADDRESS = '0x0fd5c0a63626F6Cc25E507F2A614f686B46e62f6';
+const CONTRACT_PROXY_ADDRESS = '0x5Ce75E5C8575ff802f65633eA2613b5c2ee27904';
 
 function ButtonContract() {
   const { account } = useContext(WalletContext);
@@ -16,14 +16,6 @@ function ButtonContract() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const getButtonColorClass = () => {
-    return isDarkMode ? 'dark-mode-button' : 'light-mode-button';
-  };
-
-  const getInputColorClass = () => {
-    return isDarkMode ? 'dark-mode-input' : 'light-mode-input';
-  };
-
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.request({ method: 'eth_requestAccounts' })
@@ -31,22 +23,22 @@ function ButtonContract() {
         const web3Inst = new Web3(window.ethereum);
         setWeb3(web3Inst);
 
-        const contractInstance = new web3Inst.eth.Contract(ABI.abi, CONTRACT_ADDRESS);
+        const contractInstance = new web3Inst.eth.Contract(ABI.abi, CONTRACT_PROXY_ADDRESS);
         setContract(contractInstance);
       })
       .catch((error) => {
         console.error('Error while initializing Web3:', error);
-        setError('Failed to connect to MetaMask. Please make sure it is installed and unlocked.');
+        displayError('Failed to connect to MetaMask. Please make sure it is installed and unlocked.');
       });
     } else {
-      setError('Please install MetaMask!');
+      displayError('Please install MetaMask!');
     }
   }, []);
 
   const handleDeposit = (event) => {
     event.preventDefault();
     if (!depositAmount || isNaN(depositAmount) || parseFloat(depositAmount) <= 0) {
-      setError('Please enter a valid deposit amount.');
+      displayError('Please enter a valid deposit amount.');
       return;
     }
 
@@ -64,25 +56,34 @@ function ButtonContract() {
     })
     .on('error', (error) => {
       console.log('Deposit error:', error.message);
-      setError('There was an error while completing the deposit!');
+      displayError('There was an error while completing the deposit!');
       setLoading(false);
     });
   };
 
+  const displayError = (message) => {
+    setError(message);
+    setTimeout(() => { setError('') }, 3000); // Error message will disappear after 3 seconds
+  };
+
   return (
     <div className='fade'>
-      <form onSubmit={handleDeposit}>
-        <input
-          className={getInputColorClass()}
-          type="number"
-          placeholder="Enter deposit amount"
-          onChange={event => setDepositAmount(event.target.value)}
-          value={depositAmount}
-        />
-        <button className={getButtonColorClass()} type="submit" disabled={loading}>Deposit</button>
+      <form onSubmit={handleDeposit} className="field is-grouped">
+        <div className="control is-small">
+          <input
+            className={`input is-small ${isDarkMode ? 'dark-mode-input' : 'light-mode-input'}`}
+            type="number"
+            placeholder="Enter deposit amount"
+            onChange={event => setDepositAmount(event.target.value)}
+            value={depositAmount}
+            maxLength="3"
+          />
+        </div>
+        <div className="control">
+          <button className={`button is-small is-primary ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}>Deposit</button>
+        </div>
       </form>
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: isDarkMode ? '#fff' : '#f00' }}>{error}</p>}
+      {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}
     </div>
   );
 }

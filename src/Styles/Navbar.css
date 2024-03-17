@@ -13,13 +13,13 @@
 
 .is-dark {
   background-color: #000000;
-  transition: background-color 1.5s ease-in-out; /* Transición suave */
+  transition: background-color 2s ease-in-out; /* Transición suave */
 
 }
 
 .is-light {
   background-color: whitesmoke;
-  transition: background-color 1.5s ease-in-out; /* Transición suave */
+  transition: background-color 2s ease-in-out; /* Transición suave */
 
 }
 
