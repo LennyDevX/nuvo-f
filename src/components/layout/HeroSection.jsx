@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
+import "../../Styles/HeroSection.css"
+
 const HeroSection = () => {
 
   const { isDarkMode } = useContext(ThemeContext);
