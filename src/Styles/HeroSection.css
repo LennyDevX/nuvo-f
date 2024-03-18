@@ -1,62 +1,70 @@
 .hero-section {
-  background-image: url("/HologramaHero.avif");
-  /* Ruta a tu imagen - Imagen de Freepik www.freepik.es -> aquí estaba el error*/
-
-  background-size: cover;
-  background-position: center;
-  min-height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh; 
+  padding: 2rem;
+  box-sizing: border-box; 
+ 
+  transition: background-color 2s ease-in-out; /* Transición suave */
 }
 
-
-#bg-img {
-  margin-top: 5px;
-  border-radius: 5px;
+.is-light .hero-section {
+  background-color: whitesmoke;
 }
 
-.is-dark .texto {
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: whitesmoke;
-  background-clip: text;
-
+.is-dark .hero-section {
+  background-color: #000000;
 }
 
-.is-light .title-gradient {
-  background: linear-gradient(to right, #2d2b2b, #5a446e, #55dfc8, #d2d257);
-   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.text-container {
+  max-width: 600px;
+  text-align: center;
 }
 
-.is-dark .title-gradient {
-  background: linear-gradient(to right, whitesmoke, #5a446e, #55dfc8, #d2d257);
-   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.title {
+  font-size: 3rem;
+  margin-bottom: 1rem;
 }
 
-
-
-#nuvo-nft {
-  margin-top: 50px;
-  padding-left: 10px;
-  margin-left: 80px;
-  border-radius: 1.1rem;
-  width: 65%;
-  animation-name: oscillate;
-  animation-duration: 2s;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
+.subtitle {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-@media only screen and (max-width: 768px) {
+.description {
+  font-size: 1rem;
+  margin-bottom: 2rem;
+}
 
-  .has-text-left {
-    padding: 20px;
-  }
+.button {
+  padding: 1rem 2rem;
+  background: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: .25rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
 
-  h1.title,
-  h2.subtitle,
-  p {
-    margin: 10px;
-  }
+.is-light .title, .is-light .subtitle, .is-light .description {
+  color: black;
+  transition: color 2s ease-in-out; /* Transición para el color del texto */
+}
+
+.is-dark .title, .is-dark .subtitle, .is-dark .description {
+  color: whitesmoke;  
+  transition: color 2s ease-in-out; /* Transición para el color del texto */
+}
+
+.is-light .button {
+  border: 1px solid;
+  background-color: #000;
+  color: #fff;
+}
+
+.is-dark .button {
+  border:1px solid;
+  background-color: #222;
+  color: #fff;
 }

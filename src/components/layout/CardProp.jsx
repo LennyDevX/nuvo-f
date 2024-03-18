@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import nftImage from '/NuvoLogo.avif';
+import "../../Styles/CardNft.css"
 
 const Card = ({ title, subtitle, price, button, user }) => {
   const imageSrc = nftImage;

@@ -11,4 +11,26 @@
   .card-image {
     display: none; /* Hace que la imagen ocupe la mitad del ancho en pantallas pequeñas */
   }
+
+  .card {
+    padding: 10px;
+  }
 }
+
+
+.columns {
+  display: flex; 
+  position: relative;
+  justify-content: flex-start; 
+  align-items: center; 
+
+  
+}
+
+html, body {
+  height: 100%;
+}
+
+
+
+

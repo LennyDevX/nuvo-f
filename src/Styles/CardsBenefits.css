@@ -23,6 +23,11 @@ c
   color: rgb(249, 71, 71);
 }
 
+.columns {
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 768px) {
   .card {
     width: 85%;
