@@ -65,6 +65,10 @@ body.dark-mode {
 }
 
 
+html, body {
+  height: 100%;
+}
+
 
 
 

@@ -1,36 +1,23 @@
-.image-size {
-  max-width: 200px;
-}
-.card-image {
-  width: 100%;  /* Asume que quieres que la imagen ocupe todo el ancho en pantallas grandes */
-  height: auto; /* Esto mantiene la relación de aspecto de la imagen */
+.is-dark .card {
+  background-color: #000000;
+  transition: background-color 2s ease-in-out;
 }
 
-/* Esto se aplica solo en pantallas con un ancho máximo de 768px, que generalmente incluye smartphones */
-@media (max-width: 768px) {
-  .card-image {
-    display: none; /* Hace que la imagen ocupe la mitad del ancho en pantallas pequeñas */
-  }
-
-  .card {
-    padding: 10px;
-  }
+.is-dark .title,
+.is-dark .subtitle,
+.is-dark .content {
+  color: whitesmoke !important;
+  transition: color 2s ease-in-out;
 }
 
-
-.columns {
-  display: flex; 
-  position: relative;
-  justify-content: flex-start; 
-  align-items: center; 
-
-  
+.is-light .card {
+  background-color: whitesmoke;
+  transition: background-color 2s ease-in-out;
 }
 
-html, body {
-  height: 100%;
+.is-light .title,
+.is-light .subtitle,
+.is-light .content {
+  color: black !important;
+  transition: color 2s ease-in-out;
 }
-
-
-
-

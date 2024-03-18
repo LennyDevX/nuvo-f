@@ -7,17 +7,17 @@ const HeroSection = () => {
   const { isDarkMode } = useContext(ThemeContext);
 
   const InfoTexts = () => (
-    <div className={`text-container${isDarkMode ? ' text-container-dark' : ''}`}>
+    <div className={` text-container${isDarkMode ? ' text-container-dark' : ''}`}>
       <h1 className="title title-gradient">
-           Nuvo NFT
+           Nuvos NFT
       </h1>
-      <h2 className="subtitle texto">
-        Mint your Nuvo Bot and embrace the future of digital art! Earn income from NFT sales, auto-trading, passive income and much more...
+      <h2 className=" m-3 p-2 subtitle texto">
+        Mint your best NFT and embrace the future of digital art! Earn income from NFT sales, auto-trading, passive income and much more...
       </h2>
-      <p className="description texto">
+      <p className="m-1  description texto ">
         Join our platform to gain access to a wide range of financial products, allowing you to diversify your investment portfolio and maximize your returns.
       </p>
-      <button className="button">View Collection</button>
+      <button className="mt-4 button">View Collection</button>
     </div>
   );  
 

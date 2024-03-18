@@ -11,6 +11,11 @@ const Navbar = () => {
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
 
   useEffect(() => {
+    const savedIsDarkMode = localStorage.getItem('isDarkMode'); // Buscamos en localStorage 
+    if (savedIsDarkMode !== null) { 
+      setIsDarkMode(JSON.parse(savedIsDarkMode));  // Si se encuentra información en localStorage se utiliza para establecer isDarkMode
+    }
+
     const className = isDarkMode ? 'is-dark' : 'is-light';
     document.body.classList.add(className);
   
@@ -22,7 +27,9 @@ const Navbar = () => {
   };
 
   const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
+    const newIsDarkMode = !isDarkMode;
+    setIsDarkMode(newIsDarkMode);
+    localStorage.setItem('isDarkMode', JSON.stringify(newIsDarkMode));  // Guardamos el nuevo valor en localStorage
   };
 
   return (
