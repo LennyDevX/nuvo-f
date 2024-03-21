@@ -9,62 +9,53 @@
   transition: background-color 2s ease-in-out; /* Transición suave */
 }
 
-.is-light .hero-section {
-  background-color: whitesmoke;
-}
 
-.is-dark .hero-section {
-  background-color: #000000;
-}
+
 
 .text-container {
   max-width: 600px;
   text-align: center;
 }
 
-.title {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.subtitle {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.description {
-  font-size: 1rem;
-  margin-bottom: 2rem;
-}
-
-.button {
-  padding: 1rem 2rem;
-  background: #007BFF;
-  color: #fff;
-  border: none;
-  border-radius: .25rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.is-light .title, .is-light .subtitle, .is-light .description {
-  color: black;
-  transition: color 2s ease-in-out; /* Transición para el color del texto */
-}
-
-.is-dark .title, .is-dark .subtitle, .is-dark .description {
-  color: whitesmoke;  
-  transition: color 2s ease-in-out; /* Transición para el color del texto */
+.is-dark .button {
+  background-color:transparent;
+  padding: 10px;
+  border: 1px solid whitesmoke;
+  color: whitesmoke;;
+  border-radius: 10px;
 }
 
 .is-light .button {
-  border: 1px solid;
-  background-color: #000;
-  color: #fff;
+  background-color: transparent;
+  padding: 10px;
+  border: 1px solid black;
+  border-radius: 10px;
 }
 
-.is-dark .button {
-  border:1px solid;
-  background-color: #222;
-  color: #fff;
+.is-dark .hero-section {
+  color: whitesmoke;
+
 }
+
+.is-dark .button-wallet  {
+  background: -webkit-linear-gradient(left, #8eb0f6, #b9dfec, #98ebd9, #bfcf80);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+  padding: 10px;
+  box-shadow: #b9dfec 0px 0px 1px 1px;
+  border-radius: 10px;
+
+}
+
+.is-light .button-wallet {
+  background: -webkit-linear-gradient(left, #445b89, #84a0a9, #5fa495, #74823c);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+  padding: 10px;
+  box-shadow: #000000 0px 0px 1px 1px;
+  border-radius: 10px;
+
+}
+  

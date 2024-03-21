@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { ethers } from "ethers";
 import ABI from "../../Abi/StakingContract.json";
 import { ThemeContext } from '../context/ThemeContext';
+import "../../Styles/home.css";
 
 const contractAddress = "0x5Ce75E5C8575ff802f65633eA2613b5c2ee27904";
 
@@ -33,8 +34,7 @@ function App() {
         const realRewards = ethers.utils.formatEther(rewards);
         setRewardAmount(realRewards);
 
-        const totalBalance = netDeposit + parseFloat(realRewards);
-        setTotalDeposited(totalBalance);
+        
       } catch (error) {
         console.error("Error: ", error);
       }
@@ -42,17 +42,16 @@ function App() {
     fetchData();
   }, []);
 
+  
+
   return (
     <div>
       <br />
       <div>
-        <strong style={isDarkMode ? { color: '#00ff00'} : { color: 'darkgreen' }}>Deposit:</strong> {depositAmount} Matic
+        <strong className="subtitle">Power 🗡️</strong> {depositAmount} Matic
+        <strong className="subtitle">Shield 🛡️</strong> ( Fee ): {netBalance} Matic
+        <p className=" subtitle"></p>Bag {rewardAmount} Matic
         <br />
-        <strong style={isDarkMode ? { color: '#00ff00'} : { color: 'darkgreen' }}>Net Deposit</strong> (After Fee Deduction): {netBalance} Matic
-        <br />
-        <strong style={isDarkMode ? { color: '#00ff00'} : { color: 'darkgreen' }}>Rewards:</strong> {rewardAmount} Matic
-        <br />
-        <strong style={isDarkMode ? { color: '#00ff00'} : { color: 'darkgreen' }}>Total Deposit:</strong> {totalDeposited} Matic 
       </div>
     </div>
   );

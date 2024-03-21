@@ -57,16 +57,16 @@ const Navbar = () => {
             Home
           </Link>
           <Link to="/dashboard" className="navbar-item" onClick={toggleMenu}>
-            Dashboard
+            Pocket
           </Link>
-          <Link to="/about" className="navbar-item" onClick={toggleMenu}>
-            About
+          <Link to="/swaptoken" className="navbar-item" onClick={toggleMenu}>
+            Swap Token
           </Link>
           <Link to="/nft" className="navbar-item" onClick={toggleMenu}>
             NFT
           </Link>
-          <Link to="/swaptoken" className="navbar-item" onClick={toggleMenu}>
-            Swap Token
+          <Link to="/about" className="navbar-item" onClick={toggleMenu}>
+            About
           </Link>
           <a className="navbar-item" onClick={toggleTheme} style={{ marginRight: '1rem' }}>
             <FontAwesomeIcon icon={isDarkMode ? faSun : faMoon} />

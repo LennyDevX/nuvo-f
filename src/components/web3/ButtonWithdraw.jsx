@@ -5,7 +5,7 @@ import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
 import '../../Styles/ButtonDeposit.css';
 
-const CONTRACT_ADDRESS = '0x5Ce75E5C8575ff802f65633eA2613b5c2ee27904';
+const CONTRACT_ADDRESS = '0x202A6dBa7Fbb34728C513e5791625989c76556c0';
 
 function ButtonContract() {
   const { account } = useContext(WalletContext);
@@ -67,11 +67,11 @@ function ButtonContract() {
   };
 
   return (
-    <div className='fade'>
+    <div className=''>
       <form onSubmit={handleWithdraw} className="field is-grouped">
-        <div className="control is-small">
+        <div className="control">
           <input
-            className={`input is-small ${isDarkMode ? 'dark-mode-input' : 'light-mode-input'}`}
+            className={`input ${isDarkMode ? 'dark-mode-input' : 'light-mode-input'}`}
             type="number"
             placeholder="Enter withdraw amount"
             onChange={event => setWithdrawAmount(event.target.value)}
@@ -80,7 +80,7 @@ function ButtonContract() {
           />
         </div>
         <div className="control">
-          <button className={`button  is-small is-danger ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}>Withdraw</button>
+          <button className={`button   is-danger ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>TAKE IT</strong></button>
         </div>
       </form>
       {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}

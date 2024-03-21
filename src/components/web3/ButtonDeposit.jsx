@@ -5,7 +5,7 @@ import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
 import '../../Styles/ButtonDeposit.css';
 
-const CONTRACT_PROXY_ADDRESS = '0x5Ce75E5C8575ff802f65633eA2613b5c2ee27904';
+const CONTRACT_PROXY_ADDRESS = '0x202A6dBa7Fbb34728C513e5791625989c76556c0';
 
 function ButtonContract() {
   const { account } = useContext(WalletContext);
@@ -67,20 +67,20 @@ function ButtonContract() {
   };
 
   return (
-    <div className='fade'>
+    <div className=''>
       <form onSubmit={handleDeposit} className="field is-grouped">
-        <div className="control is-small">
+        <div className="control ">
           <input
-            className={`input is-small ${isDarkMode ? 'dark-mode-input' : 'light-mode-input'}`}
+            className={`input  ${isDarkMode ? 'dark-mode-input' : 'light-mode-input'}`}
             type="number"
             placeholder="Enter deposit amount"
             onChange={event => setDepositAmount(event.target.value)}
             value={depositAmount}
-            maxLength="3"
+            maxLength="4"
           />
         </div>
         <div className="control">
-          <button className={`button is-small is-primary ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}>Deposit</button>
+          <button className={`button    ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>LEVEL UP</strong></button>
         </div>
       </form>
       {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}

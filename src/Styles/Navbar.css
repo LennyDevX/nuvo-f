@@ -11,30 +11,8 @@
  
 }
 
-.is-dark {
-  background-color: #000000;
-  transition: background-color 2s ease-in-out; /* Transición suave */
-
-}
-
-.is-light {
-  background-color: whitesmoke;
-  transition: background-color 2s ease-in-out; /* Transición suave */
-
-}
 
 
-
-.is-light .navbar-item {
-  color: black; /* Color de texto en modo claro */
-  transition: color 2s ease-in-out; /* Transición para el color del texto */
-}
-
-
-.is-dark .navbar-item {
-  color: whitesmoke; /* Color de texto en modo claro */
-  transition: color 2s ease-in-out; /* Transición para el color del texto */
-}
 
 /* Target submenu items on hover in dark mode for mobile screens */
 @media only screen and (max-width: 768px) {

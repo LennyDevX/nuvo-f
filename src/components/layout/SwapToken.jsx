@@ -17,14 +17,14 @@ const App = () => {
   }, [account, network, balance]);
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '100vh', textAlign: 'center' }}>
+    <div className="fade title-gradient" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '80vh', textAlign: 'center' }}>
       <h1 style={{ marginBottom: '10px', fontSize: '30px', fontWeight: 'bold',  color: isDarkMode ? 'white' : 'black' }}>Swap Widget</h1>
       {isConnected ? 
         (
           <DodoSwapIframe />
         ) : 
         (
-          <p>Por favor, conecta tu wallet para utilizar el widget.</p>
+          <p className="subtitle">Por favor, conecta tu wallet para utilizar el widget.</p>
         )}
     </div>
   );

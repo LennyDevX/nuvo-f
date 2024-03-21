@@ -11,7 +11,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
-import "../Styles/App.css";
 import InfoAccount from './layout/InfoAccount';
 
 const App = () => {

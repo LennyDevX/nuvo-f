@@ -3,9 +3,12 @@ import Web3 from 'web3';
 import { WalletContext } from '../context/WalletContext'; 
 import WalletUtils from "../web3/WalletUtils"; 
 import MetaMaskLogo from '/metamask-logo.png';
+import { ThemeContext } from '../context/ThemeContext';
+import "../../Styles/HeroSection.css";
 
 const WalletConnect = () => {
   const { setAccount, setNetwork, setBalance } = useContext(WalletContext); 
+  const { isDarkMode } = useContext(ThemeContext);
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -46,16 +49,16 @@ const WalletConnect = () => {
   return (
     <div>
       {connected ? (
-        <button className="button mr-2" disabled>
-          <span><strong> {WalletUtils.censorAccount(accounts[0])} </strong>Conectado</span>
+        <button className={` button-wallet  mr-2 ${isDarkMode? 'is-dark' : 'is-light'}`} disabled>
+          <strong>{WalletUtils.censorAccount(accounts[0])}</strong>
         </button>
       ) : (
-        <button className={`button is-info mr-2 ${isLoading && 'is-loading'}`} onClick={connectToWallet}>
+        <button className={`button button-wallet mr-2 ${isDarkMode? 'is-dark' : 'is-light'} ${isLoading ? 'is-loading' : ''}`} onClick={connectToWallet}>
           {isLoading ? (
-            <span>Conectando...</span>
+            ''
           ) : (
             <>
-              <span>Wallet</span>
+              <strong>WALLET</strong>
               <img src={MetaMaskLogo} alt="MetaMask Logo" style={{ marginLeft: '5px' }} />
             </>
           )}

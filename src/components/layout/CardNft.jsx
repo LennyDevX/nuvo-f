@@ -1,36 +1,58 @@
 import React from 'react';
-import Card from './CardProp';
-import '../../Styles/CardNft.css'
+import 'bulma/css/bulma.css';
+import '../../Styles/CardNft.css'; // Importa los estilos CSS
+import LaserGun from "/LaserGun.jpeg";
+import nuvoStartImage from "/NuvoBot4.jpeg"; // Importa la imagen para Nuvo Start
+import nuvoEliteImage from "/NuvoBot3.jpeg"; // Importa la imagen para Nuvo Elite
+
+const ArkarisCard = () => {
+  return (
+    <div className="card ">
+      <img src={nuvoStartImage} alt="Test" />
+      <div className="card-text">
+        
+        <button className="button button-card ">ARKARIS</button> {/* Aplica las clases de estilo y animación */}
+
+      </div>
+    </div>
+  );
+};
+
+const Laser = () => {
+  return (
+    <div className="card laser ">
+      <img src={LaserGun} alt="Test" />
+      <div className="card-text">
+        <button className="button button-card">LSE X1</button> {/* Aplica las clases de estilo y animación */}
+
+      </div>
+    </div>
+  );
+};
+
+const RiakisCard = () => {
+  return (
+    <div className="card ">
+      <img src={nuvoEliteImage} alt="Test" />
+      <div className="card-text">
+        <button className="button button-card">RIAKIS</button> {/* Aplica las clases de estilo y animación */}
+
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   return (
-    <div className="columns is-flex-wrap-wrap is-gap-2">
+    <div className="fade columns is-flex-wrap-wrap is-gap-2">
       <div className="column is-3">
-        <Card 
-          title="Nuvo Start" 
-          subtitle="Basic Nuvo Bot for passive income, up to 1% ROI, collect 5 levels to enhance performance" 
-          price="50 USDT"
-          button="Coming soon"
-          user="John Doe"
-        />
+        <ArkarisCard />
       </div>
       <div className="column is-3">
-        <Card 
-          title="Nuvo Elite" 
-          subtitle="Advanced Nuvo Bot with highly accurate predictions, up to 2.5% ROI, collect 10 levels to unlock premium features" 
-          price="125 USDT"
-          button="Coming soon"
-          user="Jane Smith"
-        />
+        <RiakisCard />
       </div>
-      <div className="column is-3">
-        <Card 
-          title="Nuvo X1" 
-          subtitle="Top-of-the-line Nuvo Bot with cutting-edge algorithms, up to 5% ROI, collect 15 levels to access exclusive perks" 
-          price="300 USDT"
-          button="Coming soon"
-          user="Robert Johnson"
-        />
+      <div className='column is-3'>
+        <Laser />
       </div>
     </div>
   );
