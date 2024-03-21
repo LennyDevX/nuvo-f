@@ -111,7 +111,7 @@
 
 
 .is-light .button-card  {
-  color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
   text-align: center;
   margin-top: 10px;
   border-radius: 10px;
@@ -135,3 +135,9 @@
   box-shadow: rgb(197, 89, 89) 0px 0px 10px 0px;
 }
 
+.main-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}

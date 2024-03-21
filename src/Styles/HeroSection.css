@@ -10,7 +10,12 @@
 }
 
 
-
+.is-light .title {
+  background: -webkit-linear-gradient(left, #475570, #70a4b5, #4c9384, #d4ee6e);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+}
 
 .text-container {
   max-width: 600px;

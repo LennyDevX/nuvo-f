@@ -17,8 +17,8 @@ const App = () => {
   }, [account, network, balance]);
 
   return (
-    <div className="fade title-gradient" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '80vh', textAlign: 'center' }}>
-      <h1 style={{ marginBottom: '10px', fontSize: '30px', fontWeight: 'bold',  color: isDarkMode ? 'white' : 'black' }}>Swap Widget</h1>
+    <div className="fade subtitle" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', height: '80vh', textAlign: 'center' }}>
+      <h1 className="title">SwapToken</h1>
       {isConnected ? 
         (
           <DodoSwapIframe />
