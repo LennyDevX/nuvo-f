@@ -34,3 +34,13 @@
 .is-dark .burger-button {
   background-color: whitesmoke;
 }
+
+
+
+#NuvoLogo {
+  width: 60px;
+  height: 55px;
+  padding: 5px 5px;
+  margin: 5px;
+  border-radius: 100%;
+}

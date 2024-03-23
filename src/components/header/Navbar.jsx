@@ -36,12 +36,12 @@ const Navbar = () => {
   };
 
   return (
+    
     <nav className={`navbar ${isDarkMode ? 'is-dark' : 'is-light'}`} role="navigation" aria-label="main navigation">
-      <div className="navbar-brand">
-        <Link to="/" className="navbar-item" >
-          <img id='NuvoLogo' src="/NuvoLogo.avif" alt="Placeholder image" />
-        </Link>
+                <img id='NuvoLogo' src="/NuvoLogo.avif" alt="Placeholder image" />
 
+      <div className="navbar-brand">
+        
         <button
           className={`navbar-burger burger ${isActive ? 'is-active' : ''} ${isDarkMode ? 'is-dark' : ''}`} // Agregar clase is-dark en el modo oscuro
           aria-label="menu"
