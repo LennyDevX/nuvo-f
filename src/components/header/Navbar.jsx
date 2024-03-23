@@ -59,8 +59,8 @@ const Navbar = () => {
           <Link to="/" className="navbar-item" onClick={toggleMenu}>
             Home
           </Link>
-          <Link to="/dashboard" className="navbar-item" onClick={toggleMenu}>
-            Pocket
+          <Link to="/staking" className="navbar-item" onClick={toggleMenu}>
+            Staking
           </Link>
           <Link to="/swaptoken" className="navbar-item" onClick={toggleMenu}>
             Swap Token

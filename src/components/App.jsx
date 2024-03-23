@@ -25,7 +25,7 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/signup" element={<RegistrationForm />} />
               <Route path="/login" element={<LoginForm />} />
-              <Route path="/dashboard" element={<InfoAccount />} />
+              <Route path="/staking" element={<InfoAccount />} />
               <Route path="/swaptoken" element={<SwapToken />} />
               <Route path="/nft" element={<CardNft />} />
 
