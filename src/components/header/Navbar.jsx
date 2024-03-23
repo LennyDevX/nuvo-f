@@ -1,9 +1,12 @@
+// Navbar.jsx
+
 import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ThemeContext } from '../context/ThemeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons';
 import WalletConnect from '../web3/WalletConnect';
+
 import '../../Styles/Navbar.css'
 
 const Navbar = () => {
@@ -11,9 +14,9 @@ const Navbar = () => {
   const { isDarkMode, setIsDarkMode } = useContext(ThemeContext);
 
   useEffect(() => {
-    const savedIsDarkMode = localStorage.getItem('isDarkMode'); // Buscamos en localStorage 
+    const savedIsDarkMode = localStorage.getItem('isDarkMode');
     if (savedIsDarkMode !== null) { 
-      setIsDarkMode(JSON.parse(savedIsDarkMode));  // Si se encuentra información en localStorage se utiliza para establecer isDarkMode
+      setIsDarkMode(JSON.parse(savedIsDarkMode));  
     }
 
     const className = isDarkMode ? 'is-dark' : 'is-light';
@@ -29,7 +32,7 @@ const Navbar = () => {
   const toggleTheme = () => {
     const newIsDarkMode = !isDarkMode;
     setIsDarkMode(newIsDarkMode);
-    localStorage.setItem('isDarkMode', JSON.stringify(newIsDarkMode));  // Guardamos el nuevo valor en localStorage
+    localStorage.setItem('isDarkMode', JSON.stringify(newIsDarkMode));
   };
 
   return (
@@ -40,18 +43,18 @@ const Navbar = () => {
         </Link>
 
         <button
-          className={`navbar-burger burger ${isActive ? 'is-active' : ''}`}
+          className={`navbar-burger burger ${isActive ? 'is-active' : ''} ${isDarkMode ? 'is-dark' : ''}`} // Agregar clase is-dark en el modo oscuro
           aria-label="menu"
           aria-expanded="false"
           onClick={toggleMenu}
         >
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
+          <span className='burger-button' aria-hidden="true"></span>
+          <span className='burger-button'  aria-hidden="true"></span>
+          <span className='burger-button'aria-hidden="true"></span>
         </button>
       </div>
 
-      <div id="navbarBasicExample" className={`navbar-menu ${isActive ? 'is-active' : ''} ${isDarkMode ? 'is-dark' : 'is-light'}`}>
+      <div id="navbarBasicExample" className={`navbar-menu ${isActive ? 'is-active' : ''}`}>
         <div className="navbar-start">
           <Link to="/" className="navbar-item" onClick={toggleMenu}>
             Home

@@ -1,10 +1,11 @@
 import React from 'react';
 import Navbar from './header/Navbar';
-import HeroSection from './layout/HeroSection';
+import Home from './layout/Home';
 import RegistrationForm from './forms/RegisterForm';
 import LoginForm from './forms/LoginForm';
 import CardNft from './layout/CardNft';
 import SwapToken from './layout/SwapToken';
+
 
 
 import { AuthProvider } from './context/AuthContext';
@@ -21,7 +22,7 @@ const App = () => {
         <WalletProvider>
           <Navbar />
             <Routes>
-              <Route path="/" element={<HeroSection />} />
+              <Route path="/" element={<Home />} />
               <Route path="/signup" element={<RegistrationForm />} />
               <Route path="/login" element={<LoginForm />} />
               <Route path="/dashboard" element={<InfoAccount />} />

@@ -1,24 +1,36 @@
+/* Navbar.css */
 
-
-
-.navbar-item {
-  font-family: 'Nova Flat', sans-serif;
+.navbar {
+  transition: background-color 1s ease-in-out, color 1s ease-in-out; /* Transición suave para el color de fondo y color del texto */
 }
 
+.navbar-menu {
+  transition: background-color 1s ease-in-out; /* Transición suave para el color de fondo */
+}
 
 #NuvoLogo {
   border-radius: 5px;
- 
 }
 
+.is-dark .navbar {
+  background-color: black;
+  color: whitesmoke; /* Color de texto en modo oscuro */
+}
 
+.is-light .navbar {
+  background-color: whitesmoke;
+  color: black; /* Color de texto en modo claro */
+}
 
-
-/* Target submenu items on hover in dark mode for mobile screens */
+/* Estilos para el submenu en modo oscuro en pantallas móviles */
 @media only screen and (max-width: 768px) {
   .is-dark .navbar-menu .navbar-item:hover {
     background-color: rgb(39, 38, 38);
-    color: whitesmoke; /* White text for readability */
+    color: whitesmoke; /* Texto blanco para mayor legibilidad */
   }
 }
 
+
+.is-dark .burger-button {
+  background-color: whitesmoke;
+}

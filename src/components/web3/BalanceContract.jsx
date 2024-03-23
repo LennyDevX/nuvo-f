@@ -4,7 +4,8 @@ import ABI from "../../Abi/StakingContract.json";
 import { ThemeContext } from '../context/ThemeContext';
 import "../../Styles/home.css";
 
-const contractAddress = "0x5Ce75E5C8575ff802f65633eA2613b5c2ee27904";
+// Importa la variable de entorno correctamente
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 function App() {
   const [depositAmount, setDepositAmount] = useState(0);
@@ -19,22 +20,24 @@ function App() {
       try {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
-        const contract = new ethers.Contract(contractAddress, ABI.abi, signer);
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
         const signerAddress = await signer.getAddress();
 
-        const deposited = await contract.getTotalDeposited(signerAddress);
-        const realDeposited = ethers.utils.formatEther(deposited);
-        setDepositAmount(realDeposited);
+        // Obtener todos los depósitos realizados por el usuario
+        const allDeposits = await contract.getAllDeposits(signerAddress);
+        const totalDeposited = allDeposits.reduce((acc, deposit) => acc + parseFloat(ethers.utils.formatEther(deposit)), 0);
+        setTotalDeposited(totalDeposited);
 
-        const fees = realDeposited * 0.04;
-        const netDeposit = realDeposited - fees;
-        setNetBalance(netDeposit);
-        
+        // Calcular las recompensas basadas en todos los depósitos
         const rewards = await contract.calculateRewards(signerAddress);
         const realRewards = ethers.utils.formatEther(rewards);
         setRewardAmount(realRewards);
 
-        
+        // Calcular el total del depósito después de aplicar las tarifas
+        const fees = totalDeposited * 0.05;
+        const netDeposit = totalDeposited - fees;
+        setNetBalance(netDeposit);
+
       } catch (error) {
         console.error("Error: ", error);
       }
@@ -42,15 +45,13 @@ function App() {
     fetchData();
   }, []);
 
-  
-
   return (
     <div>
       <br />
       <div>
-        <strong className="subtitle">Power 🗡️</strong> {depositAmount} Matic
+        <strong className="subtitle">Power 🗡️</strong> {totalDeposited} Matic
         <strong className="subtitle">Shield 🛡️</strong> ( Fee ): {netBalance} Matic
-        <p className=" subtitle"></p>Bag {rewardAmount} Matic
+        <p className="subtitle">Bag {rewardAmount} Matic</p>
         <br />
       </div>
     </div>

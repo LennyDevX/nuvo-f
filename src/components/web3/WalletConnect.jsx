@@ -4,7 +4,7 @@ import { WalletContext } from '../context/WalletContext';
 import WalletUtils from "../web3/WalletUtils"; 
 import MetaMaskLogo from '/metamask-logo.png';
 import { ThemeContext } from '../context/ThemeContext';
-import "../../Styles/HeroSection.css";
+import "../../Styles/WebWallet.css";
 
 const WalletConnect = () => {
   const { setAccount, setNetwork, setBalance } = useContext(WalletContext); 

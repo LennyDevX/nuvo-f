@@ -5,7 +5,8 @@ import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
 import '../../Styles/ButtonDeposit.css';
 
-const CONTRACT_PROXY_ADDRESS = '0x202A6dBa7Fbb34728C513e5791625989c76556c0';
+// Importa la variable de entorno correctamente
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 function ButtonContract() {
   const { account } = useContext(WalletContext);
@@ -23,7 +24,7 @@ function ButtonContract() {
         const web3Inst = new Web3(window.ethereum);
         setWeb3(web3Inst);
 
-        const contractInstance = new web3Inst.eth.Contract(ABI.abi, CONTRACT_PROXY_ADDRESS);
+        const contractInstance = new web3Inst.eth.Contract(ABI.abi, CONTRACT_ADDRESS);
         setContract(contractInstance);
       })
       .catch((error) => {

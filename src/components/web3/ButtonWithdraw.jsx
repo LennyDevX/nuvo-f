@@ -3,11 +3,11 @@ import Web3 from 'web3';
 import ABI from '../../Abi/StakingContract.json';
 import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
-import '../../Styles/ButtonDeposit.css';
 
-const CONTRACT_ADDRESS = '0x202A6dBa7Fbb34728C513e5791625989c76556c0';
+// Importa la variable de entorno correctamente
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-function ButtonContract() {
+function ButtonWithdraw() {
   const { account } = useContext(WalletContext);
   const { isDarkMode } = useContext(ThemeContext);
   const [web3, setWeb3] = useState(null);
@@ -35,39 +35,76 @@ function ButtonContract() {
     }
   }, []);
 
-  const handleWithdraw = (event) => {
+  const handleWithdraw = async (event) => {
     event.preventDefault();
-    if (!withdrawAmount || isNaN(withdrawAmount) || parseFloat(withdrawAmount) <= 0) {
-      displayError('Please enter a valid withdraw amount.');
+    if (!contract || !withdrawAmount || isNaN(withdrawAmount) || parseFloat(withdrawAmount) <= 0) {
+      displayError('Invalid contract or withdrawal amount.');
       return;
     }
-
+  
     setLoading(true);
-    const amountInWei = web3.utils.toWei(withdrawAmount);
-
-    contract.methods.withdraw(amountInWei).send({ from: account })
-    .on('transactionHash', (hash) => {
-      console.log('Transaction hash:', hash);
-    })
-    .on('receipt', (receipt) => {
-      console.log('Receipt:', receipt);
-      alert('Withdraw Success!');
+    try {
+      // Verificar si el usuario tiene suficientes recompensas para retirar
+      const rewards = await contract.methods.userRewards(account).call();
+      if (parseFloat(rewards) <= 0) {
+        displayError('You have no rewards to withdraw.');
+        setLoading(false);
+        return;
+      }
+  
+      // Verificar si han pasado los 7 días desde el último retiro
+      const lastWithdrawalTimestamp = await contract.methods.lastWithdrawalTimestamp(account).call();
+      const currentTime = Math.floor(Date.now() / 1000);
+      const sevenDaysInSeconds = 7 * 24 * 60 * 60;
+      if (currentTime - lastWithdrawalTimestamp < sevenDaysInSeconds) {
+        const remainingTime = sevenDaysInSeconds - (currentTime - lastWithdrawalTimestamp);
+        const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60));
+        displayError(`You can withdraw only after ${remainingDays} days from your last withdrawal.`);
+        setLoading(false);
+        return;
+      }
+  
+      const withdrawAmountFloat = parseFloat(withdrawAmount);
+      if (withdrawAmountFloat > parseFloat(rewards)) {
+        displayError('You are trying to withdraw more than your available rewards.');
+        setLoading(false);
+        return;
+      }
+  
+      // Realizar el retiro
+      await contract.methods.withdrawRewards().send({ from: account })
+      .on('transactionHash', (hash) => {
+        console.log('Transaction hash:', hash);
+      })
+      .on('receipt', (receipt) => {
+        console.log('Receipt:', receipt);
+        alert('Withdraw Success!');
+        setLoading(false);
+      })
+      .on('error', (error) => {
+        console.log('Withdraw error:', error.message);
+        if (error.code === 4001) {
+          displayError('You rejected the transaction or MetaMask is not available.');
+        } else {
+          displayError('There was an error while completing the withdraw. Please try again later.');
+        }
+        setLoading(false);
+      });
+    } catch (error) {
+      console.error('Error handling withdrawal:', error);
+      displayError('Failed to process withdrawal. Please try again later.');
       setLoading(false);
-    })
-    .on('error', (error) => {
-      console.log('Withdraw error:', error.message);
-      displayError('There was an error while completing the withdraw!');
-      setLoading(false);
-    });
+    }
   };
+  
 
   const displayError = (message) => {
     setError(message);
-    setTimeout(() => { setError('') }, 3000); // Error message will disappear after 3 seconds
+    setTimeout(() => { setError('') }, 3000); // El mensaje de error desaparecerá después de 3 segundos
   };
 
   return (
-    <div className=''>
+    <div className='withdraw-container'>
       <form onSubmit={handleWithdraw} className="field is-grouped">
         <div className="control">
           <input
@@ -80,12 +117,12 @@ function ButtonContract() {
           />
         </div>
         <div className="control">
-          <button className={`button   is-danger ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>TAKE CASH</strong></button>
+          <button className={`button is-danger ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>Withdraw</strong></button>
         </div>
       </form>
-      {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}
+      {error && <p className={`subtitle error-message ${isDarkMode ? 'dark-mode-error' : 'light-mode-error'}`}>{error}</p>}
     </div>
   );
 }
 
-export default ButtonContract;
+export default ButtonWithdraw;

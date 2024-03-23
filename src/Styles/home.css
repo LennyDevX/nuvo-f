@@ -45,6 +45,22 @@
     -webkit-text-fill-color: transparent;
 }
 
+.is-light .title {
+  background: -webkit-linear-gradient(left, #84a0d8, #89a9b3, #98ebd9, #8f9c5b);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+}
+
+.is-light strong {
+  background: -webkit-linear-gradient(left, #6f80a2, #3b7284, #2a7161, #374012);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+}
+
+
+
 .is-dark .subtitle {
   color: whitesmoke;
 }
