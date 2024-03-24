@@ -30,7 +30,7 @@ html, body {
   padding: 8px;
   margin-bottom: 5px;
   border: 1px solid whitesmoke;
-  color: black;
+  color: whitesmoke;
   border-radius: 7px;
   transition: 0.7 s ease-in-out;
 
