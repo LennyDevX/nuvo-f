@@ -10,19 +10,7 @@
 }
 
 
-.is-dark .card {
-  background: -webkit-linear-gradient(left, #34415c, #305764, #1f7462, #435209);
-  transition: 1.6s ease-in;
-  box-shadow: #f3aa19 0px 3px 10px;
 
-}
-
-.is-light .card {
-  background: -webkit-linear-gradient(left, #aebfe4, #bce0ec, #a4e6d7, #e8f0cb);
-  transition: 1.6s ease-in;
-  box-shadow: #f3aa19 0px 3px 10px;
-
-}
 
 
 .is-dark .subtitle {

@@ -33,7 +33,7 @@ const HeroSection = () => {
         <div className="container">
           <div className="columns">
             <div className="column is-4 is-offset-0 is-hidden-mobile">
-              <img src="/SolCoin.gif" alt="NFT Image" className="image nft-img is-3by3" />
+              <img src="/BtcStake.png" alt="NFT Image" className="image nft-img is-3by3" />
             </div>
             <div className="column is-4">
               <h1 className="title is-1 mb-3">
@@ -46,7 +46,11 @@ const HeroSection = () => {
                 Each Stake will allow you to earn a 135% ROI, you get weekly passive returns.
               </p>
               <Link to="/staking" className="button">
-                Stake Now
+                Stake Now!
+              </Link>
+
+              <Link to="/about" className="button ml-3">
+                Know more!
               </Link>
             </div>
           </div>

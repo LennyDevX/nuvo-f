@@ -67,7 +67,7 @@ function InfoAccount() {
     return (
         <div>
             <div className={`fade  container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
-                <div className=" main-container">
+                <div className="  main-container">
                     <h1 className="title is-3 is-centered has-text-centered">Staking</h1>
                     <div className={`flex ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
                         {isConnected ? (
