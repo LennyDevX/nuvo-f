@@ -61,7 +61,7 @@ function ClaimRewards() {
 
   return (
     <div className="has-text-centered">
-      <button className="button boton is-primary" onClick={handleOnClick}>
+      <button className="button boton is-success" onClick={handleOnClick}>
         <strong>Claim Rewards </strong>
       </button>
       <div className='subtitle is-6'>Total claimed rewards: {claimedRewards}</div>
