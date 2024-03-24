@@ -66,17 +66,15 @@ function InfoAccount() {
 
     return (
         <div>
-            <div className={`fade container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
-                <div className="main-container">
-                    <h1 className="title is-3 is-centered">Pocket</h1>
+            <div className={`fade  container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
+                <div className=" main-container">
+                    <h1 className="title is-3 is-centered has-text-centered">Pocket</h1>
                     <div className={`flex ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
                         {isConnected ? (
                             <>
-                                <p className={`subtitle account-info ${isDarkMode ? 'account-info-dark' : ''}`}>
-                                    <strong>Blockchain:</strong> {network}
-                                </p>
+                                
 
-                                <div className={`balance-display ${isDarkMode ? 'balance-dark' : 'balance-light'}`}>
+                                <div className={` fade balance-display ${isDarkMode ? 'balance-dark' : 'balance-light'}`}>
                                     <p className="subtitle">
                                         <strong>Power 🗡️:</strong> {depositAmount} Matic
                                     </p>
@@ -100,7 +98,9 @@ function InfoAccount() {
                                     <ButtonWithdraw className=" "/>
                                 </div>
 
-                                
+                                <p className={`subtitle account-info ${isDarkMode ? 'account-info-dark' : ''}`}>
+                                    <strong>Blockchain:</strong> {network}
+                                </p>
 
                             </>
                         ) : (

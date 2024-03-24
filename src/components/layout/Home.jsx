@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   return (
-    <section className="hero-body is-fullheight">
+    <section className="fade hero-body is-fullheight">
       <div className="hero-section">
         <div className="container">
           <div className="columns">
@@ -37,7 +37,7 @@ const HeroSection = () => {
             </div>
             <div className="column is-4">
               <h1 className="title is-1 mb-3">
-                Nuvo NFTStaking 1.0 is now live!
+                Nuvos Staking 1.0 is now live!
               </h1>
               <h2 className="subtitle is-3">
                 Earn up to 5% weekly for your stake in our pool, earn up to 3% extra if you own NFTs from our collections.
@@ -54,7 +54,7 @@ const HeroSection = () => {
       </div>
 
       <div className="hero-section">
-        <div className="container">
+        <div className="section">
           <div className="columns">
             <div className="column is-4">
               <h1 className="title is-1 mb-3">

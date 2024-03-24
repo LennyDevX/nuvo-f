@@ -26,14 +26,33 @@ html, body {
 }
 
 /* Estilo de botones */
-.is-dark button {
-   color: #000000;
-   border-radius:15px;
-   
+.is-dark .button {
+  padding: 8px;
+  margin-bottom: 5px;
+  border: 1px solid whitesmoke;
+  color: black;
+  border-radius: 7px;
+  transition: 0.7 s ease-in-out;
+
+  
+}
+
+.button:hover {
+  transform: scale(0.95);
+  box-shadow: 1px 2px 10px rgba(124, 59, 189, 0.756);
+  transition: 0.7s ease-in-out;
+  background-color: rgba(247, 185, 185, 0.418);
+
+}
 
 
+.is-light .button {
+  transition: 0.7s ease-in-out;
+  border: 1px solid black;
+  border-radius: 7px;
 
-
+  padding: 8px;
+  margin-bottom: 5px;
 }
 
 

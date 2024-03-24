@@ -1,65 +1,12 @@
-.dark-mode-button {
-  /* Color de fondo azul y texto negro para el modo oscuro */
-  background-color: rgb(109, 109, 250);
-  transition: ease-in-out 1.5s;
-
-}
-
-.light-mode-button {
-  /* Color de fondo negro y texto blanco para el modo claro */
-  background-color: black;
-  color: rgb(218, 20, 20);
-  transition: ease-in-out 1.5s;
-
-}
-
-/* ... existing styles ... */
-
-/* For dark mode */
-
-
-.is-dark .button {
-  background-color: transparent;
-  padding: 8px;
-  margin-bottom: 5px;
-  border: 1px solid whitesmoke;
-  color: whitesmoke;
-  border-radius: 10px;
-  transition: 0.5s ease-in-out;
-
-  &:hover {
-    transform: scale(1.1);
-    transition: 0.5s ease-in-out;
-    background-color: rgba(193, 238, 192, 0.333);
-  }
-}
-
-.is-light .button {
-  background-color: transparent;
-  margin-bottom: 5px;
-  padding: 8px;
-  border: 1px solid rgb(0, 0, 0);
-  color: rgb(0, 0, 0);
-  border-radius: 10px;
-  transition: 0.5s ease-in-out;
-  &:hover {
-    transform: scale(1.1);
-    transition: 0.5s ease-in-out;
-    background-color: rgba(138, 231, 136, 0.459);
-
-  }
-}
 
 /* For light mode */
 .light-mode-input {
   color: black; /* colour of user-entered numbers and placeholder */
   transition: ease-in-out 1.5s;
-
-
 }
 
 .light-mode-input::placeholder {
-  color: black;
+  color: rgba(107, 106, 106, 0.769);
   transition: ease-in-out 1.5s;
 }
 

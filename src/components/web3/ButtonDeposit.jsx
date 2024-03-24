@@ -81,7 +81,7 @@ function ButtonContract() {
           />
         </div>
         <div className="control">
-          <button className={`button    ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>LEVEL UP</strong></button>
+          <button className={`button is-info     ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>Level Up</strong></button>
         </div>
       </form>
       {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}

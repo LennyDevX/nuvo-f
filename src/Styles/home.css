@@ -1,16 +1,28 @@
 .main-container {
-  position: absolute; 
-  display: flex; 
-  flex-direction: column; 
-  justify-content: flex-start; 
-  align-items: center; 
-  top: 10vh; 
-  right: 0; 
-  bottom: 0; 
-  left: 0; 
-  transition: background-color 1.6s ease-in-out;
+  display: block;
+  position: relative;
+  z-index: 1;
+  top: -10vh;
+  bottom: 0;
+  right: 0;
+  left: 0;
+
 }
 
+
+.is-dark .card {
+  background: -webkit-linear-gradient(left, #34415c, #305764, #1f7462, #435209);
+  transition: 1.6s ease-in;
+  box-shadow: #f3aa19 0px 3px 10px;
+
+}
+
+.is-light .card {
+  background: -webkit-linear-gradient(left, #aebfe4, #bce0ec, #a4e6d7, #e8f0cb);
+  transition: 1.6s ease-in;
+  box-shadow: #f3aa19 0px 3px 10px;
+
+}
 
 
 .is-dark .subtitle {
@@ -21,7 +33,6 @@
 
 .balance-display {
   position: relative; 
-  display: block; 
   width: auto;
   margin: 10px;
   padding: 10px;
@@ -31,12 +42,7 @@
 
 
 
-.is-dark strong {
-    background: -webkit-linear-gradient(left, #8eb0f6, #b9dfec, #98ebd9, #bfcf80);
-    -webkit-background-clip: text;
-    background-clip: text; 
-    -webkit-text-fill-color: transparent;
-}
+
 
 .is-dark .title {
     background: -webkit-linear-gradient(left, #8eb0f6, #b9dfec, #98ebd9, #bfcf80);
@@ -46,18 +52,18 @@
 }
 
 .is-light .title {
-  background: -webkit-linear-gradient(left, #84a0d8, #89a9b3, #98ebd9, #8f9c5b);
+  background: -webkit-linear-gradient(left, #ec7979, #e78357, #e39312cc, #ba6d089a);
   -webkit-background-clip: text;
   background-clip: text;  
   -webkit-text-fill-color: transparent;
 }
 
 .is-light strong {
-  background: -webkit-linear-gradient(left, #6f80a2, #3b7284, #2a7161, #374012);
-  -webkit-background-clip: text;
-  background-clip: text;  
-  -webkit-text-fill-color: transparent;
+  color: #000000;
+
 }
+
+
 
 
 
@@ -66,7 +72,7 @@
 }
 
 .is-light .subtitle {
-  color: #000;
+  color: #000000cc;
 }
 
 .columns {
