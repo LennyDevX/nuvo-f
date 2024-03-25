@@ -24,7 +24,7 @@ function HeroDescription() {
     <div className={isDarkMode ? "hero-body fadedark-mode" : "hero-body"}>
       <div className="  columns m-0 p-0 is-vcentered fade">
         <p className='card column section is-5 title'>
-        Earn extra comission by collecting our NFTs or holding our special Sol Coin token.        </p>
+        Earn extra comission by collecting our NFTs or holding our special Sol Coin Token. Up to 2% in all revenue       </p>
       </div>
       
 
@@ -39,8 +39,7 @@ function HeroDescription() {
               <h2 className="subtitle is-3">
               Our native token to increase your power and get amazing specials within the Nuvo ecosystem              </h2>
               <p className="subtitle is-4">
-                Each Stake will allow you to earn a 135% ROI, you get weekly passive returns.
-              </p>
+              Maximum Supply 2M              </p>
               <Link  className="button is-active is-medium">
                 Coming soon!
               </Link>
