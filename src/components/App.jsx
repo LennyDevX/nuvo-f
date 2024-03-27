@@ -5,7 +5,7 @@ import RegistrationForm from './forms/RegisterForm';
 import LoginForm from './forms/LoginForm';
 import CardNft from './layout/CardNft';
 import SwapToken from './layout/SwapToken';
-
+import About from './layout/About';
 
 
 import { AuthProvider } from './context/AuthContext';
@@ -28,6 +28,8 @@ const App = () => {
               <Route path="/staking" element={<InfoAccount />} />
               <Route path="/swaptoken" element={<SwapToken />} />
               <Route path="/nft" element={<CardNft />} />
+              <Route path="/about" element={<About />} />
+
 
             </Routes>
           </WalletProvider>
