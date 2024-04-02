@@ -1,49 +1,43 @@
-import { useContext, useState, useEffect } from 'react';
-import { ethers } from 'ethers';
+import React, { useState, useContext, useEffect } from "react";
+import { ethers } from "ethers";
+import { ThemeContext } from '../context/ThemeContext';
 import { WalletContext } from '../context/WalletContext';
-import ABI from "../../Abi/StakingContract.json";
-import '../../Styles/ButtonDeposit.css';
+import ABI from '../../Abi/StakingContract.json';
+import "../../Styles/Notification.css"; // Importa los estilos de notificación
 
-// Utiliza la variable de entorno para la dirección del contrato
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-function ClaimRewards() {
+const ClaimRewardsComponent = () => {
+  const { isDarkMode } = useContext(ThemeContext);
   const { account } = useContext(WalletContext);
-  const [claimedRewards, setClaimedRewards] = useState(0);
+  const [claimingRewards, setClaimingRewards] = useState(false);
+  const [error, setError] = useState(null);
+  const [rewardsClaimed, setRewardsClaimed] = useState(0);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   useEffect(() => {
     if (account) {
-      const fetchClaimedRewards = async () => {
+      const fetchRewardsClaimed = async () => {
         try {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-
-          const filter = contract.filters.RewardClaimed(account);
-          const logs = await provider.getLogs({
-            fromBlock: 0,
-            toBlock: "latest",
-            address: CONTRACT_ADDRESS,
-            topics: filter.topics,
-          });
-
-          const totalClaimed = logs.reduce((total, log) => {
-            const data = contract.interface.parseLog(log).args;
-            return total + parseFloat(ethers.utils.formatEther(data.amount));
-          }, 0);
-
-          setClaimedRewards(totalClaimed);
+  
+          const claimed = await contract.totalRewardsClaimed(account);
+          setRewardsClaimed(claimed);
         } catch (error) {
-          console.error("Error while fetching claimed rewards:", error);
+          console.error("Error fetching rewards claimed:", error);
         }
       };
-
-      fetchClaimedRewards();
+  
+      fetchRewardsClaimed();
     }
   }, [account]);
 
-  const handleOnClick = async () => {
+  const handleClaimRewards = async () => {
     if (account) {
       try {
+        setClaimingRewards(true);
+
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         const signer = provider.getSigner();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
@@ -51,22 +45,39 @@ function ClaimRewards() {
         const tx = await contract.claimRewards();
         await tx.wait();
 
-        // Update claimed rewards after successful claim
-        fetchClaimedRewards();
+        const claimed = await contract.totalRewardsClaimed(account);
+        setRewardsClaimed(claimed);
+
+        setSuccessMessage("Rewards claimed successfully!");
       } catch (error) {
-        console.log("Error while claiming rewards:", error);
+        console.error("Error while claiming rewards:", error);
+        setError("Error claiming rewards. Please try again.");
+
+        setTimeout(() => {
+          setError(null);
+        }, 3000);
+      } finally {
+        setClaimingRewards(false);
       }
     }
   };
 
   return (
-    <div className="has-text-centered">
-      <button className="button boton is-success" onClick={handleOnClick}>
-        <strong>Claim Rewards </strong>
-      </button>
-      <div className='subtitle is-6'>Total claimed rewards: {claimedRewards}</div>
+    <div className={" "}>
+      <div className="content  hero">
+        <button
+          onClick={handleClaimRewards}
+          className={`button  ${isDarkMode ? 'has-text-warning' : 'has-text-primary'}`}
+          disabled={claimingRewards}
+        >
+          {claimingRewards ? 'Claiming Rewards...' : 'Claim Rewards'}
+        </button>
+        {error && <p className={`notification is-danger notification-visible ${isDarkMode ? 'dark-mode-error' : 'light-mode-error'}`}>{error}</p>}
+        {successMessage && <p className={`notification is-success notification-visible ${isDarkMode ? 'dark-mode-success' : 'light-mode-success'}`}>{successMessage}</p>}
+        <strong className=" ">Total rewards claimed: {parseFloat(ethers.utils.formatEther(rewardsClaimed)).toFixed(10)} Matic</strong>
+      </div>
     </div>
   );
-}
+};
 
-export default ClaimRewards;
+export default ClaimRewardsComponent;

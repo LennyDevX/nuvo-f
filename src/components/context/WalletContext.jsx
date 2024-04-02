@@ -16,12 +16,15 @@ export const WalletProvider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [balance, setBalance] = useState(null);
   const [network, setNetwork] = useState(null);
-  const [walletConnected, setWalletConnected] = useState(false);  // walletConnected state and setter function
+  const [walletConnected, setWalletConnected] = useState(false);
 
-  // Update the number of purchases when 'account' changes
+  // Function to update the account and walletConnected state
+  const updateAccount = (newAccount) => {
+    setAccount(newAccount);
+    setWalletConnected(!!newAccount); // Set walletConnected to true if newAccount is truthy
+  };
 
-
-  const value = { balance, setBalance, account, setAccount, network, setNetwork, walletConnected, setWalletConnected };
+  const value = { balance, setBalance, account, setAccount, updateAccount, network, setNetwork, walletConnected };
 
   return (
     <WalletContext.Provider value={value}>

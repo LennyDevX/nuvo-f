@@ -4,6 +4,7 @@ import ABI from '../../Abi/StakingContract.json';
 import { WalletContext } from '../context/WalletContext';
 import { ThemeContext } from '../context/ThemeContext';
 import '../../Styles/ButtonDeposit.css';
+import '../../Styles/Notification.css'; // Importar los estilos de notificación
 
 // Importa la variable de entorno correctamente
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
@@ -16,6 +17,7 @@ function ButtonContract() {
   const [depositAmount, setDepositAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [notification, setNotification] = useState({ message: '', type: '' });
 
   useEffect(() => {
     if (window.ethereum) {
@@ -29,17 +31,17 @@ function ButtonContract() {
       })
       .catch((error) => {
         console.error('Error while initializing Web3:', error);
-        displayError('Failed to connect to MetaMask. Please make sure it is installed and unlocked.');
+        displayNotification('Failed to connect to MetaMask. Please make sure it is installed and unlocked.', 'error');
       });
     } else {
-      displayError('Please install MetaMask!');
+      displayNotification('Please install MetaMask!', 'error');
     }
   }, []);
 
   const handleDeposit = (event) => {
     event.preventDefault();
     if (!depositAmount || isNaN(depositAmount) || parseFloat(depositAmount) <= 0) {
-      displayError('Please enter a valid deposit amount.');
+      displayNotification('Please enter a valid deposit amount.', 'error');
       return;
     }
 
@@ -52,19 +54,19 @@ function ButtonContract() {
     })
     .on('receipt', (receipt) => {
       console.log('Receipt:', receipt);
-      alert('Deposit Success!');
       setLoading(false);
+      displayNotification('Your deposit was successful!', 'success');
     })
     .on('error', (error) => {
       console.log('Deposit error:', error.message);
-      displayError('There was an error while completing the deposit!');
+      displayNotification('There was an error while completing the deposit!', 'error');
       setLoading(false);
     });
   };
 
-  const displayError = (message) => {
-    setError(message);
-    setTimeout(() => { setError('') }, 3000); // Error message will disappear after 3 seconds
+  const displayNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => { setNotification({ message: '', type: '' }) }, 3000); // Notification will disappear after 3 seconds
   };
 
   return (
@@ -81,9 +83,15 @@ function ButtonContract() {
           />
         </div>
         <div className="control">
-          <button className={`button is-info     ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>Level Up</strong></button>
+          <button className={`button  ${isDarkMode ? 'is-success' : 'is-danger'} ${loading ? 'is-loading' : ''}`} type="submit" disabled={loading}><strong>Level Up</strong></button>
         </div>
       </form>
+      {/* Notification */}
+      {notification.message && (
+        <div className={`notification ${notification.type === 'error' ? 'is-danger' : 'is-success'} notification-visible`}>
+          <p>{notification.message}</p>
+        </div>
+      )}
       {error && <p style={{ color: isDarkMode ? '#fff' : '#f00', position: 'fixed', bottom: 0 }}>{error}</p>}
     </div>
   );

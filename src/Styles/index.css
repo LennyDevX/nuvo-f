@@ -4,7 +4,15 @@
 
 
 
+.is-dark {
+  transition: 1s ease-in-out  ;
+  background-color: #100f0f; /* Color de fondo para el modo claro */
+}
 
+.is-light {
+  transition: 1s ease-in-out  ;
+  background-color: whitesmoke; /* Color de fondo para el modo claro */
+}
 
 html, body {
   height: 100%;
@@ -13,6 +21,20 @@ html, body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.is-dark .box-account {
+  transition: 1s ease-in-out;
+  background: linear-gradient(to bottom, #161873cc, #401fb798, #33248bcf, #673cb3be);
+
+}
+
+.is-light .box-account {
+  transition: 1s ease-in-out;
+
+  background-color: transparent;
+  box-shadow: #100f0f 0px 0px 10px;
+
 }
 
 /* Estilo de inputs */
@@ -51,39 +73,15 @@ html, body {
   transition: 0.7s ease-in-out;
   border: 1px solid black;
   border-radius: 7px;
-
   padding: 8px;
   margin-bottom: 5px;
-}
-
-
-
-
-/* Estilo de la barra de navegación según el tema */
-.navbar {
-  background-color: whitesmoke;
-  border-radius: 10px;
-}
-
-
-body.is-light .navbar {
-  background-color: white;
-}
-
-
-body.is-dark .navbar {
-  background-color: #000000;
-}
-
-
-.is-dark {
-  background-color: #000000;
-  transition: background-color 2s ease-in-out; /* Transición suave */
 
 }
 
-.is-light {
-  background-color: whitesmoke;
-  transition: background-color 2s ease-in-out; /* Transición suave */
 
-}
+
+
+
+
+
+

@@ -22,7 +22,9 @@ const Navbar = () => {
     const className = isDarkMode ? 'is-dark' : 'is-light';
     document.body.classList.add(className);
   
-    return () => document.body.classList.remove(className);
+    return () => {
+      document.body.classList.remove(className);
+    };
   }, [isDarkMode]);
   
   const toggleMenu = () => {

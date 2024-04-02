@@ -12,15 +12,7 @@
   border-radius: 5px;
 }
 
-.is-dark .navbar {
-  background-color: black;
-  color: whitesmoke; /* Color de texto en modo oscuro */
-}
 
-.is-light .navbar {
-  background-color: whitesmoke;
-  color: black; /* Color de texto en modo claro */
-}
 
 /* Estilos para el submenu en modo oscuro en pantallas móviles */
 @media only screen and (max-width: 768px) {
