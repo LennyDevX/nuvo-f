@@ -24,7 +24,7 @@ function HeroDescription() {
     <div className={isDarkMode ? "hero-body fadedark-mode" : "hero-body"}>
       <div className="  columns m-0 p-0 is-vcentered fade">
         <p className='card column section is-5 title'>
-        Earn extra comission by collecting our NFTs or holding our special Sol Coin Token. Up to 2% in all revenue       </p>
+        Earn extra comission by collecting our NFTs or holding our special Sol Coin Token. Up to 0.5% in all revenue       </p>
       </div>
       
 

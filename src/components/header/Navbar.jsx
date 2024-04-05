@@ -72,9 +72,16 @@ const Navbar = () => {
           <Link to="/nft" className="navbar-item" onClick={toggleMenu}>
             NFT
           </Link>
+          <Link to="/governance" className="navbar-item" onClick={toggleMenu}>
+            GOV
+          </Link>
           <Link to="/about" className="navbar-item" onClick={toggleMenu}>
             About
           </Link>
+          
+          <strong className='navbar-item version-nuvo'>
+             BETA V2
+          </strong>
           <a className="navbar-item" onClick={toggleTheme} style={{ marginRight: '1rem' }}>
             <FontAwesomeIcon icon={isDarkMode ? faSun : faMoon} />
           </a>

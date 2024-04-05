@@ -9,7 +9,7 @@ const Features = () => {
   const { isDarkMode } = useContext(ThemeContext);
 
   return (
-    <div className={`card-container ${isDarkMode ? 'is-dark' : 'is-light'}`}>
+    <div className={`hero-body card-container ${isDarkMode ? 'is-dark' : 'is-light'}`}>
       <div className="card">
         <div className="card-content">
           <h1 className="title">Staking Contract</h1>

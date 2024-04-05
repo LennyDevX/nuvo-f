@@ -7,16 +7,30 @@ import "../../Styles/Notification.css"; // Importa los estilos de notificación
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-const ClaimRewardsComponent = () => {
+const ClaimRewardsComponent = ({ onClaimRewards }) => {
   const { isDarkMode } = useContext(ThemeContext);
   const { account } = useContext(WalletContext);
   const [claimingRewards, setClaimingRewards] = useState(false);
   const [error, setError] = useState(null);
   const [rewardsClaimed, setRewardsClaimed] = useState(0);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [rewardsBalance, setRewardsBalance] = useState(0);
+  const [lastClaimTime, setLastClaimTime] = useState(0); // Agregar estado para el último tiempo de reclamo
 
   useEffect(() => {
     if (account) {
+      const fetchRewardBalance = async () => {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+
+          const rewardsBalance = await contract.computeRewards(account);
+          setRewardsBalance(rewardsBalance);
+        } catch (error) {
+          console.error("Error fetching rewards balance:", error);
+        }
+      };
+
       const fetchRewardsClaimed = async () => {
         try {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -28,39 +42,67 @@ const ClaimRewardsComponent = () => {
           console.error("Error fetching rewards claimed:", error);
         }
       };
-  
+
+      const fetchLastClaimTime = async () => {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+
+          const lastTime = await contract.getLastClaimTime(account);
+          setLastClaimTime(lastTime.toNumber()); // Convertir a número
+        } catch (error) {
+          console.error("Error fetching last claim time:", error);
+        }
+      };
+
+      fetchRewardBalance();
       fetchRewardsClaimed();
+      fetchLastClaimTime();
     }
   }, [account]);
 
   const handleClaimRewards = async () => {
-    if (account) {
-      try {
-        setClaimingRewards(true);
+    const now = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
 
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
+    // Verificar si ha pasado al menos una hora desde el último reclamo
+    if (now - lastClaimTime >= 3600) {
+      if (account && rewardsBalance.gt(0)) {
+          try {
+              setClaimingRewards(true);
 
-        const tx = await contract.claimRewards();
-        await tx.wait();
+              const provider = new ethers.providers.Web3Provider(window.ethereum);
+              const signer = provider.getSigner();
+              const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
 
-        const claimed = await contract.totalRewardsClaimed(account);
-        setRewardsClaimed(claimed);
+              const tx = await contract.claimRewards();
+              await tx.wait();
 
-        setSuccessMessage("Rewards claimed successfully!");
-      } catch (error) {
-        console.error("Error while claiming rewards:", error);
-        setError("Error claiming rewards. Please try again.");
+              // Actualiza el saldo de recompensas reclamadas del usuario
+              const claimedRewards = await contract.totalRewardsClaimed(account);
+              setRewardsClaimed(claimedRewards);
+              setLastClaimTime(now); // Actualizar el último tiempo de reclamo
 
-        setTimeout(() => {
-          setError(null);
-        }, 3000);
-      } finally {
-        setClaimingRewards(false);
+              setSuccessMessage("Rewards claimed successfully!");
+          } catch (error) {
+              console.error("Error while claiming rewards:", error);
+              setError("Error claiming rewards. Please try again.");
+          } finally {
+              setClaimingRewards(false);
+          }
+      } else {
+          setError("You don't have any rewards to claim.");
       }
+    } else {
+      setError("You can only claim rewards once every hour.");
     }
-  };
+
+    // Limpiar errores después de 3 segundos
+    setTimeout(() => {
+        setError(null);
+        setSuccessMessage(null);
+    }, 3000);
+};
+
 
   return (
     <div className={" "}>
