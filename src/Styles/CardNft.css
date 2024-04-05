@@ -1,16 +1,6 @@
-.is-dark .hero-body {
-  transition: 1s ease-in-out  ;
-  background-color: #000000; /* Color de fondo para el modo claro */
-}
 
-.is-light .hero-body {
-  transition: 1s ease-in-out  ;
-  background-color: whitesmoke; /* Color de fondo para el modo claro */
-}
 
-.dark-mode .hero-body {
-  background-color: #333; /* Color de fondo para el modo oscuro */
-}
+
 
 .content-image {
   gap: 1rem; /* Ajuste en el espacio entre imágenes */

@@ -1,13 +1,15 @@
 import React, { useContext } from 'react';
 import { ThemeContext } from '../context/ThemeContext';
 import Feautures from './Features';
+import "../../Styles/CardNft.css";
+
 
 const About = () => {
   const { isDarkMode } = useContext(ThemeContext);
 
   return (
-    <div className={isDarkMode ? "hero-body fadedark-mode" : "hero-body"}>
-      <div className="hero">
+    <div className={isDarkMode ? "fadedark-mode" : "hero-body"}>
+      <div className="hero-body">
         <div className="section">
           <div className='has-text-centered'>
             <h1 className="title">Nuvo App</h1>

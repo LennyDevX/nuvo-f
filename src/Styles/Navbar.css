@@ -12,15 +12,7 @@
   border-radius: 5px;
 }
 
-.is-dark .navbar {
-  background-color: black;
-  color: whitesmoke; /* Color de texto en modo oscuro */
-}
 
-.is-light .navbar {
-  background-color: whitesmoke;
-  color: black; /* Color de texto en modo claro */
-}
 
 /* Estilos para el submenu en modo oscuro en pantallas móviles */
 @media only screen and (max-width: 768px) {
@@ -35,7 +27,19 @@
   background-color: whitesmoke;
 }
 
+.version-nuvo {
+  background: -webkit-linear-gradient(left, #e9d99b, #dec34e, #deb640, #dbbc3c, #fa8423);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+}
 
+.is-light .version-nuvo {
+  background: -webkit-linear-gradient(left, #ec7979, #e78357, #e39312cc, #ba6d089a);
+  -webkit-background-clip: text;
+  background-clip: text;  
+  -webkit-text-fill-color: transparent;
+}
 
 #NuvoLogo {
   width: 60px;

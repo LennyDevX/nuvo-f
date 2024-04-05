@@ -15,6 +15,20 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.is-dark .box-account {
+  transition: 1s ease-in-out;
+  background: linear-gradient(to bottom, #161873cc, #401fb798, #33248bcf, #673cb3be);
+
+}
+
+.is-light .box-account {
+  transition: 1s ease-in-out;
+
+  background-color: transparent;
+  box-shadow: #100f0f 0px 0px 10px;
+
+}
+
 /* Estilo de inputs */
 .is-light .input {
   border: 1px solid #823737; 
@@ -51,39 +65,27 @@ html, body {
   transition: 0.7s ease-in-out;
   border: 1px solid black;
   border-radius: 7px;
-
   padding: 8px;
   margin-bottom: 5px;
+
 }
 
-
-
-
-/* Estilo de la barra de navegación según el tema */
-.navbar {
-  background-color: whitesmoke;
-  border-radius: 10px;
+.is-dark .hero-body {
+  transition: 1s ease-in-out  ;
+  background-color: #000000; /* Color de fondo para el modo claro */
 }
 
-
-body.is-light .navbar {
-  background-color: white;
+.is-light .hero-body {
+  transition: 1s ease-in-out  ;
+  background-color: whitesmoke; /* Color de fondo para el modo claro */
 }
 
-
-body.is-dark .navbar {
+.is-dark .navbar {
   background-color: #000000;
 }
 
 
-.is-dark {
-  background-color: #000000;
-  transition: background-color 2s ease-in-out; /* Transición suave */
 
-}
 
-.is-light {
-  background-color: whitesmoke;
-  transition: background-color 2s ease-in-out; /* Transición suave */
 
-}
+
