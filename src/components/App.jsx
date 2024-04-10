@@ -7,6 +7,9 @@ import CardNft from './layout/CardNft';
 import SwapToken from './layout/SwapToken';
 import InfoGovernance from "./layout/InfoGovernance"
 import About from './layout/About';
+import Propose from "./layout/Propose"
+import ExecuteProposal from './layout/executeProposal';
+import Vote from './layout/Vote';
 
 
 import { AuthProvider } from './context/AuthContext';
@@ -17,7 +20,7 @@ import InfoAccount from './layout/InfoAccount';
 
 const App = () => {
   return (
-    <Router>
+    <Router> 
       <AuthProvider>
         <ThemeProvider>
         <WalletProvider>
@@ -31,6 +34,11 @@ const App = () => {
               <Route path="/nft" element={<CardNft />} />
               <Route path="/about" element={<About />} />
               <Route path="/governance" element={<InfoGovernance />} />
+              <Route path="/propose" element={<Propose />} />
+              <Route path="/executepropose" element={<ExecuteProposal />} />
+              <Route path="/vote" element={<Vote />} />
+
+
 
 
 

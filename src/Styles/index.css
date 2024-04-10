@@ -29,13 +29,6 @@ html, body {
 
 }
 
-/* Estilo de inputs */
-.is-light .input {
-  border: 1px solid #823737; 
-  padding: 10px; 
-  border-radius: 5px; 
-  background-color: transparent;
-}
 
 .input::placeholder {
   color: #999; 
@@ -83,6 +76,58 @@ html, body {
 .is-dark .navbar {
   background-color: #000000;
 }
+
+
+.is-dark .textarea::placeholder {
+  color: #999; 
+}
+
+
+
+.is-dark .input {
+  color: whitesmoke;
+  background-color: black;
+}
+
+.is-light .input {
+  background-color: rgb(71, 71, 71);
+  color: whitesmoke;
+}
+
+.is-dark .textarea {
+  color: whitesmoke;
+  background-color: black;
+}
+
+.is-light .textarea::placeholder {
+  color: #999;
+}
+
+.is-light .textarea {
+  background-color: black;
+ 
+}
+
+
+.is-dark .textarea {
+  background-color: black;
+ 
+}
+
+.textarea {
+    width: 450px;
+    
+    height: 150px;
+    
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+
+}
+
+
 
 
 
