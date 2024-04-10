@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { ethers } from 'ethers';
-import ABI from "../../Abi/Gobernanza.json";
+import ABI from "../../Abi/Governance.json";
 import { ThemeContext } from '../context/ThemeContext';
 import { WalletContext } from '../context/WalletContext';
-import "../../Styles/Notification.css"; // Importa los estilos de notificación
+import "../../Styles/Notification.css"; // Import notification styles
 
-// Importa la variable de entorno correctamente
+// Import the environment variable correctly
 const GOVERNANCE_CONTRACT_ADDRESS = import.meta.env.VITE_GOVERNANCE_CONTRACT_ADDRESS;
 
 function WithdrawalComponent() {
@@ -29,7 +29,7 @@ function WithdrawalComponent() {
 
   const getBalance = async (account) => {
     if (account && governanceContract) {
-      const balance = await governanceContract.saldos(account);
+      const balance = await governanceContract.balances(account);
       setBalance(ethers.utils.formatEther(balance));
     }
   };
@@ -45,9 +45,9 @@ function WithdrawalComponent() {
     const amountInWei = ethers.utils.parseEther(withdrawalAmount);
 
     try {
-      const tx = await governanceContract.retirar(amountInWei);
+      const tx = await governanceContract.withdraw(amountInWei);
       await tx.wait();
-      const newBalance = await governanceContract.saldos(account);
+      const newBalance = await governanceContract.balances(account);
       setBalance(ethers.utils.formatEther(newBalance));
       setLoading(false);
       displayNotification('Your withdrawal was successful!', 'success');

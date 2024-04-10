@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useContext } from "react";
 import { ethers } from "ethers";
-import ABI from "../../Abi/Gobernanza.json"; // Asegúrate de tener el ABI correcto
+import ABI from "../../Abi/Governance.json"; // Make sure you have the correct ABI
 import { ThemeContext } from '../context/ThemeContext';
 import { WalletContext } from '../context/WalletContext';
 import ButtonGovernance from "../web3/ButtonGovernance";
 import ButtonWithdraw from "../web3/WithdrawGovernance";
-import PolygonLogo from "/PolygonLogo.png"; // Importa la imagen
+import PolygonLogo from "/PolygonLogo.png"; // Import the image
 import "../../Styles/home.css";
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_GOVERNANCE_CONTRACT_ADDRESS;
@@ -18,7 +18,7 @@ function InfoAccount() {
   const [votingPower, setVotingPower] = useState(0);
   const [error, setError] = useState(null);
   const [depositedMatic, setDepositedMatic] = useState(0);
-  const [governanceLevel, setGovernanceLevel] = useState(""); // Nuevo estado para el nivel de gobernanza
+  const [governanceLevel, setGovernanceLevel] = useState("");
 
   useEffect(() => {
     setIsConnected(account && network && balance !== null);
@@ -36,23 +36,23 @@ function InfoAccount() {
       const signer = provider.getSigner();
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
-        ABI.abi, // Asegúrate de tener el ABI correcto
+        ABI.abi, // Make sure you have the correct ABI
         signer
       );
 
       const signerAddress = await signer.getAddress();
-      const votingPowerBN = await contract.votos(signerAddress);
+      const votingPowerBN = await contract.votes(signerAddress);
       const votingPowerStr = ethers.utils.formatEther(votingPowerBN);
       const votingPower = parseFloat(votingPowerStr);
       setVotingPower(votingPower);
 
       // Fetch deposited MATIC (assuming "saldos" mapping stores the balances)
-      const depositedMaticBN = await contract.saldos(signerAddress);
+      const depositedMaticBN = await contract.balances(signerAddress); // Changed from `saldos` to `balances`
       const depositedMaticStr = ethers.utils.formatEther(depositedMaticBN);
       const depositedMatic = parseFloat(depositedMaticStr);
-      setDepositedMatic(depositedMatic); // Update balance state
+      setDepositedMatic(depositedMatic);
 
-      // Determinar el nivel de gobernanza según el "Voting Power"
+      // Determine the governance level based on the "Voting Power"
       const level = getGovernanceLevel(votingPower);
       setGovernanceLevel(level);
     } catch (error) {
@@ -61,7 +61,7 @@ function InfoAccount() {
     }
   };
 
-  // Función para obtener el nivel de gobernanza
+  // Function to determine the governance level
   const getGovernanceLevel = (votingPower) => {
     if (votingPower >= 1 && votingPower <= 50) {
       return "Rocket";
@@ -75,11 +75,11 @@ function InfoAccount() {
   };
 
   return (
-    <div className="fade">
+    <div className="">
       <section className={isDarkMode ? "hero-body fadedark-mode" : "hero-body"}>
         <div className={`fade hero container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
           <div className="box box-account main-container">
-            <h1 className="title is-3 is-centered has-text-centered">Governance</h1>
+            <h1 className="title is-3 is-centered has-text-centered">Governance V1</h1>
             <div className={`flex ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
               {isConnected ? (
                 <>

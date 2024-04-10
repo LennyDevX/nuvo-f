@@ -77,8 +77,8 @@ function InfoAccount() {
   
 
   return (
-    <div className="  fade">
-      <section className={isDarkMode ? "  hero-body fadedark-mode" : "hero-body"}>
+    <div className="  ">
+      <section className={isDarkMode ? "  hero-body fade dark-mode" : "hero-body"}>
         <div className={` fade hero container ${isDarkMode ? 'dark-mode' : 'light-mode'}`}>
           <div className="box box-account main-container">
             <h1 className="title is-3 is-centered has-text-centered">Staking V1</h1>

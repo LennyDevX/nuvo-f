@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { ethers } from 'ethers';
-import ABI from "../../Abi/Gobernanza.json";
-import { ThemeContext } from '../context/ThemeContext';
+import ABI from "../../Abi/Governance.json";
+import { ThemeContext } from '../context/ThemeContext'; 
 import { WalletContext } from '../context/WalletContext';
 
-// Importa la variable de entorno correctamente
+// Import the environment variable correctly
 const GOVERNANCE_CONTRACT_ADDRESS = import.meta.env.VITE_GOVERNANCE_CONTRACT_ADDRESS;
 
 function GovernanceComponent() {
@@ -28,7 +28,7 @@ function GovernanceComponent() {
 
   const getVotes = async (account) => {
     if (account && governanceContract) {
-      const votes = await governanceContract.votos(account);
+      const votes = await governanceContract.votes(account);
       setVotes(ethers.utils.formatEther(votes));
     }
   };
@@ -44,9 +44,9 @@ function GovernanceComponent() {
     const amountInWei = ethers.utils.parseEther(depositAmount);
   
     try {
-        const tx = await governanceContract.depositar({ value: amountInWei });
+        const tx = await governanceContract.deposit({ value: amountInWei });
         await tx.wait();
-      const newVotes = await governanceContract.votos(account);
+      const newVotes = await governanceContract.votes(account);
       setVotes(ethers.utils.formatEther(newVotes));
       setLoading(false);
       displayNotification('Your deposit was successful!', 'success');
@@ -68,7 +68,7 @@ function GovernanceComponent() {
                 errorDetails = "You don't have enough MATIC in your wallet to complete this deposit.";
               } else {
                 errorMessage = "Contract error.";
-                errorDetails = "There was an issue with the Gobernanza contract. Please try again later or contact support."; 
+                errorDetails = "There was an issue with the Governance contract. Please try again later or contact support."; 
               }
               break;
             default: 
@@ -124,6 +124,6 @@ function GovernanceComponent() {
       </div>
     </div>
   );
-        }
+}
 
 export default GovernanceComponent;
