@@ -6,7 +6,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import "../../Styles/Notification.css"; // Importa los estilos de notificación
 
 // Importa la variable de entorno correctamente
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 function ButtonWithdraw() {
   const { account } = useContext(WalletContext);

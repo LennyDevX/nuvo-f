@@ -10,7 +10,7 @@ import PolygonLogo from "/PolygonLogo.png"; // Importa la imagen
 import "../../Styles/home.css";
 
 // Utiliza la variable de entorno para la dirección del contrato
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 function InfoAccount() {
   const { isDarkMode } = useContext(ThemeContext);
@@ -37,6 +37,8 @@ function InfoAccount() {
     const currentTime = Math.floor(Date.now() / 1000);
     const timeSinceLastClaim = currentTime - lastClaimTime;
     if (timeSinceLastClaim >= 3600) {
+      setHasClaimableRewards(true);
+    } else {
       setHasClaimableRewards(false);
     }
   }, [lastClaimTime]);
@@ -50,22 +52,21 @@ function InfoAccount() {
         ABI.abi,
         signer
       );
-  
+
       const signerAddress = await signer.getAddress();
       const deposit = await contract.getTotalDeposit(signerAddress);
       const realDeposit = ethers.utils.formatEther(deposit);
       setDepositAmount(realDeposit);
-  
+
       // Obtener el tiempo del último reclamo
       const lastClaim = await contract.getLastClaimTime(signerAddress);
       setLastClaimTime(lastClaim.toNumber());
-  
+
       const currentTime = Math.floor(Date.now() / 1000);
       const timeSinceLastClaim = currentTime - lastClaim.toNumber();
-  
+
       if (timeSinceLastClaim >= 3600) {
-        const claimableRewards = await contract.claimableRewards(signerAddress);
-        setHasClaimableRewards(ethers.utils.formatEther(claimableRewards) > 0);
+        setHasClaimableRewards(true);
       } else {
         setHasClaimableRewards(false);
       }
@@ -74,7 +75,7 @@ function InfoAccount() {
       setError("Error fetching account information. Please try again later.");
     }
   };
-  
+
 
   return (
     <div className="  ">
@@ -97,13 +98,13 @@ function InfoAccount() {
                     </p>
                   </div>
                   <div className="m-2">
-                    <ButtonDeposit className=" "/>
+                    <ButtonDeposit className=" " />
                   </div>
                   <div className="m-2">
                     <ClaimRewards onRewardsClaimed={() => { setHasClaimableRewards(false); fetchData(); }} />
                   </div>
                   <div className="m-2">
-                    <ButtonWithdraw className=" "/>
+                    <ButtonWithdraw className=" " />
                   </div>
                   <p className={`subtitle account-info ${isDarkMode ? 'account-info-dark' : ''}`}>
                     <strong>Blockchain:</strong> {network}

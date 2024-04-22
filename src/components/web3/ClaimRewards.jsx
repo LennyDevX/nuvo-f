@@ -5,7 +5,7 @@ import { WalletContext } from '../context/WalletContext';
 import ABI from '../../Abi/StakingContract.json';
 import "../../Styles/Notification.css"; // Importa los estilos de notificación
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 const ClaimRewardsComponent = ({ onClaimRewards }) => {
   const { isDarkMode } = useContext(ThemeContext);
@@ -24,7 +24,7 @@ const ClaimRewardsComponent = ({ onClaimRewards }) => {
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
 
-          const rewardsBalance = await contract.computeRewards(account);
+          const rewardsBalance = await contract.calculateRewards(account);
           setRewardsBalance(rewardsBalance);
         } catch (error) {
           console.error("Error fetching rewards balance:", error);

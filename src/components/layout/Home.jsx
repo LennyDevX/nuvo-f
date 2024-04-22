@@ -44,7 +44,7 @@ const HeroSection = () => {
               <p className="subtitle is-4">
               Earn up to 1% extra, holding our NFTs Tokens
                   </p>
-              <Link  className="button is-active is-medium">
+              <Link to="staking"  className="button is-active is-medium">
                 STAKE NOW!
               </Link>
             </div>
@@ -65,7 +65,7 @@ const HeroSection = () => {
               <p className="subtitle is-4">
               Our first Governance contract,
                where all users regardless of their level will be able to vote in our decision-making and be part of what is happening behind the scenes. Block Matic & Win Votes              </p>
-              <Link to="/nft" className="button">
+              <Link to="/governance" className="button">
                 Get Votes!
               </Link>
             </div>
@@ -93,7 +93,7 @@ const HeroSection = () => {
                         </h2>
               <p className="subtitle is-4">
               Blockchain is the technology that uses all of our smart contracts, enabling flexibility, security, privacy, and efficiency in person-to-person transactions. All your movements are safe and immutable with this technology              </p>
-              <Link to="/nft" className="button">
+              <Link to="/about" className="button">
                 Learn more about Blockchain
               </Link>
             </div>
