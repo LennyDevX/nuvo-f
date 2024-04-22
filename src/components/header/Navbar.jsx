@@ -72,17 +72,17 @@ const Navbar = () => {
           <Link to="/nft" className="navbar-item" onClick={toggleMenu}>
             NFT
           </Link>
-          <Link to="/governance" className="navbar-item" onClick={toggleMenu}>
+          <Link to="#" className="navbar-item" onClick={toggleMenu}>
             GOV
           </Link>
-          <Link to="/propose" className="navbar-item" onClick={toggleMenu}>
+          <Link to="#" className="navbar-item" onClick={toggleMenu}>
             Proposal
           </Link>
           
           <Link to="/vote" className="navbar-item" onClick={toggleMenu}>
             Vote
           </Link>
-          <Link to="/executepropose" className="navbar-item" onClick={toggleMenu}>
+          <Link to="#" className="navbar-item" onClick={toggleMenu}>
             Execute Proposal
           </Link>
           <Link to="/about" className="navbar-item" onClick={toggleMenu}>

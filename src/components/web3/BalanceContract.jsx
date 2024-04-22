@@ -5,7 +5,7 @@ import { ThemeContext } from '../context/ThemeContext';
 import "../../Styles/home.css";
 
 // Importa la variable de entorno correctamente
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 
 function App() {
   const [depositAmount, setDepositAmount] = useState(0);
