@@ -112,6 +112,7 @@ function DashboardStaking() {
   useEffect(() => {
     if (account) {
       loadWithdrawalHistory();
+      fetchWithdrawalEvents();
     }
   }, [account]);
 
@@ -133,59 +134,89 @@ function DashboardStaking() {
     return () => clearInterval(interval);
   }, []);
 
-  // Used by fetchContractData when needed
-  const fetchWithdrawalEvents = async () => {
-    try {
-      const provider = await getProvider();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-      const filter = contract.filters.WithdrawalMade(account);
-      const events = await contract.queryFilter(filter);
-      
-      const withdrawals = await Promise.all(events.map(async event => {
-        try {
-          const block = await provider.getBlock(event.blockNumber);
-          return {
-            amount: ethers.utils.formatEther(event.args.amount),
-            timestamp: new Date(block.timestamp * 1000).toISOString(),
-            transactionHash: event.transactionHash
-          };
-        } catch (error) {
-          console.warn('Error processing withdrawal event:', error);
-          return {
-            amount: ethers.utils.formatEther(event.args.amount),
-            timestamp: new Date().toISOString(),
-            transactionHash: event.transactionHash
-          };
-        }
-      }));
-
-      const total = withdrawals.reduce((acc, w) => acc + parseFloat(w.amount), 0);
-      setWithdrawalHistory(withdrawals);
-      setTotalWithdrawn(total);
-      
-      localStorage.setItem(`withdrawals_${account}`, JSON.stringify(withdrawals));
-      localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
-    } catch (error) {
-      throw error;
-    }
-  };
-
-const loadWithdrawalHistory = async () => {
+  // Update fetchWithdrawalEvents to include better error handling
+const fetchWithdrawalEvents = async () => {
   try {
-    const storedWithdrawals = JSON.parse(localStorage.getItem(`withdrawals_${account}`)) || [];
-    const total = storedWithdrawals.reduce((acc, w) => acc + parseFloat(w.amount), 0);
-    setWithdrawalHistory(storedWithdrawals);
+    console.log("Fetching withdrawal events for account:", account);
+    
+    const provider = await getProvider();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+    const filter = contract.filters.WithdrawalMade(account);
+    const events = await contract.queryFilter(filter);
+    
+    console.log("Raw withdrawal events:", events);
+
+    const withdrawals = await Promise.all(events.map(async event => {
+      try {
+        const block = await provider.getBlock(event.blockNumber);
+        const amount = ethers.utils.formatEther(event.args.amount);
+        
+        return {
+          amount: parseFloat(amount).toString(), // Ensure string format
+          timestamp: new Date(block.timestamp * 1000).toISOString(),
+          transactionHash: event.transactionHash
+        };
+      } catch (error) {
+        console.warn('Error processing withdrawal event:', error);
+        return null;
+      }
+    }));
+
+    // Filter out null values and invalid amounts
+    const validWithdrawals = withdrawals.filter(w => w && !isNaN(parseFloat(w.amount)));
+    
+    console.log("Processed withdrawals:", validWithdrawals);
+
+    const total = validWithdrawals.reduce((acc, w) => acc + parseFloat(w.amount), 0);
+    console.log("Calculated total withdrawn:", total);
+
+    setWithdrawalHistory(validWithdrawals);
     setTotalWithdrawn(total);
+    
+    // Update localStorage with validated data
+    localStorage.setItem(`withdrawals_${account}`, JSON.stringify(validWithdrawals));
+    localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
+
   } catch (error) {
-    console.error("Error loading withdrawal history:", error);
-    setError("Error loading withdrawal history");
+    console.error("Error in fetchWithdrawalEvents:", error);
+    throw error;
   }
 };
+
+  const loadWithdrawalHistory = async () => {
+    try {
+      // Add debug logging
+      console.log("Loading withdrawal history for account:", account);
+      
+      const storedWithdrawals = JSON.parse(localStorage.getItem(`withdrawals_${account}`)) || [];
+      console.log("Stored withdrawals:", storedWithdrawals);
+      
+      // Ensure numbers and handle NaN
+      const total = storedWithdrawals.reduce((acc, w) => {
+        const amount = parseFloat(w.amount) || 0;
+        return acc + amount;
+      }, 0);
+      
+      console.log("Calculated total:", total);
+      
+      setWithdrawalHistory(storedWithdrawals);
+      setTotalWithdrawn(total);
+  
+      // Store the validated total
+      localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
+      
+    } catch (error) {
+      console.error("Error loading withdrawal history:", error);
+      setError("Error loading withdrawal history");
+      // Fallback to 0 if error
+      setWithdrawalHistory([]);
+      setTotalWithdrawn(0);
+    }
+  };
 
 const simulateTradingBot = () => {
   const now = new Date();
   const hour = now.getHours();
-  const minutes = now.getMinutes();
 
   // Market conditions
   const isMarketHours = hour >= MARKET_HOURS.START && hour <= MARKET_HOURS.END;
@@ -234,17 +265,39 @@ const simulateTradingBot = () => {
 };
 
 
+const calculateROIProgress = () => {
+  try {
+    const depositValue = Number(depositAmount);
+    const withdrawnValue = Number(totalWithdrawn);
 
-  const calculateROIProgress = () => {
-    if (depositAmount > 0 && totalWithdrawn >= 0) {
-      const maxReward = parseFloat(depositAmount) * 1.3;
-      const roi = (totalWithdrawn / maxReward) * 100;
-      setRoiProgress(Math.min(roi, 130));
+    console.log("Calculating ROI with:", {
+      depositValue,
+      withdrawnValue,
+      depositType: typeof depositAmount,
+      withdrawnType: typeof totalWithdrawn
+    });
+
+    if (depositValue > 0 && withdrawnValue >= 0) {
+      const maxPossibleReward = depositValue * 1.3;
+      const currentProgress = (withdrawnValue / maxPossibleReward) * 100;
+      const finalRoi = Math.min(currentProgress, 130);
+      
+      console.log("ROI calculation:", {
+        maxPossibleReward,
+        currentProgress,
+        finalRoi
+      });
+      
+      setRoiProgress(finalRoi);
     } else {
+      console.log("Setting ROI to 0 - invalid values");
       setRoiProgress(0);
     }
-  };
-
+  } catch (err) {
+    console.error("Error calculating ROI:", err);
+    setRoiProgress(0);
+  }
+};
   const getCachedData = async (key, fetchFn) => {
     const now = Date.now();
     if (cache[key] && now - cache[key].timestamp < CACHE_DURATION) {
@@ -586,6 +639,5 @@ const simulateTradingBot = () => {
       </div>
     );
   }
-
 
 export default DashboardStaking;
