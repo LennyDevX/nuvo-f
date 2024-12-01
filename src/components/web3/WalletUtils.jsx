@@ -1,41 +1,32 @@
 import React from 'react';
 
-const getNetworkName = (networkId) => {
-  switch (networkId) {
-    case '1':
-      return 'Ethereum Mainnet';
-    case '3':
-      return 'Ropsten Testnet';
-    case '4':
-      return 'Rinkeby Testnet';
-    case '42':
-      return 'Kovan Testnet';
-    case '56':
-      return 'Binance Smart Chain'; // Agregar Binance Smart Chain (BSC)
-    case '97':
-      return 'Binance Smart Chain Testnet'; // Agregar Binance Smart Chain Testnet (BSC Testnet)
-    case '137':
-      return 'Polygon Mainnet';
-    case '80001':
-      return 'Polygon Mumbai Testnet';
-    case '42220':
-      return 'Celo Mainnet';
-    case '44787':
-      return 'Celo Alfajores Testnet';
-    default:
-      return 'Red Desconocida';
-  }
+const NETWORK_NAMES = {
+  '1': 'Ethereum Mainnet',
+  '3': 'Ropsten Testnet',
+  '4': 'Rinkeby Testnet',
+  '42': 'Kovan Testnet',
+  '56': 'Binance Smart Chain',
+  '97': 'Binance Smart Chain Testnet',
+  '137': 'Polygon Mainnet',
+  '80001': 'Polygon Mumbai Testnet',
+  '42220': 'Celo Mainnet',
+  '44787': 'Celo Alfajores Testnet',
 };
 
+const getNetworkName = (networkId) => {
+  return NETWORK_NAMES[networkId] || 'Red Desconocida';
+};
 
-const censorAccount = (account) => {
-  return account ? `${account.substring(0, 6)}...${account.substring(account.length - 6)}` : '';
+const censorAccount = (account, visibleChars = 6) => {
+  if (!account || account.length <= visibleChars * 2) {
+    return account;
+  }
+  return `${account.substring(0, visibleChars)}...${account.substring(account.length - visibleChars)}`;
 };
 
 const NetworkUtils = {
   getNetworkName,
   censorAccount
-
 };
 
 export default NetworkUtils;

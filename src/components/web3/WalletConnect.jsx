@@ -3,7 +3,6 @@ import { ethers } from 'ethers';
 import { WalletContext } from '../context/WalletContext'; 
 import WalletUtils from "../web3/WalletUtils"; 
 import MetaMaskLogo from '/metamask-logo.png';
-import "../../Styles/WebWallet.css";
 
 const WalletConnect = () => {
   const { setAccount, setNetwork, setBalance } = useContext(WalletContext); 
