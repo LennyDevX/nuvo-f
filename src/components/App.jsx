@@ -9,10 +9,9 @@ import { StakingProvider } from './context/StakingContext';
 import About from './layout/About';
 
 
-import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
-import InfoAccount from './layout/InfoAccount';
+import DashboardStaking from './layout/DashboardStaking/DashboardStaking'; // Importa el componente InfoAccount
 
 const App = () => {
 
@@ -26,19 +25,17 @@ const App = () => {
   
   return (
     <Router> 
-      <AuthProvider>
-w          <WalletProvider>
+          <WalletProvider>
             <StakingProvider>
               <Navbar />
               <Routes>
                 <Route path="/" element={<Home />} />
-                <Route path="/staking" element={<InfoAccount />} />
+                <Route path="/staking" element={<DashboardStaking />} />
                 <Route path="/swaptoken" element={<SwapToken />} />
                 <Route path="/about" element={<About />} />
               </Routes>
             </StakingProvider>
           </WalletProvider>
-      </AuthProvider>
     </Router>
   );
 }
