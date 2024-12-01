@@ -12,9 +12,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 const UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
 const cache = {};
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || '';
+const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY || '';
+
 const RPC_URLS = [
-  "https://polygon-mainnet.g.alchemy.com/v2/Oyk0XqXD7K2HQO4bkbDm1w8iZQ6fHulV",
+  ALCHEMY_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : '',
   "https://rpc.ankr.com/polygon",
   "https://polygon-rpc.com",
 ];
@@ -23,16 +25,31 @@ let provider;
 
 const getProvider = async () => {
   if (provider) return provider;
-  for (const url of RPC_URLS) {
+  
+  // Try Alchemy first if API key exists
+  if (ALCHEMY_KEY) {
     try {
-      const newProvider = new ethers.providers.JsonRpcProvider(url);
-      await newProvider.getBlockNumber();
-      provider = newProvider;
+      const alchemyProvider = new ethers.providers.JsonRpcProvider(RPC_URLS[0]);
+      await alchemyProvider.getBlockNumber();
+      provider = alchemyProvider;
       return provider;
     } catch (error) {
-      console.warn(`Error connecting to ${url}:`, error);
+      console.warn("Failed to connect to Alchemy:", error);
     }
   }
+
+  // Try fallback RPCs
+  for (let i = 1; i < RPC_URLS.length; i++) {
+    try {
+      const fallbackProvider = new ethers.providers.JsonRpcProvider(RPC_URLS[i]);
+      await fallbackProvider.getBlockNumber();
+      provider = fallbackProvider;
+      return provider;
+    } catch (error) {
+      console.warn(`Error connecting to ${RPC_URLS[i]}:`, error);
+    }
+  }
+  
   throw new Error("All RPC connections failed");
 };
 
@@ -116,6 +133,7 @@ function DashboardStaking() {
     return () => clearInterval(interval);
   }, []);
 
+  // Used by fetchContractData when needed
   const fetchWithdrawalEvents = async () => {
     try {
       const provider = await getProvider();
@@ -164,7 +182,6 @@ const loadWithdrawalHistory = async () => {
   }
 };
 
-// Enhanced trading bot simulation
 const simulateTradingBot = () => {
   const now = new Date();
   const hour = now.getHours();
@@ -455,9 +472,9 @@ const simulateTradingBot = () => {
                     {stat.value}
                     </p>
                     {stat.subtext && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <div className="text-xs text-gray-400 mt-1">
                       {stat.subtext}
-                    </p>
+                    </div>
                     )}
                   </motion.div>
                   ))}
