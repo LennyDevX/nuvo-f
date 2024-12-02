@@ -1,70 +1,101 @@
 import React, { useState, useContext } from 'react';
-import Web3 from 'web3';
+import { ethers } from 'ethers';
 import { WalletContext } from '../context/WalletContext'; 
 import WalletUtils from "../web3/WalletUtils"; 
 import MetaMaskLogo from '/metamask-logo.png';
-import { ThemeContext } from '../context/ThemeContext';
-import "../../Styles/WebWallet.css";
 
 const WalletConnect = () => {
   const { setAccount, setNetwork, setBalance } = useContext(WalletContext); 
-  const { isDarkMode } = useContext(ThemeContext);
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleConnect = async (web3, accounts, networkName) => {
-    setAccounts(accounts);
+  const handleConnect = async (provider, account, networkName) => {
+    setAccounts([account]);
     setConnected(true);
     setIsLoading(false);
-    setAccount(accounts[0]); 
+    setAccount(account); 
     setNetwork(networkName); 
 
-    const balanceWei = await web3.eth.getBalance(accounts[0]);
-    const balance = web3.utils.fromWei(balanceWei, 'ether');
-    setBalance(balance); 
+    // Get balance using ethers
+    const balance = await provider.getBalance(account);
+    const formattedBalance = ethers.utils.formatEther(balance);
+    setBalance(formattedBalance);
+  };
+
+  const getNetworkName = async (provider) => {
+    const network = await provider.getNetwork();
+    const networkId = network.chainId;
+    return WalletUtils.getNetworkName(networkId.toString());
   };
 
   const connectToWallet = async () => {
     try {
       setIsLoading(true);
       if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        const networkId = await web3Instance.eth.net.getId();
-        const networkName = WalletUtils.getNetworkName(networkId.toString()); 
+        // Create provider
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        // Request account access
+        const accounts = await provider.send("eth_requestAccounts", []);
+        
+        // Get network name
+        const networkName = await getNetworkName(provider);
+        
+        await handleConnect(provider, accounts[0], networkName);
 
-        handleConnect(web3Instance, accounts, networkName);
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', (newAccounts) => {
+          if (newAccounts.length > 0) {
+            handleConnect(provider, newAccounts[0], networkName);
+          } else {
+            setConnected(false);
+            setAccounts([]);
+          }
+        });
+
+        // Listen for network changes
+        window.ethereum.on('chainChanged', async () => {
+          const newNetworkName = await getNetworkName(provider);
+          setNetwork(newNetworkName);
+        });
+
       } else {
-        throw new Error('Metamask no está instalado en este navegador o no está habilitado.');
+        throw new Error('MetaMask is not installed or not enabled in this browser.');
       }
     } catch (error) {
-      console.error('Error al conectar con Metamask: ', error);
+      console.error('Error connecting to MetaMask: ', error);
       setError(error.message);
       setIsLoading(false);
     }
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       {connected ? (
-        <button className={` button-wallet  mr-2 ${isDarkMode? 'is-dark' : 'is-light'}`} disabled>
+        <button className="px-4 py-2 rounded-lg shadow-md bg-white text-gray-800 cursor-not-allowed">
           <strong>{WalletUtils.censorAccount(accounts[0])}</strong>
         </button>
       ) : (
-        <button className={`button button-wallet mr-2 ${isDarkMode? 'is-dark' : 'is-light'} ${isLoading ? 'is-loading' : ''}`} onClick={connectToWallet}>
+        <button 
+          className={`px-4 py-2 rounded-lg shadow-md flex items-center bg-white text-gray-800 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`} 
+          onClick={connectToWallet}
+          disabled={isLoading}
+        >
           {isLoading ? (
-            ''
+            <span className="loader"></span>
           ) : (
             <>
               <strong>WALLET</strong>
-              <img src={MetaMaskLogo} alt="MetaMask Logo" style={{ marginLeft: '5px' }} />
+              <img src={MetaMaskLogo} alt="MetaMask Logo" className="ml-2 w-5 h-5" />
             </>
           )}
         </button>
       )}
-      {error && <p>{error}</p>}
+      {error && (
+        <p className="text-red-500 mt-2">{error}</p>
+      )}
     </div>
   );
 };

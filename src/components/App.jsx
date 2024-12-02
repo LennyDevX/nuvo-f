@@ -1,54 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Navbar from './header/Navbar';
 import Home from './layout/Home';
-import RegistrationForm from './forms/RegisterForm';
-import LoginForm from './forms/LoginForm';
-import CardNft from './layout/CardNft';
 import SwapToken from './layout/SwapToken';
-import InfoGovernance from "./layout/InfoGovernance"
+
+import { StakingProvider } from './context/StakingContext';
+
+
 import About from './layout/About';
-import Propose from "./layout/Propose"
-import ExecuteProposal from './layout/executeProposal';
-import Vote from './layout/Vote';
 
 
-import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
-import InfoAccount from './layout/InfoAccount';
+import DashboardStaking from './layout/DashboardStaking/DashboardStaking'; // Importa el componente InfoAccount
 
 const App = () => {
+
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('isDarkMode');
+    const initialTheme = savedTheme ? JSON.parse(savedTheme) : true; // Set dark as default
+    document.documentElement.classList.toggle('is-dark', initialTheme);
+    document.documentElement.classList.toggle('is-light', !initialTheme);
+  }, []);
+  
   return (
     <Router> 
-      <AuthProvider>
-        <ThemeProvider>
-        <WalletProvider>
-          <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/signup" element={<RegistrationForm />} />
-              <Route path="/login" element={<LoginForm />} />
-              <Route path="/staking" element={<InfoAccount />} />
-              <Route path="/swaptoken" element={<SwapToken />} />
-              <Route path="/nft" element={<CardNft />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/governance" element={<InfoGovernance />} />
-              <Route path="/propose" element={<Propose />} />
-              <Route path="/executepropose" element={<ExecuteProposal />} />
-              <Route path="/vote" element={<Vote />} />
-
-
-
-
-
-            </Routes>
+          <WalletProvider>
+            <StakingProvider>
+              <Navbar />
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/staking" element={<DashboardStaking />} />
+                <Route path="/swaptoken" element={<SwapToken />} />
+                <Route path="/about" element={<About />} />
+              </Routes>
+            </StakingProvider>
           </WalletProvider>
-
-        </ThemeProvider>
-      </AuthProvider>
     </Router>
   );
-};
+}
 
 export default App;

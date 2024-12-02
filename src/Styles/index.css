@@ -1,136 +1,48 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
-/* Importamos el CSS de Bulma */
-@import 'bulma/css/bulma.min.css';
+@layer base {
+  :root {
+    --dark-bg: #000000;
+    --light-bg: #ffffff;
+    --dark-text: #ffffff;
+    --light-text: #000000;
+    --primary-color: #4B0082; /* Indigo */
+    --secondary-color: #FF0000; /* Red */
+    --accent-color: #0000FF; /* Blue */
+  }
 
+  html, body {
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+  }
 
+  a {
+    color: var(--accent-color);
+    text-decoration: none;
+  }
 
+  a:hover {
+    text-decoration: underline;
+  }
 
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--primary-color);
+  }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  button {
+    background-color: var(--secondary-color);
+    color: var(--dark-text);
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background-color: var(--accent-color);
+  }
 }
-
-.is-dark .box-account {
-  transition: 1s ease-in-out;
-  background: linear-gradient(to bottom, #161873cc, #401fb798, #33248bcf, #673cb3be);
-
-}
-
-.is-light .box-account {
-  transition: 1s ease-in-out;
-
-  background-color: transparent;
-  box-shadow: #100f0f 0px 0px 10px;
-
-}
-
-
-.input::placeholder {
-  color: #999; 
-}
-
-/* Estilo de botones */
-.is-dark .button {
-  padding: 8px;
-  margin-bottom: 5px;
-  border: 1px solid whitesmoke;
-  border-radius: 7px;
-  transition: 0.7 s ease-in-out;
-
-  
-}
-
-.button:hover {
-  transform: scale(0.95);
-  box-shadow: 1px 2px 10px rgba(124, 59, 189, 0.756);
-  transition: 0.7s ease-in-out;
-  background-color: rgba(206, 7, 7, 0.776);
-
-}
-
-
-.is-light .button {
-  transition: 0.7s ease-in-out;
-  border: 1px solid black;
-  border-radius: 7px;
-  padding: 8px;
-  margin-bottom: 5px;
-
-}
-
-.is-dark .hero-body {
-  transition: 1s ease-in-out  ;
-  background-color: #000000; /* Color de fondo para el modo claro */
-}
-
-.is-light .hero-body {
-  transition: 1s ease-in-out  ;
-  background-color: whitesmoke; /* Color de fondo para el modo claro */
-}
-
-.is-dark .navbar {
-  background-color: #000000;
-}
-
-
-.is-dark .textarea::placeholder {
-  color: #999; 
-}
-
-
-
-.is-dark .input {
-  color: whitesmoke;
-  background-color: black;
-}
-
-.is-light .input {
-  background-color: rgb(71, 71, 71);
-  color: whitesmoke;
-}
-
-.is-dark .textarea {
-  color: whitesmoke;
-  background-color: black;
-}
-
-.is-light .textarea::placeholder {
-  color: #999;
-}
-
-.is-light .textarea {
-  background-color: black;
- 
-}
-
-
-.is-dark .textarea {
-  background-color: black;
- 
-}
-
-.textarea {
-    width: 450px;
-    
-    height: 150px;
-    
-    padding: 12px 20px;
-    margin: 8px 0;
-    display: inline-block;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-
-}
-
-
-
-
-
-
-
-
