@@ -63,21 +63,21 @@ function ButtonWithdraw() {
 
   return (
     <motion.div 
-      className="rounded-2xl p-8 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm"
+      className="rounded-2xl p-4 sm:p-8 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(139, 92, 246, 0.1)" }}
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         {/* Rewards Summary */}
         <motion.div 
-          className="space-y-3 p-6 bg-black/30 rounded-xl border border-purple-500/20 backdrop-blur-sm"
+          className="space-y-3 p-4 sm:p-6 bg-black/30 rounded-xl border border-purple-500/20 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="flex justify-between items-center">
-            <span className="text-purple-400 text-xl font-medium">Available to Withdraw</span>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <span className="text-purple-400 text-lg sm:text-xl font-medium">Available to Withdraw</span>
             <div className="flex items-center gap-2">
               <span className="text-3xl text-white font-bold">
                 {parseFloat(estimatedRewards).toFixed(6)}

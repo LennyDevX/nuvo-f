@@ -95,20 +95,20 @@ function ButtonDeposit() {
 
   return (
     <motion.div 
-      className="rounded-2xl p-8 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm"
+      className="rounded-2xl p-4 sm:p-8 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm w-full max-w-md mx-auto"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(139, 92, 246, 0.1)" }}
     >
       {isContractPaused && (
-        <div className="mb-6 px-4 py-3 bg-yellow-500/20 text-yellow-200 text-sm rounded-xl border border-yellow-500/20 backdrop-blur-sm">
+        <div className="mb-4 sm:mb-6 px-3 py-2 sm:px-4 sm:py-3 bg-yellow-500/20 text-yellow-200 text-xs sm:text-sm rounded-xl border border-yellow-500/20 backdrop-blur-sm">
           Contract is currently paused
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-        <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-6">
+        <div className="space-y-3 sm:space-y-4">
           <div className="relative">
             <input
               type="number"
@@ -118,20 +118,20 @@ function ButtonDeposit() {
               min="5"
               max="10000"
               step="0.1"
-              className="w-full px-6 py-4 bg-black/40 border border-purple-500/20 
+              className="w-full px-4 sm:px-6 py-3 sm:py-4 bg-black/40 border border-purple-500/20 
                 rounded-xl text-white placeholder-gray-400 focus:outline-none 
                 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20
-                text-lg transition-all duration-300"
+                text-base sm:text-lg transition-all duration-300"
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
             {DEPOSIT_PRESETS.map((amount, index) => (
               <motion.button
                 key={amount}
                 type="button"
                 onClick={() => handlePresetClick(amount)}
-                className="px-4 py-3 text-white bg-gradient-to-r from-purple-600 to-pink-600
+                className="px-3 py-2 sm:px-4 sm:py-3 text-sm sm:text-base text-white bg-gradient-to-r from-purple-600 to-pink-600
                   border border-purple-500/20 rounded-xl hover:bg-purple-500/30 
                   transition-all duration-300 backdrop-blur-sm"
                 initial={{ opacity: 0, y: 20 }}
@@ -149,29 +149,29 @@ function ButtonDeposit() {
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="space-y-3 p-6 bg-black/30 rounded-xl border border-purple-500/20 backdrop-blur-sm"
+              className="space-y-2 sm:space-y-3 p-4 sm:p-6 bg-black/30 rounded-xl border border-purple-500/20 backdrop-blur-sm text-sm sm:text-base"
             >
-              <p className="text-gray-300 flex justify-between">
+              <div className="text-gray-300 flex flex-wrap justify-between">
                 <span>Commission (6%):</span>
-                <span>{(parseFloat(depositAmount || 0) * COMMISSION_RATE).toFixed(4)} MATIC</span>
-              </p>
-              <p className="text-gray-300 flex justify-between">
+                <span className="font-mono">{(parseFloat(depositAmount || 0) * COMMISSION_RATE).toFixed(4)} MATIC</span>
+              </div>
+              <div className="text-gray-300 flex flex-wrap justify-between">
                 <span>Net deposit:</span>
-                <span>{netAmount} MATIC</span>
-              </p>
-              <p className="text-purple-400 flex justify-between font-medium">
+                <span className="font-mono">{netAmount} MATIC</span>
+              </div>
+              <div className="text-purple-400 flex flex-wrap justify-between font-medium">
                 <span>Est. max return:</span>
-                <span>{estimatedReturn} MATIC</span>
-              </p>
-              <div className="border-t border-purple-500/20 pt-3">
-                <p className="text-gray-300 flex justify-between">
+                <span className="font-mono">{estimatedReturn} MATIC</span>
+              </div>
+              <div className="border-t border-purple-500/20 pt-2 sm:pt-3">
+                <div className="text-gray-300 flex flex-wrap justify-between">
                   <span>Remaining slots:</span>
-                  <span>{remainingSlots}/300</span>
-                </p>
-                <p className="text-gray-300 flex justify-between">
+                  <span className="font-mono">{remainingSlots}/300</span>
+                </div>
+                <div className="text-gray-300 flex flex-wrap justify-between">
                   <span>Your deposits:</span>
-                  <span>{userDeposits.length}</span>
-                </p>
+                  <span className="font-mono">{userDeposits.length}</span>
+                </div>
               </div>
             </motion.div>
           )}
@@ -180,7 +180,7 @@ function ButtonDeposit() {
         <motion.button
           type="submit"
           disabled={isPending || !account || isContractPaused}
-          className={`relative px-8 py-4 rounded-xl font-medium text-lg text-white
+          className={`relative px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-medium text-base sm:text-lg text-white
             bg-gradient-to-r from-purple-600 to-pink-600 
             hover:from-purple-700 hover:to-pink-700
             disabled:opacity-50 disabled:cursor-not-allowed

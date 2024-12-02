@@ -1,13 +1,11 @@
-{/* Logo */}
-<div className="flex-shrink-0 flex items-center pl-0"></div>
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import WalletConnect from '../web3/WalletConnect';
 
-const Navbar = () => {
+const Navbar = ({ contractAddress = '0x1234567890abcdef1234567890abcdef12345678' }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-    const navLinkClasses = `
+  const navLinkClasses = `
     relative px-4 py-2 text-sm font-medium
     text-white rounded-lg
     transition-all duration-300
@@ -36,11 +34,11 @@ const Navbar = () => {
     <nav className="fixed py-2 top-0 w-full z-50 bg-black/95 backdrop-blur-sm border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4  lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center pl-2">
+          {/* Logo and Contract Address */}
+          <div className="flex items-center space-x-4 pl-2">
             <Link to="/" className="flex items-center transition-transform duration-300 hover:scale-105">
               <img 
-                className="h-12 w-auto " // Increased from h-8 to h-12
+                className="h-12 w-auto"
                 src="/NuvoLogo.avif" 
                 alt="Nuvo Logo"
                 style={{
@@ -48,6 +46,17 @@ const Navbar = () => {
                 }}
               />
             </Link>
+            <div className="hidden sm:block">
+              <p className="text-gray-300 text-sm mb-1">Contract Address:</p>
+              <a 
+                href={`https://polygonscan.com/address/${contractAddress}`}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-block bg-purple-700 text-white text-xs font-semibold px-3 py-1 rounded-full hover:bg-purple-600 transition-colors"
+              >
+                {`${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`}
+              </a>
+            </div>
           </div>
 
           {/* Desktop Menu */}
@@ -66,7 +75,7 @@ const Navbar = () => {
             </Link>
             
             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-              BETA v4.2
+              BETA v4.3
             </span>
           </div>
 
@@ -113,6 +122,15 @@ const Navbar = () => {
           </Link>
           <Link to="/about" className={mobileNavLinkClasses} onClick={() => setIsOpen(false)}>
             About
+          </Link>
+          <Link 
+            to={`https://polygonscan.com/address/${contractAddress}`} 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className={mobileNavLinkClasses} 
+            onClick={() => setIsOpen(false)}
+          >
+            {`${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`}
           </Link>
         </div>
       </div>

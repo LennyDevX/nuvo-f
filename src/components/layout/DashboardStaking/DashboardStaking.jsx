@@ -12,11 +12,11 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 const UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
 const cache = {};
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || '';
-const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY || '';
+const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || "";
+const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY_API_KEY || "";
 
 const RPC_URLS = [
-  ALCHEMY_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : '',
+  ALCHEMY_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "",
   "https://rpc.ankr.com/polygon",
   "https://polygon-rpc.com",
 ];
@@ -25,7 +25,7 @@ let provider;
 
 const getProvider = async () => {
   if (provider) return provider;
-  
+
   // Try Alchemy first if API key exists
   if (ALCHEMY_KEY) {
     try {
@@ -49,7 +49,7 @@ const getProvider = async () => {
       console.warn(`Error connecting to ${RPC_URLS[i]}:`, error);
     }
   }
-  
+
   throw new Error("All RPC connections failed");
 };
 
@@ -70,9 +70,9 @@ function DashboardStaking() {
 
   const MARKET_HOURS = {
     START: 9, // 9 AM
-    END: 17,  // 5 PM
+    END: 17, // 5 PM
     HIGH_VOLATILITY: [10, 15], // High volatility hours
-    LOW_VOLATILITY: [12, 14],  // Low volatility hours (lunch time)
+    LOW_VOLATILITY: [12, 14], // Low volatility hours (lunch time)
   };
 
   const isMarketHours = () => {
@@ -87,14 +87,14 @@ function DashboardStaking() {
     if (profit < -3) return "📉";
     return "💹";
   };
-  
+
   const TRADING_CONFIG = {
-    BASE_CHANGE: 2,        // Base percentage change
-    MAX_VOLATILITY: 3,     // Maximum additional volatility
-    MARKET_MULTIPLIER: 1.5,// Market hours multiplier
+    BASE_CHANGE: 2, // Base percentage change
+    MAX_VOLATILITY: 3, // Maximum additional volatility
+    MARKET_MULTIPLIER: 1.5, // Market hours multiplier
     OFF_HOURS_MULTIPLIER: 0.8, // Non-market hours multiplier
     UPDATE_INTERVAL: 60 * 60 * 1000, // 1 hour in milliseconds
-    TREND_DURATION: 4,     // Hours before trend changes
+    TREND_DURATION: 4, // Hours before trend changes
   };
 
   useEffect(() => {
@@ -124,87 +124,87 @@ function DashboardStaking() {
     const updateTradingBot = () => {
       simulateTradingBot();
     };
-    
+
     // Initial update
     updateTradingBot();
-    
+
     // Set interval for updates
     const interval = setInterval(updateTradingBot, TRADING_CONFIG.UPDATE_INTERVAL);
-    
+
     return () => clearInterval(interval);
   }, []);
 
   // Update fetchWithdrawalEvents to include better error handling
-const fetchWithdrawalEvents = async () => {
-  try {
-    console.log("Fetching withdrawal events for account:", account);
-    
-    const provider = await getProvider();
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-    const filter = contract.filters.WithdrawalMade(account);
-    const events = await contract.queryFilter(filter);
-    
-    console.log("Raw withdrawal events:", events);
+  const fetchWithdrawalEvents = async () => {
+    try {
+      console.log("Fetching withdrawal events for account:", account);
 
-    const withdrawals = await Promise.all(events.map(async event => {
-      try {
-        const block = await provider.getBlock(event.blockNumber);
-        const amount = ethers.utils.formatEther(event.args.amount);
-        
-        return {
-          amount: parseFloat(amount).toString(), // Ensure string format
-          timestamp: new Date(block.timestamp * 1000).toISOString(),
-          transactionHash: event.transactionHash
-        };
-      } catch (error) {
-        console.warn('Error processing withdrawal event:', error);
-        return null;
-      }
-    }));
+      const provider = await getProvider();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+      const filter = contract.filters.WithdrawalMade(account);
+      const events = await contract.queryFilter(filter);
 
-    // Filter out null values and invalid amounts
-    const validWithdrawals = withdrawals.filter(w => w && !isNaN(parseFloat(w.amount)));
-    
-    console.log("Processed withdrawals:", validWithdrawals);
+      console.log("Raw withdrawal events:", events);
 
-    const total = validWithdrawals.reduce((acc, w) => acc + parseFloat(w.amount), 0);
-    console.log("Calculated total withdrawn:", total);
+      const withdrawals = await Promise.all(
+        events.map(async (event) => {
+          try {
+            const block = await provider.getBlock(event.blockNumber);
+            const amount = ethers.utils.formatEther(event.args.amount);
 
-    setWithdrawalHistory(validWithdrawals);
-    setTotalWithdrawn(total);
-    
-    // Update localStorage with validated data
-    localStorage.setItem(`withdrawals_${account}`, JSON.stringify(validWithdrawals));
-    localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
+            return {
+              amount: parseFloat(amount).toString(), // Ensure string format
+              timestamp: new Date(block.timestamp * 1000).toISOString(),
+              transactionHash: event.transactionHash,
+            };
+          } catch (error) {
+            console.warn("Error processing withdrawal event:", error);
+            return null;
+          }
+        })
+      );
 
-  } catch (error) {
-    console.error("Error in fetchWithdrawalEvents:", error);
-    throw error;
-  }
-};
+      // Filter out null values and invalid amounts
+      const validWithdrawals = withdrawals.filter((w) => w && !isNaN(parseFloat(w.amount)));
+
+      console.log("Processed withdrawals:", validWithdrawals);
+
+      const total = validWithdrawals.reduce((acc, w) => acc + parseFloat(w.amount), 0);
+      console.log("Calculated total withdrawn:", total);
+
+      setWithdrawalHistory(validWithdrawals);
+      setTotalWithdrawn(total);
+
+      // Update localStorage with validated data
+      localStorage.setItem(`withdrawals_${account}`, JSON.stringify(validWithdrawals));
+      localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
+    } catch (error) {
+      console.error("Error in fetchWithdrawalEvents:", error);
+      throw error;
+    }
+  };
 
   const loadWithdrawalHistory = async () => {
     try {
       // Add debug logging
       console.log("Loading withdrawal history for account:", account);
-      
+
       const storedWithdrawals = JSON.parse(localStorage.getItem(`withdrawals_${account}`)) || [];
       console.log("Stored withdrawals:", storedWithdrawals);
-      
+
       // Ensure numbers and handle NaN
       const total = storedWithdrawals.reduce((acc, w) => {
         const amount = parseFloat(w.amount) || 0;
         return acc + amount;
       }, 0);
-      
+
       console.log("Calculated total:", total);
-      
+
       setWithdrawalHistory(storedWithdrawals);
       setTotalWithdrawn(total);
-  
+
       // Store the validated total
       localStorage.setItem(`totalWithdrawn_${account}`, total.toString());
-      
     } catch (error) {
       console.error("Error loading withdrawal history:", error);
       setError("Error loading withdrawal history");
@@ -214,90 +214,92 @@ const fetchWithdrawalEvents = async () => {
     }
   };
 
-const simulateTradingBot = () => {
-  const now = new Date();
-  const hour = now.getHours();
+  const simulateTradingBot = () => {
+    const now = new Date();
+    const hour = now.getHours();
 
-  // Market conditions
-  const isMarketHours = hour >= MARKET_HOURS.START && hour <= MARKET_HOURS.END;
-  const isHighVolatility = hour >= MARKET_HOURS.HIGH_VOLATILITY[0] && hour <= MARKET_HOURS.HIGH_VOLATILITY[1];
-  const isLowVolatility = hour >= MARKET_HOURS.LOW_VOLATILITY[0] && hour <= MARKET_HOURS.LOW_VOLATILITY[1];
+    // Market conditions
+    const marketOpen = isMarketHours();
+    const isHighVolatility =
+      hour >= MARKET_HOURS.HIGH_VOLATILITY[0] && hour <= MARKET_HOURS.HIGH_VOLATILITY[1];
+    const isLowVolatility =
+      hour >= MARKET_HOURS.LOW_VOLATILITY[0] && hour <= MARKET_HOURS.LOW_VOLATILITY[1];
 
-  // Base volatility calculation
-  let volatility = TRADING_CONFIG.BASE_CHANGE;
-  
-  // Adjust volatility based on market conditions
-  if (isMarketHours) {
-    volatility *= TRADING_CONFIG.MARKET_MULTIPLIER;
-    if (isHighVolatility) volatility *= 1.5;
-    if (isLowVolatility) volatility *= 0.5;
-  } else {
-    volatility *= TRADING_CONFIG.OFF_HOURS_MULTIPLIER;
-  }
+    // Base volatility calculation
+    let volatility = TRADING_CONFIG.BASE_CHANGE;
 
-  // Add random factor with trend consideration
-  const trend = Math.sin(Date.now() / (TRADING_CONFIG.TREND_DURATION * 3600000)) * 0.5;
-  const randomFactor = (Math.random() * 2 - 1 + trend) * TRADING_CONFIG.MAX_VOLATILITY;
-  
-  // Calculate final change
-  const change = (volatility + randomFactor) * (isMarketHours ? 1 : 0.8);
-  const finalChange = Math.round(change * 100) / 100;
+    // Adjust volatility based on market conditions
+    if (marketOpen) {
+      volatility *= TRADING_CONFIG.MARKET_MULTIPLIER;
+      if (isHighVolatility) volatility *= 1.5;
+      if (isLowVolatility) volatility *= 0.5;
+    } else {
+      volatility *= TRADING_CONFIG.OFF_HOURS_MULTIPLIER;
+    }
 
-  // Additional market data
-  const volume = Math.floor(Math.random() * 100000) + 50000;
-  const trades = Math.floor(Math.random() * 500) + 100;
-  
-  const timestamp = new Date().toISOString();
-  const marketData = {
-    change: finalChange,
-    volume,
-    trades,
-    timestamp,
-    isMarketHours,
-    trend: trend > 0 ? 'bullish' : 'bearish'
+    // Add random factor with trend consideration
+    const trend = Math.sin(Date.now() / (TRADING_CONFIG.TREND_DURATION * 3600000)) * 0.5;
+    const randomFactor = (Math.random() * 2 - 1 + trend) * TRADING_CONFIG.MAX_VOLATILITY;
+
+    // Calculate final change
+    const change = (volatility + randomFactor) * (marketOpen ? 1 : 0.8);
+    const finalChange = Math.round(change * 100) / 100;
+
+    // Additional market data
+    const volume = Math.floor(Math.random() * 100000) + 50000;
+    const trades = Math.floor(Math.random() * 500) + 100;
+
+    const timestamp = new Date().toISOString();
+    const marketData = {
+      change: finalChange,
+      volume,
+      trades,
+      timestamp,
+      isMarketHours: marketOpen,
+      trend: trend > 0 ? "bullish" : "bearish",
+    };
+
+    setTradingBotProfit(finalChange);
+    setLastTradingUpdate(timestamp);
+
+    // Store enhanced data
+    localStorage.setItem("tradingBotData", JSON.stringify(marketData));
   };
 
-  setTradingBotProfit(finalChange);
-  setLastTradingUpdate(timestamp);
-  
-  // Store enhanced data
-  localStorage.setItem('tradingBotData', JSON.stringify(marketData));
-};
+  const calculateROIProgress = () => {
+    try {
+      const depositValue = Number(depositAmount);
+      const withdrawnValue = Number(totalWithdrawn);
 
-
-const calculateROIProgress = () => {
-  try {
-    const depositValue = Number(depositAmount);
-    const withdrawnValue = Number(totalWithdrawn);
-
-    console.log("Calculating ROI with:", {
-      depositValue,
-      withdrawnValue,
-      depositType: typeof depositAmount,
-      withdrawnType: typeof totalWithdrawn
-    });
-
-    if (depositValue > 0 && withdrawnValue >= 0) {
-      const maxPossibleReward = depositValue * 1.3;
-      const currentProgress = (withdrawnValue / maxPossibleReward) * 100;
-      const finalRoi = Math.min(currentProgress, 130);
-      
-      console.log("ROI calculation:", {
-        maxPossibleReward,
-        currentProgress,
-        finalRoi
+      console.log("Calculating ROI with:", {
+        depositValue,
+        withdrawnValue,
+        depositType: typeof depositAmount,
+        withdrawnType: typeof totalWithdrawn,
       });
-      
-      setRoiProgress(finalRoi);
-    } else {
-      console.log("Setting ROI to 0 - invalid values");
+
+      if (depositValue > 0 && withdrawnValue >= 0) {
+        const maxPossibleReward = depositValue * 1.3;
+        const currentProgress = (withdrawnValue / maxPossibleReward) * 100;
+        const finalRoi = Math.min(currentProgress, 130);
+
+        console.log("ROI calculation:", {
+          maxPossibleReward,
+          currentProgress,
+          finalRoi,
+        });
+
+        setRoiProgress(finalRoi);
+      } else {
+        console.log("Setting ROI to 0 - invalid values");
+        setRoiProgress(0);
+      }
+    } catch (err) {
+      console.error("Error calculating ROI:", err);
       setRoiProgress(0);
     }
-  } catch (err) {
-    console.error("Error calculating ROI:", err);
-    setRoiProgress(0);
-  }
-};
+  };
+
   const getCachedData = async (key, fetchFn) => {
     const now = Date.now();
     if (cache[key] && now - cache[key].timestamp < CACHE_DURATION) {
@@ -315,54 +317,53 @@ const calculateROIProgress = () => {
       if (forceFresh) {
         delete cache[cacheKey];
       }
-  
+
       const getData = async () => {
         const provider = await getProvider();
         const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-        
+
         // Fetch rewards first
         const rewards = await contract.calculateRewards(account);
-        
+
         // Then fetch other data
         const [poolBalance, deposit, deposits] = await Promise.all([
           contract.getContractBalance(),
           contract.getTotalDeposit(account),
           contract.getUserDeposits(account),
         ]);
-  
+
         // Format rewards properly
-        const formattedRewards = ethers.utils.formatEther(rewards || '0');
-        
-        return { 
-          poolBalance, 
-          deposit, 
-          deposits, 
+        const formattedRewards = ethers.utils.formatEther(rewards || "0");
+
+        return {
+          poolBalance,
+          deposit,
+          deposits,
           rewards,
-          formattedRewards 
+          formattedRewards,
         };
       };
-  
+
       const data = await getCachedData(cacheKey, getData);
-      
+
       // Actualizar estados asegurando formato consistente
       setTotalPoolBalance(ethers.utils.formatEther(data.poolBalance));
       setDepositAmount(ethers.utils.formatEther(data.deposit));
       setAvailableRewards(data.formattedRewards); // Usar el valor formateado
-  
+
       if (data.deposits.length > 0) {
         setFirstDepositTime(data.deposits[0].timestamp.toNumber());
       }
-  
+
       // Actualizar caché
       cache[`rewards_${account}`] = {
         data: data.formattedRewards,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-  
     } catch (error) {
       console.error("Error fetching contract data:", error);
       setError(error.reason || "Error fetching data");
-      
+
       // Usar caché si está disponible
       const cachedRewards = cache[`rewards_${account}`];
       if (cachedRewards && Date.now() - cachedRewards.timestamp < CACHE_DURATION) {
@@ -423,221 +424,235 @@ const calculateROIProgress = () => {
     }
 
     return "No withdrawals yet";
-
-
-
   };
-  
-    return (
-      <div className="min-h-screen pt-4 bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full pt-20 pb-6 md:pt-24"
-        >
-          <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-                  <motion.div
-                    className="text-center mb-12"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <motion.span
-                    className="inline-block px-4 py-1 mb-6 text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    >
-                    Your Staking Dashboard
-                    </motion.span>
-              
-                    <motion.h1
-                    className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight"
-                    initial={{ opacity: 0, y: -30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1 }}
-                    >
-                    Manage Your <span className="text-gradient bg-gradient-to-r from-purple-400 to-pink-500">Smart Staking</span>
-                    </motion.h1>
-                  </motion.div>
-              
-                  
-                {isConnected && (
-                  <motion.div
-                  className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  >
-                   {[
-                  {
-                    label: "Total Staked",
-                    value: `${parseFloat(depositAmount).toFixed(2)} POL`,
-                    icon: "📈",
-                    subtext: (
-                      <div className="space-y-1">
-                        <span className="block">{lastTradingUpdate ? `Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}` : "Updating..."}</span>
-                        <span className={`text-xs block ${isMarketHours() ? 'text-green-400' : 'text-gray-400'}`}>
-                          {isMarketHours() ? '🟢 Market Open' : '⚪ After Hours'}
-                        </span>
-                      </div>
-                    )
-                  },
-                  {
-                    label: "Available Rewards",
-                    value: `${parseFloat(availableRewards).toFixed(6)} POL`, // Usar 6 decimales para consistencia
-                    icon: "🎁"
-                  },
-                  {
-                    label: "Trading Bot Performance",
-                    value: `${parseFloat(tradingBotProfit) > 0 ? '+' : ''}${parseFloat(tradingBotProfit).toFixed(2)}%`,
-                    icon: getTradingIcon(tradingBotProfit),
-                    className: `${parseFloat(tradingBotProfit) >= 0 ? 'text-green-400' : 'text-red-400'} 
-                                ${Math.abs(tradingBotProfit) > 5 ? 'animate-pulse' : ''}`,
-                    subtext: (
-                      <div className="space-y-1">
-                        <p>{lastTradingUpdate ? `Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}` : "Updating..."}</p>
-                        <p className={`text-xs ${isMarketHours() ? 'text-green-400' : 'text-gray-400'}`}>
-                          {isMarketHours() ? '🟢 Market Open' : '⚪ After Hours'}
-                        </p>
-                      </div>
-                    )
-                  },
-                  {
-                    label: "Pool Balance",
-                    value: `${parseFloat(totalPoolBalance).toFixed(2)} POL`,
-                    icon: "🏦"
-                  }
-                  ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20"
-                    initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                  >
-                    <div className="flex items-center justify-between">
-                    <span className="text-2xl">{stat.icon}</span>
-                    <span className="text-sm text-purple-400">{stat.label}</span>
-                    </div>
-                    <p className={`text-2xl font-bold mt-2 ${stat.className || 'text-white'}`}>
-                    {stat.value}
-                    </p>
-                    {stat.subtext && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {stat.subtext}
-                    </div>
-                    )}
-                  </motion.div>
-                  ))}
-                  </motion.div>
-                )}
-              
-                  {/* Main Dashboard Content */}
-            <motion.div
-              className="rounded-2xl p-6 md:p-8 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm"
-              initial={{ y: 20 }}
-              animate={{ y: 0 }}
+
+  return (
+    <div className="min-h-screen pt-4 bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-full pt-16 pb-6 md:pt-20"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.span
+              className="inline-block px-3 py-1 mb-4 text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              {isConnected ? (
-                <div className="space-y-8">
-                  <DashboardCards
-                    depositAmount={depositAmount}
-                    roiProgress={roiProgress}
-                    totalWithdrawn={totalWithdrawn}
-                    availableRewards={availableRewards}
-                    totalPoolBalance={totalPoolBalance}
-                    getStakingDuration={getStakingDuration}
-                  />
-                  <ActionButtons
-                    availableRewards={availableRewards}
-                    fetchContractData={fetchContractData}
-                    handleWithdrawalSuccess={handleWithdrawalSuccess}
-                  />
-                  <NetworkTag network={network} />
-                </div>
-              ) : (
+              Your Staking Dashboard
+            </motion.span>
+
+            <motion.h1
+              className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight px-2"
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1 }}
+            >
+              Manage Your{" "}
+              <span className="text-gradient bg-gradient-to-r from-purple-400 to-pink-500">
+                Smart Staking
+              </span>
+            </motion.h1>
+          </motion.div>
+
+          {isConnected && (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              {[
+                {
+                  label: "Total Staked",
+                  value: `${parseFloat(depositAmount).toFixed(2)} POL`,
+                  icon: "📈",
+                  subtext: (
+                    <div className="space-y-1">
+                      <span className="block">
+                        {lastTradingUpdate
+                          ? `Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}`
+                          : "Updating..."}
+                      </span>
+                      <span
+                        className={`text-xs block ${
+                          isMarketHours() ? "text-green-400" : "text-gray-400"
+                        }`}
+                      >
+                        {isMarketHours() ? "🟢 Market Open" : "⚪ After Hours"}
+                      </span>
+                    </div>
+                  ),
+                },
+                {
+                  label: "Available Rewards",
+                  value: `${parseFloat(availableRewards).toFixed(6)} POL`,
+                  icon: "🎁",
+                },
+                {
+                  label: "Trading Bot Performance",
+                  value: `${
+                    parseFloat(tradingBotProfit) > 0 ? "+" : ""
+                  }${parseFloat(tradingBotProfit).toFixed(2)}%`,
+                  icon: getTradingIcon(tradingBotProfit),
+                  className: `${
+                    parseFloat(tradingBotProfit) >= 0 ? "text-green-400" : "text-red-400"
+                  } ${Math.abs(tradingBotProfit) > 5 ? "animate-pulse" : ""}`,
+                  subtext: (
+                    <div className="space-y-1">
+                      <p>
+                        {lastTradingUpdate
+                          ? `Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}`
+                          : "Updating..."}
+                      </p>
+                      <p
+                        className={`text-xs ${
+                          isMarketHours() ? "text-green-400" : "text-gray-400"
+                        }`}
+                      >
+                        {isMarketHours() ? "🟢 Market Open" : "⚪ After Hours"}
+                      </p>
+                    </div>
+                  ),
+                },
+                {
+                  label: "Pool Balance",
+                  value: `${parseFloat(totalPoolBalance).toFixed(2)} POL`,
+                  icon: "🏦",
+                },
+              ].map((stat, index) => (
                 <motion.div
-                  className="text-center py-12"
+                  key={stat.label}
+                  className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20"
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-2xl">{stat.icon}</span>
+                    <span className="text-sm text-purple-400">{stat.label}</span>
+                  </div>
+                  <p className={`text-xl font-bold mt-2 ${stat.className || "text-white"}`}>
+                    {stat.value}
+                  </p>
+                  {stat.subtext && <div className="text-xs text-gray-400 mt-1">{stat.subtext}</div>}
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Main Dashboard Content */}
+          <motion.div
+            className="rounded-2xl p-4 md:p-6 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border border-purple-500/20 backdrop-blur-sm"
+            initial={{ y: 20 }}
+            animate={{ y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            {isConnected ? (
+              <div className="space-y-6">
+                <DashboardCards
+                  depositAmount={depositAmount}
+                  roiProgress={roiProgress}
+                  totalWithdrawn={totalWithdrawn}
+                  availableRewards={availableRewards}
+                  totalPoolBalance={totalPoolBalance}
+                  getStakingDuration={getStakingDuration}
+                />
+                <ActionButtons
+                  availableRewards={availableRewards}
+                  fetchContractData={fetchContractData}
+                  handleWithdrawalSuccess={handleWithdrawalSuccess}
+                />
+                <NetworkTag network={network} />
+              </div>
+            ) : (
+              <motion.div
+                className="text-center py-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <p className="text-lg text-white mb-4 px-4">
+                  Connect your wallet to view the dashboard information
+                </p>
+                <motion.div
+                  className="text-gray-400 text-6xl"
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                  }}
+                >
+                  <i className="fas fa-wallet"></i>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Enhanced Error Display */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  className="mt-4 p-4 rounded-xl bg-red-500/20 border border-red-500/20 backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-red-400 text-2xl">⚠️</span>
+                    <p className="text-red-100 text-sm">{error}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Enhanced Loading State */}
+            <AnimatePresence>
+              {loading && (
+                <motion.div
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
+                  exit={{ opacity: 0 }}
                 >
-                  <p className="text-xl text-white mb-4">
-                    Connect your wallet to view the dashboard information
-                  </p>
                   <motion.div
-                    className="text-gray-400 text-6xl"
-                    animate={{ 
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: "reverse"
-                    }}
+                    className="bg-black/80 rounded-2xl p-6 border border-purple-500/20"
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.9 }}
                   >
-                    <i className="fas fa-wallet"></i>
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
+                      <p className="text-purple-400 text-base">Loading data...</p>
+                    </div>
                   </motion.div>
                 </motion.div>
               )}
-  
-              {/* Enhanced Error Display */}
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    className="mt-4 p-6 rounded-xl bg-red-500/20 border border-red-500/20 backdrop-blur-sm"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-red-400 text-2xl">⚠️</span>
-                      <p className="text-red-100">{error}</p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-  
-              {/* Enhanced Loading State */}
-              <AnimatePresence>
-                {loading && (
-                  <motion.div
-                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <motion.div
-                      className="bg-black/80 rounded-2xl p-8 border border-purple-500/20"
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0.9 }}
-                    >
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="w-16 h-16 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin" />
-                        <p className="text-purple-400 text-lg">Loading data...</p>
-                      </div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        </motion.div>
-  
-        <style>{`
-          .text-gradient {
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-          }
-        `}</style>
-      </div>
-    );
-  }
+            </AnimatePresence>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      <style>{`
+        .text-gradient {
+          background-clip: text;
+          -webkit-background-clip: text;
+          color: transparent;
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default DashboardStaking;
