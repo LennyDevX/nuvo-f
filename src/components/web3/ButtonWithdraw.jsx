@@ -18,7 +18,6 @@ function ButtonWithdraw() {
   } = useContext(StakingContext);
 
   const [notification, setNotification] = useState({ message: '', type: '' });
-  const [withdrawalHistory, setWithdrawalHistory] = useState([]);
 
   useEffect(() => {
     if (account) {
@@ -56,6 +55,36 @@ function ButtonWithdraw() {
     }
   };
 
+  const handleEmergencyWithdraw = async () => {
+    if (!contract || !account || !isContractPaused) return;
+
+    try {
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contractWithSigner = contract.connect(signer);
+
+      const tx = await contractWithSigner.emergencyUserWithdraw({
+        gasLimit: 300000
+      });
+
+      displayNotification('Transaction submitted...', 'info');
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        await fetchUserData();
+        displayNotification('Emergency withdrawal successful! 🎉', 'success');
+      } else {
+        throw new Error('Transaction failed');
+      }
+    } catch (error) {
+      console.error('Emergency withdrawal error:', error);
+      displayNotification(
+        error.reason || 'Failed to withdraw deposits',
+        'error'
+      );
+    }
+  };
+
   const displayNotification = (message, type) => {
     setNotification({ message, type });
     setTimeout(() => setNotification({ message: '', type: '' }), 3000);
@@ -77,7 +106,7 @@ function ButtonWithdraw() {
           animate={{ opacity: 1 }}
         >
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-            <span className="text-purple-400 text-lg sm:text-xl font-medium">Available to Withdraw</span>
+            <span className="text-purple-400 text-lg sm:text-xl font-medium">Available</span>
             <div className="flex items-center gap-2">
               <span className="text-3xl text-white font-bold">
                 {parseFloat(estimatedRewards).toFixed(6)}
@@ -141,6 +170,23 @@ function ButtonWithdraw() {
             </div>
           )}
         </motion.button>
+
+        {/* Emergency Withdraw Button */}
+        {isContractPaused && (
+          <motion.button
+            onClick={handleEmergencyWithdraw}
+            disabled={isPending || !account || !isContractPaused}
+            className={`relative px-8 py-4 rounded-xl font-medium text-lg text-white
+              bg-gradient-to-r from-red-600 to-red-700 
+              hover:from-red-700 hover:to-red-800
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-all duration-300 mt-4`}
+            whileHover={{ y: -2, boxShadow: "0 10px 20px rgba(255, 0, 0, 0.1)" }}
+            whileTap={{ scale: 0.98 }}
+          >
+            Emergency Withdraw
+          </motion.button>
+        )}
 
         {/* Help Text */}
         {parseFloat(estimatedRewards) <= 0 && (
