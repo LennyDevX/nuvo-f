@@ -3,6 +3,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../context/WalletContext";
 import useContractData from "../../hooks/useContractData";
+import useTreasuryBalance from "../../hooks/useTreasuryBalance";
 import { calculateROIProgress, getStakingDuration } from "../../utils/utils";
 import DashboardCards from "./DashboardCards";
 import ActionButtons from "./ActionButtons";
@@ -10,9 +11,8 @@ import NetworkTag from "./Tag";
 import QuickStats from "./QuickStats";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import LoadingOverlay from "../../LoadOverlay/LoadingOverlay";
-import useTradingSimulator from "./TradingSimulator";
 
-const UPDATE_INTERVAL = 5 * 60 * 1000; // 2 minutos
+const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 function DashboardStaking() {
   const { account, network, balance } = useContext(WalletContext);
@@ -32,32 +32,27 @@ function DashboardStaking() {
     handleWithdrawalSuccess,
   } = useContractData(account);
 
-  const {
-    tradingBotProfit,
-    lastTradingUpdate,
-    getTradingIcon,
-    isMarketHours,
-  } = useTradingSimulator();
+  const { treasuryBalance, lastUpdate } = useTreasuryBalance();
 
-  // Effect para conexión
+  // Effect for connection
   useEffect(() => {
     setIsConnected(account && network && balance !== null);
   }, [account, network, balance]);
 
-  // Effect para fetch de datos
+  // Effect to fetch data
   useEffect(() => {
     if (isConnected) {
       fetchContractData(true);
       const interval = setInterval(() => {
-        if (!loading) {  // Only fetch if not currently loading
-          fetchContractData(false);  // Use cache when possible
+        if (!loading) {
+          fetchContractData(false);
         }
       }, UPDATE_INTERVAL);
       return () => clearInterval(interval);
     }
   }, [isConnected, fetchContractData, loading]);
 
-  // Effect para calcular ROI
+  // Effect to calculate ROI
   useEffect(() => {
     const roi = calculateROIProgress(depositAmount, totalWithdrawn);
     setRoiProgress(roi);
@@ -71,18 +66,9 @@ function DashboardStaking() {
         transition={{ duration: 0.5 }}
         className="w-full pt-16 pb-6 md:pt-20"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px- lg:px-8">
           {/* Header */}
-          <motion.div className="text-center mb-8">
-            <motion.span
-              className="inline-block px-3 py-1 mb-4 text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              Your Staking Dashboard
-            </motion.span>
-
+          <motion.div className="text-center mt-4">
             <motion.h1
               className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight px-2"
               initial={{ opacity: 0, y: -30 }}
@@ -104,44 +90,27 @@ function DashboardStaking() {
                   label: "Total Staked",
                   value: `${parseFloat(depositAmount).toFixed(2)} POL`,
                   icon: "📈",
-                  subtext: lastTradingUpdate ? (
-                    <div className="space-y-1">
-                      <span className="block">
-                        {`Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}`}
-                      </span>
-                      <span className={`text-xs block ${isMarketHours() ? "text-green-400" : "text-gray-400"}`}>
-                        {isMarketHours() ? "🟢 Market Open" : "⚪ After Hours"}
-                      </span>
-                    </div>
-                  ) : "Updating..."
+                  className: "text-green-400",
                 },
                 {
                   label: "Available Rewards",
                   value: `${parseFloat(availableRewards).toFixed(6)} POL`,
-                  icon: "🎁"
+                  icon: "🎁",
                 },
                 {
-                  label: "Trading Bot Performance",
-                  value: `${parseFloat(tradingBotProfit) > 0 ? "+" : ""}${parseFloat(tradingBotProfit).toFixed(2)}%`,
-                  icon: getTradingIcon(tradingBotProfit),
-                  className: `${parseFloat(tradingBotProfit) >= 0 ? "text-green-400" : "text-red-400"} 
-                    ${Math.abs(tradingBotProfit) > 5 ? "animate-pulse" : ""}`,
-                  subtext: (
-                    <div className="space-y-1">
-                      <p>{lastTradingUpdate ? 
-                        `Updated: ${new Date(lastTradingUpdate).toLocaleTimeString()}` : 
-                        "Updating..."}</p>
-                      <p className={`text-xs ${isMarketHours() ? "text-green-400" : "text-gray-400"}`}>
-                        {isMarketHours() ? "🟢 Market Open" : "🔴 Market Closed"}
-                      </p>
-                    </div>
-                  )
+                  label: "Treasury Balance",
+                  value: `${parseFloat(treasuryBalance).toFixed(4)} POL`,
+                  icon: "🏦",
+                  className: "text-blue-400",
+                  subtext: lastUpdate
+                    ? `Updated: ${new Date(lastUpdate).toLocaleTimeString()}`
+                    : "Updating...",
                 },
                 {
                   label: "Pool Balance",
                   value: `${parseFloat(totalPoolBalance).toFixed(2)} POL`,
-                  icon: "🏦"
-                }
+                  icon: "💰",
+                },
               ]}
             />
           )}
@@ -161,7 +130,12 @@ function DashboardStaking() {
                   totalWithdrawn={totalWithdrawn}
                   availableRewards={availableRewards}
                   totalPoolBalance={totalPoolBalance}
-                  getStakingDuration={() => getStakingDuration(firstDepositTime, localStorage.getItem(`lastWithdrawal_${account}`))}
+                  getStakingDuration={() =>
+                    getStakingDuration(
+                      firstDepositTime,
+                      localStorage.getItem(`lastWithdrawal_${account}`)
+                    )
+                  }
                 />
                 <ActionButtons
                   availableRewards={availableRewards}

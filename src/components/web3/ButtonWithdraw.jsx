@@ -111,7 +111,6 @@ function ButtonWithdraw() {
               <span className="text-3xl text-white font-bold">
                 {parseFloat(estimatedRewards).toFixed(6)}
               </span>
-              <img src={PolygonLogo} alt="MATIC" className="h-5 w-5" />
             </div>
           </div>
           

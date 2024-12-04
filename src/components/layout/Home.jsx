@@ -352,67 +352,66 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Community Benefits */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <motion.h2
-          className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          Community Benefits
-        </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { title: "Holding Bonus", reward: "+2% APR", requirement: "Hold 1000+ tokens" },
-            { title: "Referral Rewards", reward: "+1% per referral", requirement: "Up to 5% bonus" },
-            { title: "Community Bonus", reward: "+3% monthly", requirement: "Active participation" },
-            { title: "Duration Bonus", reward: "+1% quarterly", requirement: "Long-term staking" }
-          ].map((benefit, index) => (
-            <motion.div
-              key={benefit.title}
-              className="bg-black/30 rounded-xl p-6 border border-purple-500/20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <h3 className="text-xl font-semibold text-purple-400 mb-3">{benefit.title}</h3>
-              <p className="text-2xl font-bold text-white mb-2">{benefit.reward}</p>
-              <p className="text-gray-400 text-sm">{benefit.requirement}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-        <section className=" mx-auto px-6 py-12 text-center">
+        <section className="max-w-6xl mx-auto px-6 py-16">
           <motion.h2
-            className="text-3xl md:text-4xl font-bold text-white mb-6"
+            className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            Ready to Start Earning?
+            Community Benefits
           </motion.h2>
-          <motion.p
-            className="text-lg md:text-xl text-gray-300 mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Join our growing community of investors and start earning passive income today.
-          </motion.p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+          { title: "Holding Bonus", reward: "Up to 5% APR", requirement: "Hold 1000+ tokens" },
+          { title: "Airdrops", reward: "Free Tokens", requirement: "Every 2 month (coming soon)" },
+          { title: "NFT", reward: "Exclusive benefits", requirement: "Mint Your NFT (coming soon)" },
+          { title: "Token NCT", reward: "Get Tokens every month", requirement: "Stakes above 200 POL" }
+            ].map((benefit, index) => (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            key={benefit.title}
+            className="bg-black/30 rounded-xl p-6 border border-purple-500/20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.2 }}
           >
-            <Link
-          to="/staking"
-          className="px-8 py-4 text-lg font-medium rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:bg-purple-700 transition-colors"
-            >
-          Get Started →
-            </Link>
+            <h3 className="text-xl font-semibold text-purple-400 mb-3">{benefit.title}</h3>
+            <p className="text-2xl font-bold text-white mb-2">{benefit.reward}</p>
+            <p className="text-gray-400 text-sm">{benefit.requirement}</p>
           </motion.div>
+            ))}
+          </div>
         </section>
 
-       
-    {/* Global Styles */}
+          <section className=" mx-auto px-6 py-12 text-center">
+            <motion.h2
+          className="text-3xl md:text-4xl font-bold text-white mb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+            >
+          Ready to Start Earning?
+            </motion.h2>
+            <motion.p
+          className="text-lg md:text-xl text-gray-300 mb-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+            >
+          Join our growing community of investors and start earning passive income today.
+            </motion.p>
+            <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+            >
+          <Link
+            to="/staking"
+            className="px-8 py-4 text-lg font-medium rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:bg-purple-700 transition-colors"
+          >
+            Get Started →
+          </Link>
+            </motion.div>
+          </section>
+
+         
+          {/* Global Styles */}
     <style>
         {`
           .text-gradient {
