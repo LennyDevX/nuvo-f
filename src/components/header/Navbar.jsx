@@ -2,7 +2,10 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import WalletConnect from '../web3/WalletConnect';
 
-const Navbar = ({ contractAddress = '0x1234567890abcdef1234567890abcdef12345678' }) => {
+// Importa la variable de entorno
+const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
+
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinkClasses = `
@@ -67,23 +70,28 @@ const Navbar = ({ contractAddress = '0x1234567890abcdef1234567890abcdef12345678'
             <Link to="/staking" className={navLinkClasses}>
               Staking
             </Link>
+            <Link to  ="/tokenomics" className={navLinkClasses}>
+                Tokenomics
+            </Link>
             <Link to="/swaptoken" className={navLinkClasses}>
               Swap Token
             </Link>
+            
             <Link to="/about" className={navLinkClasses}>
               About
             </Link>
             
             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-              BETA v4.3
+              BETA v5.1
             </span>
           </div>
 
-          {/* Rest of the code remains the same but update mobile menu link classes */}
+          {/* Wallet Connect */}
           <div className="ml-4">
             <WalletConnect />
           </div>
 
+          {/* Mobile Menu Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}

@@ -27,7 +27,7 @@ const Home = () => {
   const contractAddress = "0xc23242a0bbaad97280b2e73d6dc240df2bc5dee4";
 
   const calculateReturns = (amount) => {
-    const daily = (amount * 0.6) / 100;
+    const daily = (amount * 0.48) / 100;
     const monthly = daily * 30;
     const sixMonths = daily * 180;
     const yearly = monthly * 12;
@@ -45,17 +45,10 @@ const Home = () => {
         <div className="absolute inset-0 bg-gradient-radial from-purple-600/20 via-transparent to-transparent" />
   
           <motion.div className="relative z-10 max-w-3xl mx-auto">
-            <motion.span
-              className="inline-block mt-20 sm:mt-8 px-3 py-2 mb-4 text-xs sm:text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              Institutional-Grade Staking Protocol
-            </motion.span>
+            
           
             <motion.h1
-              className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight px-2 sm:px-0"
+              className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mt-12 sm:mb-6 leading-tight px-2 sm:px-0"
               initial={{ opacity: 0, y: -30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1 }}
@@ -67,15 +60,24 @@ const Home = () => {
             </motion.h1>
           
             <motion.p
-              className="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 px-4 sm:px-0"
+              className="text-base sm:text-lg md:text-xl text-gray-300  sm:mb-8 px-2 sm:px-0"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3 }}
             >
               Experience a revolutionary staking protocol that combines automated yield optimization with institutional-grade security. Earn consistent{" "}
-              <span className="text-purple-400">0.025% hourly returns</span>, with potential earnings up to{" "}
-              <span className="text-purple-400">130% ROI</span> through our advanced DeFi strategies.
+              <span className="text-purple-400">0.02% hourly returns</span>, with potential earnings up to{" "}
+              <span className="text-purple-400">125% ROI</span> through our advanced DeFi strategies. (Launching Soon)
             </motion.p>
+
+            <motion.span
+              className="inline-block  sm:mt-8 px-3 py-2 mb-6 text-xs sm:text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              Institutional-Grade Staking Protocol (Coming Soon)
+            </motion.span>
           
             {/* Key Features */}
           <motion.div
@@ -85,9 +87,9 @@ const Home = () => {
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             {[
-              { title: "Audited Security", value: "3 Audits", desc: "by leading firms" },
-              { title: "Total Locked", value: "$2.5M+", desc: "in protocol" },
-              { title: "Active Users", value: "1000+", desc: "growing community" }
+              { title: "Audited Security", value: "In Process", desc: "Certik Certification" },
+              { title: "Total Locked", value: "Projected $1M+", desc: "by Q2 2025" },
+              { title: "Active Users", value: "Projected 1K+", desc: "by Q1 2025" }
             ].map((stat) => (
               <div
                 key={stat.title}
@@ -136,28 +138,9 @@ const Home = () => {
                   clipRule="evenodd"
                 />
               </svg>
-              Audited by Certik
+              Audited by Certik (In Process)
             </span>
-            <span className="text-xs sm:text-sm text-gray-400 flex items-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              KYC Verified Team
-            </span>
-            <span className="text-xs sm:text-sm text-gray-400 flex items-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Insurance Coverage
-            </span>
+            
           </motion.div>
         </motion.div>
       </section>
@@ -256,6 +239,14 @@ const Home = () => {
           </div>
         </motion.div>
       </div>
+      <div className="text-center mt-8">
+        <Link
+          to="/tokenomics"
+          className="inline-block px-8 py-4 text-lg font-medium rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:bg-purple-700 transition-colors"
+        >
+          Learn More About Tokenomics →
+        </Link>
+      </div>
     </section>
 
       {/* Calculator Section */}
@@ -287,7 +278,7 @@ const Home = () => {
                   className="bg-black/40 rounded-xl p-6 backdrop-blur-sm hover:bg-purple-900/40 transition-all duration-300 transform hover:-translate-y-1"
                   whileHover={{ scale: 1.02 }}
                 >
-                  <p className="text-gray-300 text-lg mb-2">Daily Returns (0.6%)</p>
+                  <p className="text-gray-300 text-lg mb-2">Daily Returns</p>
                   <p className="text-3xl font-bold text-purple-400">
                     {daily.toFixed(2)} POL
                   </p>
@@ -313,7 +304,7 @@ const Home = () => {
               </div>
             </div>
             <p className="text-gray-300 text-base mt-6 text-center">
-              *Calculations based on 0.6% daily ROI
+              *Calculations based on 0.48% daily ROI
             </p>
           </div>
         </motion.div>
@@ -361,67 +352,66 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Community Benefits */}
-      <section className="max-w-6xl mx-auto px-6 py-16">
-        <motion.h2
-          className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          Community Benefits
-        </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { title: "Holding Bonus", reward: "+2% APR", requirement: "Hold 1000+ tokens" },
-            { title: "Referral Rewards", reward: "+1% per referral", requirement: "Up to 5% bonus" },
-            { title: "Community Bonus", reward: "+3% monthly", requirement: "Active participation" },
-            { title: "Duration Bonus", reward: "+1% quarterly", requirement: "Long-term staking" }
-          ].map((benefit, index) => (
-            <motion.div
-              key={benefit.title}
-              className="bg-black/30 rounded-xl p-6 border border-purple-500/20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.2 }}
-            >
-              <h3 className="text-xl font-semibold text-purple-400 mb-3">{benefit.title}</h3>
-              <p className="text-2xl font-bold text-white mb-2">{benefit.reward}</p>
-              <p className="text-gray-400 text-sm">{benefit.requirement}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-        <section className=" mx-auto px-6 py-12 text-center">
+        <section className="max-w-6xl mx-auto px-6 py-16">
           <motion.h2
-            className="text-3xl md:text-4xl font-bold text-white mb-6"
+            className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            Ready to Start Earning?
+            Community Benefits
           </motion.h2>
-          <motion.p
-            className="text-lg md:text-xl text-gray-300 mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-          >
-            Join our growing community of investors and start earning passive income today.
-          </motion.p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+          { title: "Holding Bonus", reward: "Up to 5% APR", requirement: "Hold 1000+ tokens" },
+          { title: "Airdrops", reward: "Free Tokens", requirement: "Every 2 month (coming soon)" },
+          { title: "NFT", reward: "Exclusive benefits", requirement: "Mint Your NFT (coming soon)" },
+          { title: "Token NCT", reward: "Get Tokens every month", requirement: "Stakes above 200 POL" }
+            ].map((benefit, index) => (
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            key={benefit.title}
+            className="bg-black/30 rounded-xl p-6 border border-purple-500/20"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.2 }}
           >
-            <Link
-          to="/staking"
-          className="px-8 py-4 text-lg font-medium rounded-full bg-purple-600 text-white hover:bg-purple-700 transition-colors"
-            >
-          Get Started →
-            </Link>
+            <h3 className="text-xl font-semibold text-purple-400 mb-3">{benefit.title}</h3>
+            <p className="text-2xl font-bold text-white mb-2">{benefit.reward}</p>
+            <p className="text-gray-400 text-sm">{benefit.requirement}</p>
           </motion.div>
+            ))}
+          </div>
         </section>
 
-       
-    {/* Global Styles */}
+          <section className=" mx-auto px-6 py-12 text-center">
+            <motion.h2
+          className="text-3xl md:text-4xl font-bold text-white mb-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+            >
+          Ready to Start Earning?
+            </motion.h2>
+            <motion.p
+          className="text-lg md:text-xl text-gray-300 mb-12"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+            >
+          Join our growing community of investors and start earning passive income today.
+            </motion.p>
+            <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+            >
+          <Link
+            to="/staking"
+            className="px-8 py-4 text-lg font-medium rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:bg-purple-700 transition-colors"
+          >
+            Get Started →
+          </Link>
+            </motion.div>
+          </section>
+
+         
+          {/* Global Styles */}
     <style>
         {`
           .text-gradient {

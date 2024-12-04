@@ -9,31 +9,25 @@ const DodoSwapWidget = () => {
   return (
     <div className="swap-widget-container h-full">
       <SwapWidget
+        colorMode="dark"
+        width={380}
+        height={500}
         apikey={dodoexAPI}
-        rebateTo="0xe34C3565AC80fd959627c6EFf02D793808a0b2A2"
         provider={window.ethereum}
-        feeRate={2e16} // 2% de comisión
         jsonRpcUrlMap={{
           137: ['https://polygon-rpc.com/'],
+        
         }}
         defaultChainId={137}
-        colorMode="light" // Modo claro para coincidir con la temática
         defaultFromToken={{
           chainId: 137,
           address: '0x0000000000000000000000000000000000001010', // MATIC
-          name: 'MATIC',
+          name: 'POL',
           decimals: 18,
-          symbol: 'MATIC',
+          symbol: 'POL',
           logoURI: 'https://polygonscan.com/token/images/polygon.png', // Logo de MATIC
         }}
-        defaultToToken={{
-          chainId: 137,
-          address: '', // Dirección del token al que quieres cambiar por defecto
-          name: '',
-          decimals: 18,
-          symbol: '',
-          logoURI: '',
-        }}
+        
         style={{
           borderRadius: '0.75rem',
           height: '100%',
