@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { WalletContext } from '../context/WalletContext';
 import { StakingContext } from '../context/StakingContext';
 
-const DEPOSIT_PRESETS = [5, 10, 50, 100, 500, 1000];
+const DEPOSIT_PRESETS = [5, 10, 50,];
 const COMMISSION_RATE = 0.06;
 
 function ButtonDeposit() {
