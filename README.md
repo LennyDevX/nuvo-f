@@ -1,117 +1,83 @@
-# 🌟 NUVO DeFi - Smart Staking Protocol
+# 🌟 NUVO DeFi - Intelligent Staking Protocol
 
-## 🚀 Overview
-NUVO is a decentralized finance (DeFi) platform that combines algorithmic trading, yield optimization, and traditional staking rewards in a secure and user-friendly interface. Built on Polygon Network, our protocol offers institutional-grade staking services with automated reward distribution.
+## Vision
+NUVO DeFi revolutionizes traditional staking by combining algorithmic trading strategies with DeFi yield optimization. Built on Polygon, we're creating a secure, efficient, and user-friendly platform for both retail and institutional investors.
 
-## ⚡ Core Features
+## 🎯 What Makes NUVO Different?
 
-### Smart Contract Integration ✅
-- Contract Address: `0xc23242a0bbaad97280b2e73d6dc240df2bc5dee4` Test
-- Network: Polygon Mainnet
-- Audited by: CertiK (In Progress ❌)
-- Solidity Version: ^0.8.24
+### Smart Staking
+- Automated reward distribution
+- Time-based bonus system (up to +5%)
+- Dynamic yield optimization
+- Real-time performance tracking
 
-### Staking Mechanics ✅
-- Minimum Stake: 5 POL
-- Maximum Stake: 10,000 POL
-- ROI: 0.025% hourly (compounded)
-- Maximum ROI: 130%
-- Commission: 5%
+### Security First
+- Built on Polygon Network
+- OpenZeppelin security standards
+- Emergency withdrawal system
+- Transparent reward mechanics
 
-### Revenue Streams
-- Third-Party Staking (30%) ❌
-- DeFi Lending (25%) ❌
-- Algorithmic Trading (20%) ✅
-- Liquidity Provision (15%) ❌
-- Strategic Holdings (10%) ❌
+### User Experience
+- Intuitive dashboard
+- Real-time analytics
+- Mobile-responsive design
+- Seamless wallet integration
 
-## 🔧 Technical Stack
+## 🔧 Core Features
 
-### Frontend
-- React 18.2 ✅
-- Framer Motion for animations ✅
-- TailwindCSS for styling ✅
-- Web3 Integration:
-  - ethers.js v5.7 ✅
+### Staking Mechanics
+- Base APR: 25%
+- Time Bonuses: 1-5%
+- Min Stake: 5 POL
+- Max Stake: 10,000 POL
 
-### Backend & APIs
-- Alchemy RPC Provider ✅
-- DODO Swap Widget Integration ✅
-- Fallback RPC Configuration:
+### Revenue Generation
+- Algorithmic Trading
+- Yield Farming
+- Liquidity Provision
+- Strategic Holdings
 
-### Smart Contract Features
-- OpenZeppelin Contracts ✅
-  - Ownable
-  - Pausable
-  - ReentrancyGuard
-- Custom Implementations:
-  - Staking Logic ✅
-  - Reward Distribution ✅
-  - Emergency Withdrawal ✅
-  - Governance (Coming Soon ❌)
 
-## 📊 Performance & Security
+## 👩‍💻 For Developers
 
-### Optimization
-- Caching System ✅
-- RPC Fallback Mechanism ✅
-- Gas Optimization ✅
+# Tech Stack
 
-### Security Measures
-- Multi-signature Wallet ❌
-- Time-locks ✅
-- Emergency Pause ✅
-- Rate Limiting ✅
+Frontend: 
 
-## 🛠 For Developers
+React, TailwindCSS, Framer Motion  
 
-### Getting Started
+Blockchain: Polygon, Ethers.js
+Smart Contracts: Solidity 0.8.24, OpenZeppelin  
+
+Contributing Areas
+Governance Implementation
+Yield Strategies
+Security Audits
+UI/UX Enhancements  
+
+Documentation
+🗺 Roadmap
+Current Phase - Beta 5.1   
+✅ Smart Contract Deployment ✅ Staking Dashboard ⚠️ Tokenomics Implementation ⚠️ Basic Trading Bot Integration
+
+Next Steps
+❌ CertiK Audit ❌ DAO Governance ❌ Enhanced Yield Strategies ❌ Community Features
+
+🤝 Community
+Join our growing community:
+
+Documentation: [Coming Soon]
+Discord: [Coming Soon]
+Twitter: [Coming Soon]
+⚠️ Beta Status
+Currently in Beta v5.1. While thoroughly tested, users should exercise caution and understand the risks involved in DeFi investments.
+
+### Quick Start
 ```bash
-git clone https://github.com/yourusername/nuvo-protocol.git
-cd nuvo-protocol
+
+cd nuvo-f
 npm install
 npm run dev
-```
 
-### Environment Setup
-```env
-VITE_ALCHEMY_API_KEY=your_key
-VITE_PRIVATE_KEY=your_private_key
-VITE_SWAP_DODOEX_API=your_dodo_key
-VITE_STAKING_ADDRESS=contract_address
-```
 
-### Contributing
-We welcome contributions! Key areas we're looking to improve:
-- Governance Implementation ❌
-- Additional Yield Strategies ❌
-- Security Audits ❌
-- UI/UX Enhancements ✅ Can Be Better
-- Documentation ❌
 
-## 📈 Future Roadmap
-
-### Q4 2024
-- Nuvo Defi Launch ❌
-- Community DAO ❌
-- Additional Yield Strategies ❌
-
-### Q1 2025
-- Automated Portfolio Management ❌
-- Improve Bot Performance ❌
-- Marketing lv1
-- Add Balance to Smart Contract
-
-## 🤝 Join the Community
-- Discord: [Coming Soon] ❌
-- Twitter: [Coming Soon] ❌
-- Documentation: [Coming Soon] ❌
-
-## ⚠️ Disclaimer
-This project is in Beta v4.2. While we have implemented robust security measures, users should exercise caution and only stake what they can afford to risk.
-
----
-
-Made with 💜 by the NUVO Team
-
-License • Security • Contributing
