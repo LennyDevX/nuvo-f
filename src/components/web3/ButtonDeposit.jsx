@@ -154,16 +154,16 @@ function ButtonDeposit() {
               <div className="text-gray-300 flex flex-wrap justify-between">
                 <span>Commission (6%):</span>
                 <span className="font-mono">
-                  {(parseFloat(depositAmount || 0) * COMMISSION_RATE).toFixed(4)} MATIC
+                  {(parseFloat(depositAmount || 0) * COMMISSION_RATE).toFixed(4)} POL
                 </span>
               </div>
               <div className="text-gray-300 flex flex-wrap justify-between">
                 <span>Net deposit:</span>
-                <span className="font-mono">{netAmount} MATIC</span>
+                <span className="font-mono">{netAmount} POL</span>
               </div>
               <div className="text-purple-400 flex flex-wrap justify-between font-medium">
                 <span>Est. max return:</span>
-                <span className="font-mono">{estimatedReturn} MATIC</span>
+                <span className="font-mono">{estimatedReturn} POL</span>
               </div>
               <div className="border-t border-purple-500/20 pt-2 sm:pt-3">
                 <div className="text-gray-300 flex flex-wrap justify-between">

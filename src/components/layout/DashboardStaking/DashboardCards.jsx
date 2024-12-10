@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import PolygonLogo from '../../../../public/PolygonLogo.png';
+import PolygonLogo from '/PolygonLogo.png';
 
 const getTimeBonusText = (days, percentage) => {
   return `${percentage}% bonus for staking ${days}+ days`;
