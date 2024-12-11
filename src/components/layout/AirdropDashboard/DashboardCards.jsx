@@ -43,6 +43,8 @@ const DashboardCards = ({ account, formatAddress, onOpenSidebar }) => {
         });
     };
 
+    
+
     const getCurrentMonthDays = () => {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);

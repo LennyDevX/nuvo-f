@@ -86,7 +86,7 @@ const Navbar = () => {
             </Link>
             
             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-              BETA v5.3
+              BETA v5.4
             </span>
           </div>
 
