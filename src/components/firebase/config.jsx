@@ -1,26 +1,116 @@
-// src/firebase/config.js
+// src/firebase/config.jsx
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection } from 'firebase/firestore';
+import { collection, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: "space-nft-6acba.firebaseapp.com",
-  projectId: "space-nft-6acba",
-  storageBucket: "space-nft-6acba.appspot.com",
-  messagingSenderId: import.meta.env.VITE_PROJECT_NUMBER,
-  appId: import.meta.env.VITE_APP_ID
+// Firebase configuration validation
+const validateConfig = (config) => {
+  const requiredFields = [
+    'apiKey',
+    'projectId',
+    'messagingSenderId',
+    'appId'
+  ];
+
+  const missingFields = requiredFields.filter(field => !config[field]);
+  if (missingFields.length > 0) {
+    throw new Error(`Missing required Firebase config fields: ${missingFields.join(', ')}`);
+  }
 };
 
+// Firebase configuration with environment variables
+// Add environment variables validation
+const validateEnvVariables = () => {
+  const required = [
+    'VITE_FIREBASE_API_KEY',
+    'VITE_FIREBASE_AUTH_DOMAIN',
+    'VITE_FIREBASE_PROJECT_ID',
+    'VITE_FIREBASE_STORAGE_BUCKET',
+    'VITE_FIREBASE_MESSAGING_SENDER_ID',
+    'VITE_FIREBASE_APP_ID'
+  ];
+
+  const missing = required.filter(key => !import.meta.env[key]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
+  }
+};
+
+
+
+// Validate before initializing
+validateEnvVariables();
+
+// Create Firebase config from environment variables
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+// Collection names
+const COLLECTION_NAMES = {
+  AIRDROPS: 'airdrops'
+};
+
+// Initialize Firebase variables
 let app;
 let db;
+let auth;
 let airdropsCollection;
 
 try {
+  // Log configuration for debugging
+  console.log('Initializing Firebase with config:', {
+    apiKey: firebaseConfig.apiKey ? '***' : undefined,
+    authDomain: firebaseConfig.authDomain,
+    projectId: firebaseConfig.projectId,
+    storageBucket: firebaseConfig.storageBucket,
+    messagingSenderId: firebaseConfig.messagingSenderId,
+    appId: firebaseConfig.appId ? '***' : undefined
+  });
+
+  // Validate configuration
+  validateConfig(firebaseConfig);
+
+  // Initialize Firebase app
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  db = getFirestore(app);
-  airdropsCollection = collection(db, 'airdrops');
+  
+  // Initialize Firestore with persistence
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+  });
+
+  // Initialize Auth
+  auth = getAuth(app);
+  
+  // Initialize collections
+  airdropsCollection = collection(db, COLLECTION_NAMES.AIRDROPS);
+  
+  console.log('Firebase initialized successfully');
 } catch (error) {
   console.error('Error initializing Firebase:', error);
+  throw new Error(`Firebase initialization failed: ${error.message}`);
 }
 
-export { db, airdropsCollection };
+// Export initialized instances
+export { 
+  app,
+  db, 
+  auth,
+  airdropsCollection,
+  COLLECTION_NAMES 
+};
+
+// Export type-safe collection getter
+export const getCollection = (collectionName) => {
+  if (!db) {
+    throw new Error('Database not initialized');
+  }
+  return collection(db, collectionName);
+};
