@@ -1,10 +1,16 @@
-// src/components/layout/AirdropDashboard/AirdropForm.jsx
 import React, { useContext, useState, useEffect } from 'react';
 import { WalletContext } from '../../context/WalletContext';
 import { FaGift, FaWallet, FaCoins, FaPalette, FaImages, FaBox } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { airdropsCollection } from '../../firebase/config';
-import { addDoc, Timestamp } from 'firebase/firestore';
+import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
+
+const airdropTypes = [
+    { id: 'tokens', name: 'Tokens', description: 'Receive tokens directly to your wallet', icon: <FaCoins /> },
+    { id: 'nfts', name: 'NFTs', description: 'Get exclusive NFTs', icon: <FaImages />, comingSoon: true },
+    { id: 'items', name: 'Items', description: 'Receive special items', icon: <FaBox />, comingSoon: true },
+    { id: 'art', name: 'Art', description: 'Get unique digital art', icon: <FaPalette />, comingSoon: true }
+];
 
 const AirdropForm = () => {
     const { account, walletConnected } = useContext(WalletContext);
@@ -12,10 +18,9 @@ const AirdropForm = () => {
         name: '',
         email: '',
         wallet: account || '',
-        airdropType: '' // Add new field
+        airdropType: ''
     });
 
-    // Countdown timer state
     const [timeLeft, setTimeLeft] = useState({
         days: 0,
         hours: 0,
@@ -31,14 +36,19 @@ const AirdropForm = () => {
         }));
     };
 
-    const airdropTypes = [
-        { id: 'tokens', name: 'Tokens', icon: <FaCoins />, description: 'POL tokens airdrop' },
-        { id: 'nft', name: 'NFT', icon: <FaPalette />, description: 'Exclusive NFT drop' },
-        { id: 'collection', name: 'NFT Collection', icon: <FaImages />, description: 'Complete NFT collection' },
-        { id: 'items', name: 'Items', icon: <FaBox />, description: 'In-game items and collectibles' }
-    ];
+    const getAirdropTypeStatus = async (typeId) => {
+        const participations = await checkPreviousParticipation(typeId);
+        if (participations && participations.length > 0) {
+            const participation = participations[0];
+            return {
+                isRegistered: true,
+                timestamp: new Date(participation.submittedAt.seconds * 1000).toLocaleDateString(),
+                submissionId: participation.id
+            };
+        }
+        return { isRegistered: false };
+    };
 
-    // Calculate countdown
     useEffect(() => {
         const targetDate = new Date('2024-12-14T00:00:00');
         
@@ -73,13 +83,37 @@ const AirdropForm = () => {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
+    
+    const checkPreviousParticipation = async (airdropType) => {
+        const q = query(airdropsCollection, where('wallet', '==', account), where('airdropType', '==', airdropType));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    };
 
-    // Update form validation
-    const validateForm = () => {
-        if (!formData.name.trim()) return false;
-        if (!formData.email.trim()) return false;
-        if (!formData.wallet) return false;
-        if (!formData.airdropType) return false;
+    const validateForm = async () => {
+        if (!formData.name.trim()) {
+            setError('Please enter your name');
+            return false;
+        }
+        if (!formData.email.trim()) {
+            setError('Please enter your email address');
+            return false;
+        }
+        if (!formData.wallet) {
+            setError('Please connect your wallet first');
+            return false;
+        }
+        if (!formData.airdropType) {
+        if (!formData.airdropType) {
+            setError('Please select an airdrop type');
+            return false;
+        }
+        
+        const { isRegistered } = await getAirdropTypeStatus(formData.airdropType);
+            setError(`You have already registered for this airdrop type. Please select a different one.`);
+            return false;
+        }
+        
         return true;
     };
 
@@ -90,44 +124,87 @@ const AirdropForm = () => {
             setError('Please connect your wallet first');
             return;
         }
-
+    
         if (!validateForm()) {
-            setError('Please fill in all required fields');
             return;
         }
     
         setIsLoading(true);
         try {
+            const selectedAirdropType = airdropTypes.find(type => type.id === formData.airdropType);
+            const sanitizedAirdropDetails = {
+                id: selectedAirdropType.id,
+                name: selectedAirdropType.name,
+                description: selectedAirdropType.description
+            };
+    
             const submissionData = {
-                name: formData.name.trim(),
-                email: formData.email.trim(),
-                wallet: account,
-                submittedAt: Timestamp.now(),
+                name: String(formData.name).trim(),
+                email: String(formData.email).trim().toLowerCase(),
+                wallet: String(account),
+                airdropType: String(formData.airdropType),
+                airdropDetails: sanitizedAirdropDetails,
                 status: 'pending',
+                submittedAt: Timestamp.now(),
+                lastUpdated: Timestamp.now(),
+                isWalletVerified: Boolean(account),
+                emailVerified: false,
                 rewards: {
-                    tokens: [],
+                    tokens: {
+                        amount: Number(0),
+                        claimed: Boolean(false),
+                        claimDate: null
+                    },
                     nfts: [],
-                    other: []
+                    items: [],
+                    collection: null
                 },
-                lastUpdated: Timestamp.now()
+                participationCount: Number(1),
+                lastParticipation: Timestamp.now(),
+                eligibilityScore: Number(0),
+                notes: String(''),
+                ipAddress: String(''),
+                userAgent: String(navigator.userAgent || '')
             };
             
-            const docRef = await addDoc(airdropsCollection, submissionData);
-            console.log('Document written with ID: ', docRef.id);
-            setIsSubmitted(true);
-            setError(null);
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    const docRef = await addDoc(airdropsCollection, submissionData);
+                    console.log('Airdrop registration successful with ID:', docRef.id);
+                    
+                    const participations = JSON.parse(localStorage.getItem('airdropParticipations') || '{}');
+                    participations[formData.airdropType] = {
+                        submissionId: docRef.id,
+                        timestamp: Date.now()
+                    };
+                    localStorage.setItem('airdropParticipations', JSON.stringify(participations));
+                    
+                    setIsSubmitted(true);
+                    setError(null);
+                    localStorage.removeItem('airdropParticipations');
+                    break;
+                } catch (err) {
+                    retryCount++;
+                    if (retryCount === maxRetries) {
+                        throw err;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                }
+            }
         } catch (err) {
-            console.error('Error adding document: ', err);
-            setError('Failed to submit form. Please try again.');
+            console.error('Error submitting airdrop registration:', err);
+            setError('Failed to submit registration. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen  mt-16">
-
-<motion.div className="mb-8 text-center">
+        <div className="min-h-screen mt-16">
+            <motion.div className="mb-8 text-center">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white text-center">
                     <div className="bg-black/30 rounded-xl p-4">
                         <div className="text-2xl font-bold">{timeLeft.days}</div>
@@ -156,10 +233,7 @@ const AirdropForm = () => {
                     transition={{ duration: 0.6 }}
                 >
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                        Join Our  {""}
-                        <span className='text-gradient bg-gradient-to-r from-purple-400 to-pink-500'>
-                        Airdrop Program
-                        </span>
+                        Join Our <span className='text-gradient bg-gradient-to-r from-purple-400 to-pink-500'>Airdrop Program</span>
                     </h1>
                     <p className="text-gray-300 text-lg">
                         Subscribe to receive tokens, NFTs, and other digital assets directly to your Polygon wallet.
@@ -180,40 +254,86 @@ const AirdropForm = () => {
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
-
-<div className="space-y-4">
-                            <label className="block text-gray-300 mb-2">Select Airdrop Type</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {airdropTypes.map((type) => (
-                                    <label
-                                        key={type.id}
-                                        className={`
-                                            flex items-center gap-4 p-4 rounded-xl cursor-pointer
-                                            transition-all duration-200
-                                            ${formData.airdropType === type.id 
-                                                ? 'bg-purple-600/20 border-2 border-purple-500' 
-                                                : 'bg-black/30 border-2 border-purple-500/30 hover:border-purple-500/50'}
-                                        `}
+                            <div className="space-y-4">
+                                <label className="block text-gray-300 mb-2">Select Airdrop Type</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {airdropTypes.map((type) => {
+                                        const { isRegistered, timestamp } = getAirdropTypeStatus(type.id);
+                                        
+                                        return (
+                                            <label
+                                                key={type.id}
+                                                className={`relative flex items-center gap-4 p-4 rounded-xl cursor-pointer transition-all duration-300
+                                                    ${type.comingSoon 
+                                                        ? 'bg-gray-800/50 border-2 border-gray-600 cursor-not-allowed' 
+                                                        : isRegistered 
+                                                            ? 'bg-gray-800/50 border-2 border-gray-600 cursor-not-allowed' 
+                                                            : formData.airdropType === type.id 
+                                                                ? 'bg-purple-600/20 border-2 border-purple-500 shadow-lg shadow-purple-500/20' 
+                                                                : 'bg-black/30 border-2 border-purple-500/30 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/10'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="airdropType"
+                                                    value={type.id}
+                                                    checked={formData.airdropType === type.id}
+                                                    onChange={handleChange}
+                                                    disabled={isRegistered || type.comingSoon}
+                                                    className="hidden"
+                                                />
+                                                <div className={`text-2xl transition-all duration-300
+                                                    ${isRegistered || type.comingSoon 
+                                                        ? 'text-gray-500' 
+                                                        : formData.airdropType === type.id 
+                                                            ? 'text-purple-400 scale-110' 
+                                                            : 'text-gray-400'}`}
+                                                >
+                                                    {type.icon}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-white flex items-center gap-2">
+                                                        {type.name}
+                                                        {isRegistered && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300">
+                                                                Registered
+                                                            </span>
+                                                        )}
+                                                        {type.comingSoon && (
+                                                            <span className="text-xs px-2 py-1 rounded-full bg-gray-700 text-gray-300">
+                                                                Coming Soon
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {isRegistered && (
+                                                        <div className="text-xs text-gray-500 mt-1">
+                                                            Registered on {timestamp}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {formData.airdropType === type.id && !isRegistered && !type.comingSoon && (
+                                                    <motion.div
+                                                        layoutId="selectedIndicator"
+                                                        className="absolute -right-1 -top-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center"
+                                                        initial={{ scale: 0 }}
+                                                        animate={{ scale: 1 }}
+                                                    >
+                                                        <div className="w-2 h-2 bg-white rounded-full" />
+                                                    </motion.div>
+                                                )}
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                                {error && error.includes('airdrop type') && (
+                                    <motion.p 
+                                        className="text-red-400 text-sm mt-2"
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
                                     >
-                                        <input
-                                            type="radio"
-                                            name="airdropType"
-                                            value={type.id}
-                                            checked={formData.airdropType === type.id}
-                                            onChange={handleChange}
-                                            className="hidden"
-                                        />
-                                        <div className={`text-2xl ${formData.airdropType === type.id ? 'text-purple-400' : 'text-gray-400'}`}>
-                                            {type.icon}
-                                        </div>
-                                        <div>
-                                            <div className="font-medium text-white">{type.name}</div>
-                                            <div className="text-sm text-gray-400">{type.description}</div>
-                                        </div>
-                                    </label>
-                                ))}
+                                        {error}
+                                    </motion.p>
+                                )}
                             </div>
-                        </div>
 
                             <div className="flex flex-col sm:flex-row gap-6">
                                 <div className="flex-1">

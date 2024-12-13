@@ -16,6 +16,17 @@ const AirdropDashboard = () => {
         return `${address.slice(0, 6)}...${address.slice(-6)}`;
     };
 
+    const verifyEligibility = async (submissionData) => {
+        const eligibilityScore = calculateEligibilityScore({
+          walletAge: submissionData.isWalletVerified,
+          emailVerified: submissionData.emailVerified,
+          participationCount: submissionData.participationCount,
+          // Add more criteria
+        });
+      
+        return eligibilityScore > 50; // Threshold for eligibility
+      };
+
     const Sidebar = () => (
         <AnimatePresence>
             {isSidebarOpen && (

@@ -2,7 +2,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Navbar from './header/Navbar';
-import Home from './layout/Home';
+import Home from './pages/home/Home';
 import SwapToken from './layout/SwapToken';
 import About from './layout/About';
 import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
