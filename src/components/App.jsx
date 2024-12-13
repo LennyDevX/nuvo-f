@@ -1,49 +1,106 @@
-import React, { useEffect } from 'react';
+// src/components/App.jsx
+import React from 'react';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Navbar from './header/Navbar';
 import Home from './layout/Home';
 import SwapToken from './layout/SwapToken';
 import About from './layout/About';
+import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
 import TokenomicsDashboard from './layout/TokenomicsDashboard/TokenomicsDashboard';
-
-
-
-
-
 import { StakingProvider } from './context/StakingContext';
-
-
-
-
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { WalletProvider } from './context/WalletContext'; // Importa el WalletProvider
-import DashboardStaking from './layout/DashboardStaking/DashboardStaking'; // Importa el componente InfoAccount
+import { WalletProvider } from './context/WalletContext';
+import DashboardStaking from './layout/DashboardStaking/DashboardStaking';
 
 const App = () => {
-
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('isDarkMode');
-    const initialTheme = savedTheme ? JSON.parse(savedTheme) : true; // Set dark as default
-    document.documentElement.classList.toggle('is-dark', initialTheme);
-    document.documentElement.classList.toggle('is-light', !initialTheme);
-  }, []);
-  
-  return (
-    <Router> 
-          <WalletProvider>
-            <StakingProvider>
+  // Definir la configuración del router
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
               <Navbar />
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/tokenomics" element={<TokenomicsDashboard />} />
-                <Route path="/staking" element={<DashboardStaking />} />
-                <Route path="/swaptoken" element={<SwapToken />} />
-                <Route path="/about" element={<About />} />
-              </Routes>
-            </StakingProvider>
-          </WalletProvider>
-    </Router>
-  );
-}
+              <Home />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/tokenomics",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <TokenomicsDashboard />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/staking",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <DashboardStaking />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/swaptoken",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <SwapToken />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/about",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <About />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/airdrops",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <AirdropDashboard />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+  ], {
+    // Configuración adicional para React Router v7
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true
+    }
+  });
+
+  return <RouterProvider router={router} />;
+};
 
 export default App;
