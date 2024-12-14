@@ -2,6 +2,7 @@ import React from 'react';
 import HeroSection from '../home/HeroSection';
 import StakingCalculator from '../../utils/StakingCalculator';
 import Features from '../home/Features';
+import AnnouncementModal from '../../modal/AnnouncementModal';
 
 const Home = () => {
   return (
@@ -9,7 +10,7 @@ const Home = () => {
       <HeroSection />
       <StakingCalculator />
       <Features />
-      
+      <AnnouncementModal />
     </div>
   );
 };
