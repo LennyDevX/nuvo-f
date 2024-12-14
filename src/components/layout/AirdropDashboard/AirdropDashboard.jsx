@@ -5,11 +5,11 @@ import { WalletContext } from '../../context/WalletContext';
 import { useAirdropData } from '../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardCards from './DashboardCards';
-import { FaTimes, FaBars } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 
 const AirdropDashboard = () => {
     const { account } = useContext(WalletContext);
-    const { airdropData, loading, error } = useAirdropData(account);
+    const { airdropData } = useAirdropData(account);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const formatAddress = (address) => {
         if (!address) return 'N/A';
@@ -17,6 +17,9 @@ const AirdropDashboard = () => {
     };
 
     const verifyEligibility = async (submissionData) => {
+        // Example usage of verifyEligibility
+        const isEligible = await verifyEligibility(submissionData);
+        console.log(`Eligibility: ${isEligible}`);
         const eligibilityScore = calculateEligibilityScore({
           walletAge: submissionData.isWalletVerified,
           emailVerified: submissionData.emailVerified,
@@ -64,11 +67,14 @@ const AirdropDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 tracking-tight">
-                        Airdrop Dashboard
+                    <h1 className="text-3xl md:text-4xl font-bold text-gradient bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text mb-4">
+                    Airdrop Beta{" "}
+                    <span className="text-white">
+                        Dashboard
+                    </span>
                     </h1>
-                    <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
-                        Manage your airdrop participation and track your rewards.
+                    <p className="text-gray-300">
+                    Manage your airdrop submissions and eligibility
                     </p>
                 </motion.div>
 
@@ -81,6 +87,7 @@ const AirdropDashboard = () => {
                     />
                 </div>
             </div>
+            
         </div>
     );
 };

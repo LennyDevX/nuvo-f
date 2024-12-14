@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import WalletConnect from '../web3/WalletConnect';
+import AirdropDownloader from '../firebase/AirdropDownloader';
 
 // Importa la variable de entorno
 const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
@@ -70,23 +71,21 @@ const Navbar = () => {
             <Link to="/staking" className={navLinkClasses}>
               Staking
             </Link>
-            <Link to  ="/tokenomics" className={navLinkClasses}>
-                Tokenomics
+            <Link to="/tokenomics" className={navLinkClasses}>
+              Tokenomics
             </Link>
             <Link to="/swaptoken" className={navLinkClasses}>
               Swap Token
             </Link>
-            
             <Link to="/about" className={navLinkClasses}>
               About
             </Link>
-
             <Link to="/airdrops" className={navLinkClasses}>
               Airdrops
             </Link>
-            
+            {/*<AirdropDownloader />*/} {/* Use this button to download, the Airdrop Db-firebase*/}
             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-              BETA v5.4
+              BETA LIVE v0.1
             </span>
           </div>
 

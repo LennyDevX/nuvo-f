@@ -1,4 +1,3 @@
-// src/components/layout/DashboardStaking/ActionButtons.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 import ButtonDeposit from '../../web3/ButtonDeposit';
@@ -9,7 +8,13 @@ const ActionButtons = ({
   availableRewards,
   fetchContractData,
   handleWithdrawalSuccess,
+  handleDepositSuccess,
 }) => {
+  const onDepositSuccess = async () => {
+    await handleDepositSuccess();
+    await fetchContractData(true);
+  };
+
   return (
     <motion.div
       className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12"
@@ -19,7 +24,7 @@ const ActionButtons = ({
     >
       <div>
         <ButtonDeposit
-          onSuccess={() => fetchContractData(true)}
+          onSuccess={onDepositSuccess}
         />
       </div>
 

@@ -13,7 +13,7 @@ const DashboardCards = ({
   getStakingDuration,
 }) => {
   // Constants from smart contract
-  const HOURLY_ROI_PERCENTAGE = 200; // 0.02% per hour
+  const HOURLY_ROI_PERCENTAGE = 100; // 0.02% per hour
   const COMMISSION_PERCENTAGE = 6; // 6% commission
   const DAILY_HOURS = 24;
 

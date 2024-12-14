@@ -5,7 +5,7 @@ const StakingCalculator = () => {
   const [stakingAmount, setStakingAmount] = useState('5');
 
   const calculateReturns = (amount) => {
-    const daily = (amount * 0.48) / 100;
+    const daily = (amount * 0.24) / 100;
     const monthly = daily * 30;
     const sixMonths = daily * 180;
     const yearly = monthly * 12;
@@ -69,7 +69,7 @@ const StakingCalculator = () => {
             </div>
           </div>
           <p className="text-gray-300 text-base mt-6 text-center">
-            *Calculations based on 0.48% daily ROI
+            *Calculations based on 0.24% daily ROI
           </p>
         </div>
       </motion.div>

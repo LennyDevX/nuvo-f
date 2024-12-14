@@ -155,6 +155,18 @@ const useContractData = (account) => {
     [account, fetchContractData]
   );
 
+  const handleDepositSuccess = useCallback(async () => {
+    try {
+      await fetchContractData();
+      // Clear cache to force fresh data
+      const cacheKey = `contractData_${account}`;
+      delete cache.current[cacheKey];
+    } catch (err) {
+      console.error("Error updating after deposit:", err);
+      setError("Error updating data after deposit");
+    }
+  }, [account, fetchContractData]);
+
   useEffect(() => {
     if (account && provider) {
       fetchWithdrawalEvents();
@@ -177,6 +189,7 @@ const useContractData = (account) => {
     error,
     fetchContractData,
     handleWithdrawalSuccess,
+    handleDepositSuccess,
   };
 };
 

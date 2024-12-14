@@ -30,6 +30,7 @@ function DashboardStaking() {
     error,
     fetchContractData,
     handleWithdrawalSuccess,
+    handleDepositSuccess,
   } = useContractData(account);
 
   const { treasuryBalance, lastUpdate } = useTreasuryBalance();
@@ -141,6 +142,8 @@ function DashboardStaking() {
                   availableRewards={availableRewards}
                   fetchContractData={fetchContractData}
                   handleWithdrawalSuccess={handleWithdrawalSuccess}
+                  handleDepositSuccess={handleDepositSuccess}
+
                 />
                 <NetworkTag network={network} />
               </div>

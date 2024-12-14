@@ -9,13 +9,7 @@ const Home = () => {
       <HeroSection />
       <StakingCalculator />
       <Features />
-      <style>{`
-        .text-gradient {
-          background-clip: text;
-          -webkit-background-clip: text;
-          color: transparent;
-        }
-      `}</style>
+      
     </div>
   );
 };

@@ -17,7 +17,7 @@ const HeroSection = () => {
             transition={{ duration: 1 }}
           >
             Elevate Your Investment Strategy Through{" "}
-            <span className="text-gradient bg-gradient-to-r from-purple-400 to-pink-500">
+            <span className="text-gradient bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text">
               Smart Staking
             </span>
           </motion.h1>
@@ -87,16 +87,7 @@ const HeroSection = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            <span className="text-xs sm:text-sm text-gray-400 flex items-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Audited by Certik (In Process)
-            </span>
+            
           </motion.div>
         </motion.div>
       </section>
