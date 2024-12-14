@@ -56,12 +56,15 @@ Security Audits
 UI/UX Enhancements  
 
 Documentation
-🗺 Roadmap
-Current Phase - Beta 5.1   
-✅ Smart Contract Deployment ✅ Staking Dashboard ⚠️ Tokenomics Implementation ⚠️ Basic Trading Bot Integration
+🗺 Roadmap  
+
+Current Phase - Beta 5.5    
+
+✅ Smart Contract Deployment ✅ Staking Dashboard ✅ Airdrop Bonus
+⚠️ Tokenomics Implementation ⚠️ Basic Trading Bot Integration
 
 Next Steps
-❌ CertiK Audit ❌ DAO Governance ❌ Enhanced Yield Strategies ❌ Community Features
+❌ Official Launch ❌ DAO Governance ❌ Enhanced Yield Strategies ❌ Community Features ❌ Bot integration 
 
 🤝 Community
 Join our growing community:
@@ -76,8 +79,13 @@ Currently in Beta v5.1. While thoroughly tested, users should exercise caution a
 ```bash
 
 cd nuvo-f
+```
+```
 npm install
+```
+```
 npm run dev
+```
 
 
 
