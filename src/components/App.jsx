@@ -12,6 +12,8 @@ import { WalletProvider } from './context/WalletContext';
 import DashboardStaking from './layout/DashboardStaking/DashboardStaking';
 
 const App = () => {
+  const isDevelopment = import.meta.env.MODE === 'development';
+
   // Definir la configuración del router
   const router = createBrowserRouter([
     {
@@ -100,7 +102,11 @@ const App = () => {
     }
   });
 
-  return <RouterProvider router={router} />;
+  return (
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <RouterProvider router={router} />
+    </div>
+  );
 };
 
 export default App;

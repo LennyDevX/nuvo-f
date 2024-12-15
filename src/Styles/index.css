@@ -3,7 +3,7 @@
 @import "tailwindcss/utilities";
 
 @layer base {
-  :root {
+  :root { 
     /* Color System */
     --color-primary: #8B5CF6;    /* Purple */
     --color-secondary: #EC4899;  /* Pink */
@@ -34,6 +34,16 @@
     --transition-normal: 300ms;
     --transition-slow: 500ms;
   }
+}
+
+
+.app-container {
+  min-height: 100vh;
+  position: relative;
+}
+
+.grecaptcha-badge {
+  visibility: hidden !important;
 }
 
 @layer components {
