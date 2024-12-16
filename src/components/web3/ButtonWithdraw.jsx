@@ -29,12 +29,12 @@ function ButtonWithdraw() {
     if (!contract || !account || isContractPaused || isMigrated) return;
 
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const contractWithSigner = contract.connect(signer);
 
       const tx = await contractWithSigner.withdraw({
-        gasLimit: 300000
+        gasLimit: 300000n
       });
 
       displayNotification('Transaction submitted...', 'info');
@@ -59,12 +59,12 @@ function ButtonWithdraw() {
     if (!contract || !account || !isContractPaused) return;
 
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const contractWithSigner = contract.connect(signer);
 
       const tx = await contractWithSigner.emergencyUserWithdraw({
-        gasLimit: 300000
+        gasLimit: 300000n
       });
 
       displayNotification('Transaction submitted...', 'info');

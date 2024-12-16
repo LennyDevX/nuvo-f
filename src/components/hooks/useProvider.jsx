@@ -1,49 +1,55 @@
-// src/hooks/useProvider.js
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 
 const useProvider = () => {
   const [provider, setProvider] = useState(null);
   const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
-  const RPC_URLS = [
-    ALCHEMY_KEY ? `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}` : "",
-    "https://rpc.ankr.com/polygon",
-    "https://polygon-rpc.com",
-  ];
 
   useEffect(() => {
-    const getProvider = async () => {
-      if (provider) return provider;
+    let mounted = true;
 
-      // Intenta conectar con Alchemy primero si existe la clave API
-      if (ALCHEMY_KEY) {
-        try {
-          const alchemyProvider = new ethers.providers.JsonRpcProvider(RPC_URLS[0]);
-          await alchemyProvider.getBlockNumber();
-          setProvider(alchemyProvider);
-          return;
-        } catch (error) {
-          console.warn("Failed to connect to Alchemy:", error);
-        }
+    const initProvider = async () => {
+      if (!ALCHEMY_KEY) {
+        console.error("Alchemy API key is required");
+        return;
       }
 
-      // Intenta conectarte a los RPC de respaldo
-      for (let i = 1; i < RPC_URLS.length; i++) {
+      try {
+        // Try WebSocket first
+        const wsUrl = `wss://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
+        const wsProvider = new ethers.WebSocketProvider(wsUrl);
+        
         try {
-          const fallbackProvider = new ethers.providers.JsonRpcProvider(RPC_URLS[i]);
-          await fallbackProvider.getBlockNumber();
-          setProvider(fallbackProvider);
-          return;
-        } catch (error) {
-          console.warn(`Error connecting to ${RPC_URLS[i]}:`, error);
+          await wsProvider.getNetwork();
+          if (mounted) {
+            console.log("Connected via WebSocket");
+            setProvider(wsProvider);
+            return;
+          }
+        } catch (wsError) {
+          console.warn("WebSocket connection failed, falling back to HTTPS");
         }
-      }
 
-      throw new Error("All RPC connections failed");
+        // Fallback to HTTPS
+        const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
+        const httpProvider = new ethers.JsonRpcProvider(httpsUrl);
+        
+        await httpProvider.getNetwork();
+        if (mounted) {
+          console.log("Connected via HTTPS");
+          setProvider(httpProvider);
+        }
+      } catch (error) {
+        console.error("Failed to initialize provider:", error);
+      }
     };
 
-    getProvider();
-  }, [provider, ALCHEMY_KEY, RPC_URLS]);
+    initProvider();
+
+    return () => {
+      mounted = false;
+    };
+  }, [ALCHEMY_KEY]);
 
   return provider;
 };

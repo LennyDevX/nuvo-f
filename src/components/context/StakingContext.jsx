@@ -7,8 +7,8 @@ import ABI from '../../Abi/StakingContract.json';
 const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
 export const StakingContext = createContext();
 
-const MIN_DEPOSIT = ethers.utils.parseEther("5");
-const MAX_DEPOSIT = ethers.utils.parseEther("10000");
+const MIN_DEPOSIT = ethers.parseEther("5");
+const MAX_DEPOSIT = ethers.parseEther("10000");
 const MAX_DEPOSITS = 300;
 
 export function StakingProvider({ children }) {
@@ -37,8 +37,8 @@ export function StakingProvider({ children }) {
 
   const initializeContract = async () => {
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const stakingContract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
       
       setContract(stakingContract);
@@ -80,8 +80,8 @@ export function StakingProvider({ children }) {
         contract.getUserDeposits(account)
       ]);
 
-      setTotalDeposits(ethers.utils.formatEther(deposits));
-      setEstimatedRewards(ethers.utils.formatEther(rewards));
+      setTotalDeposits(ethers.formatEther(deposits));
+      setEstimatedRewards(ethers.formatEther(rewards));
       setUserDeposits(userDeposits);
       setRemainingSlots(MAX_DEPOSITS - userDeposits.length);
     } catch (err) {
@@ -99,13 +99,13 @@ export function StakingProvider({ children }) {
       setIsPending(true);
       setError(null);
 
-      const amountInWei = ethers.utils.parseEther(amount.toString());
+      const amountInWei = ethers.parseEther(amount.toString());
 
       // Validate deposit amount
-      if (amountInWei.lt(MIN_DEPOSIT)) {
+      if (amountInWei < MIN_DEPOSIT) {
         throw new Error("Deposit below minimum (5 MATIC)");
       }
-      if (amountInWei.gt(MAX_DEPOSIT)) {
+      if (amountInWei > MAX_DEPOSIT) {
         throw new Error("Deposit exceeds maximum (10000 MATIC)");
       }
       if (userDeposits.length >= MAX_DEPOSITS) {
@@ -114,7 +114,7 @@ export function StakingProvider({ children }) {
 
       const tx = await contract.deposit({ 
         value: amountInWei,
-        gasLimit: 300000
+        gasLimit: 300000n
       });
 
       const receipt = await tx.wait();
@@ -146,7 +146,8 @@ export function StakingProvider({ children }) {
       isPending,
       error,
       makeDeposit,
-      fetchUserData
+      fetchUserData, // Make sure this is included
+      // ...other values
     }}>
       {children}
     </StakingContext.Provider>

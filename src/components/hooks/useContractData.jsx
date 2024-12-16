@@ -32,7 +32,6 @@ const useContractData = (account) => {
     const now = Date.now();
     const cacheKey = `contractData_${account}`;
 
-    // Usar datos en caché si son válidos
     if (
       cache.current[cacheKey] &&
       now - cache.current[cacheKey].timestamp < CACHE_DURATION
@@ -48,18 +47,18 @@ const useContractData = (account) => {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
 
       const [rewards, poolBalance, deposit, deposits] = await Promise.all([
-        contract.calculateRewards(account).catch(() => ethers.BigNumber.from(0)),
-        contract.getContractBalance().catch(() => ethers.BigNumber.from(0)),
-        contract.getTotalDeposit(account).catch(() => ethers.BigNumber.from(0)),
+        contract.calculateRewards(account).catch(() => ethers.parseEther("0")),
+        contract.getContractBalance().catch(() => ethers.parseEther("0")),
+        contract.getTotalDeposit(account).catch(() => ethers.parseEther("0")),
         contract.getUserDeposits(account).catch(() => []),
       ]);
 
       const newData = {
-        depositAmount: ethers.utils.formatEther(deposit),
-        availableRewards: ethers.utils.formatEther(rewards),
-        totalPoolBalance: ethers.utils.formatEther(poolBalance),
-        firstDepositTime: deposits[0]
-          ? deposits[0].timestamp.toNumber()
+        depositAmount: ethers.formatEther(deposit || "0"),
+        availableRewards: ethers.formatEther(rewards || "0"),
+        totalPoolBalance: ethers.formatEther(poolBalance || "0"),
+        firstDepositTime: deposits?.[0]?.timestamp 
+          ? Number(deposits[0].timestamp)
           : null,
       };
 
@@ -84,10 +83,10 @@ const useContractData = (account) => {
       const withdrawals = await Promise.all(
         events.map(async (event) => {
           const block = await provider.getBlock(event.blockNumber);
-          const amount = ethers.utils.formatEther(event.args.amount);
+          const amount = ethers.formatEther(event.args.amount || "0");
           return {
-            amount: parseFloat(amount).toString(),
-            timestamp: new Date(block.timestamp * 1000).toISOString(),
+            amount: amount,
+            timestamp: new Date(Number(block.timestamp) * 1000).toISOString(),
             transactionHash: event.transactionHash,
           };
         })
@@ -115,50 +114,51 @@ const useContractData = (account) => {
     }
   }, [provider, account]);
 
-  const handleWithdrawalSuccess = useCallback(
-    (amount) => {
-      const netAmount = parseFloat(amount);
-      if (isNaN(netAmount) || netAmount <= 0) return;
-
+  const handleWithdrawalSuccess = useCallback(async (amount) => {
+    try {
+      // Forzar actualización inmediata
+      await fetchContractData();
+      
+      const netAmount = amount ? ethers.formatEther(amount) : '0';
       const timestamp = new Date().toISOString();
-      const newWithdrawal = {
-        amount: netAmount.toString(),
-        timestamp,
-        transactionHash: "", // Agrega el hash si está disponible
-      };
 
-      setData((prevData) => {
-        const updatedHistory = [...prevData.withdrawalHistory, newWithdrawal];
-        const newTotalWithdrawn = prevData.totalWithdrawn + netAmount;
+      setData(prevData => {
+        const newTotalWithdrawn = prevData.totalWithdrawn + parseFloat(netAmount);
+        const newWithdrawal = {
+          amount: netAmount,
+          timestamp,
+          transactionHash: '',
+        };
 
+        // Actualizar localStorage
         localStorage.setItem(
           `withdrawals_${account}`,
-          JSON.stringify(updatedHistory)
+          JSON.stringify([...prevData.withdrawalHistory, newWithdrawal])
         );
-        localStorage.setItem(
-          `totalWithdrawn_${account}`,
-          newTotalWithdrawn.toString()
-        );
+        localStorage.setItem(`totalWithdrawn_${account}`, newTotalWithdrawn.toString());
         localStorage.setItem(`lastWithdrawal_${account}`, timestamp);
 
         return {
           ...prevData,
-          availableRewards: 0,
-          withdrawalHistory: updatedHistory,
+          availableRewards: '0',
+          withdrawalHistory: [...prevData.withdrawalHistory, newWithdrawal],
           totalWithdrawn: newTotalWithdrawn,
         };
       });
 
-      // Actualiza los datos del contrato después de un retiro
-      fetchContractData();
-    },
-    [account, fetchContractData]
-  );
+      // Actualizar eventos y balance
+      await Promise.all([
+        fetchWithdrawalEvents(),
+        fetchContractData(),
+      ]);
+    } catch (err) {
+      console.error("Error updating data after withdrawal:", err);
+    }
+  }, [account, fetchContractData, fetchWithdrawalEvents]);
 
   const handleDepositSuccess = useCallback(async () => {
     try {
       await fetchContractData();
-      // Clear cache to force fresh data
       const cacheKey = `contractData_${account}`;
       delete cache.current[cacheKey];
     } catch (err) {
@@ -172,7 +172,6 @@ const useContractData = (account) => {
       fetchWithdrawalEvents();
       fetchContractData();
 
-      // Configura el intervalo de actualización
       intervalRef.current = setInterval(() => {
         fetchContractData();
       }, UPDATE_INTERVAL);

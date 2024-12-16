@@ -1,196 +1,215 @@
-// ButtonWithdrawAll.jsx
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ethers } from "ethers";
-import { WalletContext } from "../../components/context/WalletContext";
-import ABI from "../../Abi/StakingContract.json";
+import React, { useState, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ethers } from 'ethers';
+import { StakingContext } from '../context/StakingContext';
+import { WalletContext } from '../context/WalletContext';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || '';
+function ButtonWithdrawAll() {
+  const { account } = useContext(WalletContext);
+  const { 
+    contract, 
+    isPending, 
+    isContractPaused,
+    isMigrated,
+    fetchUserData 
+  } = useContext(StakingContext);
+  
+  const [notification, setNotification] = useState({ message: '', type: '' });
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-const ButtonWithdrawAll = ({ onSuccess }) => {
-  const { account } = React.useContext(WalletContext);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-    // ButtonWithdrawAll.jsx
-  const handleWithdrawAll = async () => {
-    if (!account) {
-      setError("Please connect your wallet first");
+  const handleClick = async () => {
+    if (!contract || !account) {
+      console.error("Contract or account not available");
+      displayNotification('Please connect your wallet', 'error');
       return;
     }
-  
-    setIsLoading(true);
-    setError(null);
-  
+
     try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
-  
-      // Verificar saldos primero
-      const userInfo = await contract.getUserInfo(account);
+      // Verificar balance del contrato y rewards
       const contractBalance = await contract.getContractBalance();
-      const totalDeposit = await contract.getTotalDeposit(account);
+      const userInfo = await contract.getUserInfo(account);
+      const totalToWithdraw = userInfo.totalDeposited + userInfo.pendingRewards;
       
-      if (totalDeposit.isZero()) {
-        throw new Error("No deposits found");
+      console.log('Contract balance:', ethers.formatEther(contractBalance));
+      console.log('Total to withdraw:', ethers.formatEther(totalToWithdraw));
+
+      if (contractBalance < totalToWithdraw) {
+        displayNotification(
+          'The contract currently has insufficient funds. Please try again later or contact support.',
+          'error'
+        );
+        return;
       }
-  
-      // Verificar que el contrato tiene suficientes fondos
-      const totalAmount = totalDeposit.add(userInfo.pendingRewards);
-      if (contractBalance.lt(totalAmount)) {
-        throw new Error("Insufficient contract balance");
-      }
-  
-      // Estimar gas antes de la transacción
-      const gasEstimate = await contract.estimateGas.withdrawAll();
-      const gasLimit = gasEstimate.mul(120).div(100); // 20% buffer
-  
-      // Ejecutar transacción con parámetros optimizados
-      const tx = await contract.withdrawAll({
-        gasLimit: gasLimit,
-        from: account
-      });
-  
-      setError("Transaction submitted. Waiting for confirmation...");
-      
-      const receipt = await tx.wait();
-      
-      if (receipt.status === 1) {
-        if (onSuccess) onSuccess();
-        setShowConfirm(false);
-        setError(null);
-      } else {
-        throw new Error("Transaction failed");
-      }
+
+      // Si hay fondos suficientes, mostrar el modal de confirmación
+      setShowConfirmation(true);
     } catch (error) {
-      console.error("WithdrawAll error:", error);
-      
-      // Manejo específico de errores
-      if (error.message.includes("execution reverted")) {
-        if (error.message.includes("No funds")) {
-          setError("No funds available to withdraw");
-        } else if (error.message.includes("Contract is underfunded")) {
-          setError("Contract currently lacks sufficient funds. Please try again later.");
-        } else {
-          setError("Transaction failed: " + (error.data?.message || error.message));
-        }
-      } else {
-        setError(error.message || "Transaction failed. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
+      console.error("Error checking balances:", error);
+      displayNotification('Error checking contract balance', 'error');
+      return;
     }
   };
 
+  const handleConfirm = async () => {
+    if (!contract || !account || isContractPaused || isMigrated) {
+      displayNotification('Cannot proceed with withdrawal', 'error');
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      setShowConfirmation(false);
+      
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contractWithSigner = contract.connect(signer);
+
+      // Intentar estimar el gas primero
+      try {
+        const gasEstimate = await contractWithSigner.withdrawAll.estimateGas();
+        console.log("Estimated gas:", gasEstimate.toString());
+        
+        const gasLimit = (gasEstimate * BigInt(120)) / BigInt(100);
+        const tx = await contractWithSigner.withdrawAll({ gasLimit });
+        
+        console.log("Transaction sent:", tx.hash);
+        displayNotification('Transaction submitted, please wait...', 'info');
+
+        const receipt = await tx.wait();
+        console.log("Transaction receipt:", receipt);
+
+        if (receipt.status === 1) {
+          await fetchUserData();
+          displayNotification('Successfully withdrawn all funds! 🎉', 'success');
+        }
+      } catch (error) {
+        if (error.message.includes("Insufficient contract balance")) {
+          displayNotification(
+            'The contract currently has insufficient funds to process your withdrawal. Please try again later.',
+            'error'
+          );
+        } else {
+          throw error;
+        }
+      }
+    } catch (error) {
+      console.error('WithdrawAll error:', error);
+      
+      let errorMessage = 'Failed to withdraw funds';
+      if (error.reason) {
+        errorMessage = error.reason;
+      } else if (error.message?.includes("user rejected")) {
+        errorMessage = 'Transaction was rejected by user';
+      } else if (error.message?.includes("insufficient funds")) {
+        errorMessage = 'Insufficient funds for gas';
+      }
+      
+      displayNotification(errorMessage, 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowConfirmation(false);
+  };
+
+  const displayNotification = (message, type) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification({ message: '', type: '' }), 5000);
+  };
+
   return (
-    <motion.div
-      className="w-full space-y-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      {!showConfirm ? (
-        <motion.button
-          onClick={() => setShowConfirm(true)}
-          className="w-full py-4 text-lg font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-xl transition-all transform"
-          whileHover={{ y: -5, boxShadow: "0 10px 20px rgba(139, 92, 246, 0.1)" }}
-          whileTap={{ scale: 0.98 }}
-        >
-          Withdraw All
-        </motion.button>
-      ) : (
-        <AnimatePresence>
+    <div className="relative">
+      {/* Main Button */}
+      <motion.button
+        onClick={handleClick}
+        disabled={isProcessing || isPending || !account || isContractPaused || isMigrated}
+        className={`
+          w-full px-6 py-3 rounded-xl font-medium
+          bg-gradient-to-r from-purple-600 to-pink-600
+          hover:from-purple-700 hover:to-pink-700
+          text-white transition-all duration-300
+          disabled:opacity-50 disabled:cursor-not-allowed
+        `}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        {isProcessing || isPending ? (
+          <div className="flex items-center justify-center gap-2">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            Processing...
+          </div>
+        ) : (
+          <span>Withdraw All Funds 💎</span>
+        )}
+      </motion.button>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmation && (
           <motion.div
-            className="bg-black/40 backdrop-blur-sm rounded-xl p-6 border border-red-500/20"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
+            onClick={handleCancel}
           >
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <svg 
-                  className="w-6 h-6 text-red-500" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
-                  />
-                </svg>
-                <h3 className="text-lg font-semibold text-red-400">
-                  Important Notice
-                </h3>
-              </div>
-              
-              <p className="text-gray-300 text-sm">
-                By withdrawing all your deposits, you will:
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-gray-900 p-6 rounded-2xl border border-purple-500/20 max-w-md w-full"
+            >
+              <h3 className="text-xl font-bold text-white mb-4">⚠️ Warning</h3>
+              <p className="text-gray-300 mb-6">
+                By withdrawing all your rewards and deposits, you will stop participating in the staking program. 
+                This action cannot be undone. Are you sure you want to proceed?
               </p>
-              
-              <ul className="list-disc list-inside text-gray-300 text-sm space-y-2">
-                <li>Stop receiving any further staking rewards</li>
-                <li>Leave the staking protocol completely</li>
-                <li>Need to make new deposits to participate again</li>
-              </ul>
-
-              {error && (
-                <p className="text-red-400 text-sm mt-2">
-                  {error}
-                </p>
-              )}
-
-              <div className="flex space-x-4 pt-4">
-                <motion.button
-                  onClick={handleWithdrawAll}
-                  disabled={isLoading}
-                  className={`flex-1 py-3 text-sm font-medium text-white rounded-xl transition-all
-                    ${isLoading 
-                      ? 'bg-gray-500 cursor-not-allowed'
-                      : 'bg-red-500 hover:bg-red-600'
-                    }`}
-                  whileHover={!isLoading && { scale: 1.02 }}
-                  whileTap={!isLoading && { scale: 0.98 }}
+              <div className="flex gap-4">
+                <button
+                  onClick={handleConfirm}
+                  className="flex-1 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white transition-colors"
                 >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                      Processing...
-                    </div>
-                  ) : (
-                    'Confirm Withdrawal'
-                  )}
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => {
-                    setShowConfirm(false);
-                    setError(null);
-                  }}
-                  disabled={isLoading}
-                  className={`flex-1 py-3 text-sm font-medium text-white rounded-xl transition-all
-                    ${isLoading
-                      ? 'bg-gray-500 cursor-not-allowed'
-                      : 'bg-gray-600 hover:bg-gray-700'
-                    }`}
-                  whileHover={!isLoading && { scale: 1.02 }}
-                  whileTap={!isLoading && { scale: 0.98 }}
+                  Yes, withdraw all
+                </button>
+                <button
+                  onClick={handleCancel}
+                  className="flex-1 px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-white transition-colors"
                 >
                   Cancel
-                </motion.button>
+                </button>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </AnimatePresence>
-      )}
-    </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {notification.message && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`
+              mt-4 p-4 rounded-xl text-white text-center
+              ${notification.type === 'error' ? 'bg-red-500/20' : 
+                notification.type === 'success' ? 'bg-green-500/20' : 
+                'bg-blue-500/20'}
+            `}
+          >
+            {notification.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-};
+}
 
 export default ButtonWithdrawAll;

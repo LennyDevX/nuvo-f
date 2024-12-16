@@ -1,5 +1,5 @@
 // src/components/layout/DashboardStaking/DashboardStaking.jsx
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../context/WalletContext";
 import useContractData from "../../hooks/useContractData";
@@ -11,8 +11,10 @@ import NetworkTag from "./Tag";
 import QuickStats from "./QuickStats";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import LoadingOverlay from "../../LoadOverlay/LoadingOverlay";
+import { ethers } from "ethers";
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
 
 function DashboardStaking() {
   const { account, network, balance } = useContext(WalletContext);
@@ -29,11 +31,10 @@ function DashboardStaking() {
     loading,
     error,
     fetchContractData,
-    handleWithdrawalSuccess,
     handleDepositSuccess,
   } = useContractData(account);
 
-  const { treasuryBalance, lastUpdate } = useTreasuryBalance();
+  const { balance: treasuryBalance, error: treasuryError } = useTreasuryBalance(TREASURY_ADDRESS);
 
   // Effect for connection
   useEffect(() => {
@@ -54,6 +55,42 @@ function DashboardStaking() {
   }, [isConnected, fetchContractData, loading]);
 
   // Effect to calculate ROI
+  useEffect(() => {
+    const roi = calculateROIProgress(depositAmount, totalWithdrawn);
+    setRoiProgress(roi);
+  }, [depositAmount, totalWithdrawn]);
+
+  // Verificar y validar la dirección del tesoro
+  useEffect(() => {
+    if (!TREASURY_ADDRESS) {
+      console.error('Treasury address is not configured in environment variables');
+    } else {
+      try {
+        const isValid = ethers.isAddress(TREASURY_ADDRESS);
+        console.log('Treasury address validation:', {
+          address: TREASURY_ADDRESS,
+          isValid
+        });
+      } catch (err) {
+        console.error('Error validating treasury address:', err);
+      }
+    }
+  }, []);
+
+  const handleWithdrawalSuccess = useCallback(async () => {
+    try {
+      // Actualizar todos los datos relevantes
+      await fetchContractData(true);
+      
+      // Recalcular ROI después de la actualización
+      const newRoi = calculateROIProgress(depositAmount, totalWithdrawn);
+      setRoiProgress(newRoi);
+    } catch (error) {
+      console.error("Error updating dashboard after withdrawal:", error);
+    }
+  }, [fetchContractData, depositAmount, totalWithdrawn]);
+
+  // Actualizar ROI cuando cambien los valores relevantes
   useEffect(() => {
     const roi = calculateROIProgress(depositAmount, totalWithdrawn);
     setRoiProgress(roi);
@@ -100,12 +137,18 @@ function DashboardStaking() {
                 },
                 {
                   label: "Treasury Balance",
-                  value: `${parseFloat(treasuryBalance).toFixed(4)} POL`,
+                  value: (() => {
+                    if (treasuryError) return "Error loading";
+                    if (!treasuryBalance || treasuryBalance === "0") return "Loading...";
+                    return `${parseFloat(treasuryBalance).toFixed(4)} POL`;
+                  })(),
                   icon: "🏦",
                   className: "text-blue-400",
-                  subtext: lastUpdate
-                    ? `Updated: ${new Date(lastUpdate).toLocaleTimeString()}`
-                    : "Updating...",
+                  subtext: treasuryError 
+                    ? "Failed to load balance" 
+                    : treasuryBalance === "0"
+                    ? "Loading treasury data..."
+                    : "Live treasury balance",
                 },
                 {
                   label: "Pool Balance",

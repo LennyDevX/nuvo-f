@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
 import ButtonDeposit from '../../web3/ButtonDeposit';
 import ButtonWithdraw from '../../web3/ButtonWithdraw';
 import ButtonWithdrawAll from '../../web3/ButtonWithdrawAll';
+import { StakingContext } from '../../context/StakingContext';
 
 const ActionButtons = ({
   availableRewards,
@@ -10,6 +11,8 @@ const ActionButtons = ({
   handleWithdrawalSuccess,
   handleDepositSuccess,
 }) => {
+  const { contract, isPending, isContractPaused } = useContext(StakingContext);
+
   const onDepositSuccess = async () => {
     await handleDepositSuccess();
     await fetchContractData(true);

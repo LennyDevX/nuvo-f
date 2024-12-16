@@ -18,9 +18,9 @@ const WalletConnect = () => {
     setAccount(account); 
     setNetwork(networkName); 
 
-    // Get balance using ethers
+    // Get balance using ethers v6
     const balance = await provider.getBalance(account);
-    const formattedBalance = ethers.utils.formatEther(balance);
+    const formattedBalance = ethers.formatEther(balance);
     setBalance(formattedBalance);
   };
 
@@ -34,11 +34,13 @@ const WalletConnect = () => {
     try {
       setIsLoading(true);
       if (window.ethereum) {
-        // Create provider
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        // Create provider using ethers v6
+        const provider = new ethers.BrowserProvider(window.ethereum);
         
         // Request account access
-        const accounts = await provider.send("eth_requestAccounts", []);
+        const accounts = await window.ethereum.request({ 
+          method: "eth_requestAccounts" 
+        });
         
         // Get network name
         const networkName = await getNetworkName(provider);
@@ -46,9 +48,9 @@ const WalletConnect = () => {
         await handleConnect(provider, accounts[0], networkName);
 
         // Listen for account changes
-        window.ethereum.on('accountsChanged', (newAccounts) => {
+        window.ethereum.on('accountsChanged', async (newAccounts) => {
           if (newAccounts.length > 0) {
-            handleConnect(provider, newAccounts[0], networkName);
+            await handleConnect(provider, newAccounts[0], networkName);
           } else {
             setConnected(false);
             setAccounts([]);
@@ -59,6 +61,13 @@ const WalletConnect = () => {
         window.ethereum.on('chainChanged', async () => {
           const newNetworkName = await getNetworkName(provider);
           setNetwork(newNetworkName);
+          
+          // Refresh provider and account info
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const accounts = await provider.listAccounts();
+          if (accounts.length > 0) {
+            await handleConnect(provider, accounts[0], newNetworkName);
+          }
         });
 
       } else {
