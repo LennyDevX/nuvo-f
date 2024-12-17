@@ -1,55 +1,103 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ethers } from "ethers";
 
 const useProvider = () => {
   const [provider, setProvider] = useState(null);
+  const [error, setError] = useState(null);
+  const retryCount = useRef(0);
+  const MAX_RETRIES = 3;
   const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
+
+  const createProvider = async () => {
+    if (!ALCHEMY_KEY) {
+      setError("Alchemy API key is required");
+      return null;
+    }
+
+    try {
+      // Always use HTTPS provider for stability
+      const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
+      const httpProvider = new ethers.JsonRpcProvider(httpsUrl, {
+        chainId: 137,
+        name: 'polygon-mainnet',
+        // Add rate limiting handling
+        pollingInterval: 4000,
+        throttleLimit: 1,
+        batchMaxSize: 1
+      });
+
+      // Test the connection
+      await httpProvider.getNetwork();
+      console.log("Provider connected successfully");
+      
+      // Setup event listeners for the provider
+      httpProvider.on("network", (newNetwork, oldNetwork) => {
+        if (oldNetwork) {
+          console.log("Network changed, reloading...");
+          window.location.reload();
+        }
+      });
+
+      return httpProvider;
+    } catch (error) {
+      console.error("Provider creation failed:", error);
+      return null;
+    }
+  };
+
+  const initializeProvider = async () => {
+    try {
+      const newProvider = await createProvider();
+      if (newProvider) {
+        setProvider(newProvider);
+        retryCount.current = 0;
+        setError(null);
+      } else if (retryCount.current < MAX_RETRIES) {
+        retryCount.current++;
+        setTimeout(initializeProvider, 2000 * retryCount.current);
+      } else {
+        setError("Failed to connect to network after multiple attempts");
+      }
+    } catch (err) {
+      console.error("Provider initialization error:", err);
+      setError("Failed to initialize provider");
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
+    let currentProvider = null;
 
-    const initProvider = async () => {
-      if (!ALCHEMY_KEY) {
-        console.error("Alchemy API key is required");
-        return;
-      }
-
-      try {
-        // Try WebSocket first
-        const wsUrl = `wss://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
-        const wsProvider = new ethers.WebSocketProvider(wsUrl);
-        
-        try {
-          await wsProvider.getNetwork();
-          if (mounted) {
-            console.log("Connected via WebSocket");
-            setProvider(wsProvider);
-            return;
-          }
-        } catch (wsError) {
-          console.warn("WebSocket connection failed, falling back to HTTPS");
-        }
-
-        // Fallback to HTTPS
-        const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
-        const httpProvider = new ethers.JsonRpcProvider(httpsUrl);
-        
-        await httpProvider.getNetwork();
-        if (mounted) {
-          console.log("Connected via HTTPS");
-          setProvider(httpProvider);
-        }
-      } catch (error) {
-        console.error("Failed to initialize provider:", error);
-      }
+    const init = async () => {
+      if (!mounted) return;
+      await initializeProvider();
     };
 
-    initProvider();
+    init();
 
     return () => {
       mounted = false;
+      if (currentProvider) {
+        currentProvider.removeAllListeners();
+      }
     };
-  }, [ALCHEMY_KEY]);
+  }, []);
+
+  // Add reconnection logic
+  useEffect(() => {
+    if (!provider) return;
+
+    const handleError = (error) => {
+      console.error("Provider error:", error);
+      initializeProvider();
+    };
+
+    provider.on("error", handleError);
+
+    return () => {
+      provider.removeListener("error", handleError);
+    };
+  }, [provider]);
 
   return provider;
 };

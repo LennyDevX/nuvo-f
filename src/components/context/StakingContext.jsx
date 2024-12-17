@@ -1,155 +1,349 @@
-// StakingContext.jsx
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { WalletContext } from './WalletContext';
+import useProvider from '../hooks/useProvider';
 import ABI from '../../Abi/StakingContract.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
-export const StakingContext = createContext();
+// Mover las constantes fuera del componente
+export const STAKING_CONSTANTS = {
+  HOURLY_ROI: 0.0001, // 0.01%
+  MAX_ROI: 1.25, // 125%
+  COMMISSION: 0.06, // 6%
+  MAX_DEPOSIT: 10000,
+  MIN_DEPOSIT: 5,
+  MAX_DEPOSITS_PER_USER: 300,
+  BASIS_POINTS: 10000,
+  TIME_BONUSES: {
+    YEAR: { days: 365, bonus: 0.05 }, // 5%
+    HALF_YEAR: { days: 180, bonus: 0.03 }, // 3%
+    QUARTER: { days: 90, bonus: 0.01 } // 1%
+  }
+};
 
-const MIN_DEPOSIT = ethers.parseEther("5");
-const MAX_DEPOSIT = ethers.parseEther("10000");
-const MAX_DEPOSITS = 300;
+const defaultState = {
+  contract: null,
+  isContractPaused: false,
+  isMigrated: false,
+  newContractAddress: null,
+  uniqueUsersCount: 0,
+  totalPoolBalance: '0',
+  userDeposits: [],
+  userInfo: {
+    totalStaked: '0',
+    timeBonus: 0,
+    pendingRewards: '0',
+    lastWithdraw: 0,
+    roiProgress: 0
+  },
+  treasuryAddress: null,
+  stakingStats: {
+    totalDeposited: '0',
+    pendingRewards: '0',
+    lastWithdraw: 0,
+    depositsCount: 0,
+    remainingSlots: 300
+  },
+  isPending: false
+};
 
-export function StakingProvider({ children }) {
-  const { account } = useContext(WalletContext);
-  const [contract, setContract] = useState(null);
-  const [userDeposits, setUserDeposits] = useState([]);
-  const [totalDeposits, setTotalDeposits] = useState('0');
-  const [remainingSlots, setRemainingSlots] = useState(MAX_DEPOSITS);
-  const [isContractPaused, setIsContractPaused] = useState(false);
-  const [isMigrated, setIsMigrated] = useState(false);
-  const [estimatedRewards, setEstimatedRewards] = useState('0');
-  const [isPending, setIsPending] = useState(false);
-  const [error, setError] = useState(null);
+const StakingContext = createContext({
+  state: defaultState,
+  STAKING_CONSTANTS: {
+    HOURLY_ROI: 0.0001,
+    MAX_ROI: 1.25,
+    COMMISSION: 0.06,
+    MAX_DEPOSIT: 10000,
+    MIN_DEPOSIT: 5,
+    MAX_DEPOSITS_PER_USER: 300,
+    BASIS_POINTS: 10000,
+    TIME_BONUSES: {
+      YEAR: { days: 365, bonus: 0.05 },
+      HALF_YEAR: { days: 180, bonus: 0.03 },
+      QUARTER: { days: 90, bonus: 0.01 }
+    }
+  }
+});
 
-  // Initialize contract and setup listeners
+export const useStaking = () => {
+  const context = useContext(StakingContext);
+  if (!context) {
+    throw new Error('useStaking must be used within a StakingProvider');
+  }
+  return context;
+};
+
+export const StakingProvider = ({ children }) => {
+  const provider = useProvider();
+  const [state, setState] = useState(defaultState);
+  const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
+
   useEffect(() => {
-    if (account) {
-      initializeContract();
-      return () => {
-        if (contract) {
-          contract.removeAllListeners();
-        }
-      };
-    }
-  }, [account]);
-
-  const initializeContract = async () => {
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const stakingContract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
+    if (provider && CONTRACT_ADDRESS) {
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+      setState(prev => ({ ...prev, contract }));
       
-      setContract(stakingContract);
-
-      // Setup event listeners
-      stakingContract.on("DepositMade", (user, depositId, amount, commission, timestamp) => {
-        if (user.toLowerCase() === account.toLowerCase()) {
-          fetchUserData();
-        }
-      });
-
-      // Fetch initial state
-      const [paused, migrated, deposits] = await Promise.all([
-        stakingContract.paused(),
-        stakingContract.migrated(),
-        stakingContract.getUserDeposits(account)
-      ]);
-
-      setIsContractPaused(paused);
-      setIsMigrated(migrated);
-      setUserDeposits(deposits);
-      setRemainingSlots(MAX_DEPOSITS - deposits.length);
-
-      await fetchUserData();
-    } catch (err) {
-      console.error("Contract initialization error:", err);
-      setError("Failed to initialize contract");
+      // Initial contract status fetch
+      getContractStatus(contract);
     }
+  }, [provider]);
+
+  const getSignedContract = async () => {
+    if (!window.ethereum) throw new Error('No wallet found');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    return new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
   };
 
-  const fetchUserData = async () => {
-    if (!contract || !account) return;
-    
+  const deposit = async (amount) => {
     try {
-      setIsPending(true);
-      const [deposits, rewards, userDeposits] = await Promise.all([
-        contract.getTotalDeposit(account),
-        contract.calculateRewards(account),
-        contract.getUserDeposits(account)
-      ]);
-
-      setTotalDeposits(ethers.formatEther(deposits));
-      setEstimatedRewards(ethers.formatEther(rewards));
-      setUserDeposits(userDeposits);
-      setRemainingSlots(MAX_DEPOSITS - userDeposits.length);
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      setError("Failed to fetch user data");
-    } finally {
-      setIsPending(false);
-    }
-  };
-
-  const makeDeposit = async (amount) => {
-    if (!contract || !account || isContractPaused || isMigrated) return false;
-
-    try {
-      setIsPending(true);
-      setError(null);
-
-      const amountInWei = ethers.parseEther(amount.toString());
-
-      // Validate deposit amount
-      if (amountInWei < MIN_DEPOSIT) {
-        throw new Error("Deposit below minimum (5 MATIC)");
-      }
-      if (amountInWei > MAX_DEPOSIT) {
-        throw new Error("Deposit exceeds maximum (10000 MATIC)");
-      }
-      if (userDeposits.length >= MAX_DEPOSITS) {
-        throw new Error("Maximum deposits reached");
-      }
-
-      const tx = await contract.deposit({ 
-        value: amountInWei,
-        gasLimit: 300000n
+      setState(prev => ({ ...prev, isPending: true }));
+      const contract = await getSignedContract();
+      
+      const tx = await contract.deposit({
+        value: amount,
+        gasLimit: 300000
       });
-
+      
       const receipt = await tx.wait();
-      
-      if (receipt.status === 1) {
-        await fetchUserData();
-        return true;
-      }
-      throw new Error("Transaction failed");
-
-    } catch (err) {
-      console.error("Deposit error:", err);
-      setError(err.reason || err.message || "Failed to make deposit");
-      return false;
-    } finally {
-      setIsPending(false);
+      setState(prev => ({ ...prev, isPending: false }));
+      return true;
+    } catch (error) {
+      setState(prev => ({ ...prev, isPending: false }));
+      throw error;
     }
+  };
+
+  const withdrawRewards = async () => {
+    try {
+      setState(prev => ({ ...prev, isPending: true }));
+      const contract = await getSignedContract();
+      
+      const tx = await contract.withdraw();
+      await tx.wait();
+      setState(prev => ({ ...prev, isPending: false }));
+      return true;
+    } catch (error) {
+      setState(prev => ({ ...prev, isPending: false }));
+      throw error;
+    }
+  };
+
+  const withdrawAll = async () => {
+    try {
+      setState(prev => ({ ...prev, isPending: true }));
+      const contract = await getSignedContract();
+      
+      const tx = await contract.withdrawAll();
+      await tx.wait();
+      
+      // Refresh state after withdrawal
+      await getContractStatus();
+      setState(prev => ({ ...prev, isPending: false }));
+      return true;
+    } catch (error) {
+      setState(prev => ({ ...prev, isPending: false }));
+      throw error;
+    }
+  };
+
+  // Helper functions
+  const refreshUserInfo = async (address) => {
+    if (!state.contract || !address) return;
+    try {
+      const [userInfoResponse, depositsResponse] = await Promise.all([
+        state.contract.getUserInfo(address).then(info => ({
+          totalDeposited: info.totalDeposited.toString(),
+          pendingRewards: info.pendingRewards.toString(),
+          lastWithdraw: Number(info.lastWithdraw || 0)
+        })).catch(() => ({
+          totalDeposited: '0',
+          pendingRewards: '0',
+          lastWithdraw: 0
+        })),
+        state.contract.getUserDeposits(address).then(deps => 
+          deps.map(d => ({
+            amount: d.amount.toString(),
+            timestamp: Number(d.timestamp)
+          }))
+        ).catch(() => [])
+      ]);
+
+      const timeBonus = calculateTimeBonus((depositsResponse[0]?.timestamp || 0) * 1000);
+      const roiProgress = calculateROIProgress(depositsResponse);
+
+      setState(prev => ({
+        ...prev,
+        userInfo: {
+          totalStaked: userInfoResponse.totalDeposited,
+          timeBonus,
+          pendingRewards: userInfoResponse.pendingRewards,
+          lastWithdraw: userInfoResponse.lastWithdraw,
+          roiProgress
+        },
+        userDeposits: depositsResponse,
+        stakingStats: {
+          totalDeposited: userInfoResponse.totalDeposited,
+          pendingRewards: userInfoResponse.pendingRewards,
+          lastWithdraw: userInfoResponse.lastWithdraw,
+          depositsCount: depositsResponse.length,
+          remainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - depositsResponse.length
+        }
+      }));
+    } catch (error) {
+      console.error('Error refreshing user info:', error);
+      setState(prev => ({
+        ...prev,
+        userInfo: defaultState.userInfo,
+        stakingStats: defaultState.stakingStats
+      }));
+    }
+  };
+
+  // Update getContractStatus to accept contract parameter
+  const getContractStatus = async (contractInstance = state.contract) => {
+    if (!contractInstance) return;
+    try {
+      const [paused, migrated, treasury, balance] = await Promise.all([
+        contractInstance.paused(),
+        contractInstance.migrated(),
+        contractInstance.treasury(),
+        contractInstance.getContractBalance()
+      ]);
+      setState(prev => ({
+        ...prev,
+        isContractPaused: paused,
+        isMigrated: migrated,
+        treasuryAddress: treasury,
+        totalPoolBalance: balance.toString()
+      }));
+    } catch (error) {
+      console.error('Error getting contract status:', error);
+    }
+  };
+
+  // Format date helper function
+  const formatWithdrawDate = useCallback((timestamp) => {
+    if (!timestamp || timestamp === 0) return 'Never';
+    try {
+      return new Date(timestamp * 1000).toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  }, []);
+
+  const calculateROIProgress = useCallback((deposits) => {
+    if (!deposits || deposits.length === 0) return 0;
+    const now = Math.floor(Date.now() / 1000);
+    
+    const progress = deposits.reduce((acc, deposit) => {
+      const timeStaked = now - Number(deposit.timestamp);
+      const hourlyProgress = (timeStaked / 3600) * STAKING_CONSTANTS.HOURLY_ROI;
+      return acc + Math.min(hourlyProgress, STAKING_CONSTANTS.MAX_ROI);
+    }, 0);
+
+    return (progress / deposits.length) * 100;
+  }, []);
+
+  const contextValue = {
+    state,
+    setState,
+    STAKING_CONSTANTS,
+    deposit,
+    withdrawRewards,
+    withdrawAll,        // Add withdrawAll to context
+    refreshUserInfo,
+    getContractStatus,
+    formatWithdrawDate,  // Add this to context
+    calculateROIProgress // Add this to context
   };
 
   return (
-    <StakingContext.Provider value={{
-      contract,
-      userDeposits,
-      totalDeposits,
-      remainingSlots,
-      isContractPaused,
-      isMigrated,
-      estimatedRewards,
-      isPending,
-      error,
-      makeDeposit,
-      fetchUserData, // Make sure this is included
-      // ...other values
-    }}>
+    <StakingContext.Provider value={contextValue}>
       {children}
     </StakingContext.Provider>
   );
-}
+};
+
+// Funciones de utilidad para cálculos
+const calculateTimeBonus = (stakingTime) => {
+  const daysStaked = Math.floor(stakingTime / (24 * 3600));
+  if (daysStaked >= STAKING_CONSTANTS.TIME_BONUSES.YEAR.days) return STAKING_CONSTANTS.TIME_BONUSES.YEAR.bonus;
+  if (daysStaked >= STAKING_CONSTANTS.TIME_BONUSES.HALF_YEAR.days) return STAKING_CONSTANTS.TIME_BONUSES.HALF_YEAR.bonus;
+  if (daysStaked >= STAKING_CONSTANTS.TIME_BONUSES.QUARTER.days) return STAKING_CONSTANTS.TIME_BONUSES.QUARTER.bonus;
+  return 0;
+};
+
+const calculateRewards = (deposits) => {
+  return deposits.reduce((total, deposit) => {
+    const timeStaked = Date.now() / 1000 - deposit.timestamp;
+    const baseReward = deposit.amount * STAKING_CONSTANTS.HOURLY_ROI * (timeStaked / 3600);
+    const timeBonus = calculateTimeBonus(timeStaked);
+    const maxReward = deposit.amount * STAKING_CONSTANTS.MAX_ROI;
+    let reward = baseReward * (1 + timeBonus);
+    return total + Math.min(reward, maxReward);
+  }, 0);
+};
+
+// Funciones del contrato
+const contractFunctions = {
+  async deposit(amount) {
+    // ...existing deposit logic...
+  },
+
+  async withdrawRewards() {
+    // ...existing withdraw logic...
+  },
+
+  async withdrawAll() {
+    // ...existing withdrawAll logic...
+  },
+
+  async emergencyWithdraw() {
+    // ...existing emergencyWithdraw logic...
+  },
+
+  // Nuevas funciones
+  async refreshUserInfo(address) {
+    if (!state.contract || !address) return;
+    try {
+      const userInfo = await state.contract.getUserInfo(address);
+      const deposits = await state.contract.getUserDeposits(address);
+      setState(prev => ({
+        ...prev,
+        userInfo,
+        userDeposits: deposits,
+        stakingStats: {
+          ...prev.stakingStats,
+          totalDeposited: userInfo.totalDeposited.toString(),
+          pendingRewards: userInfo.pendingRewards.toString(),
+          lastWithdraw: userInfo.lastWithdraw.toNumber(),
+          depositsCount: deposits.length,
+          remainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - deposits.length
+        }
+      }));
+    } catch (error) {
+      console.error('Error refreshing user info:', error);
+    }
+  },
+
+  async getContractStatus() {
+    if (!state.contract) return;
+    try {
+      const [paused, migrated, treasury, balance] = await Promise.all([
+        state.contract.paused(),
+        state.contract.migrated(),
+        state.contract.treasury(),
+        state.contract.getContractBalance()
+      ]);
+      setState(prev => ({
+        ...prev,
+        isContractPaused: paused,
+        isMigrated: migrated,
+        treasuryAddress: treasury,
+        totalPoolBalance: balance.toString()
+      }));
+    } catch (error) {
+      console.error('Error getting contract status:', error);
+    }
+  }
+};

@@ -1,6 +1,6 @@
 // src/components/layout/AirdropDashboard/AirdropDashboard.jsx
 import React, { useContext, useState } from 'react';
-import AirdropForm from '../AirdropForm/AirdropForm';
+import AirdropForm from './AirdropForm/AirdropForm';
 import { WalletContext } from '../../context/WalletContext';
 import { useAirdropData } from '../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
