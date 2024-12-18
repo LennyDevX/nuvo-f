@@ -34,28 +34,23 @@ const StakingStatusCard = ({ account, depositAmount }) => {
     <BaseCard title="Staking Status" icon={<FaWallet />}>
       <div className="flex flex-col h-full justify-between">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400">Total Staked:</span>
-            <span className="text-white font-medium">
-              {formatBalance(memoizedValues.totalStaked)} POL
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-400">Time Bonus:</span>
-            <span className="text-green-400">+{memoizedValues.timeBonus}%</span>
-          </div>
-          <div className="flex justify-between items-center">
+         <div className="flex justify-between items-center">
             <span className="text-gray-400">Your Stake:</span>
             <span className="text-white font-medium">
               {formatBalance(depositAmount)} POL
             </span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Hourly ROI:</span>
+            <span className="text-gray-400">Time Bonus:</span>
+            <span className="text-green-400">+{memoizedValues.timeBonus}%</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-400">Hourly APY:</span>
             <span className="text-green-400">{STAKING_CONSTANTS.HOURLY_ROI * 100}%</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-400">Max ROI:</span>
+            <span className="text-gray-400">Max APY:</span>
             <span className="text-purple-400">{STAKING_CONSTANTS.MAX_ROI * 100}%</span>
           </div>
         </div>

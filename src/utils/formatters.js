@@ -14,3 +14,8 @@ export const formatBalance = (value) => {
     return '0.00';
   }
 };
+
+export const formatPercentage = (value) => {
+  if (!value) return '0';
+  return parseFloat(value).toFixed(2);
+};

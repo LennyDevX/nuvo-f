@@ -16,10 +16,10 @@ const ROICard = ({ depositAmount, totalWithdrawn, firstDepositTime }) => {
   console.log('ROICard rendered with:', { roiProgress, formattedWithdrawn });
 
   return (
-    <BaseCard title="ROI Stats" icon={<FaChartLine />}>
+    <BaseCard title="APY Stats" icon={<FaChartLine />}>
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-gray-400">ROI Progress:</span>
+          <span className="text-gray-400">APY Progress:</span>
           <span className="text-purple-400">{roiProgress ? roiProgress.toFixed(2) : '0.00'}%</span>
         </div>
         <div className="flex justify-between items-center">

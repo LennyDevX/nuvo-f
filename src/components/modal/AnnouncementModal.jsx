@@ -31,12 +31,12 @@ const AnnouncementModal = () => {
             transition={{ type: "spring", duration: 0.5 }}
           >
             <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-              Nuvo Beta Live v0.1
+              Nuvo Beta Live v0.2
             </h2>
             
             <div className="space-y-4 text-gray-100 mb-6">
               <p className="leading-relaxed">
-                ✨ We're thrilled to announce the first Beta Live version of Nuvo! 
+                ✨ We're thrilled to announce the second Beta Live version of Nuvo! 
                 <span className="text-xs ml-2 text-purple-400">(Note: This version may contain some instabilities)</span>
               </p>
               
@@ -50,9 +50,9 @@ const AnnouncementModal = () => {
               <div className="text-sm space-y-2">
                 <p>🔥 <span className="font-semibold">New Features:</span></p>
                 <ul className="list-disc list-inside pl-4 space-y-1 text-gray-300">
-                  <li>Enhanced Smart Staking Platform</li>
-                  <li>Automated Rewards Distribution</li>
-                  <li>Improved Security Measures</li>
+                  <li>Enhanced Smart Staking Dashboard</li>
+                  <li>Enhanced Airdrop Dashboard </li>
+                  <li>Improved Security Measures & Performance</li>
                 </ul>
               </div>
             </div>

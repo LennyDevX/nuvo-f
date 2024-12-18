@@ -15,16 +15,45 @@ const useProvider = () => {
     }
 
     try {
-      // Always use HTTPS provider for stability
       const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
       const httpProvider = new ethers.JsonRpcProvider(httpsUrl, {
         chainId: 137,
         name: 'polygon-mainnet',
-        // Add rate limiting handling
-        pollingInterval: 4000,
+        // Mejorar el manejo de rate limiting
+        pollingInterval: 15000, // Aumentar a 15 segundos
         throttleLimit: 1,
-        batchMaxSize: 1
+        batchMaxSize: 1,
+        // Agregar retry strategy
+        staticNetwork: true,
+        retryDelay: 1000,
+        maxRetries: 5,
+        cacheTimeout: 30000 // Cache de 30 segundos
       });
+
+      // Agregar retries personalizados
+      const originalSend = httpProvider.send;
+      httpProvider.send = async (...args) => {
+        let retries = 0;
+        const maxRetries = 5;
+        const baseDelay = 1000;
+
+        while (retries < maxRetries) {
+          try {
+            return await originalSend.apply(httpProvider, args);
+          } catch (error) {
+            if (error?.code === 429) { // Rate limit error
+              retries++;
+              if (retries === maxRetries) throw error;
+              
+              // Exponential backoff
+              const delay = baseDelay * Math.pow(2, retries);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+            throw error;
+          }
+        }
+      };
 
       // Test the connection
       await httpProvider.getNetwork();

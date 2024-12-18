@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Navbar from './header/Navbar';
 import Home from './pages/home/Home';
 import SwapToken from './pages/SwapToken';
-import About from './layout/About';
+import About from './pages/About';
 import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
 import TokenomicsDashboard from './layout/TokenomicsDashboard/TokenomicsDashboard';
 import { StakingProvider } from './context/StakingContext';
