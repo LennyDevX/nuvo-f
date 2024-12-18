@@ -1,18 +1,14 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
-import { StakingContext } from '../context/StakingContext';
+import { useStaking } from '../context/StakingContext';
 import { WalletContext } from '../context/WalletContext';
+import { useContext } from 'react';
 
 function ButtonWithdrawAll() {
   const { account } = useContext(WalletContext);
-  const { 
-    contract, 
-    isPending, 
-    isContractPaused,
-    isMigrated,
-    fetchUserData 
-  } = useContext(StakingContext);
+  const { state, contract } = useStaking();
+  const { isPending, isContractPaused, isMigrated } = state;
   
   const [notification, setNotification] = useState({ message: '', type: '' });
   const [showConfirmation, setShowConfirmation] = useState(false);

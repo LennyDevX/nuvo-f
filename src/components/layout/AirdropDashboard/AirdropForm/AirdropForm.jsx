@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { WalletContext } from '../../context/WalletContext';
+import { WalletContext } from '../../../context/WalletContext';
 import TimeCounter from './TimeCounter';
 import FormHeader from './FormHeader';
 import { motion } from 'framer-motion';
@@ -7,7 +7,7 @@ import AirdropTypeSelector from './AirdropTypeSelector';
 import RegistrationForm from './RegistrationForm'; // Ensure this is the default export
 import { FaCoins, FaImages, FaBox, FaPalette } from 'react-icons/fa';
 import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { airdropsCollection } from '../../firebase/config';
+import { airdropsCollection } from '../../../firebase//config';
 import SubmissionSuccess from './SubmissionSuccess'; // Add this line
 
 const airdropTypes = [ 

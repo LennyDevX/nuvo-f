@@ -6,7 +6,7 @@ import { WalletContext } from '../context/WalletContext';
 import { FaGift } from 'react-icons/fa';
 import AirdropABI from '../../Abi/Airdrop.json'; 
 
-function ButtonClaimAirdrop({ account, isEligible }) {
+const ButtonClaimAirdrop = ({ account, isEligible }) => {
   const { provider } = useContext(WalletContext);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -31,34 +31,34 @@ function ButtonClaimAirdrop({ account, isEligible }) {
       if (!provider) return;
 
       const contract = new ethers.Contract(
-        AIRDROP_CONTRACT_ADDRESS,
+        import.meta.env.VITE_AIRDROP_ADDRESS,
         AirdropABI.abi,
         provider
       );
 
-      // Get more detailed status information
-      const [stats, currentTime] = await Promise.all([
-        contract.getAirdropStats(),
-        provider.getBlock('latest').then(block => block.timestamp)
+      // Verificar el contrato directamente
+      const [airdropActive, userEligibility] = await Promise.all([
+        contract.isAirdropActive(),
+        contract.checkUserEligibility(account)
       ]);
 
-      console.log('Debug Airdrop Status:', {
-        stats,
-        currentTime,
-        startDate: stats.startDate?.toString(),
-        endDate: stats.endDate?.toString(),
-        isActive: stats.isAirdropActive,
-        isFunded: stats.isFunded
+      console.log('Airdrop Contract Check:', {
+        address: import.meta.env.VITE_AIRDROP_ADDRESS,
+        isActive: airdropActive,
+        userEligibility
       });
 
       setAirdropStats({
-        isActive: stats.isAirdropActive,
-        isFunded: stats.isFunded,
-        hasClaimed: stats.hasClaimed,
-        remainingTime: stats.remainingTime?.toString()
+        isActive: airdropActive,
+        isFunded: true, // Asumimos que está funded si el contrato está desplegado
+        hasClaimed: userEligibility.hasClaimed_
       });
+
     } catch (error) {
-      console.error('Detailed error checking airdrop status:', error);
+      console.error('Contract Check Error:', {
+        message: error.message,
+        address: import.meta.env.VITE_AIRDROP_ADDRESS
+      });
     }
   };
 
@@ -131,9 +131,16 @@ function ButtonClaimAirdrop({ account, isEligible }) {
 
   return (
     <div className="w-full">
+      {/* Debug info solo en desarrollo */}
+      {import.meta.env.DEV && (
+        <div className="text-xs text-gray-400 mb-2">
+          Contract: {import.meta.env.VITE_AIRDROP_ADDRESS}
+        </div>
+      )}
+
       <motion.button
         onClick={handleClick}
-        disabled={isLoading || !account || !isEligible || airdropStats.hasClaimed || !airdropStats.isActive}
+        disabled={isLoading || !account || !isEligible || airdropStats.hasClaimed}
         className={`
           w-full px-6 py-4 rounded-xl font-medium text-lg
           bg-gradient-to-r from-purple-600 to-pink-600

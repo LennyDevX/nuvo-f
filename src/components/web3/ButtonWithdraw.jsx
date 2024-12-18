@@ -3,19 +3,18 @@ import React, { useState, useContext, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletContext } from '../context/WalletContext';
-import { StakingContext } from '../context/StakingContext';
+import { useStaking } from '../context/StakingContext';
 import PolygonLogo from "/PolygonLogo.png";
 
 function ButtonWithdraw() {
   const { account } = useContext(WalletContext);
+  const { state, withdrawRewards } = useStaking();
   const { 
-    contract,
-    estimatedRewards,
     isContractPaused,
     isMigrated,
     isPending,
-    fetchUserData 
-  } = useContext(StakingContext);
+    estimatedRewards 
+  } = state;
 
   const [notification, setNotification] = useState({ message: '', type: '' });
 
@@ -26,25 +25,12 @@ function ButtonWithdraw() {
   }, [account]);
 
   const handleWithdraw = async () => {
-    if (!contract || !account || isContractPaused || isMigrated) return;
+    if (!account || state.isContractPaused || state.isMigrated) return;
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contractWithSigner = contract.connect(signer);
-
-      const tx = await contractWithSigner.withdraw({
-        gasLimit: 300000n
-      });
-
-      displayNotification('Transaction submitted...', 'info');
-      const receipt = await tx.wait();
-
-      if (receipt.status === 1) {
-        await fetchUserData();
+      const success = await withdrawRewards();
+      if (success) {
         displayNotification('Withdrawal successful! 🎉', 'success');
-      } else {
-        throw new Error('Transaction failed');
       }
     } catch (error) {
       console.error('Withdrawal error:', error);

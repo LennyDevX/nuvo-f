@@ -1,23 +1,16 @@
 // ButtonDeposit.jsx
 import React, { useState, useContext } from 'react';
-import { ethers } from 'ethers';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletContext } from '../context/WalletContext';
-import { StakingContext } from '../context/StakingContext';
+import { useStaking } from '../context/StakingContext';
 
 const DEPOSIT_PRESETS = [5, 10, 50,];
 const COMMISSION_RATE = 0.06;
 
 function ButtonDeposit() {
   const { account } = useContext(WalletContext);
-  const {
-    makeDeposit,
-    isPending,
-    remainingSlots,
-    userDeposits,
-    isContractPaused,
-    fetchUserData,
-  } = useContext(StakingContext);
+  const { state, deposit } = useStaking();
+  const { isPending, isContractPaused } = state;
 
   const [depositAmount, setDepositAmount] = useState('');
   const [notification, setNotification] = useState({ message: '', type: '' });
@@ -68,14 +61,11 @@ function ButtonDeposit() {
     if (!validateDeposit()) return;
 
     try {
-      const success = await makeDeposit(depositAmount);
+      const success = await deposit(depositAmount);
       if (success) {
         displayNotification('Your deposit was successful! 🎉', 'success');
         setDepositAmount('');
         setIsExpanded(false);
-        await fetchUserData();
-      } else {
-        displayNotification('Transaction failed', 'error');
       }
     } catch (error) {
       console.error('Deposit error:', error);
