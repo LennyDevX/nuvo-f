@@ -9,7 +9,7 @@ import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
 import TokenomicsDashboard from './layout/TokenomicsDashboard/TokenomicsDashboard';
 import { StakingProvider } from './context/StakingContext';
 import { WalletProvider } from './context/WalletContext';
-import DashboardStaking from './layout/DashboardStaking/DashboardStaking';
+import DashboardStaking from './layout/StakingDashboard/DashboardStaking';
 
 const App = () => {
   const isDevelopment = import.meta.env.MODE === 'development';
