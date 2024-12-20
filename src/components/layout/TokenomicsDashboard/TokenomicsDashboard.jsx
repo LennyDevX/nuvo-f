@@ -8,7 +8,6 @@ import {
   Tooltip,
   Legend
 } from "chart.js";
-import Roadmap from "./Roadmap";
 import { size } from "lodash";
 
 ChartJS.register(
@@ -231,10 +230,7 @@ const TokenomicsDashboard = () => {
             </div>
           </motion.div>
 
-          {/* Roadmap Section */}
-          <div className="mt-12">
-            <Roadmap />
-          </div>
+          {/* Remove Roadmap Section */}
         </div>
       </motion.div>
 
