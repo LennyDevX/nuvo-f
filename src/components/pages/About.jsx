@@ -19,13 +19,6 @@ const About = () => {
     { value: 1000000, label: "Transactions", prefix: "" }
   ];
 
-  const timeline = [
-    { year: "2023 Q4", title: "Project Launch", description: "Initial concept and team formation" },
-    { year: "2024 Q1", title: "Beta Release", description: "Launch of core staking features" },
-    { year: "2024 Q2", title: "Public Launch", description: "Full platform release" },
-    { year: "2024 Q3", title: "Expansion", description: "New features and partnerships" }
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
       {/* Hero Section without Parallax */}
@@ -58,29 +51,6 @@ const About = () => {
 
       
       
-      <section className="py-20 px-4">
-        <h2 className="text-4xl font-bold text-center text-white mb-16">Our Journey</h2>
-        <div className="max-w-4xl mx-auto">
-          {timeline.map((item, index) => (
-            <motion.div
-              key={index}
-              className="flex gap-8 mb-12 relative"
-              initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              viewport={{ once: true }}
-            >
-              <div className="w-32 flex-shrink-0 text-purple-400 font-bold">{item.year}</div>
-              <div className="flex-grow">
-                <div className="bg-black/30 p-6 rounded-xl border border-purple-500/20 backdrop-blur-sm">
-                  <h3 className="text-xl font-bold text-purple-400 mb-2">{item.title}</h3>
-                  <p className="text-gray-300">{item.description}</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
 
       {/* Team Section with Enhanced Cards */}
       <section className="py-20 px-4">

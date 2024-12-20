@@ -32,69 +32,85 @@ const useContractData = (account) => {
   const fetchContractData = useCallback(async (isInitialFetch = false) => {
     if (!provider || !account || !CONTRACT_ADDRESS) return;
 
-    // Debounce check
-    const now = Date.now();
-    const lastFetch = cache.current.lastFetch || 0;
-    if (!isInitialFetch && now - lastFetch < DEBOUNCE_DELAY) {
-      return;
-    }
-    cache.current.lastFetch = now;
-
     try {
-      if (isInitialFetch) {
-        setLoading(true);
-      }
+      if (isInitialFetch) setLoading(true);
 
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+      
+      // Updated safe value handling
+      const safeValue = (value) => {
+        try {
+          // Handle various input types
+          if (typeof value === 'bigint') return value;
+          if (typeof value === 'string') return BigInt(value);
+          if (typeof value === 'number') return BigInt(Math.floor(value));
+          if (value?._isBigNumber) return BigInt(value.toString());
+          return BigInt(0);
+        } catch (err) {
+          console.warn('Safe value conversion error:', err);
+          return BigInt(0);
+        }
+      };
 
-      const [rewards, poolBalance, deposit, deposits, withdrawEvents] = await Promise.all([
-        contract.calculateRewards(account).catch(() => '0'),
-        contract.getContractBalance().catch(() => '0'),
-        contract.getTotalDeposit(account).catch(() => '0'),
-        contract.getUserDeposits(account).catch(() => []),
-        // Add withdrawal events fetch here
-        contract.queryFilter(contract.filters.WithdrawalMade(account))
+      const safeCall = async (promise, defaultValue = BigInt(0)) => {
+        try {
+          const result = await promise;
+          return safeValue(result);
+        } catch (err) {
+          console.warn('Safe call error:', err);
+          return defaultValue;
+        }
+      };
+
+      // Format amounts safely
+      const formatAmount = (value) => {
+        try {
+          const bigIntValue = safeValue(value);
+          return ethers.formatEther(bigIntValue.toString());
+        } catch (err) {
+          console.warn('Format amount error:', err);
+          return '0';
+        }
+      };
+
+      // Get contract data with safe handling
+      const [rewards, poolBalance, deposit, deposits] = await Promise.all([
+        safeCall(contract.calculateRewards(account)),
+        safeCall(contract.getContractBalance()),
+        safeCall(contract.getTotalDeposit(account)),
+        contract.getUserDeposits(account).then(deps => 
+          (deps || []).map(d => ({
+            amount: safeValue(d.amount),
+            timestamp: Number(d.timestamp || 0)
+          }))
+        ).catch(() => [])
       ]);
 
-      // Calculate total withdrawn
-      const totalWithdrawn = withdrawEvents.reduce((acc, event) => 
-        acc + parseFloat(ethers.formatEther(event.args.amount || '0')), 0);
-
-      console.log('Contract Data Fetched:', {
-        deposit: ethers.formatEther(deposit.toString()),
-        totalWithdrawn
-      });
-
-      if (!mounted.current) return;
-
       const newData = {
-        depositAmount: ethers.formatEther(deposit.toString()),
-        availableRewards: ethers.formatEther(rewards.toString()),
-        totalPoolBalance: ethers.formatEther(poolBalance.toString()),
+        depositAmount: formatAmount(deposit),
+        availableRewards: formatAmount(rewards),
+        totalPoolBalance: formatAmount(poolBalance),
         firstDepositTime: deposits[0]?.timestamp || null,
-        totalWithdrawn,
         deposits: deposits.map(d => ({
-          amount: ethers.formatEther(d.amount.toString()),
-          timestamp: Number(d.timestamp)
+          amount: formatAmount(d.amount),
+          timestamp: d.timestamp
         }))
       };
 
       setData(prevData => ({ ...prevData, ...newData }));
-      if (isInitialFetch) {
-        isInitialLoad.current = false;
-      }
+      
     } catch (err) {
       console.error("Error fetching contract data:", err);
-      if (mounted.current) {
-        setError("Failed to fetch contract data");
-      }
+      setError("Failed to fetch contract data");
     } finally {
-      if (mounted.current && isInitialFetch) {
+      if (isInitialFetch) {
         setLoading(false);
+        isInitialLoad.current = false;
       }
     }
   }, [provider, account, CONTRACT_ADDRESS]);
 
+  // Update fetchWithdrawalEvents to use safe value handling
   const fetchWithdrawalEvents = useCallback(async () => {
     if (!provider || !account) return;
 
@@ -106,31 +122,24 @@ const useContractData = (account) => {
       const withdrawals = await Promise.all(
         events.map(async (event) => {
           const block = await provider.getBlock(event.blockNumber);
-          // This is the net amount (after commission)
-          const netAmount = ethers.formatEther(event.args.amount || "0");
+          const amount = event.args?.amount ? safeValue(event.args.amount) : BigInt(0);
           return {
-            netAmount,
+            netAmount: ethers.formatEther(amount.toString()),
             timestamp: new Date(Number(block.timestamp) * 1000).toISOString(),
             transactionHash: event.transactionHash,
           };
         })
       );
 
-      // Calculate total net withdrawn
       const totalNetWithdrawn = withdrawals.reduce(
-        (acc, w) => acc + parseFloat(w.netAmount),
+        (acc, w) => acc + Number(w.netAmount),
         0
       );
 
-      console.log('Withdrawal totals:', {
-        totalNetWithdrawn,
-        withdrawalsCount: withdrawals.length
-      });
-
-      setData((prevData) => ({
+      setData(prevData => ({
         ...prevData,
         withdrawalHistory: withdrawals,
-        totalWithdrawn: totalNetWithdrawn, // This is net amount
+        totalWithdrawn: totalNetWithdrawn,
       }));
 
       localStorage.setItem(

@@ -4,12 +4,14 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Navbar from './header/Navbar';
 import Home from './pages/home/Home';
 import SwapToken from './pages/SwapToken';
+import Footer from './layout/Footer';
 import About from './pages/About';
 import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
 import TokenomicsDashboard from './layout/TokenomicsDashboard/TokenomicsDashboard';
 import { StakingProvider } from './context/StakingContext';
 import { WalletProvider } from './context/WalletContext';
 import DashboardStaking from './layout/StakingDashboard/DashboardStaking';
+import Roadmap from './pages/roadmap/Roadmap';
 
 const App = () => {
   const isDevelopment = import.meta.env.MODE === 'development';
@@ -24,6 +26,7 @@ const App = () => {
             <div>
               <Navbar />
               <Home />
+              <Footer />
             </div>
           </StakingProvider>
         </WalletProvider>
@@ -89,6 +92,20 @@ const App = () => {
             <div>
               <Navbar />
               <AirdropDashboard />
+            </div>
+          </StakingProvider>
+        </WalletProvider>
+      ),
+    },
+    {
+      path: "/roadmap",
+      element: (
+        <WalletProvider>
+          <StakingProvider>
+            <div>
+              <Navbar />
+              <Roadmap />
+              <Footer />
             </div>
           </StakingProvider>
         </WalletProvider>

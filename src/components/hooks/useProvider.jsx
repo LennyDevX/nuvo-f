@@ -13,83 +13,48 @@ const useProvider = () => {
       setError("Alchemy API key is required");
       return null;
     }
-
+  
     try {
       const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
-      const httpProvider = new ethers.JsonRpcProvider(httpsUrl, {
-        chainId: 137,
-        name: 'polygon-mainnet',
-        // Mejorar el manejo de rate limiting
-        pollingInterval: 15000, // Aumentar a 15 segundos
-        throttleLimit: 1,
-        batchMaxSize: 1,
-        // Agregar retry strategy
-        staticNetwork: true,
-        retryDelay: 1000,
-        maxRetries: 5,
-        cacheTimeout: 30000 // Cache de 30 segundos
-      });
+      const provider = new ethers.JsonRpcProvider(httpsUrl);
 
-      // Agregar retries personalizados
-      const originalSend = httpProvider.send;
-      httpProvider.send = async (...args) => {
-        let retries = 0;
-        const maxRetries = 5;
-        const baseDelay = 1000;
+      // Verify the connection works
+      await provider.getNetwork();
 
-        while (retries < maxRetries) {
-          try {
-            return await originalSend.apply(httpProvider, args);
-          } catch (error) {
-            if (error?.code === 429) { // Rate limit error
-              retries++;
-              if (retries === maxRetries) throw error;
-              
-              // Exponential backoff
-              const delay = baseDelay * Math.pow(2, retries);
-              await new Promise(resolve => setTimeout(resolve, delay));
-              continue;
-            }
-            throw error;
+      // Add basic event emitter functionality
+      if (!provider._events) {
+        provider._events = {};
+        
+        provider.on = function(eventName, listener) {
+          if (!this._events[eventName]) {
+            this._events[eventName] = [];
           }
-        }
-      };
+          this._events[eventName].push(listener);
+          return this;
+        };
 
-      // Test the connection
-      await httpProvider.getNetwork();
-      console.log("Provider connected successfully");
-      
-      // Setup event listeners for the provider
-      httpProvider.on("network", (newNetwork, oldNetwork) => {
-        if (oldNetwork) {
-          console.log("Network changed, reloading...");
-          window.location.reload();
-        }
-      });
+        provider.removeListener = function(eventName, listener) {
+          if (!this._events[eventName]) return this;
+          const idx = this._events[eventName].indexOf(listener);
+          if (idx > -1) this._events[eventName].splice(idx, 1);
+          return this;
+        };
 
-      return httpProvider;
-    } catch (error) {
-      console.error("Provider creation failed:", error);
-      return null;
-    }
-  };
-
-  const initializeProvider = async () => {
-    try {
-      const newProvider = await createProvider();
-      if (newProvider) {
-        setProvider(newProvider);
-        retryCount.current = 0;
-        setError(null);
-      } else if (retryCount.current < MAX_RETRIES) {
-        retryCount.current++;
-        setTimeout(initializeProvider, 2000 * retryCount.current);
-      } else {
-        setError("Failed to connect to network after multiple attempts");
+        provider.removeAllListeners = function(eventName) {
+          if (eventName) {
+            delete this._events[eventName];
+          } else {
+            this._events = {};
+          }
+          return this;
+        };
       }
-    } catch (err) {
-      console.error("Provider initialization error:", err);
-      setError("Failed to initialize provider");
+
+      return provider;
+    } catch (error) {
+      console.error("Provider creation error:", error);
+      setError(error.message);
+      return null;
     }
   };
 
@@ -99,34 +64,31 @@ const useProvider = () => {
 
     const init = async () => {
       if (!mounted) return;
-      await initializeProvider();
+      try {
+        const newProvider = await createProvider();
+        if (mounted && newProvider) {
+          setProvider(newProvider);
+          currentProvider = newProvider;
+          retryCount.current = 0;
+        }
+      } catch (err) {
+        console.error("Provider initialization error:", err);
+        if (retryCount.current < MAX_RETRIES && mounted) {
+          retryCount.current++;
+          setTimeout(init, 2000 * retryCount.current);
+        }
+      }
     };
 
     init();
 
     return () => {
       mounted = false;
-      if (currentProvider) {
+      if (currentProvider?.removeAllListeners) {
         currentProvider.removeAllListeners();
       }
     };
   }, []);
-
-  // Add reconnection logic
-  useEffect(() => {
-    if (!provider) return;
-
-    const handleError = (error) => {
-      console.error("Provider error:", error);
-      initializeProvider();
-    };
-
-    provider.on("error", handleError);
-
-    return () => {
-      provider.removeListener("error", handleError);
-    };
-  }, [provider]);
 
   return provider;
 };
