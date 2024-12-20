@@ -1,9 +1,64 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import ChartWrapper from '../../charts/ChartWrapper';
+
+// Registrar los componentes necesarios de Chart.js
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const HeroSection = () => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => {
+      setMounted(false);
+      // Limpiar todas las instancias de Chart al desmontar
+      Object.keys(ChartJS.instances).forEach(key => {
+        ChartJS.instances[key].destroy();
+      });
+    };
+  }, []);
+
+  // Configuración de los datos para los gráficos
+  const tokenDistributionData = {
+    labels: ['Staking Rewards', 'Treasury', 'Community', 'Development', 'Marketing'],
+    datasets: [{
+      data: [40, 25, 20, 10, 5],
+      backgroundColor: ['#8B5CF6', '#EC4899', '#06B6D4', '#10B981', '#F59E0B'],
+      borderColor: 'rgba(0, 0, 0, 0.2)',
+      borderWidth: 2,
+    }]
+  };
+
+  const revenueStreamsData = {
+    labels: ['Third-Party Staking', 'DeFi Lending', 'Algorithmic Trading', 'Liquidity Provision', 'Strategic Holdings'],
+    datasets: [{
+      data: [30, 25, 20, 15, 10],
+      backgroundColor: ['#7C3AED', '#DB2777', '#0891B2', '#059669', '#D97706'],
+      borderColor: 'rgba(0, 0, 0, 0.2)',
+      borderWidth: 2,
+    }]
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          color: '#fff',
+          padding: 10,
+          font: {
+            size: window.innerWidth < 640 ? 10 : 14,
+          },
+        },
+      },
+    },
+  };
+
   return (
     <>
       <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-12 sm:pt-20 pb-8 sm:pb-12">
@@ -111,35 +166,14 @@ const HeroSection = () => {
               Token Distribution
             </h3>
             <div className="relative w-full" style={{ height: '250px' }}>
-              <Pie
-                data={{
-                  labels: ['Staking Rewards', 'Treasury', 'Community', 'Development', 'Marketing'],
-                  datasets: [
-                    {
-                      data: [40, 25, 20, 10, 5],
-                      backgroundColor: ['#8B5CF6', '#EC4899', '#06B6D4', '#10B981', '#F59E0B'],
-                      borderColor: 'rgba(0, 0, 0, 0.2)',
-                      borderWidth: 2,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom',
-                      labels: {
-                        color: '#fff',
-                        padding: 10,
-                        font: {
-                          size: window.innerWidth < 640 ? 10 : 14,
-                        },
-                      },
-                    },
-                  },
-                }}
-              />
+              {mounted && (
+                <ChartWrapper
+                  type="pie"
+                  data={tokenDistributionData}
+                  options={chartOptions}
+                  key="token-distribution-chart"
+                />
+              )}
             </div>
           </motion.div>
           {/* Revenue Streams Chart */}
@@ -152,35 +186,14 @@ const HeroSection = () => {
               Revenue Streams
             </h3>
             <div className="relative w-full" style={{ height: '250px' }}>
-              <Pie
-                data={{
-                  labels: ['Third-Party Staking', 'DeFi Lending', 'Algorithmic Trading', 'Liquidity Provision', 'Strategic Holdings'],
-                  datasets: [
-                    {
-                      data: [30, 25, 20, 15, 10],
-                      backgroundColor: ['#7C3AED', '#DB2777', '#0891B2', '#059669', '#D97706'],
-                      borderColor: 'rgba(0, 0, 0, 0.2)',
-                      borderWidth: 2,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  plugins: {
-                    legend: {
-                      position: 'bottom',
-                      labels: {
-                        color: '#fff',
-                        padding: 10,
-                        font: {
-                          size: window.innerWidth < 640 ? 10 : 14,
-                        },
-                      },
-                    },
-                  },
-                }}
-              />
+              {mounted && (
+                <ChartWrapper
+                  type="pie"
+                  data={revenueStreamsData}
+                  options={chartOptions}
+                  key="revenue-streams-chart"
+                />
+              )}
             </div>
           </motion.div>
         </div>

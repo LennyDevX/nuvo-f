@@ -1,118 +1,111 @@
 // src/components/App.jsx
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import Navbar from './header/Navbar';
-import Home from './pages/home/Home';
-import SwapToken from './pages/SwapToken';
-import Footer from './layout/Footer';
-import About from './pages/About';
-import AirdropDashboard from './layout/AirdropDashboard/AirdropDashboard';
-import TokenomicsDashboard from './layout/TokenomicsDashboard/TokenomicsDashboard';
-import { StakingProvider } from './context/StakingContext';
-import { WalletProvider } from './context/WalletContext';
-import DashboardStaking from './layout/StakingDashboard/DashboardStaking';
-import Roadmap from './pages/roadmap/Roadmap';
+import MainLayout from './layout/MainLayout';
+import ErrorBoundary from './ErrorBoundary';
+
+// Lazy loading components
+const Home = lazy(() => import('./pages/home/Home'));
+const SwapToken = lazy(() => import('./pages/SwapToken'));
+const About = lazy(() => import('./pages/About'));
+const AirdropDashboard = lazy(() => import('./layout/AirdropDashboard/AirdropDashboard'));
+const TokenomicsDashboard = lazy(() => import('./layout/TokenomicsDashboard/TokenomicsDashboard'));
+const DashboardStaking = lazy(() => import('./layout/StakingDashboard/DashboardStaking'));
+const Roadmap = lazy(() => import('./pages/roadmap/roadmap'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+
+// Loading component
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center min-h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+  </div>
+);
 
 const App = () => {
-  const isDevelopment = import.meta.env.MODE === 'development';
-
-  // Definir la configuración del router
-  const router = createBrowserRouter([
+  const routes = [
     {
       path: "/",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <Home />
-              <Footer />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout showFooter={true}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Home />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/tokenomics",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <TokenomicsDashboard />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <TokenomicsDashboard />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/staking",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <DashboardStaking />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <DashboardStaking />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/swaptoken",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <SwapToken />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <SwapToken />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/about",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <About />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <About />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/airdrops",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <AirdropDashboard />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <AirdropDashboard />
+          </Suspense>
+        </MainLayout>
       ),
     },
     {
       path: "/roadmap",
       element: (
-        <WalletProvider>
-          <StakingProvider>
-            <div>
-              <Navbar />
-              <Roadmap />
-              <Footer />
-            </div>
-          </StakingProvider>
-        </WalletProvider>
+        <MainLayout showFooter={true}>
+          <Suspense fallback={<LoadingSpinner />}>
+            <Roadmap />
+          </Suspense>
+        </MainLayout>
       ),
     },
-  ], {
-    // Configuración adicional para React Router v7
+    {
+      path: "*",
+      element: (
+        <MainLayout>
+          <Suspense fallback={<LoadingSpinner />}>
+            <NotFound />
+          </Suspense>
+        </MainLayout>
+      ),
+    },
+  ];
+
+  const router = createBrowserRouter(routes, {
     future: {
       v7_startTransition: true,
       v7_relativeSplatPath: true
@@ -120,9 +113,11 @@ const App = () => {
   });
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <RouterProvider router={router} />
-    </div>
+    <ErrorBoundary>
+      <div style={{ position: 'relative', minHeight: '100vh' }}>
+        <RouterProvider router={router} />
+      </div>
+    </ErrorBoundary>
   );
 };
 
