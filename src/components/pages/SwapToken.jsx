@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import DodoSwapWidget from "../web3/SwapDodo";
 import { WalletContext } from "../context/WalletContext";
@@ -12,12 +12,20 @@ const SwapToken = () => {
   const [transactionStatus, setTransactionStatus] = useState(null);
 
   useEffect(() => {
-    if (account && network && balance !== null) {
-      setIsConnected(true);
-    } else {
-      setIsConnected(false);
-    }
+    setIsConnected(Boolean(account && network && balance !== null));
   }, [account, network, balance]);
+
+  const handleError = useCallback((err) => {
+    setError(err?.message || 'An error occurred');
+  }, []);
+
+  const handleLoading = useCallback((loading) => {
+    setIsLoading(loading);
+  }, []);
+
+  const handleTransactionStatus = useCallback((status) => {
+    setTransactionStatus(status);
+  }, []);
 
   const NetworkBadge = () => (
     <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-4">
@@ -38,6 +46,12 @@ const SwapToken = () => {
       </motion.div>
     )
   );
+
+  const widgetProps = useMemo(() => ({
+    onError: handleError,
+    onLoading: handleLoading,
+    onTransactionStatus: handleTransactionStatus
+  }), [handleError, handleLoading, handleTransactionStatus]);
 
   return (
     <div className="min-h-screen bg-black py-8 md:py-16 flex items-center justify-center">
@@ -91,11 +105,7 @@ const SwapToken = () => {
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
               >
-                <DodoSwapWidget 
-                  onError={setError}
-                  onLoading={setIsLoading}
-                  onTransactionStatus={setTransactionStatus}
-                />
+                <DodoSwapWidget {...widgetProps} />
                 {showTooltip && (
                   <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-sm">
                     Intercambia tus tokens aquí
@@ -123,4 +133,4 @@ const SwapToken = () => {
   );
 };
 
-export default SwapToken;
+export default React.memo(SwapToken);

@@ -2,7 +2,7 @@
 import React, { useContext, useState } from 'react';
 import AirdropForm from './AirdropForm/AirdropForm';
 import { WalletContext } from '../../context/WalletContext';
-import { useAirdropData } from '../../hooks/useAirdropData';
+import { useAirdropData } from '../../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardCards from './AirdropCards';
 import { FaTimes } from 'react-icons/fa';

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import useProvider from '../hooks/useProvider';
+import useProvider from '../../hooks/useProvider';
 import ABI from '../../Abi/StakingContract.json';
 
 // Mover las constantes fuera del componente

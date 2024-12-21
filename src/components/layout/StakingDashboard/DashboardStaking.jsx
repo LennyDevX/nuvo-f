@@ -2,8 +2,8 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../context/WalletContext";
-import useContractData from "../../hooks/useContractData";
-import useTreasuryBalance from "../../hooks/useTreasuryBalance";
+import useContractData from "../../../hooks/useContractData";
+import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
 import { getStakingDuration } from "../../../utils/utils";
 import DashboardCards from "./DashboardCards";
 import ActionButtons from "./ActionButtons";

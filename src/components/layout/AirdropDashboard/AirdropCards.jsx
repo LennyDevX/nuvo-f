@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fa';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { airdropsCollection } from '../../firebase/config';
-import useTreasuryBalance from '../../hooks/useTreasuryBalance';
+import useTreasuryBalance from '../../../hooks/useTreasuryBalance';
 import ButtonClaimAirdrop from '../../web3/ButtonClaimAirdrop';
 import WalletStatusCard from './WalletStatusCard';
 import AirdropProgressCard from './AirdropProgressCard';
