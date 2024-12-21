@@ -1,7 +1,7 @@
 # 🌟 NUVO DeFi - Intelligent Staking Protocol
 
 ## Vision
-NUVO DeFi revolutionizes traditional staking by combining algorithmic trading strategies with DeFi yield optimization. Built on Polygon, we're creating a secure, efficient, and user-friendly platform for both retail and institutional investors.
+NUVO DeFi revolutionizes traditional staking by combining algorithmic trading strategies with DeFi yield optimization. Built on Polygon, we are creating a secure, efficient, and user-friendly platform for both retail and institutional investors.
 
 ## 🎯 What Makes NUVO Different?
 
@@ -12,7 +12,7 @@ NUVO DeFi revolutionizes traditional staking by combining algorithmic trading st
 - Real-time performance tracking
 
 ### Security First
-- Built on Polygon Network
+- Built on the Polygon Network
 - OpenZeppelin security standards
 - Emergency withdrawal system
 - Transparent reward mechanics
@@ -37,44 +37,43 @@ NUVO DeFi revolutionizes traditional staking by combining algorithmic trading st
 - Liquidity Provision
 - Strategic Holdings
 
-
 ## 👩‍💻 For Developers
 
-# Tech Stack
+### Tech Stack
 
-Frontend: 
+- **Frontend:** React, TailwindCSS, Framer Motion
+- **Blockchain:** Polygon, Ethers.js
+- **Smart Contracts:** Solidity 0.8.24, OpenZeppelin
 
-React, TailwindCSS, Framer Motion  
+### Contribution Areas
+- Governance Implementation
+- Yield Strategies
+- Security Audits
+- UI/UX Enhancements
 
-Blockchain: Polygon, Ethers.js
-Smart Contracts: Solidity 0.8.24, OpenZeppelin  
+## 📚 Documentation and Roadmap
 
-Contributing Areas
-Governance Implementation
-Yield Strategies
-Security Audits
-UI/UX Enhancements  
+### Current Phase - Beta 5.5
+- 🟢 Smart Contract Deployment
+- 🟢 Staking Dashboard
+- 🟢 Airdrop Bonus
+- ⚠️ Tokenomics Implementation
+- ⚠️ Basic Trading Bot Integration
 
-Documentation
-🗺 Roadmap  
+### Next Steps
+- ❌ Official Launch
+- ❌ DAO Governance
+- ❌ Enhanced Yield Strategies
+- ❌ Community Features
+- ❌ Bot Integration
 
-Current Phase - Beta 5.5    
-
-✅ Smart Contract Deployment ✅ Staking Dashboard ✅ Airdrop Bonus
-⚠️ Tokenomics Implementation ⚠️ Basic Trading Bot Integration
-
-Next Steps
-❌ Official Launch ❌ DAO Governance ❌ Enhanced Yield Strategies ❌ Community Features ❌ Bot integration 
-
-🤝 Community
+## 🤝 Community
 Join our growing community:
+- **Documentation:** [Coming Soon]
+- **Discord:** [Coming Soon]
+- **Twitter:** [Coming Soon]
 
-Documentation: [Coming Soon]
-Discord: [Coming Soon]
-Twitter: [Coming Soon]
-⚠️ Beta Status
-Currently in Beta v5.1. While thoroughly tested, users should exercise caution and understand the risks involved in DeFi investments.
-
+🎯 **Beta Status:** Currently in Beta Live v0.1. While thoroughly tested, users should exercise caution and understand the risks involved in DeFi investments.
 ### Quick Start
 ```bash
 

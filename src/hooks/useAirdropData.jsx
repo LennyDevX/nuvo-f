@@ -1,7 +1,7 @@
 // src/hooks/useAirdropData.js
 import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../components/firebase/config';
 
 export const useAirdropData = (walletAddress) => {
   const [airdropData, setAirdropData] = useState(null);

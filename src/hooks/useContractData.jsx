@@ -1,7 +1,7 @@
 // src/hooks/useContractData.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-import ABI from "../../Abi/StakingContract.json";
+import ABI from "../Abi/StakingContract.json";
 import useProvider from "./useProvider";
 
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour

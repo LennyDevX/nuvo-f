@@ -2,13 +2,12 @@
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../context/WalletContext";
-import useContractData from "../../hooks/useContractData";
-import useTreasuryBalance from "../../hooks/useTreasuryBalance";
+import useContractData from "../../../hooks/useContractData";
+import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
 import { getStakingDuration } from "../../../utils/utils";
 import DashboardCards from "./DashboardCards";
 import ActionButtons from "./ActionButtons";
 import Tag from "./Tag";
-import QuickStats from "./card/QuickStats";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import LoadingOverlay from "../../LoadOverlay/LoadingOverlay";
 import { ethers } from "ethers";
@@ -181,12 +180,7 @@ const DashboardStaking = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
-                    <QuickStats 
-                      stats={getQuickStats()}
-                      depositAmount={safeDepositAmount}
-                      totalWithdrawn={safeTotalWithdrawn}
-                      loading={loading}
-                    />
+                   
                     <DashboardCards
                       account={account}
                       network={network}
