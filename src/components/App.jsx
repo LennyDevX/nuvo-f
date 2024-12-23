@@ -7,7 +7,7 @@ import ErrorBoundary from './ErrorBoundary';
 // Lazy loading components
 const Home = lazy(() => import('./pages/home/Home'));
 const SwapToken = lazy(() => import('./pages/SwapToken'));
-const About = lazy(() => import('./pages/About'));
+const About = lazy(() => import('./pages/about/About'));
 const AirdropDashboard = lazy(() => import('./layout/AirdropDashboard/AirdropDashboard'));
 const TokenomicsDashboard = lazy(() => import('./layout/TokenomicsDashboard/TokenomicsDashboard'));
 const DashboardStaking = lazy(() => import('./layout/StakingDashboard/DashboardStaking'));
