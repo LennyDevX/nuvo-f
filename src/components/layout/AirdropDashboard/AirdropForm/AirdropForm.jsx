@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { WalletContext } from '../../../context/WalletContext';
+import { WalletContext } from '../../../../context/WalletContext';
 import TimeCounter from './TimeCounter';
 import FormHeader from './FormHeader';
 import { motion } from 'framer-motion';

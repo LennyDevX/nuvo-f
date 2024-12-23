@@ -1,7 +1,8 @@
 // src/components/layout/AirdropDashboard/AirdropDashboard.jsx
 import React, { useContext, useState } from 'react';
+import '../../../styles/gradients.css';
 import AirdropForm from './AirdropForm/AirdropForm';
-import { WalletContext } from '../../context/WalletContext';
+import { WalletContext } from '../../../context/WalletContext';
 import { useAirdropData } from '../../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
 import DashboardCards from './AirdropCards';
@@ -67,11 +68,11 @@ const AirdropDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h1 className="text-3xl md:text-4xl font-bold text-gradient bg-gradient-to-r from-purple-400 to-pink-600 text-transparent bg-clip-text mb-4">
-                    Airdrop Beta{" "}
-                    <span className="text-white">
-                        Dashboard
-                    </span>
+                    <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+                        Airdrop Beta{" "}
+                        <span className="text-white">
+                            Dashboard
+                        </span>
                     </h1>
                     <p className="text-gray-300">
                     Manage your airdrop submissions and eligibility

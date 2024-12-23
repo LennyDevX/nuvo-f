@@ -4,93 +4,59 @@ import { ethers } from "ethers";
 const useProvider = () => {
   const [provider, setProvider] = useState(null);
   const [error, setError] = useState(null);
-  const retryCount = useRef(0);
-  const MAX_RETRIES = 3;
+  const providerRef = useRef(null);
+  const networkInitialized = useRef(false);
   const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
 
-  const createProvider = async () => {
-    if (!ALCHEMY_KEY) {
-      setError("Alchemy API key is required");
-      return null;
-    }
-  
-    try {
-      const httpsUrl = `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`;
-      const provider = new ethers.JsonRpcProvider(httpsUrl);
-
-      // Verify the connection works
-      await provider.getNetwork();
-
-      // Add basic event emitter functionality
-      if (!provider._events) {
-        provider._events = {};
-        
-        provider.on = function(eventName, listener) {
-          if (!this._events[eventName]) {
-            this._events[eventName] = [];
-          }
-          this._events[eventName].push(listener);
-          return this;
-        };
-
-        provider.removeListener = function(eventName, listener) {
-          if (!this._events[eventName]) return this;
-          const idx = this._events[eventName].indexOf(listener);
-          if (idx > -1) this._events[eventName].splice(idx, 1);
-          return this;
-        };
-
-        provider.removeAllListeners = function(eventName) {
-          if (eventName) {
-            delete this._events[eventName];
-          } else {
-            this._events = {};
-          }
-          return this;
-        };
-      }
-
-      return provider;
-    } catch (error) {
-      console.error("Provider creation error:", error);
-      setError(error.message);
-      return null;
-    }
-  };
-
   useEffect(() => {
-    let mounted = true;
-    let currentProvider = null;
+    if (!ALCHEMY_KEY || providerRef.current) return;
 
-    const init = async () => {
-      if (!mounted) return;
+    const initProvider = async () => {
       try {
-        const newProvider = await createProvider();
-        if (mounted && newProvider) {
-          setProvider(newProvider);
-          currentProvider = newProvider;
-          retryCount.current = 0;
-        }
-      } catch (err) {
-        console.error("Provider initialization error:", err);
-        if (retryCount.current < MAX_RETRIES && mounted) {
-          retryCount.current++;
-          setTimeout(init, 2000 * retryCount.current);
-        }
+        // Create provider with correct network config
+        const provider = new ethers.JsonRpcProvider(
+          `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+          {
+            name: 'polygon',
+            chainId: 137
+          }
+        );
+
+        // Wait for provider to be ready
+        await provider.getNetwork();
+        
+        // Ensure needed methods are bound correctly
+        const methods = ['call', 'getBalance', 'getBlock', 'getNetwork', 'getLogs'];
+        methods.forEach(method => {
+          if (provider[method]) {
+            provider[method] = provider[method].bind(provider);
+          }
+        });
+
+        // Store in refs and state
+        providerRef.current = provider;
+        networkInitialized.current = true;
+        setProvider(provider);
+      } catch (error) {
+        console.error("Provider initialization error:", error);
+        setError(error.message);
       }
     };
 
-    init();
+    initProvider();
 
     return () => {
-      mounted = false;
-      if (currentProvider?.removeAllListeners) {
-        currentProvider.removeAllListeners();
+      if (providerRef.current?.removeAllListeners) {
+        providerRef.current.removeAllListeners();
       }
     };
-  }, []);
+  }, [ALCHEMY_KEY]);
 
-  return provider;
+  return { 
+    provider: providerRef.current, 
+    error, 
+    isInitialized: networkInitialized.current 
+  };
 };
 
 export default useProvider;

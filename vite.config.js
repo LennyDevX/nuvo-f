@@ -36,5 +36,15 @@ export default defineConfig({
         .map(([key, values]) => `${key} ${values.join(' ')}`)
         .join('; ')
     }
+  },
+  build: {
+    cssCodeSplit: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'framer-motion': ['framer-motion'],
+        }
+      }
+    }
   }
 });

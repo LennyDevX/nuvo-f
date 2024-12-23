@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaLinkedin, FaTwitter, FaGithub, FaRocket, FaUsers } from 'react-icons/fa';
 import { SiPolygon } from 'react-icons/si';
+import '../../../styles/gradients.css';
 
 const HeroSection = () => {
   return (
@@ -18,7 +19,7 @@ const HeroSection = () => {
         transition={{ duration: 0.8 }}
       >
         <motion.h1 
-          className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
+          className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 gradient-text"
           initial={{ scale: 0.95 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1, delay: 0.2 }}

@@ -2,8 +2,8 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WalletContext } from '../context/WalletContext';
-import { useStaking } from '../context/StakingContext';
+import { WalletContext } from '../../context/WalletContext';
+import { useStaking } from '../../context/StakingContext';
 import PolygonLogo from "/PolygonLogo.png";
 
 function ButtonWithdraw() {

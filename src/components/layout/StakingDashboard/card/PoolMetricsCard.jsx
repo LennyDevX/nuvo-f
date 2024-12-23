@@ -3,7 +3,7 @@ import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift } from 'react-icons/
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
 import { formatBalance } from '../../../../utils/formatters';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 
 const PoolMetricsCard = () => {

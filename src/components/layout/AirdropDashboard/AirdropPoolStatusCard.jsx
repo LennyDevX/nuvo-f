@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import ButtonClaimAirdrop from '../../web3/ButtonClaimAirdrop';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../Abi/Airdrop.json';
-import { WalletContext } from '../../context/WalletContext';
+import { WalletContext } from '../../../context/WalletContext';
 
 const AirdropPoolStatusCard = ({ account }) => {
     const { provider } = useContext(WalletContext);

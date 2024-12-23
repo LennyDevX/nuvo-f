@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../StakingDashboard/Tooltip';
 
 const TreasuryCard = () => {

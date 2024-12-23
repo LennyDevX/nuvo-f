@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FaGift, FaInfoCircle } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../Tooltip';
 import { formatBalance } from '../../../../utils/formatters';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
 import { AnimatePresence } from 'framer-motion';
+import { ethers } from 'ethers'; // Añadir esta importación
 
 const RewardsCard = ({ onClaim, showToast }) => {
   const [loading, setLoading] = useState(false);
-  const { withdrawRewards, state } = useStaking();
+  const { withdrawRewards, state, getSignerAddress } = useStaking();
   const { isPending } = state;
   const userInfo = state.userInfo || { pendingRewards: '0', roiProgress: 0 };
   const [transactionInfo, setTransactionInfo] = useState(null);
@@ -39,6 +40,70 @@ const RewardsCard = ({ onClaim, showToast }) => {
 
     return { days, bonus, nextBonus, daysLeft };
   }, [state.userInfo?.stakingDays]);
+
+  // Add effect to log rewards updates
+  useEffect(() => {
+    console.log("Current rewards info:", {
+      pendingRewards: userInfo.pendingRewards,
+      roiProgress: userInfo.roiProgress
+    });
+  }, [userInfo]);
+
+  // Add polling for rewards with signer address
+  useEffect(() => {
+    let mounted = true;
+    
+    const pollRewards = async () => {
+      try {
+        if (!state.contract || !window.ethereum) return;
+        
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        
+        // Solo actualizar si el componente sigue montado
+        if (mounted) {
+          const result = await state.contract.calculateRewards(address);
+          console.log("Polled rewards for address:", address, ethers.formatEther(result));
+        }
+      } catch (error) {
+        console.error("Error polling rewards:", error);
+      }
+    };
+
+    pollRewards();
+    const interval = setInterval(pollRewards, 30000);
+    
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [state.contract]);
+
+  // Calcular ROI progress basado en los deposits
+  const calculateProgress = useMemo(() => {
+    if (!state.userDeposits || state.userDeposits.length === 0) return 0;
+    
+    const now = Math.floor(Date.now() / 1000);
+    let totalProgress = 0;
+    
+    state.userDeposits.forEach(deposit => {
+      const timeStaked = now - deposit.timestamp;
+      const daysStaked = timeStaked / (24 * 3600);
+      const dailyROI = 0.24; // 0.24% daily
+      const progress = Math.min(daysStaked * dailyROI, 125); // Max 125%
+      totalProgress += progress;
+    });
+
+    return totalProgress / state.userDeposits.length;
+  }, [state.userDeposits]);
+
+  // Actualizar el userInfo con el ROI calculado
+  useEffect(() => {
+    if (calculateProgress > 0) {
+      console.log("Calculated ROI Progress:", calculateProgress);
+    }
+  }, [calculateProgress]);
 
   const handleClaim = async () => {
     if (loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0') return;
@@ -112,9 +177,9 @@ const RewardsCard = ({ onClaim, showToast }) => {
                 Time Bonus Progress
                 <Tooltip content={`
                   Base ROI: 0.24% daily
-                  Current Bonus: +${stakingInfo.bonus}%
-                  Next Bonus: +${stakingInfo.nextBonus}%
-                  Days until next bonus: ${stakingInfo.daysLeft}
+                  Current Progress: ${calculateProgress.toFixed(2)}%
+                  Max ROI: 125%
+                  Days Staked: ${stakingInfo.days}
                 `}>
                   <FaInfoCircle className="text-purple-400/60 hover:text-purple-300" />
                 </Tooltip>
@@ -132,7 +197,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
                       cx="32"
                       cy="32"
                     />
-                    <circle
+                    <circle 
                       className="text-purple-400"
                       strokeWidth="4"
                       strokeLinecap="round"
@@ -141,13 +206,13 @@ const RewardsCard = ({ onClaim, showToast }) => {
                       r="30"
                       cx="32"
                       cy="32"
-                      strokeDasharray={`${userInfo.roiProgress * 1.88} 188.4`}
+                      strokeDasharray={`${(calculateProgress / 125) * 188.4} 188.4`}
                     />
                   </svg>
                   {/* Percentage Text */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <span className="text-lg font-bold text-purple-300">
-                      {userInfo.roiProgress.toFixed(1)}%
+                      {calculateProgress.toFixed(1)}%
                     </span>
                   </div>
                 </div>

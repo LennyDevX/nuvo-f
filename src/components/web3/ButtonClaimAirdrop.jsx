@@ -2,7 +2,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
-import { WalletContext } from '../context/WalletContext';
+import { WalletContext } from '../../context/WalletContext';
 import { FaGift } from 'react-icons/fa';
 import AirdropABI from '../../Abi/Airdrop.json'; 
 

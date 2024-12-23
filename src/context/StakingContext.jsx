@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import useProvider from '../../hooks/useProvider';
-import ABI from '../../Abi/StakingContract.json';
+import useProvider from '../hooks/useProvider';
+import ABI from '../Abi/StakingContract.json';
 
 // Mover las constantes fuera del componente
 export const STAKING_CONSTANTS = {
@@ -79,20 +79,76 @@ export const useStaking = () => {
   return context;
 };
 
+const createCache = () => {
+  const cache = new Map();
+  
+  return {
+    get: (key) => {
+      const item = cache.get(key);
+      if (!item) return null;
+      
+      if (Date.now() - item.timestamp > item.ttl) {
+        cache.delete(key);
+        return null;
+      }
+      
+      return item.data;
+    },
+    set: (key, data, ttl) => {
+      cache.set(key, {
+        data,
+        timestamp: Date.now(),
+        ttl
+      });
+    },
+    clear: () => cache.clear()
+  };
+};
+
 export const StakingProvider = ({ children }) => {
-  const provider = useProvider();
+  const { provider, isInitialized } = useProvider();
   const [state, setState] = useState(defaultState);
   const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
+  const cache = useRef(createCache());
+  const refreshTimeoutRef = useRef(null);
 
   useEffect(() => {
-    if (provider && CONTRACT_ADDRESS) {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-      setState(prev => ({ ...prev, contract }));
-      
-      // Initial contract status fetch
-      getContractStatus(contract);
-    }
-  }, [provider]);
+    if (!isInitialized || !provider || !CONTRACT_ADDRESS) return;
+
+    const initializeContract = async () => {
+      try {
+        console.log("Initializing contract with address:", CONTRACT_ADDRESS);
+        
+        // Verificar que el contrato existe antes de inicializarlo
+        const code = await provider.getCode(CONTRACT_ADDRESS);
+        if (code === '0x') {
+          throw new Error('Contract not deployed at address');
+        }
+
+        // Crear el contrato con un proveedor listo
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+        
+        // Agregar funciones de ayuda al contrato
+        contract.provider = provider;
+        contract.callStatic = contract.connect(provider);
+        
+        setState(prev => ({ ...prev, contract }));
+
+        // Intentar obtener estado inicial con manejo de errores
+        try {
+          await getContractStatus(contract);
+        } catch (statusError) {
+          console.warn("Initial status fetch failed:", statusError);
+          // No fallar completamente si el status inicial falla
+        }
+
+      } catch (err) {
+        console.error("Contract initialization error:", err);
+      }
+    };
+
+    initializeContract();
+  }, [provider, isInitialized, CONTRACT_ADDRESS]);
 
   const getSignedContract = async () => {
     if (!window.ethereum) throw new Error('No wallet found');
@@ -154,95 +210,116 @@ export const StakingProvider = ({ children }) => {
   };
 
   // Helper functions
-  const refreshUserInfo = async (address) => {
-    if (!state.contract || !address) return;
+  const refreshUserInfo = useCallback(async (address) => {
+    if (!state.contract || !address) {
+      console.log("Missing dependencies for refreshUserInfo:", {
+        hasContract: !!state.contract,
+        address
+      });
+      return;
+    }
+
+      console.log("Refreshing user info for:", address);
     
-    return getCachedOrFetch(
-      `user_info_${address}`,
-      async () => {
-        try {
-          const [userInfoResponse, depositsResponse] = await Promise.all([
-            state.contract.getUserInfo(address).then(info => ({
-              totalDeposited: info.totalDeposited.toString(),
-              pendingRewards: info.pendingRewards.toString(),
-              lastWithdraw: Number(info.lastWithdraw || 0)
-            })).catch(() => ({
-              totalDeposited: '0',
-              pendingRewards: '0',
-              lastWithdraw: 0
-            })),
-            state.contract.getUserDeposits(address).then(deps => 
-              deps.map(d => ({
-                amount: d.amount.toString(),
-                timestamp: Number(d.timestamp)
-              }))
-            ).catch(() => [])
-          ]);
-    
-          const timeBonus = calculateTimeBonus((depositsResponse[0]?.timestamp || 0) * 1000);
-          const roiProgress = calculateROIProgress(depositsResponse);
-    
-          const data = {
-            userInfo: {
-              totalStaked: userInfoResponse.totalDeposited,
-              timeBonus,
-              pendingRewards: userInfoResponse.pendingRewards,
-              lastWithdraw: userInfoResponse.lastWithdraw,
-              roiProgress
-            },
-            userDeposits: depositsResponse,
-            stakingStats: {
-              totalDeposited: userInfoResponse.totalDeposited,
-              pendingRewards: userInfoResponse.pendingRewards,
-              lastWithdraw: userInfoResponse.lastWithdraw,
-              depositsCount: depositsResponse.length,
-              remainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - depositsResponse.length
-            }
-          };
-    
-          setState(prev => ({ ...prev, ...data }));
-          return data;
-        } catch (error) {
-          console.error('Error refreshing user info:', error);
-          setState(prev => ({
-            ...prev,
-            userInfo: defaultState.userInfo,
-            stakingStats: defaultState.stakingStats
-          }));
-          throw error;
+    try {
+      // Use callStatic for read operations
+      const [userInfoResponse, depositsResponse] = await Promise.all([
+        state.contract.callStatic.getUserInfo(address),
+        state.contract.callStatic.getUserDeposits(address)
+      ]);
+
+      console.log("Raw user data:", {
+        userInfo: userInfoResponse,
+        deposits: depositsResponse
+      });
+
+      // Process and format the data
+      const formattedDeposits = Array.isArray(depositsResponse) ? depositsResponse.map(deposit => ({
+        amount: ethers.formatEther(deposit.amount || '0'),
+        timestamp: Number(deposit.timestamp || '0')
+      })) : [];
+
+      // Process user info
+      // Calcular ROI progress
+      const now = Math.floor(Date.now() / 1000);
+      let totalProgress = 0;
+
+      formattedDeposits.forEach(deposit => {
+        const timeStaked = now - deposit.timestamp;
+        const daysStaked = timeStaked / (24 * 3600);
+        const dailyROI = 0.24; // 0.24% daily
+        const progress = Math.min(daysStaked * dailyROI, 125);
+        totalProgress += progress;
+      });
+
+      const roiProgress = formattedDeposits.length > 0 ? 
+        totalProgress / formattedDeposits.length : 0;
+
+      // Declare formattedUserInfo with let or const
+      const formattedUserInfo = {
+        totalStaked: ethers.formatEther(userInfoResponse.totalStaked || '0'),
+        pendingRewards: ethers.formatEther(userInfoResponse.pendingRewards || '0'),
+        lastWithdraw: Number(userInfoResponse.lastWithdraw || '0'),
+        roiProgress: roiProgress,
+        stakingDays: Math.floor((now - (formattedDeposits[0]?.timestamp || now)) / (24 * 3600))
+      };
+
+      console.log("Processed user data:", {
+        userInfo: formattedUserInfo,
+        deposits: formattedDeposits,
+        roiProgress
+      });
+
+      setState(prev => ({
+        ...prev,
+        userInfo: formattedUserInfo,
+        userDeposits: formattedDeposits,
+        stakingStats: {
+          ...prev.stakingStats,
+          pendingRewards: formattedUserInfo.pendingRewards,
+          lastWithdraw: formattedUserInfo.lastWithdraw,
+          depositsCount: formattedDeposits.length,
+          roiProgress: roiProgress
         }
-      },
-      CACHE_CONFIG.USER_INFO.ttl
-    );
-  };
+      }));
+
+      return { userInfo: formattedUserInfo, deposits: formattedDeposits };
+    } catch (error) {
+      console.error("Error in refreshUserInfo:", error);
+      return null;
+    }
+  }, [state.contract]);
 
   // Update getContractStatus to accept contract parameter
   const getContractStatus = async (contractInstance = state.contract) => {
-    if (!contractInstance) return;
+    if (!contractInstance || !provider || !isInitialized) return;
     
     return getCachedOrFetch(
       'contract_status',
       async () => {
         try {
           const [paused, migrated, treasury, balance] = await Promise.all([
-            contractInstance.paused(),
-            contractInstance.migrated(),
-            contractInstance.treasury(),
-            contractInstance.getContractBalance()
-          ]);
+            contractInstance.callStatic.paused().catch(() => false),
+            contractInstance.callStatic.migrated().catch(() => false),
+            contractInstance.callStatic.treasury().catch(() => null),
+            contractInstance.callStatic.getContractBalance().catch(() => BigInt(0))
+          ].map(p => p.catch(e => {
+            console.warn('Contract call failed:', e);
+            return null;
+          })));
           
           const data = {
-            isContractPaused: paused,
-            isMigrated: migrated,
+            isContractPaused: !!paused,
+            isMigrated: !!migrated,
             treasuryAddress: treasury,
-            totalPoolBalance: balance.toString()
+            totalPoolBalance: balance?.toString() || '0'
           };
           
           setState(prev => ({ ...prev, ...data }));
           return data;
         } catch (error) {
           console.error('Error getting contract status:', error);
-          throw error;
+          return null;
         }
       },
       CACHE_CONFIG.CONTRACT_STATUS.ttl
@@ -641,6 +718,16 @@ export const StakingProvider = ({ children }) => {
     return Math.min(ratio * 100, 100); // Score de 0 a 100
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearInterval(refreshTimeoutRef.current);
+      }
+      cache.current.clear();
+    };
+  }, []);
+
   const contextValue = {
     state,
     setState,
@@ -655,6 +742,18 @@ export const StakingProvider = ({ children }) => {
     getPoolMetrics,
     getPoolEvents,
     getTreasuryMetrics,
+    // Add this function to help with signer address
+    getSignerAddress: async () => {
+      if (!window.ethereum) return null;
+      try {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        return await signer.getAddress();
+      } catch (error) {
+        console.error("Error getting signer address:", error);
+        return null;
+      }
+    }
   };
 
   return (

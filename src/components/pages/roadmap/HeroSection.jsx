@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { useStaking } from '../../context/StakingContext';
+import { useStaking } from '../../../context/StakingContext';
 import { ethers } from 'ethers';
+import '../../../styles/gradients.css';
 
 const HeroSection = () => {
   const { state } = useStaking();
@@ -203,7 +204,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 20 }} 
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl mt-8 font-bold mb-6 sm:mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl mt-8 font-bold mb-6 sm:mb-8 gradient-text leading-tight">
             Build With Us
           </h1>
           <p className="text-sm sm:text-base md:text-xl text-gray-300 max-w-2xl mx-auto">

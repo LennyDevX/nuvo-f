@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { FaWallet, FaChartLine, FaHistory, FaInfoCircle } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 
 
@@ -10,20 +10,78 @@ const StakingStatusCard = ({ account, depositAmount }) => {
   const { state, STAKING_CONSTANTS, refreshUserInfo, formatWithdrawDate } = useStaking();
   const { stakingStats, userDeposits, userInfo } = state;
 
+
+    // Add this after getting useStaking values
   useEffect(() => {
-    if (account) {
-      refreshUserInfo(account);
-    }
+    console.log("StakingStatusCard props and state:", {
+      account,
+      depositAmount,
+      userInfo,
+      stakingStats
+    });
+  }, [account, depositAmount, userInfo, stakingStats]);
+
+  // Add immediate data fetch on mount
+  useEffect(() => {
+    if (!account) return;
+
+    const fetchInitialData = async () => {
+      try {
+        console.log("Initial fetch for account:", account);
+        const result = await refreshUserInfo(account);
+        console.log("Initial fetch result:", result);
+      } catch (error) {
+        console.error("Error in initial fetch:", error);
+      }
+    };
+
+    fetchInitialData();
+  }, [account]); // Only run on mount and account change
+
+  // Regular polling
+  useEffect(() => {
+    if (!account) return;
+    
+    const interval = setInterval(() => {
+      refreshUserInfo(account).catch(console.error);
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [account, refreshUserInfo]);
 
-  const memoizedValues = useMemo(() => ({
-    actualDepositsCount: userDeposits?.length || 0,
-    actualRemainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - (userDeposits?.length || 0),
-    lastWithdrawDate: stakingStats.lastWithdraw ? formatWithdrawDate(stakingStats.lastWithdraw) : 'Never',
-    totalStaked: userInfo?.totalStaked || '0',
-    efficiency: ((userDeposits?.length || 0) / STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER) * 100,
-    pendingRewards: stakingStats.pendingRewards || '0'
-  }), [userDeposits?.length, STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER, stakingStats, userInfo]);
+  // Add debug logging
+  useEffect(() => {
+    console.log("Current staking stats:", {
+      depositAmount,
+      userDeposits: userDeposits?.length,
+      stakingStats
+    });
+  }, [depositAmount, userDeposits, stakingStats]);
+
+  const memoizedValues = useMemo(() => {
+    const values = {
+      actualDepositsCount: userDeposits?.length || 0,
+      actualRemainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - (userDeposits?.length || 0),
+      lastWithdrawDate: stakingStats.lastWithdraw ? formatWithdrawDate(stakingStats.lastWithdraw) : 'Never',
+      // Use depositAmount instead of userInfo.totalStaked if it's more accurate
+      totalStaked: depositAmount || userInfo?.totalStaked || '0',
+      efficiency: ((userDeposits?.length || 0) / STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER) * 100,
+      pendingRewards: stakingStats.pendingRewards || '0'
+    };
+    
+    console.log("Memoized values with depositAmount:", {
+      ...values,
+      rawDepositAmount: depositAmount,
+      rawTotalStaked: userInfo?.totalStaked
+    });
+    return values;
+  }, [
+    userDeposits?.length,
+    STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER,
+    stakingStats,
+    userInfo,
+    depositAmount // Add depositAmount to dependencies
+  ]);
 
   return (
     <BaseCard title="Your Staking Profile" icon={<FaWallet className="text-indigo-300" />}>

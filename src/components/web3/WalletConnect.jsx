@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { ethers } from 'ethers';
-import { WalletContext } from '../context/WalletContext'; 
+import { WalletContext } from '../../context/WalletContext'; 
 import WalletUtils from "../web3/WalletUtils"; 
 import MetaMaskLogo from '/metamask-logo.png';
 

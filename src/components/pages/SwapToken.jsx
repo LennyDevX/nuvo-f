@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import DodoSwapWidget from "../web3/SwapDodo";
-import { WalletContext } from "../context/WalletContext";
+import { WalletContext } from "../../context/WalletContext";
 
 const SwapToken = () => {
   const { account, network, balance } = useContext(WalletContext);

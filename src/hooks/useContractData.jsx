@@ -4,12 +4,13 @@ import { ethers } from "ethers";
 import ABI from "../Abi/StakingContract.json";
 import useProvider from "./useProvider";
 
-const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
+const POLLING_INTERVAL = 30000; // 30 seconds
+const CACHE_DURATION = 5000; // 5 seconds
 const UPDATE_INTERVAL = 30000; // 30 seconds
 const DEBOUNCE_DELAY = 1000; // 1 second
 
 const useContractData = (account) => {
-  const provider = useProvider();
+  const { provider, isInitialized } = useProvider();
   const [data, setData] = useState({
     depositAmount: 0,
     availableRewards: 0,
@@ -26,65 +27,88 @@ const useContractData = (account) => {
   const intervalRef = useRef(null);
   const isInitialLoad = useRef(true);
   const mounted = useRef(true);
+  const lastFetchTime = useRef(0);
+  const fetchTimeout = useRef(null);
 
   const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || "";
 
-  const fetchContractData = useCallback(async (isInitialFetch = false) => {
-    if (!provider || !account || !CONTRACT_ADDRESS) return;
-
+  const initContract = useCallback(async () => {
+    if (!provider || !CONTRACT_ADDRESS || !isInitialized) return null;
     try {
-      if (isInitialFetch) setLoading(true);
-
       const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
       
-      // Updated safe value handling
-      const safeValue = (value) => {
-        try {
-          // Handle various input types
-          if (typeof value === 'bigint') return value;
-          if (typeof value === 'string') return BigInt(value);
-          if (typeof value === 'number') return BigInt(Math.floor(value));
-          if (value?._isBigNumber) return BigInt(value.toString());
-          return BigInt(0);
-        } catch (err) {
-          console.warn('Safe value conversion error:', err);
-          return BigInt(0);
-        }
-      };
+      // Ensure contract interface is properly initialized
+      if (!contract.interface) {
+        console.error("Contract interface not found");
+        return null;
+      }
 
-      const safeCall = async (promise, defaultValue = BigInt(0)) => {
-        try {
-          const result = await promise;
-          return safeValue(result);
-        } catch (err) {
-          console.warn('Safe call error:', err);
-          return defaultValue;
-        }
-      };
+      // Add callStatic interface
+      contract.callStatic = contract.connect(provider);
 
-      // Format amounts safely
-      const formatAmount = (value) => {
-        try {
-          const bigIntValue = safeValue(value);
-          return ethers.formatEther(bigIntValue.toString());
-        } catch (err) {
-          console.warn('Format amount error:', err);
-          return '0';
-        }
-      };
+      // Verify contract exists
+      const code = await provider.getCode(CONTRACT_ADDRESS);
+      if (code === '0x') {
+        throw new Error('Contract not deployed');
+      }
 
-      // Get contract data with safe handling
-      const [rewards, poolBalance, deposit, deposits] = await Promise.all([
-        safeCall(contract.calculateRewards(account)),
-        safeCall(contract.getContractBalance()),
-        safeCall(contract.getTotalDeposit(account)),
-        contract.getUserDeposits(account).then(deps => 
-          (deps || []).map(d => ({
+      // Bind all methods
+      Object.getOwnPropertyNames(Object.getPrototypeOf(contract))
+        .filter(name => typeof contract[name] === 'function')
+        .forEach(name => {
+          contract[name] = contract[name].bind(contract);
+        });
+
+      return contract;
+    } catch (error) {
+      console.error("Contract initialization error:", error);
+      return null;
+    }
+  }, [provider, CONTRACT_ADDRESS, isInitialized]);
+
+  const fetchContractData = useCallback(async (force = false, fetchRewards = false) => {
+    if (!provider || !account || !CONTRACT_ADDRESS || !isInitialized) {
+      console.log("Missing dependencies:", { provider: !!provider, account, CONTRACT_ADDRESS, isInitialized });
+      return;
+    }
+
+    console.log("Fetching contract data:", { force, fetchRewards });
+
+    try {
+      if (force) setLoading(true);
+
+      const contract = await initContract();
+      if (!contract || !contract.callStatic) {
+        console.error("Contract or callStatic not initialized");
+        return;
+      }
+
+      // Use callStatic for read operations
+      let rewards;
+      try {
+        rewards = await contract.callStatic.calculateRewards(account);
+      } catch (err) {
+        console.warn("Error calculating rewards:", err);
+        rewards = BigInt(0);
+      }
+
+      // Fetch other data
+      const [poolBalance, deposit, deposits] = await Promise.all([
+        contract.callStatic.getContractBalance().catch(() => BigInt(0)),
+        contract.callStatic.getTotalDeposit(account).catch(() => BigInt(0)),
+        contract.callStatic.getUserDeposits(account)
+          .then(deps => deps.map(d => ({
             amount: safeValue(d.amount),
             timestamp: Number(d.timestamp || 0)
-          }))
-        ).catch(() => [])
+          })))
+          .catch(() => [])
       ]);
+
+      console.log("Fetched data:", {
+        poolBalance: poolBalance.toString(),
+        deposit: deposit.toString(),
+        depositsCount: deposits.length
+      });
 
       const newData = {
         depositAmount: formatAmount(deposit),
@@ -98,17 +122,54 @@ const useContractData = (account) => {
       };
 
       setData(prevData => ({ ...prevData, ...newData }));
+      lastFetchTime.current = Date.now();
       
     } catch (err) {
       console.error("Error fetching contract data:", err);
       setError("Failed to fetch contract data");
     } finally {
-      if (isInitialFetch) {
+      if (force) {
         setLoading(false);
         isInitialLoad.current = false;
       }
     }
-  }, [provider, account, CONTRACT_ADDRESS]);
+  }, [provider, account, CONTRACT_ADDRESS, isInitialized, initContract]);
+
+  // Updated safe value handling
+  const safeValue = (value) => {
+    try {
+      // Handle various input types
+      if (typeof value === 'bigint') return value;
+      if (typeof value === 'string') return BigInt(value);
+      if (typeof value === 'number') return BigInt(Math.floor(value));
+      if (value?._isBigNumber) return BigInt(value.toString());
+      return BigInt(0);
+    } catch (err) {
+      console.warn('Safe value conversion error:', err);
+      return BigInt(0);
+    }
+  };
+
+  const safeCall = async (promise, defaultValue = BigInt(0)) => {
+    try {
+      const result = await promise;
+      return safeValue(result);
+    } catch (err) {
+      console.warn('Safe call error:', err);
+      return defaultValue;
+    }
+  };
+
+  // Format amounts safely
+  const formatAmount = (value) => {
+    try {
+      const bigIntValue = safeValue(value);
+      return ethers.formatEther(bigIntValue.toString());
+    } catch (err) {
+      console.warn('Format amount error:', err);
+      return '0';
+    }
+  };
 
   // Update fetchWithdrawalEvents to use safe value handling
   const fetchWithdrawalEvents = useCallback(async () => {
@@ -213,20 +274,21 @@ const useContractData = (account) => {
     if (account && provider) {
       fetchContractData(true);
 
-      // Set up interval for updates
-      const intervalId = setInterval(() => {
-        if (!isInitialLoad.current) {
-          fetchContractData(false);
-        }
-      }, UPDATE_INTERVAL);
+      // Set up polling with cleanup
+      const pollData = () => {
+        fetchTimeout.current = setTimeout(() => {
+          fetchContractData();
+          pollData();
+        }, POLLING_INTERVAL);
+      };
 
-      intervalRef.current = intervalId;
+      pollData();
     }
 
     return () => {
       mounted.current = false;
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (fetchTimeout.current) {
+        clearTimeout(fetchTimeout.current);
       }
     };
   }, [account, provider, fetchContractData]);

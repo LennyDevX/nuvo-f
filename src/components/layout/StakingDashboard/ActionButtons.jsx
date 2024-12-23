@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import ButtonDeposit from '../../web3/ButtonDeposit';
 import ButtonWithdraw from '../../web3/ButtonWithdraw';
 import ButtonWithdrawAll from '../../web3/ButtonWithdrawAll';
-import { useStaking } from '../../context/StakingContext';
+import { useStaking } from '../../../context/StakingContext';
 
 const ActionButtons = ({
   availableRewards,

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
-import { useStaking } from '../context/StakingContext';
-import { WalletContext } from '../context/WalletContext';
+import { useStaking } from '../../context/StakingContext';
+import { WalletContext } from '../../context/WalletContext';
 import { useContext } from 'react';
 
 function ButtonWithdrawAll() {
