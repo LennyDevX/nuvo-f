@@ -3,7 +3,7 @@ import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift } from 'react-icons/
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
 import { formatBalance } from '../../../../utils/formatters';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 
 const PoolMetricsCard = () => {
@@ -75,7 +75,7 @@ const PoolMetricsCard = () => {
           <div className="bg-red-900/20 backdrop-blur-sm p-3 rounded-xl border border-red-600/20 shadow-lg">
             <div className="flex items-center gap-1.5">
               <FaCoins className="w-3.5 h-3.5 text-red-300" />
-              <span className="text-red-100/70 text-sm">Total Rewards</span>
+              <span className="text-red-100/70 text-sm">Rewards</span>
               <Tooltip content="Total rewards distributed to stakers">
                 <FaInfoCircle className="text-red-400/60 hover:text-red-300" />
               </Tooltip>
@@ -89,7 +89,7 @@ const PoolMetricsCard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-red-300 animate-pulse"></div>
-                <span className="text-red-100/70 text-sm">Total Withdrawn</span>
+                <span className="text-red-100/70 text-sm"> Withdrawn</span>
                 <Tooltip content="Total amount of POL withdrawn from the pool">
                   <FaInfoCircle className="text-red-400/60 hover:text-red-300" />
                 </Tooltip>

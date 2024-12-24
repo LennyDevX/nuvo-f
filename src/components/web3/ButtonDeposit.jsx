@@ -1,8 +1,8 @@
 // ButtonDeposit.jsx
 import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WalletContext } from '../context/WalletContext';
-import { useStaking } from '../context/StakingContext';
+import { WalletContext } from '../../context/WalletContext';
+import { useStaking } from '../../context/StakingContext';
 
 const DEPOSIT_PRESETS = [5, 10, 50,];
 const COMMISSION_RATE = 0.06;

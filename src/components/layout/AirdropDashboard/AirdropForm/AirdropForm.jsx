@@ -1,5 +1,5 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { WalletContext } from '../../../context/WalletContext';
+import React, { useContext, useState, useEffect, useCallback } from 'react';
+import { WalletContext } from '../../../../context/WalletContext';
 import TimeCounter from './TimeCounter';
 import FormHeader from './FormHeader';
 import { motion } from 'framer-motion';
@@ -9,6 +9,7 @@ import { FaCoins, FaImages, FaBox, FaPalette } from 'react-icons/fa';
 import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { airdropsCollection } from '../../../firebase//config';
 import SubmissionSuccess from './SubmissionSuccess'; // Add this line
+import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
 
 const airdropTypes = [ 
     { id: 'tokens', name: 'Tokens', description: 'Receive tokens directly to your wallet', icon: <FaCoins /> },
@@ -18,7 +19,8 @@ const airdropTypes = [
 ];
 
 const AirdropForm = () => {
-    const { account, walletConnected } = useContext(WalletContext);
+    const { account, walletConnected, provider } = useContext(WalletContext);
+    const { registerForAirdrop, getAirdropInfo, airdropInfo } = useAirdropRegistration(provider, account);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -33,7 +35,6 @@ const AirdropForm = () => {
         seconds: 0
     });
 
-    const [ipAddress, setIpAddress] = useState('');
     const [submitCount, setSubmitCount] = useState(0);
     const [lastSubmitTime, setLastSubmitTime] = useState(null);
 
@@ -117,17 +118,10 @@ const AirdropForm = () => {
     }, [walletConnected, account]);
 
     useEffect(() => {
-        const fetchIpAddress = async () => {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                setIpAddress(data.ip);
-            } catch (error) {
-                console.error('Error fetching IP address:', error);
-            }
-        };
-        fetchIpAddress();
-    }, []);
+        if (provider && account) {
+            getAirdropInfo();
+        }
+    }, [provider, account, getAirdropInfo]);
 
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -245,97 +239,49 @@ const AirdropForm = () => {
         return true;
     };
 
+    const submitToBackend = useCallback(async (data) => {
+        try {
+            const docRef = await addDoc(airdropsCollection, {
+                ...data,
+                submittedAt: Timestamp.now(),
+                status: 'pending'
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error('Error submitting to backend:', error);
+            throw error;
+        }
+    }, []);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
         try {
             setError(null);
             setIsLoading(true);
 
-            if (!account) {
+            if (!walletConnected || !account) {
                 setError('Please connect your wallet first');
                 return;
             }
 
-            // Verificar si el usuario está intentando hacer spam
-            if (!checkRateLimit()) {
-                setError('Too many attempts. Please try again later.');
-                return;
-            }
+            // First validate form
+            if (!(await validateForm())) return;
 
-            if (!(await validateForm())) {
-                return;
-            }
+            // Then register in smart contract
+            const registrationHash = await registerForAirdrop();
 
-            // Incrementar contador de intentos
-            setSubmitCount(prev => prev + 1);
-            setLastSubmitTime(Date.now());
+            // Then submit to backend
+            await submitToBackend({
+                ...formData,
+                registrationHash,
+                contractAddress: import.meta.env.VITE_AIRDROP_ADDRESS,
+                wallet: account
+            });
 
-            const selectedAirdropType = airdropTypes.find(type => type.id === formData.airdropType);
-            const sanitizedAirdropDetails = {
-                id: selectedAirdropType.id,
-                name: selectedAirdropType.name,
-                description: selectedAirdropType.description
-            };
-
-            const submissionData = {
-                name: String(formData.name).trim().replace(/[<>]/g, ''),
-                email: String(formData.email).trim().toLowerCase(),
-                wallet: String(account),
-                airdropType: String(formData.airdropType),
-                airdropDetails: sanitizedAirdropDetails,
-                status: 'pending',
-                submittedAt: Timestamp.now(),
-                lastUpdated: Timestamp.now(),
-                isWalletVerified: Boolean(account),
-                emailVerified: false,
-                rewards: {
-                    tokens: {
-                        amount: Number(0),
-                        claimed: Boolean(false),
-                        claimDate: null
-                    },
-                    nfts: [],
-                    items: [],
-                    collection: null
-                },
-                participationCount: Number(1),
-                lastParticipation: Timestamp.now(),
-                eligibilityScore: Number(0),
-                notes: String(''),
-                ipAddress: String(ipAddress),
-                userAgent: String(navigator.userAgent || '')
-            };
-            
-            let retryCount = 0;
-            const maxRetries = 3;
-            
-            while (retryCount < maxRetries) {
-                try {
-                    const docRef = await addDoc(airdropsCollection, submissionData);
-                    console.log('Airdrop registration successful with ID:', docRef.id);
-                    
-                    const participations = JSON.parse(localStorage.getItem('airdropParticipations') || '{}');
-                    participations[formData.airdropType] = {
-                        submissionId: docRef.id,
-                        timestamp: Date.now()
-                    };
-                    localStorage.setItem('airdropParticipations', JSON.stringify(participations));
-                    
-                    setIsSubmitted(true);
-                    setError(null);
-                    break;
-                } catch (err) {
-                    retryCount++;
-                    if (retryCount === maxRetries) {
-                        throw err;
-                    }
-                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-                }
-            }
+            setIsSubmitted(true);
         } catch (err) {
             console.error('Error submitting airdrop registration:', err);
-            setError('Failed to submit registration. Please try again.');
+            setError(err.message || 'Failed to submit registration');
         } finally {
             setIsLoading(false);
         }

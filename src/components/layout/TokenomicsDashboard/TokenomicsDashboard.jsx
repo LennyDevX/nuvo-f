@@ -2,6 +2,8 @@
 import React from "react";
 import { color, motion } from "framer-motion";
 import { Pie } from "react-chartjs-2";
+import '../../../styles/gradients.css';
+
 import {
   Chart as ChartJS,
   ArcElement,
@@ -100,7 +102,7 @@ const TokenomicsDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-3xl md:text-4xl font-bold text-gradient bg-gradient-to-r from-purple-400 to-pink-500 mb-4">
+              <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
                 Tokenomics{" "}
                 <span className="text-white">
                   Dashboard
@@ -235,14 +237,6 @@ const TokenomicsDashboard = () => {
             {/* Remove Roadmap Section */}
           </div>
         </motion.div>
-
-        <style>{`
-          .text-gradient {
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-          }
-        `}</style>
       </div>
     </MainLayout>
   );

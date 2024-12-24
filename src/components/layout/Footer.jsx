@@ -1,7 +1,8 @@
 // src/components/layout/Footer.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaTelegramPlane, FaTwitter, FaGithub, FaDiscord } from 'react-icons/fa';
+import { FaTelegramPlane, FaGithub, FaDiscord } from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
 
 const Footer = () => {
@@ -93,7 +94,7 @@ const Footer = () => {
                 className="text-gray-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.1 }}
               >
-                <FaTwitter className="text-2xl" />
+                <FaXTwitter className="text-2xl" />
               </motion.a>
               <motion.a
                 href="https://discord.gg/yourserver"
@@ -111,10 +112,10 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-purple-500/40 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Nuvo Protocol. All rights reserved.
+            © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v0.2 - Use at your own risk
+            BETA v0.3 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

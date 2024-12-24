@@ -66,7 +66,7 @@ function ROICard({ firstDepositTime }) {
               </Tooltip>
             </span>
             <div className="text-2xl font-bold text-emerald-300">
-              +{(stakingInfo.totalROI * 24).toFixed(4)}%
+              +{(stakingInfo.totalROI * 24).toFixed(2)}%
             </div>
           </div>
         </div>

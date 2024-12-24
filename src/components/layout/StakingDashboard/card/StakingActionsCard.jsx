@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { FaExchangeAlt, FaInfoCircle } from 'react-icons/fa';
 import { AnimatePresence } from 'framer-motion';
 import BaseCard from './BaseCard';
-import { useStaking } from '../../../context/StakingContext';
+import { useStaking } from '../../../../context/StakingContext';
 import { parseEther } from 'ethers';
 import Tooltip from '../Tooltip';
-import WithdrawModal from '../../../modal/WithdrawModal';
+import WithdrawModal from '../../../modals/WithdrawModal';
 import TransactionToast from '../../../ui/TransactionToast';
 
 const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {

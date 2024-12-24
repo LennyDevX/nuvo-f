@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import DodoSwapWidget from "../web3/SwapDodo";
-import { WalletContext } from "../context/WalletContext";
+import { WalletContext } from "../../context/WalletContext";
 
 const SwapToken = () => {
   const { account, network, balance } = useContext(WalletContext);
@@ -54,7 +54,7 @@ const SwapToken = () => {
   }), [handleError, handleLoading, handleTransactionStatus]);
 
   return (
-    <div className="min-h-screen bg-black py-8 md:py-16 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 py-8 md:py-16 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-8"
@@ -62,8 +62,8 @@ const SwapToken = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-purple-600 mb-4">
-            Token Swap
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+            Nuvos Swap
           </h1>
           <p className="text-white text-lg">
             Intercambia tus tokens de manera rápida y segura
