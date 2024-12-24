@@ -5,6 +5,7 @@ import ButtonClaimAirdrop from '../../web3/ButtonClaimAirdrop';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../Abi/Airdrop.json';
 import { WalletContext } from '../../../context/WalletContext';
+import AirdropClaimModal from '../../modals/AirdropClaimModal';
 
 const AirdropPoolStatusCard = ({ account }) => {
     const { provider } = useContext(WalletContext);
@@ -20,6 +21,8 @@ const AirdropPoolStatusCard = ({ account }) => {
         isChecked: false,
         isActive: false
     });
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
 
     useEffect(() => {
         if (account && provider) {
@@ -36,16 +39,14 @@ const AirdropPoolStatusCard = ({ account }) => {
                 provider
             );
 
-            const [stats, dates] = await Promise.all([
-                contract.getAirdropStats(),
-                contract.getAirdropDates()
-            ]);
-
+            const stats = await contract.getAirdropStats();
+            
             setAirdropInfo({
-                startDate: new Date(Number(dates.startDate) * 1000),
-                endDate: new Date(Number(dates.endDate) * 1000),
-                totalParticipants: Number(stats.totalClaims),
-                airdropAmount: '10'
+                startDate: null, // Estos datos ya no están disponibles
+                endDate: null,   // en el contrato actual
+                totalParticipants: Number(stats.claimedCount),
+                airdropAmount: '10',
+                isActive: stats.isAirdropActive
             });
         } catch (error) {
             console.error('Error fetching airdrop info:', error);
@@ -62,26 +63,102 @@ const AirdropPoolStatusCard = ({ account }) => {
                 provider
             );
 
-            const eligibility = await contract.checkUserEligibility(account);
-            const isActive = await contract.isAirdropActive();
+            const [eligibilityCheck, isActive] = await Promise.all([
+                contract.checkUserEligibility(account),
+                contract.isActive()
+            ]);
 
-            console.log('User Eligibility Status:', {
-                contract: import.meta.env.VITE_AIRDROP_ADDRESS,
-                account,
-                isEligible: eligibility.isEligible_,
-                hasClaimed: eligibility.hasClaimed_,
+            const [isEligible, hasClaimed, hasMinBalance, userBalance] = eligibilityCheck;
+
+            console.log('Airdrop Status:', {
+                isEligible,
+                hasClaimed,
+                hasMinBalance,
+                userBalance: ethers.formatEther(userBalance),
                 isActive
             });
 
+            // Un usuario es elegible para reclamar si:
+            // 1. Está registrado (isEligible)
+            // 2. No ha reclamado aún (!hasClaimed)
+            // 3. Tiene el balance mínimo (hasMinBalance)
+            // 4. El airdrop está activo (isActive)
+            const canClaim = isEligible && !hasClaimed && hasMinBalance && isActive;
+
             setUserEligibilityStatus({
-                isEligible: eligibility.isEligible_,
-                hasClaimed: eligibility.hasClaimed_,
+                isEligible: canClaim,
+                hasClaimed,
                 isChecked: true,
-                isActive: isActive
+                isActive,
+                hasMinBalance
             });
+
+            // Actualizar mensajes de error
+            if (!hasMinBalance) {
+                setErrorMessage(`Insufficient balance. Need 1 MATIC. Current: ${ethers.formatEther(userBalance)} MATIC`);
+            } else if (!isEligible) {
+                setErrorMessage('Please register for the airdrop first');
+            } else if (hasClaimed) {
+                setErrorMessage('You have already claimed this airdrop');
+            } else if (!isActive) {
+                setErrorMessage('Airdrop is not active at this moment');
+            } else {
+                setErrorMessage('');
+            }
+
         } catch (error) {
             console.error('Eligibility Check Failed:', error);
-            // No cambiar el estado en caso de error
+            setErrorMessage('Error checking eligibility. Please try again.');
+        }
+    };
+
+    const handleClaimClick = async () => {
+        if (!userEligibilityStatus.isEligible || userEligibilityStatus.hasClaimed || !userEligibilityStatus.isActive) {
+            return;
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmClaim = async () => {
+        try {
+            const signer = await provider.getSigner();
+            const contractWithSigner = new ethers.Contract(
+                import.meta.env.VITE_AIRDROP_ADDRESS,
+                AirdropABI.abi,
+                signer
+            );
+
+            setIsModalOpen(false);
+            
+            // Call the claimTokens function
+            console.log('Initiating claim transaction...');
+            const tx = await contractWithSigner.claimTokens();
+            console.log('Claim transaction sent:', tx.hash);
+            
+            console.log('Waiting for confirmation...');
+            const receipt = await tx.wait();
+            console.log('Claim confirmed:', receipt);
+
+            // Update eligibility status after successful claim
+            await checkUserEligibility();
+            
+        } catch (error) {
+            console.error('Claim failed:', error);
+            let errorMessage = 'Failed to claim airdrop';
+            
+            if (error.message.includes('NotEligible')) {
+                errorMessage = 'You are not eligible for this airdrop';
+            } else if (error.message.includes('AlreadyClaimed')) {
+                errorMessage = 'You have already claimed this airdrop';
+            } else if (error.message.includes('AirdropInactive')) {
+                errorMessage = 'Airdrop is not active at this moment';
+            } else if (error.message.includes('InsufficientContractBalance')) {
+                errorMessage = 'Contract has insufficient balance';
+            } else if (error.message.includes('UNSUPPORTED_OPERATION')) {
+                errorMessage = 'Please ensure your wallet is connected and unlocked';
+            }
+            
+            setErrorMessage(errorMessage);
         }
     };
 
@@ -116,23 +193,23 @@ const AirdropPoolStatusCard = ({ account }) => {
             {/* New Platform Benefits Section */}
             <div className="bg-purple-900/30 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-4">
-                    <FaGift className="text-purple-400 text-xl" />
-                    <h3 className="text-lg font-semibold text-purple-300">Platform Benefits</h3>
+                    <FaGift className="text-green-200 text-xl" />
+                    <h3 className="text-lg font-semibold text-purple-200">Platform Benefits</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-start gap-3">
                         <FaChartLine className="text-green-400 mt-1" />
                         <div>
-                            <h4 className="text-green-300 font-medium">Smart Staking</h4>
-                            <p className="text-gray-400 text-sm">Earn up to 125% APY by staking your POL tokens</p>
+                            <h4 className="text-green-400 font-medium">Smart Staking</h4>
+                            <p className="text-gray-300 text-sm">Earn up to 125% APY by staking your POL tokens</p>
                         </div>
                     </div>
                     
                     <div className="flex items-start gap-3">
-                        <FaLock className="text-purple-400 mt-1" />
+                        <FaLock className="text-green-400 mt-1" />
                         <div>
-                            <h4 className="text-purple-300 font-medium">Early Access</h4>
-                            <p className="text-gray-400 text-sm">Get priority access to new features and pools</p>
+                            <h4 className="text-green-400 font-medium">Early Access</h4>
+                            <p className="text-gray-300 text-sm">Get priority access to new features and pools</p>
                         </div>
                     </div>
                 </div>
@@ -143,14 +220,12 @@ const AirdropPoolStatusCard = ({ account }) => {
                 {/* ...existing user allocation code... */}
             </div>
 
-           
-
             {/* New Enhanced Info Section */}
             <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/20">
                 <div className="flex items-start gap-2">
                     <FaInfoCircle className="text-purple-400 mt-1" />
                     <div className="text-sm">
-                        <h3 className="text-purple-400 font-semibold mb-2">Maximize Your POL Tokens</h3>
+                        <h3 className="text-purple-200 font-semibold mb-2">Maximize Your POL Tokens</h3>
                         <ul className="space-y-2 text-gray-300">
                             <li className="flex items-center gap-2">
                                 <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
@@ -170,9 +245,35 @@ const AirdropPoolStatusCard = ({ account }) => {
             </div>
 
              {/* Claim Button - existing code */}
-             <ButtonClaimAirdrop
-                account={account}
-                isEligible={!userEligibilityStatus.hasClaimed && userEligibilityStatus.isEligible && userEligibilityStatus.isActive}
+             {errorMessage && (
+                <div className="bg-red-900/30 text-red-400 px-4 py-2 rounded-lg">
+                    {errorMessage}
+                </div>
+            )}
+
+            <button
+                onClick={handleClaimClick}
+                disabled={!userEligibilityStatus.isEligible || userEligibilityStatus.hasClaimed || !userEligibilityStatus.isActive}
+                className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
+                    userEligibilityStatus.isEligible && !userEligibilityStatus.hasClaimed && userEligibilityStatus.isActive
+                        ? 'bg-purple-500 hover:bg-purple-600 text-white'
+                        : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                }`}
+            >
+                {userEligibilityStatus.hasClaimed
+                    ? 'Already Claimed'
+                    : !userEligibilityStatus.isActive
+                    ? 'Airdrop Not Active'
+                    : userEligibilityStatus.isEligible
+                    ? 'Claim Airdrop'
+                    : 'Not Eligible'}
+            </button>
+
+            <AirdropClaimModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmClaim}
+                airdropAmount={airdropInfo.airdropAmount}
             />
 
             {/* Post Claim Actions */}

@@ -112,10 +112,10 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-purple-500/40 mt-8 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Nuvo Protocol. All rights reserved.
+            © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v0.2 - Use at your own risk
+            BETA v0.3 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

@@ -1,34 +1,56 @@
-import React, { createContext, useState, } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 
-// Create the context
 export const WalletContext = createContext({
-  account: null,
-  balance: null,
-  network: null,
-  walletConnected: false,  // New state for tracking whether the wallet is connected
-  setAccount: () => {},
-  setBalance: () => {},
-  setNetwork: () => {},
-  setWalletConnected: () => {},  // New setter function for walletConnected
+    account: null,
+    balance: null,
+    network: null,
+    walletConnected: false,
+    provider: null,
+    setAccount: () => {},
+    setBalance: () => {},
+    setNetwork: () => {},
+    setWalletConnected: () => {},
 });
 
 export const WalletProvider = ({ children }) => {
-  const [account, setAccount] = useState(null);
-  const [balance, setBalance] = useState(null);
-  const [network, setNetwork] = useState(null);
-  const [walletConnected, setWalletConnected] = useState(false);
+    const [account, setAccount] = useState(null);
+    const [balance, setBalance] = useState(null);
+    const [network, setNetwork] = useState(null);
+    const [walletConnected, setWalletConnected] = useState(false);
+    const [provider, setProvider] = useState(null);
 
-  // Function to update the account and walletConnected state
-  const updateAccount = (newAccount) => {
-    setAccount(newAccount);
-    setWalletConnected(!!newAccount); // Set walletConnected to true if newAccount is truthy
-  };
+    // Actualiza walletConnected cuando cambia la cuenta
+    useEffect(() => {
+        setWalletConnected(!!account);
+    }, [account]);
 
-  const value = { balance, setBalance, account, setAccount, updateAccount, network, setNetwork, walletConnected };
+    // Inicializa el proveedor si hay una wallet conectada
+    useEffect(() => {
+        const initProvider = async () => {
+            if (window.ethereum) {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                setProvider(provider);
+            }
+        };
+        initProvider();
+    }, []);
 
-  return (
-    <WalletContext.Provider value={value}>
-      {children}
-    </WalletContext.Provider>
-  );
+    const value = {
+        account,
+        balance,
+        network,
+        walletConnected,
+        provider,
+        setAccount,
+        setBalance,
+        setNetwork,
+        setWalletConnected
+    };
+
+    return (
+        <WalletContext.Provider value={value}>
+            {children}
+        </WalletContext.Provider>
+    );
 };

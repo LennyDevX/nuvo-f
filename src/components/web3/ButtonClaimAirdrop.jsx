@@ -38,7 +38,7 @@ const ButtonClaimAirdrop = ({ account, isEligible }) => {
 
       // Verificar el contrato directamente
       const [airdropActive, userEligibility] = await Promise.all([
-        contract.isAirdropActive(),
+        contract.isActive(),
         contract.checkUserEligibility(account)
       ]);
 

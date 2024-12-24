@@ -5,7 +5,7 @@ import HeroSection from '../home/HeroSection';
 // Lazy load components below the fold
 const StakingCalculator = lazy(() => import('../../../utils/StakingCalculator'));
 const Features = lazy(() => import('../home/Features'));
-const AnnouncementModal = lazy(() => import('../../modal/AnnouncementModal'));
+const AnnouncementModal = lazy(() => import('../../modals/AnnouncementModal'));
 
 const Home = () => {
   return (

@@ -5,7 +5,7 @@ import WalletUtils from "../web3/WalletUtils";
 import MetaMaskLogo from '/metamask-logo.png';
 
 const WalletConnect = () => {
-  const { setAccount, setNetwork, setBalance } = useContext(WalletContext); 
+  const { setAccount, setNetwork, setBalance, setWalletConnected } = useContext(WalletContext); 
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -17,6 +17,7 @@ const WalletConnect = () => {
     setIsLoading(false);
     setAccount(account); 
     setNetwork(networkName); 
+    setWalletConnected(true);
 
     // Get balance using ethers v6
     const balance = await provider.getBalance(account);

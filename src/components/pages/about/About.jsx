@@ -15,7 +15,7 @@ const About = () => {
   return (
     <MainLayout showFooter={true}>
       <motion.div style={{ y }} className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
-        <div className="absolute inset-0 bg-[url('/noise-pattern.svg')] opacity-5 pointer-events-none"></div>
+        <div className="absolute "></div>
         
         <HeroSection />
         <MissionSection />

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const CTASection = () => {
   return (
-    <section className="relative py-32 px-4">
+    <section className="relative py-16 px-4a">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-radial from-purple-600/20 via-transparent to-transparent"></div>
       </div>
@@ -34,7 +34,7 @@ const CTASection = () => {
         >
           <a
             href="/beta-signup"
-            className="inline-block px-12 py-5 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105"
+            className="inline-block px-12 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105"
           >
             Join Beta Program
           </a>
