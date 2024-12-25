@@ -25,12 +25,21 @@ export const WalletProvider = ({ children }) => {
         setWalletConnected(!!account);
     }, [account]);
 
-    // Inicializa el proveedor si hay una wallet conectada
+    // Mejorar la inicialización del proveedor
     useEffect(() => {
         const initProvider = async () => {
             if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                setProvider(provider);
+                try {
+                    const alchemyProvider = new ethers.JsonRpcProvider(
+                        `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`
+                    );
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    // Fallback al proveedor de Alchemy si hay error
+                    provider.getFallbackProvider = () => alchemyProvider;
+                    setProvider(provider);
+                } catch (error) {
+                    console.error("Error initializing provider:", error);
+                }
             }
         };
         initProvider();
@@ -38,8 +47,8 @@ export const WalletProvider = ({ children }) => {
 
     const value = {
         account,
-        balance,
-        network,
+        balance,      // Asegúrate de que estos valores
+        network,      // están incluidos en el value
         walletConnected,
         provider,
         setAccount,

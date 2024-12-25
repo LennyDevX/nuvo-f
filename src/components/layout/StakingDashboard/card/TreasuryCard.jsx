@@ -25,9 +25,9 @@ const TreasuryCard = () => {
 
   // Función para determinar el estado del treasury
   const getTreasuryStatus = (score) => {
-    if (score >= 80) return 'Excelente';
+    if (score >= 80) return 'Profits';
     if (score >= 50) return 'Estable';
-    return 'Bajo';
+    return 'Low Funds';
   };
 
   return (
@@ -99,7 +99,7 @@ const TreasuryCard = () => {
 
         {/* Treasury Allocation */}
         <div className="grid grid-cols-3 gap-3">
-          {['Locked', 'Fondos', 'Airdrop'].map((label, index) => (
+          {['Locked', 'Funds', 'Airdrop'].map((label, index) => (
             <div 
               key={index} 
               className="bg-amber-900/20 backdrop-blur-sm p-2.5 rounded-xl border border-amber-600/20 shadow-lg"

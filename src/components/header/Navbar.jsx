@@ -87,13 +87,13 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Wallet Connect */}
-          <div className="ml-4">
-            <WalletConnect />
+          {/* Wallet Connect - Modificado */}
+          <div className="relative ml-4">
+            <WalletConnect className="navbar-wallet" />
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden ml-4">
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="inline-flex items-center justify-center p-2 rounded-lg
