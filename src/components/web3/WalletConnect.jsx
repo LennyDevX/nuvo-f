@@ -12,17 +12,65 @@ const WalletConnect = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleConnect = async (provider, account, networkName) => {
-    setAccounts([account]);
-    setConnected(true);
-    setIsLoading(false);
-    setAccount(account); 
-    setNetwork(networkName); 
-    setWalletConnected(true);
-
-    // Get balance using ethers v6
-    const balance = await provider.getBalance(account);
-    const formattedBalance = ethers.formatEther(balance);
-    setBalance(formattedBalance);
+    try {
+      setIsLoading(true);
+  
+      // Add error handling for network check
+      const network = await provider.getNetwork();
+      if (network.chainId !== 137) { // Polygon Mainnet
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x89' }], // 137 in hex
+          });
+        } catch (switchError) {
+          // Handle chain switch error
+          if (switchError.code === 4902) {
+            await window.ethereum.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: '0x89',
+                chainName: 'Polygon Mainnet',
+                nativeCurrency: {
+                  name: 'MATIC',
+                  symbol: 'MATIC',
+                  decimals: 18
+                },
+                rpcUrls: ['https://polygon-rpc.com'],
+                blockExplorerUrls: ['https://polygonscan.com']
+              }]
+            });
+          }
+        }
+      }
+  
+      // Add retry logic for balance fetch
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          const balance = await provider.getBalance(account);
+          const formattedBalance = ethers.formatEther(balance);
+          setBalance(formattedBalance);
+          break;
+        } catch (error) {
+          retries--;
+          if (retries === 0) throw error;
+          await new Promise(r => setTimeout(r, 1000));
+        }
+      }
+  
+      setAccounts([account]);
+      setConnected(true);
+      setAccount(account);
+      setNetwork(networkName);
+      setWalletConnected(true);
+      setIsLoading(false);
+  
+    } catch (error) {
+      console.error('Connection error:', error);
+      setError('Failed to connect. Please make sure you are on Polygon network.');
+      setIsLoading(false);
+    }
   };
 
   const getNetworkName = async (provider) => {

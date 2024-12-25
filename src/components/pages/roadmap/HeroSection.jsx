@@ -5,7 +5,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useStaking } from '../../../context/StakingContext';
 import { ethers } from 'ethers';
-import '../../../styles/gradients.css';
+import '../../../Styles/gradients.css';
 
 const HeroSection = () => {
   const { state } = useStaking();

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import TokenomicsSection from './TokenomicsSection';
-import '../../../styles/gradients.css';
+import '../../../Styles/gradients.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
