@@ -16,7 +16,7 @@ import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
 import ROICard from './card/ROICard'; // Add this import
 import { calculateROIProgress } from '../../../utils/roiCalculations';
-import '../../../styles/gradients.css';
+import '../../../Styles/gradients.css';
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;

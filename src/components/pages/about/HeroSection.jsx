@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaLinkedin, FaTwitter, FaGithub, FaRocket, FaUsers } from 'react-icons/fa';
 import { SiPolygon } from 'react-icons/si';
-import '../../../styles/gradients.css';
+import '../../../Styles/gradients.css';
 
 const HeroSection = () => {
   return (

@@ -11,7 +11,7 @@ const About = lazy(() => import('./pages/about/About'));
 const AirdropDashboard = lazy(() => import('./layout/AirdropDashboard/AirdropDashboard'));
 const TokenomicsDashboard = lazy(() => import('./layout/TokenomicsDashboard/TokenomicsDashboard'));
 const DashboardStaking = lazy(() => import('./layout/StakingDashboard/DashboardStaking'));
-const Roadmap = lazy(() => import('./pages/roadmap/roadmap'));
+const Roadmap = lazy(() => import('./pages/roadmap/Roadmap'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Loading component

@@ -2,7 +2,7 @@
 import React from "react";
 import { color, motion } from "framer-motion";
 import { Pie } from "react-chartjs-2";
-import '../../../styles/gradients.css';
+import '../../../Styles/gradients.css';
 
 import {
   Chart as ChartJS,
