@@ -11,7 +11,8 @@ export default defineConfig({
       process: 'process/browser',
       stream: 'stream-browserify',
       util: 'util',
-      buffer: 'buffer'
+      buffer: 'buffer',
+      '@': '/src',
     }
   },
   define: {
@@ -26,7 +27,8 @@ export default defineConfig({
           buffer: true
         })
       ]
-    }
+    },
+    include: ['react', 'react-dom', 'framer-motion'],
   },
   server: {
     port: 5173,
@@ -39,10 +41,13 @@ export default defineConfig({
   },
   build: {
     cssCodeSplit: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
           'framer-motion': ['framer-motion'],
+          'react-vendor': ['react', 'react-dom'],
+          'chart-vendor': ['react-chartjs-2', 'chart.js'],
         }
       }
     }

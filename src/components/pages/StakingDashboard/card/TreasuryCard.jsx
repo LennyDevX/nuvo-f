@@ -3,7 +3,7 @@ import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock } from 'react
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import Tooltip from '../../StakingDashboard/Tooltip';
+import Tooltip from '../Tooltip';
 
 const TreasuryCard = () => {
   const { state, getTreasuryMetrics } = useStaking();

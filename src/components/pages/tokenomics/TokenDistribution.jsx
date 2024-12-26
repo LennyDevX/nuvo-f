@@ -20,6 +20,66 @@ const TokenDistribution = () => {
     plugins: {
       ...chartOptions.plugins,
       id: 'tokenDistribution',
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: {
+            size: 12,
+            family: "'Inter', sans-serif"
+          },
+          color: 'rgb(209, 213, 219)',
+          padding: 15,
+          usePointStyle: true,
+          pointStyle: 'circle'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(139, 92, 246, 0.3)',
+        borderWidth: 1,
+        callbacks: {
+          label: (context) => {
+            const value = context.parsed;
+            const label = context.label;
+            return ` ${label}: ${value}%`;
+          },
+          afterLabel: (context) => {
+            const descriptions = {
+              'Staking Rewards': 'Long-term holder incentives',
+              'Treasury': 'Protocol development & security',
+              'Community': 'Ecosystem growth initiatives',
+              'Development': 'Technical improvements & marketing'
+            };
+            return `  ${descriptions[context.label] || ''}`;
+          }
+        }
+      }
+    },
+    animation: {
+      animateRotate: true,
+      animateScale: true,
+      duration: 1200
+    },
+    hover: {
+      mode: 'nearest',
+      intersect: true
+    },
+    elements: {
+      arc: {
+        borderWidth: 2,
+        borderColor: '#000',
+        hoverBorderColor: '#fff',
+        hoverBorderWidth: 2,
+        hoverOffset: 5
+      }
     }
   };
 

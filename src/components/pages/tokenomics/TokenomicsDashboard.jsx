@@ -1,11 +1,11 @@
-// src/components/layout/TokenomicsDashboard/TokenomicsDashboard.jsx
 import React from "react";
 import { motion } from "framer-motion";
-import '../../../Styles/gradients.css';
 import MainLayout from '../../layout/MainLayout';
 import TokenDistribution from './TokenDistribution';
 import RevenueStreams from './RevenueStreams';
+import HeroSection from "./HeroSection";
 import KeyMetrics from './KeyMetrics';
+import '../../../Styles/gradients.css';
 
 const TokenomicsDashboard = () => {
   return (
@@ -18,20 +18,25 @@ const TokenomicsDashboard = () => {
           className="w-full pt-16 pb-6 md:pt-20"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header */}
+            {/* Main Header */}
             <motion.div
               className="text-center mb-12"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">
                 Tokenomics <span className="text-white">Dashboard</span>
               </h1>
-              <p className="text-gray-300">
+              <p className="text-gray-300 text-lg">
                 Understanding our token distribution and revenue model
               </p>
             </motion.div>
+
+            {/* Hero Section */}
+            <div className="mb-16">
+              <HeroSection />
+            </div>
 
             {/* Main Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
@@ -44,7 +49,7 @@ const TokenomicsDashboard = () => {
 
             {/* Tokenomics Explanation */}
             <motion.div
-              className="bg-black/30 rounded-xl p-6 border border-purple-500/20"
+              className="bg-black/30 rounded-xl p-6 border border-purple-500/20 mt-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
