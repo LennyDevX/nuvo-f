@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import HeroSection from './HeroSection';
+import HeroSection from './Carrousel';
 import { motion } from 'framer-motion';
 
 const roadmapData = {
@@ -142,7 +142,7 @@ const Roadmap = () => {
   const currentQuarterData = roadmapData[selectedYear]?.[selectedQuarter] || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900/80 to-gray-900 relative">
+    <div className="min-h-screen bg-nuvo-gradient relative">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent pointer-events-none" />
       <div className="relative">
         <HeroSection />

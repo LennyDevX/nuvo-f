@@ -54,7 +54,7 @@ const SwapToken = () => {
   }), [handleError, handleLoading, handleTransactionStatus]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 py-8 md:py-16 flex items-center justify-center">
+    <div className="bg-nuvo-gradient py-8 md:py-16 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-8"

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import TokenomicsSection from './TokenomicsSection';
-import '../../../Styles/gradients.css';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -19,7 +18,7 @@ const HeroSection = () => {
       });
     };
   }, []);
-
+ 
   return (
     <>
       <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-12 sm:pt-20 pb-8 sm:pb-12">

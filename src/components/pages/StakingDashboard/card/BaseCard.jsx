@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 const BaseCard = ({ title, icon, children, className }) => {
   return (
     <motion.div
-      className={`h-full bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all ${className}`}
+      className={`card-base h-full p-4 hover:border-purple-500/40 transition-all ${className}`}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >

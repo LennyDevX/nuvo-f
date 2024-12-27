@@ -29,7 +29,7 @@ const KeyMetrics = () => {
       {metrics.map((metric, index) => (
         <motion.div
           key={metric.title}
-          className="bg-black/30 rounded-xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all"
+          className="card-purple-gradient card-purple-wrapper"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: index * 0.1 }}

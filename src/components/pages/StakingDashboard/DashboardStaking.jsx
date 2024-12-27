@@ -16,7 +16,6 @@ import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
 import ROICard from './card/ROICard'; // Add this import
 import { calculateROIProgress } from '../../../utils/roiCalculations';
-import '../../../Styles/gradients.css';
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
@@ -187,7 +186,7 @@ const DashboardStaking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 pt-24 pb-16 px-4 md:px-8">
+    <div className="bg-nuvo-gradient pt-24 pb-16 px-4 md:px-8">
       <div className="max-w-[1440px] mx-auto">
         <LazyMotion features={domAnimation}>
           {/* Optimize the header section */}

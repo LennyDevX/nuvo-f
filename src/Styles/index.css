@@ -64,6 +64,24 @@
     box-shadow: 0 0 2rem -0.5rem #8b5cf6;
   }
 
+  /* Card with subtle purple background */
+  .card-purple-gradient {
+        background-color: rgba(139, 92, 246, 0.05);
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        transition: all 300ms;
+    }
+    .card-purple-gradient:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        background-color: rgba(139, 92, 246, 0.1);
+  }
+
+  /* Optional card wrapper for additional spacing/padding */
+  .card-purple-wrapper {
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+  }
+
   /* Button Styles */
   .btn-primary {
     padding: 0.75rem 1.5rem;
@@ -104,6 +122,12 @@
     background-color: rgba(0, 0, 0, 0.95);
     backdrop-filter: blur(4px);
     border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  /* Background Gradient */
+  .bg-nuvo-gradient {
+    min-height: 100vh;
+    background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
   }
 }
 
@@ -155,4 +179,14 @@
   background-image: linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
                     linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
   background-size: 24px 24px;
+}
+
+
+.gradient-text {
+  background-image: linear-gradient(to right, #eab17c, #ed64a6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  will-change: transform;
+  contain: layout style paint;
 }

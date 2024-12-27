@@ -62,12 +62,21 @@ const RevenueStreams = () => {
     hover: {
       mode: 'nearest',
       intersect: true
+    },
+    elements: {
+      arc: {
+        borderWidth: 2,
+        borderColor: '#000',
+        hoverBorderColor: '#fff',
+        hoverBorderWidth: 2,
+        hoverOffset: 5
+      }
     }
   };
 
   return (
     <motion.div
-      className="bg-black/40 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-purple-500/30 hover:border-purple-500/50 transition-all duration-300"
+      className="card-purple-gradient card-purple-wrapper"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
