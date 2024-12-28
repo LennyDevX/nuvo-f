@@ -9,13 +9,13 @@ import DashboardCards from "./DashboardCards";
 import ActionButtons from "./ActionButtons";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
-import LoadingOverlay from "../../LoadOverlay/LoadingOverlay";
 import { ethers } from "ethers";
 import { formatBalance } from "../../../utils/formatters"; // Add this import
 import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
 import ROICard from './card/ROICard'; // Add this import
 import { calculateROIProgress } from '../../../utils/roiCalculations';
+import LoadingSpinner from "../../LoadOverlay/LoadingSpinner"; // Update this import
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
@@ -230,7 +230,7 @@ const DashboardStaking = () => {
               <>
                 <AnimatePresence mode="wait">
                   {isInitialLoad ? (
-                    <LoadingOverlay />
+                    <LoadingSpinner size="default" message="Loading dashboard..." /> 
                   ) : (
                     <motion.div
                       key="content"

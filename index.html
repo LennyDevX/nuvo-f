@@ -1,38 +1,79 @@
 <!doctype html>
-<html lang="en" >
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link 
-    rel="preload" 
-    href="/fonts/your-font-file.woff2" 
-    as="font" 
-    type="font/woff2" 
-    crossorigin="anonymous"
-  />
+    <!-- Remove unused font preload and replace with proper font loading strategy -->
     <link rel="icon" type="image/png" href="/NuvoLogo.avif" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="description" content="Nuvos - Your Web3 Platform" />
+    <meta name="theme-color" content="#000000" />
     <title>Nuvos</title>
 
+    <!-- Optimized CSP -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       connect-src 'self' 
-        https://api.dodoex.io 
-        https://polygon-mainnet.g.alchemy.com 
-        wss://polygon-mainnet.g.alchemy.com 
-        https://images.dodoex.io 
+        https://*.dodoex.io 
+        https://*.alchemy.com 
+        wss://*.alchemy.com 
         https://*.googleapis.com 
         https://*.firebase.com 
         https://*.firebaseio.com 
         https://identitytoolkit.googleapis.com;
-      img-src 'self' data: https://images.dodoex.io https://polygonscan.com https://*.googleapis.com;
+      img-src 'self' data: https://*.dodoex.io https://polygonscan.com https://*.googleapis.com;
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com;
       style-src 'self' 'unsafe-inline';
-      frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com
+      font-src 'self' data:;
+      frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
     ">
 
+    <!-- Performance optimizations -->
+    <link rel="dns-prefetch" href="https://api.dodoex.io">
+    <link rel="dns-prefetch" href="https://polygon-mainnet.g.alchemy.com">
+    
+    <!-- Preload critical content -->
+    <link 
+      rel="preload" 
+      as="image" 
+      href="/NuvoLogo.avif" 
+      type="image/avif"
+    >
+    
+    <!-- Critical CSS -->
     <style>
       html {
         color: #ffffff;
+        background-color: #000000;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+      #root {
+        height: 100%;
+      }
+      
+      /* Add font-display swap for custom fonts */
+      @font-face {
+        font-family: 'YourFont';
+        font-display: swap;
+        src: local('Arial');
+      }
+      
+      /* Add critical LCP styles */
+      .gradient-text {
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        background-image: linear-gradient(to right, #9333ea, #db2777);
       }
     </style>
   </head>

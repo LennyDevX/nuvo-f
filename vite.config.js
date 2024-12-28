@@ -8,10 +8,6 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      process: 'process/browser',
-      stream: 'stream-browserify',
-      util: 'util',
-      buffer: 'buffer',
       '@': '/src',
     }
   },
@@ -28,7 +24,7 @@ export default defineConfig({
         })
       ]
     },
-    include: ['react', 'react-dom', 'framer-motion'],
+    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
   },
   server: {
     port: 5173,
@@ -36,8 +32,10 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': Object.entries(cspConfig.directives)
         .map(([key, values]) => `${key} ${values.join(' ')}`)
-        .join('; ')
-    }
+        .join('; '),
+    },
+    open: true,
+    cors: true
   },
   build: {
     cssCodeSplit: true,
@@ -45,11 +43,20 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'framer-motion': ['framer-motion'],
-          'react-vendor': ['react', 'react-dom'],
+          'vendor': [
+            'react',
+            'react-dom',
+            'react-router-dom'
+          ],
+          'home': ['./src/components/pages/home/Home.jsx'],
+          'staking': ['./src/components/pages/StakingDashboard/DashboardStaking.jsx'],
           'chart-vendor': ['react-chartjs-2', 'chart.js'],
+          'framer': ['framer-motion'],
+          'ethers': ['ethers'],
+          'charts': ['chart.js', 'react-chartjs-2']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000
   }
 });

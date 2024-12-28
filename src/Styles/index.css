@@ -2,157 +2,131 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Base Styles & Variables */
 @layer base {
   :root { 
-    /* Color System */
-    --color-primary: #8B5CF6;    /* Purple */
-    --color-secondary: #EC4899;  /* Pink */
-    --color-accent: #3B82F6;     /* Blue */
+    /* Colors */
+    --color-primary: #8B5CF6;
+    --color-secondary: #EC4899;
+    --color-accent: #3B82F6;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #94a3b8;
     
-    /* Background Colors */
+    /* Backgrounds */
     --bg-dark: #13151a;
     --bg-card: rgba(0, 0, 0, 0.3);
-    --bg-gradient-1: from-gray-900;
-    --bg-gradient-2: via-purple-900;
-    --bg-gradient-3: to-gray-900;
     
-    /* Border Colors */
-    --border-primary: rgba(139, 92, 246, 0.2);  /* Purple-500/20 */
-    --border-secondary: rgba(236, 72, 153, 0.2); /* Pink-500/20 */
-    
-    /* Text Colors */
-    --text-primary: #ffffff;
-    --text-secondary: #94a3b8;
-    --text-accent: #8B5CF6;
-    
-    /* Shadow Effects */
+    /* Effects */
+    --blur-default: 4px;
     --shadow-purple: 0 0 2rem -0.5rem #8b5cf6;
     --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.12);
     
-    /* Animation Durations */
+    /* Transitions */
     --transition-fast: 200ms;
     --transition-normal: 300ms;
     --transition-slow: 500ms;
   }
 }
 
-
+/* Layout Components */
 .app-container {
   min-height: 100vh;
   position: relative;
 }
 
-.grecaptcha-badge {
-  visibility: hidden !important;
-}
-
+/* Card Components */
 @layer components {
-  /* Card Styles */
   .card-base {
-    background-color: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(4px);
+    background-color: var(--bg-card);
+    backdrop-filter: blur(var(--blur-default));
     border-radius: 0.75rem;
     border: 1px solid rgba(139, 92, 246, 0.2);
   }
 
-  .card-hover {
-    transition-property: all;
-    transition-duration: 300ms;
-  }
-  .card-hover:hover {
-    border-color: rgba(139, 92, 246, 0.5);
-    box-shadow: 0 0 2rem -0.5rem #8b5cf6;
-  }
-
-  /* Card with subtle purple background */
   .card-purple-gradient {
-        background-color: rgba(139, 92, 246, 0.05);
-        backdrop-filter: blur(4px);
-        border: 1px solid rgba(139, 92, 246, 0.2);
-        transition: all 300ms;
-    }
-    .card-purple-gradient:hover {
-        border-color: rgba(139, 92, 246, 0.4);
-        background-color: rgba(139, 92, 246, 0.1);
-  }
-
-  /* Optional card wrapper for additional spacing/padding */
-  .card-purple-wrapper {
-    padding: 1.5rem;
+    background-color: rgba(139, 92, 246, 0.05);
+    backdrop-filter: blur(var(--blur-default));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    transition: all var(--transition-normal);
     border-radius: 0.75rem;
+    padding: 1.5rem;
   }
 
-  /* Button Styles */
+  .card-purple-gradient:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    background-color: rgba(139, 92, 246, 0.1);
+  }
+
+  /* Button Components */
   .btn-primary {
     padding: 0.75rem 1.5rem;
     background-image: linear-gradient(to right, #9333ea, #db2777);
-    color: white;
+    color: var(--color-text-primary);
     font-weight: 500;
     border-radius: 9999px;
-    transition: all 200ms;
-  }
-  .btn-primary:hover {
-    transform: scale(1.02);
-    box-shadow: 0 0 2rem -0.5rem #8b5cf6;
+    transition: all var(--transition-fast);
   }
 
   .btn-secondary {
     padding: 0.75rem 1.5rem;
-    background-color: rgba(0, 0, 0, 0.3);
-    color: white;
+    background-color: var(--bg-card);
+    color: var(--color-text-primary);
     border: 1px solid rgba(139, 92, 246, 0.3);
     border-radius: 9999px;
-    transition: all 200ms;
+    transition: all var(--transition-fast);
   }
+
+  /* Hover Effects */
+  .btn-primary:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-purple);
+  }
+
   .btn-secondary:hover {
     background-color: rgba(139, 92, 246, 0.1);
     border-color: rgba(139, 92, 246, 0.5);
   }
-
-  /* Text Gradient */
-  .text-gradient {
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    background-image: linear-gradient(to right, #c084fc, #db2777);
-  }
-
-  /* Glass Morphism */
-  .glass-effect {
-    background-color: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(4px);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-  }
-
-  /* Background Gradient */
-  .bg-nuvo-gradient {
-    min-height: 100vh;
-    background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
-  }
 }
 
-@layer utilities {
-  /* Custom Animations */
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-  }
-
-  /* Custom Gradients */
-  .gradient-primary {
-    background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
-  }
-
-  .gradient-button {
-    background-image: linear-gradient(to right, #9333ea, #3b82f6);
-  }
+/* Text Effects */
+.text-gradient, .gradient-text {
+  background-image: linear-gradient(to right, #c084fc, #db2777);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
+/* Background Effects */
+.bg-nuvo-gradient {
+  min-height: 100vh;
+  background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
+}
+
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glass Effect */
+.glass-effect {
+  background-color: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(var(--blur-default));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Scrollbar Styling */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
@@ -160,10 +134,6 @@
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
@@ -175,18 +145,7 @@
   background-color: rgba(139, 92, 246, 0.7);
 }
 
-.bg-grid-pattern {
-  background-image: linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-
-.gradient-text {
-  background-image: linear-gradient(to right, #eab17c, #ed64a6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  will-change: transform;
-  contain: layout style paint;
+/* Utilities */
+.grecaptcha-badge {
+  visibility: hidden !important;
 }
