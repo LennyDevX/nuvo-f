@@ -1,20 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { FaGithub, FaCode, FaBug, FaBook, FaServer, FaShieldAlt, FaRocket, FaCogs } from 'react-icons/fa';
+import { FaGithub, FaCode, FaBug, FaBook, FaServer, FaShieldAlt, FaRocket, FaCogs, FaInfoCircle } from 'react-icons/fa';
+import { Tooltip } from 'react-tooltip';
 import HeroSection from './HeroSection';
+import ApplicationModal from '../../modals/ApplicationModal';
 
 const Carrousel = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('');
+
   const carouselSettings = {
     dots: true,
     infinite: true,
-    speed: 800,
+    speed: 900,
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
-    autoplaySpeed: 5000,
+    autoplaySpeed: 10000,
     pauseOnHover: true,
     fade: true,
   };
@@ -43,10 +48,9 @@ const Carrousel = () => {
         "Testing experience",
         "Security best practices"
       ],
-      rewards: {
-        bounty: "Up to 200 POL",
-        incentives: "Performance bonuses",
-        benefits: "GitHub Copilot access"
+      bounty: {
+        amount: "25 POL",
+        description: "Fixed bounty for core development tasks. Additional rewards based on task complexity and impact."
       }
     },
     {
@@ -72,10 +76,9 @@ const Carrousel = () => {
         "Performance optimization",
         "Mobile-first design"
       ],
-      rewards: {
-        bounty: "Up to 200 POL",
-        incentives: "Feature bonuses",
-        benefits: "Premium tools access"
+      bounty: {
+        amount: "20 POL",
+        description: "Standard bounty for frontend development tasks. Bonus rewards for exceptional UI/UX improvements."
       }
     },
     {
@@ -101,21 +104,25 @@ const Carrousel = () => {
         "Security protocols",
         "Monitoring systems"
       ],
-      rewards: {
-        bounty: "Up to 200 POL",
-        incentives: "Reliability bonuses",
-        benefits: "Infrastructure access"
+      bounty: {
+        amount: "30 POL",
+        description: "Base bounty for infrastructure tasks. Additional incentives for significant performance improvements."
       }
     }
   ];
 
+  const handleApplyClick = (title) => {
+    setSelectedRole(title);
+    setIsModalOpen(true);
+  };
+
   return (
-    <div className="relative overflow-hidden pt-16 sm:pt-20 pb-12 sm:pb-16">
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="relative overflow-hidden pt-12 sm:pt-16 pb-8 sm:pb-12">
+      <div className="relative max-w-6xl mx-auto px-3 sm:px-6 lg:px-8">
         <HeroSection />
 
         <motion.div 
-          className="mt-4 sm:mt-8 md:mt-12"
+          className="mt-4 sm:mt-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -167,18 +174,27 @@ const Carrousel = () => {
                     </div>
                   </div>
 
-                  {/* Rewards Section */}
-                  <div className="border-t border-purple-500/20 pt-6 mt-6 bg-purple-900/5 rounded-b-xl">
-                    <div className="flex justify-between items-center">
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold text-white">Rewards</h3>
-                        <div className="space-y-1">
-                          <p className="text-purple-300 text-sm">Bounty: {slide.rewards.bounty}</p>
-                          <p className="text-purple-300 text-sm">+ {slide.rewards.incentives}</p>
-                          <p className="text-purple-300 text-sm">+ {slide.rewards.benefits}</p>
-                        </div>
+                  {/* Updated Rewards Section */}
+                  <div className="border-t border-purple-500/20 pt-4 mt-6 bg-purple-900/5 rounded-b-xl">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 pb-4">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-white">Base Bounty:</h3>
+                        <span className="text-purple-300 text-lg font-bold">{slide.bounty.amount}</span>
+                        <FaInfoCircle 
+                          className="text-purple-400 cursor-help ml-2" 
+                          data-tooltip-id={`bounty-info-${index}`}
+                          data-tooltip-content={slide.bounty.description}
+                        />
+                        <Tooltip 
+                          id={`bounty-info-${index}`}
+                          place="top"
+                          className="max-w-xs bg-purple-900 text-white p-2 text-sm rounded-lg"
+                        />
                       </div>
-                      <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center gap-2">
+                      <button 
+                        className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        onClick={() => handleApplyClick(slide.title)}
+                      >
                         <FaGithub />
                         Apply Now
                       </button>
@@ -189,18 +205,17 @@ const Carrousel = () => {
             ))}
           </Slider>
 
+          {/* Updated styles for better mobile experience */}
           <style>{`
             .hero-carousel .slick-dots {
-              bottom: -35px;
-              margin-top: 1rem;
-              padding-bottom: 1rem;
+              bottom: -25px;
             }
             .hero-carousel .slick-dots li {
-              margin: 0 4px;
+              margin: 0 3px;
             }
             .hero-carousel .slick-dots li button:before {
               color: #a855f7;
-              font-size: 6px;
+              font-size: 5px;
               opacity: 0.5;
               transition: all 0.3s ease;
             }
@@ -211,18 +226,23 @@ const Carrousel = () => {
             }
             @media (min-width: 640px) {
               .hero-carousel .slick-dots {
-                bottom: -45px;
+                bottom: -35px;
               }
               .hero-carousel .slick-dots li {
-                margin: 0 6px;
+                margin: 0 5px;
               }
               .hero-carousel .slick-dots li button:before {
-                font-size: 8px;
+                font-size: 6px;
               }
             }
           `}</style>
         </motion.div>
       </div>
+      <ApplicationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        roleTitle={selectedRole}
+      />
     </div>
   );
 };

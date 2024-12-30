@@ -50,7 +50,7 @@ const PoolMetricsCard = () => {
           <div className="col-span-2 bg-red-900/20 backdrop-blur-sm p-3 rounded-xl border border-red-600/20 shadow-lg">
             <div className="flex items-center gap-2">
               <span className="text-red-100/70 text-sm">Total Value Locked</span>
-              <Tooltip content="Total amount of POL tokens staked in the pool">
+              <Tooltip content="Total amount of POL tokens\ncurrently staked in the\nstaking pool">
                 <FaInfoCircle className="text-red-400/60 hover:text-red-300" />
               </Tooltip>
             </div>
@@ -76,7 +76,7 @@ const PoolMetricsCard = () => {
             <div className="flex items-center gap-1.5">
               <FaCoins className="w-3.5 h-3.5 text-red-300" />
               <span className="text-red-100/70 text-sm">Rewards</span>
-              <Tooltip content="Total rewards distributed to stakers">
+              <Tooltip content="Total rewards distributed\nto stakers since pool\ndeployment">
                 <FaInfoCircle className="text-red-400/60 hover:text-red-300" />
               </Tooltip>
             </div>
@@ -109,8 +109,8 @@ const PoolMetricsCard = () => {
               <span className="text-red-100/70 text-sm font-medium">Community Goal</span>
             </div>
             <Tooltip content={goalMetrics.isCompleted 
-              ? "Goal reached! Airdrop will be distributed soon!" 
-              : `${Number(goalMetrics.remainingAmount).toFixed(2)} POL more needed to reach the goal`}>
+              ? "Goal reached! Airdrop will be\ndistributed to participants soon!" 
+              : `${Number(goalMetrics.remainingAmount).toFixed(2)} POL more\nneeded to reach the goal`}>
               <FaInfoCircle className="text-red-400/60 hover:text-red-300" />
             </Tooltip>
           </div>

@@ -1,104 +1,103 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, LazyMotion, domAnimation } from 'framer-motion';
-import TokenomicsSection from './TokenomicsSection';
+import { FaShieldAlt, FaChartLine, FaCloud } from 'react-icons/fa';
+import StakingCalculator from '../../layout/StakingCalculator';
 
 const HeroSection = () => {
   return (
-    <>
-      <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-12 sm:pt-20 pb-8 sm:pb-12">
-        <div className="absolute inset-0 bg-gradient-radial from-purple-600/20 via-transparent to-transparent" />
-        
-        {/* Critical content without animation for fast LCP */}
-        <div className="relative z-10 max-w-3xl mx-auto">
-          <h1 
-            className="text-2xl sm:text-4xl md:text-6xl font-bold text-white mt-12 sm:mb-6 leading-tight px-2 sm:px-0"
-            style={{ 
-              contain: 'layout paint',
-              contentVisibility: 'auto'
-            }}
+    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-22 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
+      <div className="absolute inset-0 bg-gradient-radial from-purple-600/20 via-transparent to-transparent" />
+      
+      <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start lg:items-center">
+        {/* Left Column - Content */}
+        <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-4"
           >
-            Elevate Your Investment Strategy Through{' '}
-            <span className="gradient-text">Smart Staking</span>
-          </h1>
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] sm:leading-tight tracking-tight">
+              <span className="block mb-2">Elevate Your</span>
+              <span className="gradient-text block mb-2">Investment Strategy</span>
+              <span className="block">Through Smart Staking</span>
+            </h1>
+            
+            <p className="text-base sm:text-lg text-gray-300 max-w-xl mt-6">
+              Experience a revolutionary staking protocol combining automated yield optimization 
+              with institutional-grade security.
+            </p>
+          </motion.div>
 
-          {/* Non-critical content with lazy loaded animations */}
-          <LazyMotion features={domAnimation}>
-            <motion.p
-              className="text-base sm:text-lg md:text-xl text-gray-300 sm:mb-8 px-2 sm:px-0"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              Experience a revolutionary staking protocol that combines automated yield optimization 
-              with institutional-grade security. Earn consistent{' '}
-              <span className="text-purple-400">125% APY</span> through our advanced DeFi strategies.
-            </motion.p>
-
-            <motion.span
-              className="inline-block sm:mt-8 px-3 py-2 mb-6 text-xs sm:text-sm font-medium text-purple-400 bg-purple-400/10 rounded-full"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              Institutional-Grade Staking Protocol (Coming Soon)
-            </motion.span>
-            {/* Key Features */}
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              {[
-                { title: "Solidity Score", value: "78% Average", desc: "Solidity Scan Report" },
-                { title: "Total Locked", value: "Projected $1M+", desc: "by Q3 2025" },
-                { title: "Active Users", value: "Projected 1K+", desc: "by Q1 2025" }
-              ].map((stat) => (
-                <div
-                  key={stat.title}
-                  className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20 text-center"
-                >
-                  <h3 className="text-purple-400 font-medium mb-1">{stat.title}</h3>
-                  <p className="text-xl sm:text-2xl font-bold text-white mb-1">{stat.value}</p>
-                  <p className="text-sm text-gray-400">{stat.desc}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 mt-8"
+          >
+            {[
+              { value: "125%", label: "APY", icon: <FaChartLine /> },
+              { value: "100%", label: "Transparent", icon: <FaShieldAlt /> },
+              { value: "Token ERC20", label: "Powered By Polygon Network", icon: <FaCloud /> }
+            ].map((stat, index) => (
+              <motion.div
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center sm:flex-col sm:items-center p-4 bg-black/20 rounded-xl border border-purple-500/20 gap-3 sm:gap-2"
+              >
+                <div className="text-purple-400 text-2xl sm:text-xl sm:mb-2">{stat.icon}</div>
+                <div className="flex flex-col flex-1 sm:flex-none sm:text-center">
+                  <div className="text-xl sm:text-2xl font-bold text-white">{stat.value}</div>
+                  <div className="text-sm text-purple-300 sm:mt-1">{stat.label}</div>
                 </div>
-              ))}
-            </motion.div>
-            {/* CTAs */}
-            <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center px-4"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA Buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex flex-col xs:flex-row gap-3 sm:gap-4 mt-8 sm:mt-10"
+          >
+            <Link
+              to="/staking"
+              className="px-6 sm:px-8 py-3 text-center bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all transform hover:-translate-y-1"
             >
-              <Link
-                to="/staking"
-                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 transition-all transform hover:-translate-y-1 text-center"
-              >
-                Begin Your Investment Journey →
-              </Link>
-              <Link
-                to="/about"
-                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium rounded-full bg-black/30 text-white border border-purple-500/30 hover:bg-purple-500/10 transition-all transform hover:-translate-y-1 text-center"
-              >
-                Learn More About Protocol
-              </Link>
-            </motion.div>
-            {/* Trust Indicators */}
-            <motion.div
-              className="mt-8 sm:mt-12 flex flex-wrap justify-center items-center gap-4 sm:gap-8 px-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
+              Start Staking
+            </Link>
+            <Link
+              to="/about"
+              className="px-6 sm:px-8 py-3 text-center bg-black/30 border border-purple-500/30 rounded-full text-white font-medium hover:bg-purple-500/10 transition-all transform hover:-translate-y-1"
             >
-              
-            </motion.div>
-          </LazyMotion>
+              Learn More
+            </Link>
+          </motion.div>
         </div>
-      </section>
-      <TokenomicsSection />
-    </>
+
+        {/* Right Column - Calculator */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8 }}
+          className="relative mt-8 lg:mt-0"
+        >
+          <div className="relative max-w-md mx-auto">
+            <div className="absolute inset-0">
+              <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
+              <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-pink-500/20 rounded-full blur-xl animate-pulse delay-700" />
+            </div>
+            
+            {/* Staking Calculator Integration */}
+            <div className="relative">
+              <StakingCalculator />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 };
 

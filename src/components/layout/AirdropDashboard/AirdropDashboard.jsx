@@ -1,6 +1,5 @@
 // src/components/layout/AirdropDashboard/AirdropDashboard.jsx
 import React, { useContext, useState } from 'react';
-import '../../../Styles/gradients.css';
 import AirdropForm from './AirdropForm/AirdropForm';
 import { WalletContext } from '../../../context/WalletContext';
 import { useAirdropData } from '../../../hooks/useAirdropData';

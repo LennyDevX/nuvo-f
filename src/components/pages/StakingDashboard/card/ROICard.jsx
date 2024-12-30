@@ -4,6 +4,19 @@ import BaseCard from './BaseCard';
 import Tooltip from '../Tooltip';
 
 function ROICard({ firstDepositTime }) {
+  // Calcular el progreso del ROI
+  const calculateProgress = useMemo(() => {
+    if (!firstDepositTime) return 0;
+    
+    const now = new Date();
+    const deposit = new Date(firstDepositTime * 1000);
+    const daysStaked = Math.floor((now - deposit) / (1000 * 60 * 60 * 24));
+    const dailyROI = 0.24; // 0.24% daily
+    const progress = Math.min(daysStaked * dailyROI, 125); // Max 125%
+    
+    return progress;
+  }, [firstDepositTime]);
+
   const stakingInfo = useMemo(() => {
     if (!firstDepositTime) return {
       days: 0,
@@ -61,7 +74,7 @@ function ROICard({ firstDepositTime }) {
           <div className="flex justify-between items-center">
             <span className="text-emerald-100/70 flex items-center gap-2">
               Daily Returns
-              <Tooltip content="Includes base ROI and time bonus">
+              <Tooltip content={`Base ROI: 0.24% daily\nTime Bonus: +${stakingInfo.bonus}%\nTotal Daily ROI: ${(stakingInfo.totalROI * 24).toFixed(2)}%\nDays Staked: ${stakingInfo.days}`}>
                 <FaInfoCircle className="text-emerald-400/60 hover:text-emerald-300" />
               </Tooltip>
             </span>

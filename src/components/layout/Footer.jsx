@@ -9,17 +9,8 @@ const Footer = () => {
   return (
     <footer className="bg-black/90 border-t border-purple-500/60 ">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo & Description */}
-          <div className="col-span-1 md:col-span-1">
-            <Link to="/" className="flex items-center mb-4">
-              <img src="/NuvoLogo.avif" alt="Nuvo Logo" className="h-8 w-auto" />
-              <span className="ml-2 text-xl font-bold text-white">Nuvo</span>
-            </Link>
-            <p className="text-gray-400 text-sm">
-              Advanced DeFi protocol for sustainable yield generation and automated portfolio management.
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          
 
           {/* Quick Links */}
           <div className="col-span-1">
@@ -69,6 +60,15 @@ const Footer = () => {
               <li>
                 <Link to="/about#team" className="text-gray-400 hover:text-purple-400 transition-colors">
                   Team
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  to="/about" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  About
                 </Link>
               </li>
             </ul>

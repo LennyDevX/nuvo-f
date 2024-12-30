@@ -52,8 +52,7 @@ export default defineConfig({
           'staking': ['./src/components/pages/StakingDashboard/DashboardStaking.jsx'],
           'chart-vendor': ['react-chartjs-2', 'chart.js'],
           'framer': ['framer-motion'],
-          'ethers': ['ethers'],
-          'charts': ['chart.js', 'react-chartjs-2']
+          'ethers': ['ethers']
         }
       }
     },

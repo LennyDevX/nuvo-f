@@ -8,13 +8,16 @@ const roadmapData = {
       {
         title: "Protocol Development",
         icon: "🔧",
-        status: "Active",
+        status: "Completed",
         progress: 100,
         phase: "Foundation Phase",
         items: [
           { text: "Smart Staking Contract v1", status: "completed", date: "Jan 2024" },
-          { text: "Testing", status: "completed", date: "Feb 2024" },
-          { text: "Deployment", status: "completed", date: "Mar 2024" }
+          { text: "Testing & Security Audit", status: "completed", date: "Jan 2024" },
+          { text: "Deployment on Polygon Network", status: "completed", date: "Feb 2024" },
+          { text: "Yield Optimization Strategy", status: "completed", date: "Feb 2024" },
+          { text: "Smart Contract Integration", status: "completed", date: "Mar 2024" },
+          { text: "Cross-chain Bridge Research", status: "completed", date: "Mar 2024" }
         ]
       }
     ],
@@ -27,8 +30,11 @@ const roadmapData = {
         phase: "Foundation Phase",
         items: [
           { text: "Initial Planning & Research", status: "completed", date: "Apr 2024" },
-          { text: "Capital Funds", status: "completed", date: "May 2024" },
-          { text: "Technical Architecture", status: "completed", date: "Jun 2024" }
+          { text: "Capital Funds & Tokenomics", status: "completed", date: "Apr 2024" },
+          { text: "Technical Architecture Design", status: "completed", date: "May 2024" },
+          { text: "Liquidity Pool Strategy", status: "completed", date: "May 2024" },
+          { text: "Token Distribution Model", status: "completed", date: "Jun 2024" },
+          { text: "Governance Framework Design", status: "completed", date: "Jun 2024" }
         ]
       }
     ],
@@ -40,9 +46,12 @@ const roadmapData = {
         progress: 100,
         phase: "Development Phase",
         items: [
-          { text: "Nuvo Alpha Release", status: "completed", date: "Jul 2024" },
-          { text: "Frontend Implementation", status: "completed", date: "Aug 2024" },
-          { text: "Internal Testing & Operations", status: "completed", date: "Sep 2024" }
+          { text: "Alpha v1 Platform Release", status: "completed", date: "Jul 2024" },
+          { text: "Frontend Implementation", status: "completed", date: "Jul 2024" },
+          { text: "Smart Contract Optimization", status: "completed", date: "Aug 2024" },
+          { text: "DeFi Integration Framework", status: "completed", date: "Aug 2024" },
+          { text: "Yield Aggregator Development", status: "completed", date: "Sep 2024" },
+          { text: "Security Testing & Audit", status: "completed", date: "Sep 2024" }
         ]
       }
     ],
@@ -54,9 +63,12 @@ const roadmapData = {
         progress: 85,
         phase: "Launch Phase",
         items: [
-          { text: "Beta Release v0.1", status: "completed", date: "Oct 2024" },
-          { text: "Community Testing", status: "completed", date: "Nov 2024" },
-          { text: "Platform Optimization", status: "in-progress", date: "Dec 2024" }
+          { text: "Beta Platform Launch", status: "completed", date: "Oct 2024" },
+          { text: "Beta Mining Program", status: "completed", date: "Oct 2024" },
+          { text: "Community Testing Phase", status: "completed", date: "Nov 2024" },
+          { text: "Initial research Nuvo-Token", status: "completed", date: "Nov 2024" },
+          { text: "Platform Optimization", status: "in-progress", date: "Dec 2024" },
+          { text: "Fixed all bugs", status: "in-progress", date: "Dec 2024" }
         ]
       }
     ]
@@ -70,9 +82,12 @@ const roadmapData = {
         progress: 40,
         phase: "Scaling Phase",
         items: [
-          { text: "Portal Developer & Bounty Program", status: "in-progress", date: "Jan 2025" },
-          { text: "First Advertising Campaign", status: "pending", date: "Feb 2025" },
-          { text: "New Contracts & Smart Staking v2 Release", status: "pending", date: "Mar 2025" }
+          { text: "Developer Portal Launch", status: "in-progress", date: "Jan 2025" },
+          { text: "Bounty Program Initiation", status: "in-progress", date: "Jan 2025" },
+          { text: "Marketing Campaign Launch", status: "pending", date: "Feb 2025" },
+          { text: "News Smarts Contracts ", status: "pending", date: "Feb 2025" },
+          { text: "Smart Staking v2 Release", status: "pending", date: "Mar 2025" },
+          { text: "Nuvos Token Strategies", status: "pending", date: "Mar 2025" }
         ]
       }
     ],
@@ -84,9 +99,12 @@ const roadmapData = {
         progress: 0,
         phase: "Innovation Phase",
         items: [
-          { text: "AI Integration", status: "pending", date: "Apr 2025" },
-          { text: "Automated Trading", status: "pending", date: "May 2025" },
-          { text: "Risk Management Tools", status: "pending", date: "Jun 2025" }
+          { text: "AI Trading Integration", status: "pending", date: "Apr 2025" },
+          { text: "Experimental IA with Blockchain", status: "pending", date: "Apr 2025" },
+          { text: "NuvOS 1.0", status: "pending", date: "May 2025" },
+          { text: "Risk Management Suite", status: "pending", date: "May 2025" },
+          { text: "Funds Strategies Tools", status: "pending", date: "Jun 2025" },
+          { text: "Nuvos Core", status: "pending", date: "Jun 2025" }
         ]
       }
     ],
@@ -98,9 +116,12 @@ const roadmapData = {
         progress: 0,
         phase: "Growth Phase",
         items: [
-          { text: "DeFi Partnerships", status: "pending", date: "Jul 2025" },
-          { text: "Yield Aggregation", status: "pending", date: "Aug 2025" },
-          { text: "Liquidity Mining 2.0", status: "pending", date: "Sep 2025" }
+          { text: "Strategic DeFi Partnerships", status: "pending", date: "Jul 2025" },
+          { text: "Yield Optimization v2", status: "pending", date: "Jul 2025" },
+          { text: "Enhanced Liquidity Mining", status: "pending", date: "Aug 2025" },
+          { text: "Cross-Protocol Integration", status: "pending", date: "Aug 2025" },
+          { text: "Fees Strategies", status: "pending", date: "Sep 2025" },
+          { text: "Fiat On/Off Ramp", status: "pending", date: "Sep 2025" }
         ]
       }
     ],
@@ -112,9 +133,12 @@ const roadmapData = {
         progress: 0,
         phase: "Vision Phase",
         items: [
-          { text: "DAO 2.0 Launch", status: "pending", date: "Oct 2025" },
+          { text: "DAO Governance Launch", status: "pending", date: "Oct 2025" },
+          { text: "DeFi 2.0 Features", status: "pending", date: "Oct 2025" },
           { text: "Metaverse Integration", status: "pending", date: "Nov 2025" },
-          { text: "Global Expansion", status: "pending", date: "Dec 2025" }
+          { text: "NFT Finance Platform", status: "pending", date: "Nov 2025" },
+          { text: "Global Market Expansion", status: "pending", date: "Dec 2025" },
+          { text: "Enterprise Solutions", status: "pending", date: "Dec 2025" }
         ]
       }
     ]
@@ -257,20 +281,67 @@ const TimelineItem = ({ item, index }) => (
       </ul>
     </div>
 
-    {/* Contenido Complementario */}
+    {/* Contenido Complementario Actualizado */}
     <div className={`hidden sm:block ${index % 2 === 0 ? 'sm:col-start-2' : ''}`}>
       <div className="bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/10">
-        <h4 className="text-lg font-semibold text-purple-400 mb-2">
-          Impact & Metrics
+        <h4 className="text-lg font-semibold text-purple-400 mb-3">
+          Phase Objectives
         </h4>
-        <ul className="space-y-2">
-          {item.metrics?.map((metric, i) => (
-            <li key={i} className="flex items-center text-gray-300 text-sm">
-              <span className="w-2 h-2 rounded-full bg-purple-500 mr-2" />
-              {metric}
-            </li>
-          ))}
-        </ul>
+        
+        {/* Strategic Focus */}
+        <div className="mb-4">
+          <span className="text-xs font-medium text-purple-300">STRATEGIC FOCUS</span>
+          <div className="mt-1 text-sm text-gray-300">
+            {item.status === "Completed" ? (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Phase Completed Successfully
+              </div>
+            ) : item.status === "Active" ? (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                In Active Development
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                Planning & Preparation
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Key Deliverables */}
+        <div className="space-y-2">
+          <span className="text-xs font-medium text-purple-300">KEY DELIVERABLES</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-purple-900/20 rounded-lg p-2">
+              <div className="text-xs text-purple-200">Progress</div>
+              <div className="text-lg font-semibold text-white">{item.progress}%</div>
+            </div>
+            <div className="bg-purple-900/20 rounded-lg p-2">
+              <div className="text-xs text-purple-200">Timeline</div>
+              <div className="text-lg font-semibold text-white">{item.items[0].date.split(' ')[0]}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Development Status */}
+        <div className="mt-4">
+          <span className="text-xs font-medium text-purple-300">PHASE IMPACT</span>
+          <div className="mt-1 text-sm">
+            <div className="flex items-center gap-2 text-gray-300">
+              <span className="w-1 h-1 rounded-full bg-purple-500"></span>
+              {item.status === "Completed" ? "Milestone Achieved" : 
+               item.status === "Active" ? "Development in Progress" : "Future Implementation"}
+            </div>
+            <div className="flex items-center gap-2 text-gray-300 mt-1">
+              <span className="w-1 h-1 rounded-full bg-purple-500"></span>
+              {`Phase ${item.progress >= 100 ? "Completed" : 
+                item.progress > 0 ? "In Progress" : "Not Started"}`}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </motion.div>

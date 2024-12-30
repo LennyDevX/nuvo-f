@@ -2,9 +2,9 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../context/WalletContext';
 import WalletUtils from "../web3/WalletUtils";
-import { isMobile, openWalletApp } from '../../utils/MobileUtils';
+import { detectWallet } from '../../utils/walletDetector';
 import MetaMaskLogo from '/metamask-logo.png';
-import TrustWalletLogo from '/trustwallet-logo.png'; // Asegúrate de tener este asset
+import TrustWalletLogo from '/trustwallet-logo.png';
 
 const WalletConnect = ({ className }) => {
   const { 
@@ -12,23 +12,21 @@ const WalletConnect = ({ className }) => {
     setNetwork, 
     setBalance, 
     setWalletConnected,
-    balance, // Añadir balance del contexto
-    network  // Añadir network del contexto
+    balance, 
+    network  
   } = useContext(WalletContext); 
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
   const [connected, setConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(() => 
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const dropdownRef = useRef(null);
+  const [walletInfo, setWalletInfo] = useState(() => detectWallet());
 
-  useEffect(() => {
-    setIsMobileDevice(isMobile());
-  }, []);
-
-  // Agregar efecto para cerrar el dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -44,9 +42,8 @@ const WalletConnect = ({ className }) => {
     try {
       setIsLoading(true);
       
-      // Verificar si estamos en la red correcta
       const network = await provider.getNetwork();
-      const targetChainId = 137; // Polygon Mainnet
+      const targetChainId = 137; 
       
       if (Number(network.chainId) !== targetChainId) {
         console.log('Red actual:', network.chainId, 'Red objetivo:', targetChainId);
@@ -54,10 +51,9 @@ const WalletConnect = ({ className }) => {
         try {
           await window.ethereum.request({
             method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x89' }], // 137 en hex
+            params: [{ chainId: '0x89' }], 
           });
           
-          // Esperar un momento para que el cambio de red se complete
           await new Promise(resolve => setTimeout(resolve, 1000));
           
         } catch (switchError) {
@@ -83,7 +79,6 @@ const WalletConnect = ({ className }) => {
                 }]
               });
               
-              // Esperar un momento para que la adición de red se complete
               await new Promise(resolve => setTimeout(resolve, 1000));
               
             } catch (addError) {
@@ -95,14 +90,12 @@ const WalletConnect = ({ className }) => {
           }
         }
         
-        // Verificar nuevamente la red después del cambio
         const updatedNetwork = await provider.getNetwork();
         if (Number(updatedNetwork.chainId) !== targetChainId) {
           throw new Error('Please make sure you are connected to Polygon network');
         }
       }
 
-      // Add retry logic for balance fetch
       let retries = 3;
       while (retries > 0) {
         try {
@@ -137,12 +130,38 @@ const WalletConnect = ({ className }) => {
     return WalletUtils.getNetworkName(networkId.toString());
   };
 
-  const handleWalletSelection = (wallet) => {
-    setSelectedWallet(wallet);
-    if (isMobileDevice) {
-      openWalletApp(wallet);
+  const handleWalletSelection = async (walletType) => {
+    setError(null);
+    setIsLoading(true);
+    
+    try {
+      if (!walletInfo.available) {
+        const links = getWalletDownloadLink(walletType);
+        if (walletInfo.isMobile) {
+          openWalletDeepLink(walletType, window.location.href);
+        } else {
+          window.open(links.extension, '_blank');
+        }
+        throw new Error(`Please install ${walletType} to continue`);
+      }
+
+      if (walletInfo.hasMultipleWallets && window.ethereum.providers) {
+        const provider = window.ethereum.providers.find(p => {
+          return walletType === 'metamask' ? p.isMetaMask : p.isTrust;
+        });
+        if (provider) {
+          window.ethereum = provider;
+        }
+      }
+
+      await connectToWallet(walletType);
+      
+    } catch (error) {
+      console.error('Wallet selection error:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
-    connectToWallet(wallet);
   };
 
   const connectToWallet = async (walletType = 'metamask') => {
@@ -160,7 +179,6 @@ const WalletConnect = ({ className }) => {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       
-      // Request account access
       const accounts = await window.ethereum.request({ 
         method: "eth_requestAccounts" 
       });
@@ -169,12 +187,10 @@ const WalletConnect = ({ className }) => {
         throw new Error('No accounts found');
       }
 
-      // Get network name
       const networkName = await getNetworkName(provider);
       
       await handleConnect(provider, accounts[0], networkName);
 
-      // Listen for account changes
       window.ethereum.on('accountsChanged', async (newAccounts) => {
         if (newAccounts.length > 0) {
           await handleConnect(provider, newAccounts[0], networkName);
@@ -184,12 +200,10 @@ const WalletConnect = ({ className }) => {
         }
       });
 
-      // Listen for network changes
       window.ethereum.on('chainChanged', async () => {
         const newNetworkName = await getNetworkName(provider);
         setNetwork(newNetworkName);
         
-        // Refresh provider and account info
         const provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.listAccounts();
         if (accounts.length > 0) {
@@ -212,66 +226,103 @@ const WalletConnect = ({ className }) => {
     setConnected(false);
     setAccounts([]);
     setSelectedWallet(null);
-    // Limpiar los listeners de eventos
     if (window.ethereum) {
       window.ethereum.removeAllListeners('accountsChanged');
       window.ethereum.removeAllListeners('chainChanged');
     }
   };
 
-  const renderWalletButtons = () => {
+  const connectWallet = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!window.ethereum) {
+        throw new Error('Please install a Web3 wallet (MetaMask or Trust Wallet)');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await window.ethereum.request({ 
+        method: "eth_requestAccounts" 
+      });
+
+      if (!accounts?.length) {
+        throw new Error('No accounts found');
+      }
+
+      const network = await provider.getNetwork();
+      const networkName = WalletUtils.getNetworkName(network.chainId.toString());
+      
+      await handleConnect(provider, accounts[0], networkName);
+      
+      setWalletInfo(detectWallet());
+
+    } catch (error) {
+      console.error('Connection error:', error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const renderWalletButton = () => {
     if (connected) {
       return (
         <div className="relative" ref={dropdownRef}>
           <button 
-            onClick={() => setShowWalletOptions(prev => !prev)}
-            className="px-4 py-2 rounded-lg shadow-md bg-white text-gray-800 hover:bg-gray-100 transition-colors duration-200"
+            onClick={() => setShowWalletOptions(!showWalletOptions)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/60 border border-purple-500/30 hover:bg-purple-900/20"
           >
-            <div className="flex items-center">
-              <img 
-                src={selectedWallet === 'metamask' ? MetaMaskLogo : TrustWalletLogo} 
-                alt="Wallet Logo" 
-                className="w-5 h-5 mr-2" 
-              />
-              <strong>{WalletUtils.censorAccount(accounts[0])}</strong>
-            </div>
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <img 
+              src={walletInfo.type === 'metamask' ? MetaMaskLogo : TrustWalletLogo} 
+              alt="Wallet Logo" 
+              className="w-4 h-4" 
+            />
+            <span className="text-sm font-medium text-white">
+              {WalletUtils.censorAccount(accounts[0])}
+            </span>
           </button>
 
           {showWalletOptions && (
-            <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-black/90 backdrop-blur-sm border border-purple-500/20 overflow-hidden z-50">
-              <div className="p-2 space-y-1">
-                {/* Cambiar Wallet */}
-                <button
-                  onClick={() => handleWalletSelection('metamask')}
-                  className="w-full px-4 py-2 flex items-center text-white hover:bg-purple-500/20 rounded transition-colors duration-200"
-                >
-                  <img src={MetaMaskLogo} alt="MetaMask" className="w-5 h-5 mr-2" />
-                  MetaMask
-                </button>
-                <button
-                  onClick={() => handleWalletSelection('trust')}
-                  className="w-full px-4 py-2 flex items-center text-white hover:bg-purple-500/20 rounded transition-colors duration-200"
-                >
-                  <img src={TrustWalletLogo} alt="Trust Wallet" className="w-5 h-5 mr-2" />
-                  Trust Wallet
-                </button>
-                
-                <div className="border-t border-purple-500/20 my-1"></div>
-                
-                {/* Info de la Wallet - Modificado para usar balance del contexto */}
-                <div className="px-4 py-2 text-sm text-gray-300">
-                  <p>Balance: {balance ? parseFloat(balance).toFixed(4) : '0.0000'} MATIC</p>
-                  <p>Network: {network || 'Not Connected'}</p>
+            <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-black/90 backdrop-blur-sm border border-purple-500/20 overflow-hidden z-50">
+              <div className="p-3 space-y-3">
+                {/* Wallet Status */}
+                <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-900/20">
+                  <img 
+                    src={walletInfo.type === 'metamask' ? MetaMaskLogo : TrustWalletLogo} 
+                    alt="Connected Wallet" 
+                    className="w-5 h-5"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm text-purple-300">
+                      {walletInfo.type === 'metamask' ? 'MetaMask' : 'Trust Wallet'}
+                    </div>
+                    <div className="text-xs text-purple-400/70">Connected</div>
+                  </div>
+                  <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 </div>
                 
-                <div className="border-t border-purple-500/20 my-1"></div>
+                {/* Balance & Network Info */}
+                <div className="space-y-2 p-2 rounded-lg bg-purple-900/10">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-purple-300/70">Balance:</span>
+                    <span className="text-purple-300">{balance ? parseFloat(balance).toFixed(4) : '0.0000'} MATIC</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-purple-300/70">Network:</span>
+                    <span className="text-purple-300">{network || 'Not Connected'}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-purple-500/20"></div>
                 
-                {/* Botón de Desconexión */}
+                {/* Disconnect Button */}
                 <button
                   onClick={handleDisconnect}
-                  className="w-full px-4 py-2 text-left text-red-400 hover:bg-red-500/20 rounded transition-colors duration-200"
+                  className="w-full p-2 text-left text-sm text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                 >
-                  Disconnect
+                  Disconnect Wallet
                 </button>
               </div>
             </div>
@@ -281,60 +332,40 @@ const WalletConnect = ({ className }) => {
     }
 
     return (
-      <div className={`relative ${className}`} ref={dropdownRef}>
-        <button 
-          className={`px-4 py-2 rounded-lg shadow-md flex items-center bg-white text-gray-800 hover:bg-gray-100 transition-colors duration-200 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={() => setShowWalletOptions(prev => !prev)}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <span className="loader"></span>
-          ) : (
-            <>
-              <strong>CONNECT</strong>
-              <div className="flex items-center ml-2">
-                <img src={MetaMaskLogo} alt="MetaMask Logo" className="w-5 h-5" />
-                <img src={TrustWalletLogo} alt="Trust Wallet Logo" className="w-5 h-5 ml-1" />
-              </div>
-            </>
-          )}
-        </button>
-
-        {showWalletOptions && !connected && (
-          <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-black/90 backdrop-blur-sm border border-purple-500/20 overflow-hidden z-50">
-            <button
-              className="w-full px-4 py-2 flex items-center text-white hover:bg-purple-500/20 transition-colors duration-200"
-              onClick={() => handleWalletSelection('metamask')}
-            >
-              <img src={MetaMaskLogo} alt="MetaMask" className="w-5 h-5 mr-2" />
-              MetaMask
-            </button>
-            <button
-              className="w-full px-4 py-2 flex items-center text-white hover:bg-purple-500/20 transition-colors duration-200"
-              onClick={() => handleWalletSelection('trust')}
-            >
-              <img src={TrustWalletLogo} alt="Trust Wallet" className="w-5 h-5 mr-2" />
-              Trust Wallet
-            </button>
-          </div>
+      <button
+        onClick={connectWallet}
+        disabled={isLoading}
+        className={`
+          px-4 py-2 rounded-lg
+          bg-purple-900/20 hover:bg-purple-800/30
+          border border-purple-500/30
+          transition-all duration-300
+          flex items-center gap-2
+          ${isLoading ? 'opacity-50 cursor-wait' : ''}
+        `}
+      >
+        {isLoading ? (
+          <span className="text-sm text-purple-300">Connecting...</span>
+        ) : (
+          <>
+            <span className="text-sm font-medium text-white">Connect Wallet</span>
+            <div className="flex items-center gap-1">
+              <img src={MetaMaskLogo} alt="MetaMask" className="w-4 h-4" />
+              <img src={TrustWalletLogo} alt="Trust Wallet" className="w-4 h-4" />
+            </div>
+          </>
         )}
-
-        {isMobileDevice && showWalletOptions && (
-          <p className="absolute top-full mt-2 text-sm text-white/80 bg-black/90 p-2 rounded-lg backdrop-blur-sm w-48">
-            Open in wallet browser for best experience
-          </p>
-        )}
-      </div>
+      </button>
     );
   };
 
   return (
-    <div className="flex flex-col items-center">
-      {renderWalletButtons()}
+    <div className="relative">
+      {renderWalletButton()}
       {error && (
-        <p className="text-red-500 mt-2 text-sm bg-black/90 px-4 py-2 rounded-lg backdrop-blur-sm">
+        <div className="absolute top-full right-0 mt-2 p-2 bg-red-500/90 text-white text-xs rounded-lg whitespace-nowrap">
           {error}
-        </p>
+        </div>
       )}
     </div>
   );
