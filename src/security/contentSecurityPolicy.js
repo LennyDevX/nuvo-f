@@ -10,7 +10,8 @@ export const cspConfig = {
       'https://*.googleapis.com',
       'https://*.firebase.com',
       'https://*.firebaseio.com',
-      'https://identitytoolkit.googleapis.com'
+      'https://identitytoolkit.googleapis.com',
+      'https://polygon-rpc.com'
     ],
     'img-src': [
       "'self'",

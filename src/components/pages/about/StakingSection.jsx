@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { FaClock, FaChartLine, FaShieldAlt } from 'react-icons/fa';
-import { stakingInfo } from './stakingConfig';
+import { stakingInfo } from './StakingConfig';
 
 const StakingSection = () => {
   const getIcon = (iconType) => {
@@ -38,17 +38,14 @@ return (
                 {stakingInfo.features.map((feature, index) => (
                     <motion.div
                         key={index}
-                        className="relative"
+                        className="card-purple-gradient card-purple-wrapper"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.2 }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-b from-purple-700/30 to-transparent rounded-lg"></div>
-                        <div className="relative p-6 rounded-lg border border-purple-500/30 bg-gray-900/50 backdrop-blur-sm">
-                            <div className="text-purple-400 mb-4 text-2xl">{getIcon(feature.iconType)}</div>
-                            <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-                            <p className="text-gray-300 text-sm">{feature.description}</p>
-                        </div>
+                        <div className="text-purple-400 mb-4 text-2xl">{getIcon(feature.iconType)}</div>
+                        <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
+                        <p className="text-gray-300 text-sm">{feature.description}</p>
                     </motion.div>
                 ))}
             </div>
@@ -57,7 +54,7 @@ return (
                 {Object.entries(stakingInfo.details).map(([key, value], index) => (
                     <motion.div
                         key={index}
-                        className="p-3 rounded-lg border border-black bg-gray-900/50 backdrop-blur-sm"
+                        className="card-purple-gradient card-purple-wrapper"
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}

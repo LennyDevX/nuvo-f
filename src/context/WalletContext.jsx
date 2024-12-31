@@ -14,38 +14,87 @@ export const WalletContext = createContext({
 });
 
 export const WalletProvider = ({ children }) => {
-    const [account, setAccount] = useState(null);
-    const [balance, setBalance] = useState(null);
-    const [network, setNetwork] = useState(null);
-    const [walletConnected, setWalletConnected] = useState(false);
+    // Inicializar estados desde localStorage
+    const [account, setAccount] = useState(() => localStorage.getItem('walletAccount'));
+    const [balance, setBalance] = useState(() => localStorage.getItem('walletBalance'));
+    const [network, setNetwork] = useState(() => localStorage.getItem('walletNetwork'));
+    const [walletConnected, setWalletConnected] = useState(() => 
+        localStorage.getItem('walletConnected') === 'true'
+    );
     const [provider, setProvider] = useState(null);
 
-    // Actualiza walletConnected cuando cambia la cuenta
+    // Persistir estados en localStorage
     useEffect(() => {
-        setWalletConnected(!!account);
+        if (account) localStorage.setItem('walletAccount', account);
+        else localStorage.removeItem('walletAccount');
     }, [account]);
 
-    // Inicializa el proveedor si hay una wallet conectada
+    useEffect(() => {
+        if (balance) localStorage.setItem('walletBalance', balance);
+        else localStorage.removeItem('walletBalance');
+    }, [balance]);
+
+    useEffect(() => {
+        if (network) localStorage.setItem('walletNetwork', network);
+        else localStorage.removeItem('walletNetwork');
+    }, [network]);
+
+    useEffect(() => {
+        localStorage.setItem('walletConnected', walletConnected);
+    }, [walletConnected]);
+
+    // Reconectar automáticamente si hay una sesión guardada
     useEffect(() => {
         const initProvider = async () => {
-            if (window.ethereum) {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                setProvider(provider);
+            if (window.ethereum && account) {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    await provider.ready;
+                    setProvider(provider);
+
+                    // Verificar si la cuenta guardada aún está autorizada
+                    const accounts = await provider.listAccounts();
+                    if (!accounts.includes(account)) {
+                        // La cuenta ya no está autorizada, limpiar estado
+                        handleDisconnect();
+                    } else {
+                        // Actualizar balance
+                        const balance = await provider.getBalance(account);
+                        setBalance(ethers.formatEther(balance));
+                    }
+                } catch (error) {
+                    console.error("Error initializing provider:", error);
+                    handleDisconnect();
+                }
             }
         };
+
         initProvider();
     }, []);
 
+    const handleDisconnect = () => {
+        setAccount(null);
+        setBalance(null);
+        setNetwork(null);
+        setWalletConnected(false);
+        setProvider(null);
+        localStorage.removeItem('walletAccount');
+        localStorage.removeItem('walletBalance');
+        localStorage.removeItem('walletNetwork');
+        localStorage.removeItem('walletConnected');
+    };
+
     const value = {
         account,
-        balance,
-        network,
+        balance,      // Asegúrate de que estos valores
+        network,      // están incluidos en el value
         walletConnected,
         provider,
         setAccount,
         setBalance,
         setNetwork,
-        setWalletConnected
+        setWalletConnected,
+        handleDisconnect
     };
 
     return (

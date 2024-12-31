@@ -9,14 +9,13 @@ import DashboardCards from "./DashboardCards";
 import ActionButtons from "./ActionButtons";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
-import LoadingOverlay from "../../LoadOverlay/LoadingOverlay";
 import { ethers } from "ethers";
 import { formatBalance } from "../../../utils/formatters"; // Add this import
 import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
 import ROICard from './card/ROICard'; // Add this import
 import { calculateROIProgress } from '../../../utils/roiCalculations';
-import '../../../Styles/gradients.css';
+import LoadingSpinner from "../../LoadOverlay/LoadingSpinner"; // Update this import
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
@@ -187,42 +186,30 @@ const DashboardStaking = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 pt-24 pb-16 px-4 md:px-8">
+    <div className="bg-nuvo-gradient pt-24 pb-16 px-4 md:px-8">
       <div className="max-w-[1440px] mx-auto">
         <LazyMotion features={domAnimation}>
-          {/* Optimize the header section */}
+          {/* Updated Hero Section */}
           <m.div
             className="text-center mb-12"
-            initial="hidden"
-            animate="visible"
-            variants={headerVariants}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {/* Preload critical fonts */}
-            <link
-              rel="preload"
-              href="/fonts/your-font-file.woff2"
-              as="font"
-              type="font/woff2"
-              crossOrigin="anonymous"
-            />
-            
-            {/* Optimize heading with pre-rendered text */}
-            <h1 className="text-3xl md:text-4xl font-bold mb-4 gradient-text">
-              Smart Staking{" "}
-              <span className="text-white">
-                Dashboard
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                Smart Staking
+              </h1>
+              <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
+                BETA v1.0
               </span>
-            </h1>
+            </div>
             
-            {/* Optimize subtext */}
-            <p 
-              className="text-gray-300"
-              style={{
-                willChange: 'transform',
-                contain: 'layout style paint'
-              }}
-            >
-              Manage your staking positions and rewards
+            <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
+              Stake your tokens and earn rewards in our decentralized staking platform
+            </p>
+            <p className="text-sm text-purple-200/40">
+              Manage your staking positions and track your rewards in real-time
             </p>
           </m.div>
 
@@ -231,7 +218,7 @@ const DashboardStaking = () => {
               <>
                 <AnimatePresence mode="wait">
                   {isInitialLoad ? (
-                    <LoadingOverlay />
+                    <LoadingSpinner size="default" message="Loading dashboard..." /> 
                   ) : (
                     <motion.div
                       key="content"

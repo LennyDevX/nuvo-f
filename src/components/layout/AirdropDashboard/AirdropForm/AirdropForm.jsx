@@ -5,20 +5,20 @@ import FormHeader from './FormHeader';
 import { motion } from 'framer-motion';
 import AirdropTypeSelector from './AirdropTypeSelector';
 import RegistrationForm from './RegistrationForm'; // Ensure this is the default export
-import { FaCoins, FaImages, FaBox, FaPalette } from 'react-icons/fa';
+import { FaCoins, FaImages, FaBox, FaPalette, FaTimes } from 'react-icons/fa'; // Add FaTimes
 import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { airdropsCollection } from '../../../firebase//config';
+import { airdropsCollection } from '../../../firebase/config'; // Update Firebase config import path
 import SubmissionSuccess from './SubmissionSuccess'; // Add this line
 import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
 
-const airdropTypes = [ 
+const airdropTypes = [  
     { id: 'tokens', name: 'Tokens', description: 'Receive tokens directly to your wallet', icon: <FaCoins /> },
     { id: 'nfts', name: 'NFTs', description: 'Get exclusive NFTs', icon: <FaImages />, comingSoon: true },
     { id: 'items', name: 'Items', description: 'Receive special items', icon: <FaBox />, comingSoon: true },
     { id: 'art', name: 'Art', description: 'Get unique digital art', icon: <FaPalette />, comingSoon: true }
 ];
 
-const AirdropForm = () => {
+const AirdropForm = ({ onClose }) => {
     const { account, walletConnected, provider } = useContext(WalletContext);
     const { registerForAirdrop, getAirdropInfo, airdropInfo } = useAirdropRegistration(provider, account);
     const [formData, setFormData] = useState({
@@ -37,6 +37,7 @@ const AirdropForm = () => {
 
     const [submitCount, setSubmitCount] = useState(0);
     const [lastSubmitTime, setLastSubmitTime] = useState(null);
+    const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
 
     const handleChange = (nameOrEvent, value) => {
         // If it's an event (from normal inputs)
@@ -122,6 +123,21 @@ const AirdropForm = () => {
             getAirdropInfo();
         }
     }, [provider, account, getAirdropInfo]);
+
+    useEffect(() => {
+        const checkRegistrationStatus = async () => {
+            if (!account || !formData.airdropType) return;
+            
+            try {
+                const participations = await checkPreviousParticipation(formData.airdropType);
+                setIsAlreadyRegistered(participations.length > 0);
+            } catch (error) {
+                console.error('Error checking registration status:', error);
+            }
+        };
+
+        checkRegistrationStatus();
+    }, [account, formData.airdropType]);
 
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -241,11 +257,24 @@ const AirdropForm = () => {
 
     const submitToBackend = useCallback(async (data) => {
         try {
-            const docRef = await addDoc(airdropsCollection, {
-                ...data,
+            // Filter out undefined values and create clean submission data
+            const cleanData = {
+                name: data.name || '',
+                email: data.email || '',
+                wallet: data.wallet || '',
+                airdropType: data.airdropType || 'tokens',
+                registrationHash: data.registrationHash || '',
+                isRegistered: Boolean(data.isRegistered),
                 submittedAt: Timestamp.now(),
                 status: 'pending'
-            });
+            };
+
+            // Validate required fields
+            if (!cleanData.name || !cleanData.email || !cleanData.wallet) {
+                throw new Error('Missing required fields');
+            }
+
+            const docRef = await addDoc(airdropsCollection, cleanData);
             return docRef.id;
         } catch (error) {
             console.error('Error submitting to backend:', error);
@@ -253,37 +282,50 @@ const AirdropForm = () => {
         }
     }, []);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const processRegistration = async (data) => {
         try {
-            setError(null);
-            setIsLoading(true);
+            if (!data) {
+                throw new Error('No registration data provided');
+            }
 
-            if (!walletConnected || !account) {
-                setError('Please connect your wallet first');
+            // Check if already registered in Firebase
+            const existingRegistrations = await checkPreviousParticipation('tokens');
+            if (existingRegistrations.length > 0) {
+                setError('You have already registered for this airdrop');
                 return;
             }
 
-            // First validate form
-            if (!(await validateForm())) return;
+            // Ensure we have all required data
+            const submissionData = {
+                name: data.name,
+                email: data.email,
+                wallet: data.wallet,
+                airdropType: data.airdropType || formData.airdropType || 'tokens',
+                registrationHash: data.registrationHash || '',
+                isRegistered: Boolean(data.isRegistered),
+                submittedAt: Timestamp.now()
+            };
 
-            // Then register in smart contract
-            const registrationHash = await registerForAirdrop();
-
-            // Then submit to backend
-            await submitToBackend({
-                ...formData,
-                registrationHash,
-                contractAddress: import.meta.env.VITE_AIRDROP_ADDRESS,
-                wallet: account
-            });
-
+            const docId = await submitToBackend(submissionData);
+            console.log('Firebase submission successful, docId:', docId);
+            
             setIsSubmitted(true);
-        } catch (err) {
-            console.error('Error submitting airdrop registration:', err);
-            setError(err.message || 'Failed to submit registration');
-        } finally {
-            setIsLoading(false);
+            setError(null);
+            
+            return docId;
+        } catch (error) {
+            console.error('Registration processing error:', error);
+            setError('Failed to process registration. Please try again.');
+            throw error;
+        }
+    };
+
+    const handleSubmit = async (data) => {
+        try {
+            await processRegistration(data);
+        } catch (error) {
+            console.error('Error in handleSubmit:', error);
+            setError('Registration failed. Please try again.');
         }
     };
 
@@ -292,10 +334,19 @@ const AirdropForm = () => {
                         formData.airdropType !== '' &&
                         walletConnected;
 
+    // Cerrar el formulario después de un registro exitoso
+    useEffect(() => {
+        if (isSubmitted) {
+            setTimeout(() => {
+                onClose?.();
+            }, 2000);
+        }
+    }, [isSubmitted, onClose]);
+
     return (
-        <div className="min-h-screen mt-16">
+        <div className="min-h-screen">
             <TimeCounter timeLeft={timeLeft} />
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4">
                 <FormHeader />
                 <motion.div 
                     className="bg-black/40 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-purple-500/30"
@@ -318,12 +369,13 @@ const AirdropForm = () => {
                                 formData={formData}
                                 handleChange={handleChange}
                                 handleSubmit={handleSubmit}
-                                walletConnected={walletConnected}
                                 account={account}
                                 error={error}
                                 isLoading={isLoading}
                                 setFormData={setFormData}
-                                isFormValid={isFormValid}
+                                walletConnected={walletConnected}
+                                onClose={onClose} // Make sure this prop is passed
+                                isAlreadyRegistered={isAlreadyRegistered} // Add this prop
                             />
                         </>
                     )}

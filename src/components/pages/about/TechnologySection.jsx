@@ -32,18 +32,15 @@ const TechnologySection = () => {
           {technologies.map(({ Icon, name, color }, index) => (
             <motion.div
               key={index}
-              className="relative group"
+              className="card-purple-gradient card-purple-wrapper group"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               whileHover={{ y: -5 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-purple-600/10 to-transparent rounded-2xl transform group-hover:scale-105 transition-transform duration-300"></div>
-              <div className="relative p-4 md:p-8 rounded-2xl border border-purple-500/20 bg-gray-900/60 backdrop-blur-sm group-hover:border-purple-500/40 transition-all duration-300">
-                <div className="flex flex-col items-center">
-                  <Icon className={`text-5xl md:text-7xl ${color} transition-all duration-300 group-hover:scale-110 group-hover:filter group-hover:drop-shadow-lg`} />
-                  <p className="mt-3 md:mt-4 text-base md:text-lg font-medium text-gray-300 group-hover:text-white">{name}</p>
-                </div>
+              <div className="flex flex-col items-center">
+                <Icon className={`text-5xl md:text-7xl ${color} transition-all duration-300 group-hover:scale-110`} />
+                <p className="mt-3 md:mt-4 text-base md:text-lg font-medium text-gray-300 group-hover:text-white">{name}</p>
               </div>
             </motion.div>
           ))}

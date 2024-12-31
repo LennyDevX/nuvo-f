@@ -26,7 +26,7 @@ import AirdropProgressCard from './AirdropProgressCard';
 import RewardsBenefitsCard from './RewardsBenefitsCard';
 import NextAirdropCard from './NextAirdropCard';
 import AirdropCalendarCard from './AirdropCalendarCard';
-import AirdropPoolStatusCard from './AirdropPoolStatusCard';
+import AirdropPoolStatusCard from './ClaimCard';
 
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
 
@@ -76,15 +76,32 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
                     const doc = querySnapshot.docs[0].data();
                     setWalletHistory({
                         hasParticipated: true,
-                        registrationDate: doc.submittedAt.toDate(),
-                        registrationType: doc.airdropType,
-                        claimStatus: doc.rewards.tokens.claimed ? 'claimed' : 'pending',
+                        registrationDate: doc.submittedAt?.toDate() || new Date(),
+                        registrationType: doc.airdropType || 'standard',
+                        claimStatus: doc.rewards?.tokens?.claimed ? 'claimed' : 'pending',
                         isEligible: true,
                         eligibilityReason: 'Wallet meets all requirements'
+                    });
+                } else {
+                    setWalletHistory({
+                        hasParticipated: false,
+                        registrationDate: null,
+                        registrationType: null,
+                        claimStatus: 'pending',
+                        isEligible: true,
+                        eligibilityReason: 'Wallet eligible for participation'
                     });
                 }
             } catch (error) {
                 console.error('Error checking wallet history:', error);
+                setWalletHistory({
+                    hasParticipated: false,
+                    registrationDate: null,
+                    registrationType: null,
+                    claimStatus: 'error',
+                    isEligible: false,
+                    eligibilityReason: 'Error checking wallet status'
+                });
             }
         };
 

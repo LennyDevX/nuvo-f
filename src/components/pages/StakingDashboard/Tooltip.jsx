@@ -13,9 +13,11 @@ const Tooltip = ({ children, content }) => {
       </div>
       
       {isVisible && (
-        <div className="absolute z-50 px-3 py-2 text-sm text-white bg-gray-900 rounded-lg shadow-lg -top-2 -translate-y-full left-1/2 -translate-x-1/2 min-w-max">
+        <div className="absolute z-[100] px-4 py-2 text-sm text-white bg-gray-900/95 backdrop-blur-sm 
+          rounded-lg shadow-xl -top-2 -translate-y-full left-1/2 -translate-x-1/2 
+          min-w-[200px] max-w-[250px] whitespace-pre-wrap text-center">
           {content}
-          <div className="absolute w-2 h-2 bg-gray-900 rotate-45 -bottom-1 left-1/2 -translate-x-1/2" />
+          <div className="absolute w-2 h-2 bg-gray-900/95 rotate-45 -bottom-1 left-1/2 -translate-x-1/2" />
         </div>
       )}
     </div>

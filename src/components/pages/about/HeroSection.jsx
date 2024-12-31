@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaLinkedin, FaTwitter, FaGithub, FaRocket, FaUsers } from 'react-icons/fa';
 import { SiPolygon } from 'react-icons/si';
-import '../../../Styles/gradients.css';
 
 const HeroSection = () => {
   return (
@@ -51,7 +50,7 @@ const HeroSection = () => {
             { label: "Open Source", value: "Web Apps", icon: <FaGithub className="text-2xl" /> },
             { label: "Community", value: "DAO", icon: <FaUsers className="text-2xl" /> }
           ].map((stat, index) => (
-            <div key={index} className="p-6 bg-gray-900/60 backdrop-blur-sm rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
+            <div key={index} className="card-purple-gradient card-purple-wrapper">
               <div className="text-purple-400 mb-2">{stat.icon}</div>
               <div className="text-purple-300 font-medium text-sm mb-1">{stat.label}</div>
               <div className="text-2xl font-bold text-white">{stat.value}</div>

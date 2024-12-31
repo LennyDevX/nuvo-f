@@ -8,10 +8,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      process: 'process/browser',
-      stream: 'stream-browserify',
-      util: 'util',
-      buffer: 'buffer'
+      '@': '/src',
     }
   },
   define: {
@@ -26,7 +23,8 @@ export default defineConfig({
           buffer: true
         })
       ]
-    }
+    },
+    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
   },
   server: {
     port: 5173,
@@ -34,17 +32,30 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': Object.entries(cspConfig.directives)
         .map(([key, values]) => `${key} ${values.join(' ')}`)
-        .join('; ')
-    }
+        .join('; '),
+    },
+    open: true,
+    cors: true
   },
   build: {
     cssCodeSplit: true,
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
-          'framer-motion': ['framer-motion'],
+          'vendor': [
+            'react',
+            'react-dom',
+            'react-router-dom'
+          ],
+          'home': ['./src/components/pages/home/Home.jsx'],
+          'staking': ['./src/components/pages/StakingDashboard/DashboardStaking.jsx'],
+          'chart-vendor': ['react-chartjs-2', 'chart.js'],
+          'framer': ['framer-motion'],
+          'ethers': ['ethers']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000
   }
 });

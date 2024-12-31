@@ -1,94 +1,117 @@
-
 import React from 'react';
-import { FaRocket, FaInfoCircle, FaCheckCircle, FaArrowRight } from 'react-icons/fa';
+import { 
+    FaRocket, 
+    FaCalendar, 
+    FaCoins, 
+    FaClock, 
+    FaShieldAlt,
+    FaInfoCircle,
+    FaArrowRight,
+    FaUsers
+} from 'react-icons/fa';
+import { motion } from 'framer-motion';
 
-const NextAirdropCard = ({ formatDate, airdropStartDate, airdropEndDate, onOpenSidebar }) => {
+const NextAirdropCard = ({ onOpenSidebar }) => {
+    const airdropInfo = {
+        start: new Date('2025-01-15'),
+        end: new Date('2025-01-31'),
+        rewardAmount: '5 POL',
+        maxParticipants: 50,
+        distributionDate: new Date('2025-01-25')
+    };
+
+    const InfoRow = ({ icon: Icon, label, value, highlight = false }) => (
+        <div className="flex items-center justify-between p-2 rounded-lg bg-black/20">
+            <div className="flex items-center gap-2">
+                <Icon className="text-purple-400" />
+                <span className="text-gray-300">{label}</span>
+            </div>
+            <span className={`text-gray-200 font-medium ${highlight ? 'text-purple-400' : ''}`}>
+                {value}
+            </span>
+        </div>
+    );
+
     return (
-        <div className="card">
-            <div className="space-y-4">
-                <div className="relative overflow-hidden rounded-lg bg-purple-900/30 p-4">
-                    <div className="space-y-3 border-b border-purple-500/20 pb-3">
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Token:</span>
-                            <div className="flex items-center gap-2">
-                                <img src="/PolygonLogo.png" alt="POL" className="w-5 h-5" />
-                                <span className="text-purple-400 font-medium">POL Token</span>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Amount per Wallet:</span>
-                            <span className="text-purple-400 font-medium">10 POL</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">Start Date:</span>
-                            <span className="text-blue-400 font-medium">{formatDate(airdropStartDate)}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                            <span className="text-gray-300">End Date:</span>
-                            <span className="text-red-400 font-medium">{formatDate(airdropEndDate)}</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                        <h3 className="text-white font-semibold flex items-center gap-2">
-                            <FaInfoCircle className="text-purple-400" />
-                            How to Use Your POL Tokens
-                        </h3>
-                        <div className="space-y-2 text-sm">
-                            <div className="flex items-start gap-2">
-                                <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
-                                <p className="text-gray-300">
-                                    Stake your POL tokens to earn up to <span className="text-purple-400 font-medium">125% APY</span>
-                                </p>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
-                                <p className="text-gray-300">
-                                    Minimum staking amount: <span className="text-purple-400 font-medium">5 POL</span>
-                                </p>
-                            </div>
-                            <div className="flex items-start gap-2">
-                                <FaCheckCircle className="text-green-400 mt-1 flex-shrink-0" />
-                                <p className="text-gray-300">
-                                    Claim rewards every <span className="text-purple-400 font-medium">24 hours</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-purple-500/20">
-                        <div className="flex justify-between text-xs">
-                            <div className="text-center">
-                                <div className="text-blue-400">Registration</div>
-                                <div className="text-gray-400 mt-1">Dec 14</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-purple-400">Distribution</div>
-                                <div className="text-gray-400 mt-1">Dec 21</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-red-400">Deadline</div>
-                                <div className="text-gray-400 mt-1">Dec 28</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="absolute -right-6 -bottom-6 opacity-5">
-                        <FaRocket className="text-8xl text-purple-400" />
-                    </div>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                    <FaRocket className="text-purple-400" />
+                    <h3 className="text-lg font-medium text-gray-200">Next Airdrop</h3>
                 </div>
+                <span className="text-yellow-400 text-sm px-3 py-1 bg-yellow-500/20 rounded-full">
+                    Coming Soon
+                </span>
+            </div>
 
-                <button 
-                    onClick={onOpenSidebar}
-                    className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
-                >
-                    <span className="font-medium">Register for Airdrop</span>
-                    <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
-                </button>
+            <div className="bg-black/20 rounded-lg p-4 space-y-3">
+                <InfoRow 
+                    icon={FaCalendar}
+                    label="Registration"
+                    value={airdropInfo.start.toLocaleDateString('en-US', { 
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                    })}
+                />
+                <InfoRow 
+                    icon={FaClock}
+                    label="Distribution"
+                    value={airdropInfo.distributionDate.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    })}
+                />
+                <InfoRow 
+                    icon={FaCoins}
+                    label="Reward"
+                    value={airdropInfo.rewardAmount}
+                    highlight
+                />
+                <InfoRow 
+                    icon={FaUsers}
+                    label="Limit"
+                    value={`${airdropInfo.maxParticipants} wallets`}
+                />
+            </div>
 
-                <div className="text-xs text-center px-3 py-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
-                    <span className="text-purple-400">💡 Tip:</span>
-                    <span className="text-gray-300"> Register early to ensure your allocation in the Smart Staking program</span>
+            <div className="bg-black/20 rounded-lg p-4">
+                <h4 className="flex items-center gap-2 text-gray-200 font-medium mb-3">
+                    <FaShieldAlt className="text-purple-400" />
+                    Requirements
+                </h4>
+                <ul className="space-y-2 text-sm text-gray-300">
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                        Minimum 1 MATIC balance
+                    </li>
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                        Complete registration
+                    </li>
+                    <li className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>
+                        Valid wallet address
+                    </li>
+                </ul>
+            </div>
+
+            <motion.button 
+                onClick={onOpenSidebar}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 group"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+            >
+                <span className="font-medium">Register for Airdrop</span>
+                <FaArrowRight className="text-sm transition-transform group-hover:translate-x-1" />
+            </motion.button>
+
+            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-3">
+                <div className="flex items-start gap-2">
+                    <FaInfoCircle className="text-purple-400 mt-1" />
+                    <p className="text-sm text-gray-300">
+                        Early registrants have priority access to future airdrops and staking pools
+                    </p>
                 </div>
             </div>
         </div>

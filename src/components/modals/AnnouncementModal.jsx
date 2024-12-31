@@ -31,7 +31,7 @@ const AnnouncementModal = () => {
             transition={{ type: "spring", duration: 0.5 }}
           >
             <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-              Nuvo Beta Live v0.3
+              Nuvo Beta Live v0.4
             </h2>
             
             <div className="space-y-4 text-gray-100 mb-6">
@@ -59,19 +59,14 @@ const AnnouncementModal = () => {
             </div>
 
             <div className="flex flex-col space-y-3">
-              <Link 
-                to="/airdrops" 
-                className="w-full px-6 py-3 text-center bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg transition-all hover:scale-[1.02]"
-                onClick={closeModal}
-              >
-                🎁 Claim Your Airdrop Now
-              </Link>
               <button
                 onClick={closeModal}
-                className="text-red-500 hover:text-red-400 transition-colors text-base font-bold drop-shadow-lg hover:drop-shadow-xl"
-            >
-                Maybe Later
-            </button>
+                className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 text-white font-bold 
+                hover:from-purple-600 hover:to-blue-600 transition-all duration-300 transform hover:scale-[1.02] 
+                shadow-lg hover:shadow-purple-500/25 active:scale-[0.98]"
+              >
+                Let's Go!
+              </button>
             </div>
           </motion.div>
         </motion.div>

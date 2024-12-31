@@ -13,7 +13,7 @@ const About = () => {
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900">
+    <div className="bg-nuvo-gradient">
       <div className="flex flex-col min-h-screen">
         <motion.div style={{ y }} className="flex-grow">
           <HeroSection />
