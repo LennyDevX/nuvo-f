@@ -8,6 +8,8 @@ import {
   FaChartPie, 
   FaExchangeAlt, 
   FaExternalLinkAlt,
+  FaCode, 
+  FaGift,
   // ...existing imports...
 } from 'react-icons/fa'
 
@@ -41,8 +43,11 @@ const Navbar = () => {
     hover:text-purple-400
     backdrop-blur-sm
     no-underline hover:no-underline
+    flex items-center gap-2
   `;
-  
+
+  const navIconClasses = "w-4 h-4 text-purple-400/80";
+
   const mobileNavLinkClasses = `
     flex items-center gap-3 px-4 py-3.5 rounded-lg
     text-base font-medium text-white/90
@@ -57,6 +62,16 @@ const Navbar = () => {
   `;
 
   const mobileNavIconClasses = "w-5 h-5 text-purple-400/80";
+
+  // Navigation items array for both mobile and desktop
+  const navigationItems = [
+    { path: '/', label: 'Home', icon: FaHome },
+    { path: '/staking', label: 'Staking', icon: FaCoins },
+    { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
+    { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
+    { path: '/roadmap', label: 'Developer Portal', icon: FaCode },
+    { path: '/airdrops', label: 'Airdrops', icon: FaGift },
+  ];
 
   return (
     <nav className="fixed py-3 top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10">
@@ -74,25 +89,17 @@ const Navbar = () => {
             />
           </div>
 
-          {/* Desktop Menu */}
+          {/* Desktop Menu - Updated with icons */}
           <div className="hidden md:flex items-center justify-center flex-grow space-x-4">
-            <Link to="/" className={navLinkClasses}>
-              Home
-            </Link>
-            <Link to="/staking" className={navLinkClasses}>
-              Staking
-            </Link>
-            <Link to="/tokenomics" className={navLinkClasses}>
-              Tokenomics
-            </Link>
-            <Link to="/swaptoken" className={navLinkClasses}>
-              Swap Token
-            </Link>
+            {navigationItems.map(({ path, label, icon: Icon }) => (
+              <Link key={path} to={path} className={navLinkClasses}>
+                <Icon className={navIconClasses} />
+                {label}
+              </Link>
+            ))}
             
-           
-            {/*<AirdropDownloader />*/} {/* Use this button to download, the Airdrop Db-firebase*/}
             <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-              BETA LIVE v0.4
+              BETA LIVE v1.0
             </span>
           </div>
 
@@ -143,12 +150,7 @@ const Navbar = () => {
 
           {/* Navigation Links */}
           <div className="space-y-1.5">
-            {[
-              { path: '/', label: 'Home', icon: FaHome },
-              { path: '/staking', label: 'Staking', icon: FaCoins },
-              { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
-              { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
-            ].map(({ path, label, icon: Icon }) => (
+            {navigationItems.map(({ path, label, icon: Icon }) => (
               <button
                 key={path}
                 onClick={() => handleNavigation(path)}
@@ -185,7 +187,7 @@ const Navbar = () => {
 
             <div className="flex justify-center">
               <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-                BETA LIVE v0.3
+                BETA LIVE v1.0
               </span>
             </div>
           </div>

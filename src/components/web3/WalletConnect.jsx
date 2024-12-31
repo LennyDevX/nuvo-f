@@ -13,7 +13,8 @@ const WalletConnect = ({ className }) => {
     setBalance, 
     setWalletConnected,
     balance, 
-    network  
+    network,
+    handleDisconnect  // Añadir esta línea
   } = useContext(WalletContext); 
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
@@ -218,11 +219,8 @@ const WalletConnect = ({ className }) => {
     }
   };
 
-  const handleDisconnect = () => {
-    setAccount(null);
-    setBalance(null);
-    setNetwork(null);
-    setWalletConnected(false);
+  const onDisconnect = () => {
+    handleDisconnect();
     setConnected(false);
     setAccounts([]);
     setSelectedWallet(null);
@@ -319,7 +317,7 @@ const WalletConnect = ({ className }) => {
                 
                 {/* Disconnect Button */}
                 <button
-                  onClick={handleDisconnect}
+                  onClick={onDisconnect}
                   className="w-full p-2 text-left text-sm text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                 >
                   Disconnect Wallet

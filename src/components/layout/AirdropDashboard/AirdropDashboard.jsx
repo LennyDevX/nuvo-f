@@ -67,14 +67,20 @@ const AirdropDashboard = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
-                    <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
-                        Airdrop Beta{" "}
-                        <span className="text-white">
-                            Dashboard
+                    <div className="flex items-center justify-center gap-3 mb-4">
+                        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                            Airdrops
+                        </h1>
+                        <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
+                            BETA v1.0
                         </span>
-                    </h1>
-                    <p className="text-gray-300">
-                    Manage your airdrop submissions and eligibility
+                    </div>
+                    
+                    <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
+                        Join our community airdrop event and be part of the next generation of decentralized finance.
+                    </p>
+                    <p className="text-sm text-purple-200/40">
+                        Manage your airdrop submissions and check your eligibility status
                     </p>
                 </motion.div>
 

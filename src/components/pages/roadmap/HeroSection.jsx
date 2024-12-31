@@ -50,7 +50,7 @@ const HeroSection = () => {
         >
           <div className="flex items-center justify-center mb-6">
             <span className="px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm font-medium">
-              Developer Portal
+              Developer Portal - Beta v1.0
             </span>
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 gradient-text">

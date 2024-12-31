@@ -11,14 +11,22 @@ const TimeCounter = () => {
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    const startDate = new Date('2024-12-14T00:00:00').getTime();
-    const endDate = new Date('2024-12-28T23:59:59').getTime();
+    const startDate = new Date('2025-01-15T00:00:00').getTime();
+    const endDate = new Date('2025-01-29T23:59:59').getTime(); // Two weeks after start
 
     const updateTimer = () => {
       const now = new Date().getTime();
       
       if (now < startDate) {
-        setIsExpired(true);
+        // If before start date, count down to start
+        const difference = startDate - now;
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
+        setIsExpired(false);
         return;
       }
       
@@ -27,8 +35,8 @@ const TimeCounter = () => {
         return;
       }
 
+      // Count down to end date
       const difference = endDate - now;
-      
       setTimeLeft({
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
         hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
@@ -38,6 +46,7 @@ const TimeCounter = () => {
     };
 
     const timer = setInterval(updateTimer, 1000);
+    updateTimer(); // Initial call
     return () => clearInterval(timer);
   }, []);
 
@@ -69,12 +78,20 @@ const TimeCounter = () => {
 
   return (
     <div className="mb-8 p-6">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white/90 mb-2">
-          Airdrop Distribution Period
-        </h2>
-        <p className="text-purple-200/40">
-          {isExpired ? "Airdrop period has ended" : "Time remaining until airdrop ends"}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+            Next Airdrop Distribution
+          </h2>
+          
+        </div>
+        <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
+          Join our community airdrop event and be part of the next generation of decentralized finance.
+        </p>
+        <p className="text-purple-200/40 text-sm">
+          {isExpired 
+            ? "Airdrop period has ended" 
+            : "Time remaining until tokens are distributed"}
         </p>
       </div>
       
@@ -85,12 +102,15 @@ const TimeCounter = () => {
         <TimeBlock value={timeLeft.seconds} label="Seconds" />
       </div>
 
-      <div className="text-center mt-6 text-sm text-purple-200/30">
-        {isExpired ? (
-          "The airdrop period has concluded"
-        ) : (
-          "Distribution period: Dec 14, 2024 - Dec 28, 2024"
-        )}
+      <div className="text-center mt-6 space-y-2">
+        <div className="text-sm font-medium text-purple-200/50">
+          {isExpired 
+            ? "The airdrop period has concluded" 
+            : "Distribution period"}
+        </div>
+        <div className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+          January 15, 2025 - January 29, 2025
+        </div>
       </div>
     </div>
   );
