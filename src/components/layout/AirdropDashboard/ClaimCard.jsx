@@ -1,10 +1,18 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { FaUserCheck, FaClock, FaUsers, FaInfoCircle, FaGift, FaChartLine, FaLock, FaExchangeAlt } from 'react-icons/fa';
+import { 
+    FaUserCheck, 
+    FaInfoCircle, 
+    FaGift, 
+    FaChartLine, 
+    FaCheckCircle,
+    FaTrophy,
+    FaRocket,
+    FaClock
+} from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import ButtonClaimAirdrop from '../../web3/ButtonClaimAirdrop';
+import { WalletContext } from '../../../context/WalletContext';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../Abi/Airdrop.json';
-import { WalletContext } from '../../../context/WalletContext';
 import AirdropClaimModal from '../../modals/AirdropClaimModal';
 
 const AirdropPoolStatusCard = ({ account }) => {
@@ -63,45 +71,52 @@ const AirdropPoolStatusCard = ({ account }) => {
                 provider
             );
 
-            const [eligibilityCheck, isActive] = await Promise.all([
+            // Get both eligibility and airdrop status
+            const [eligibilityCheck, airdropStats] = await Promise.all([
                 contract.checkUserEligibility(account),
-                contract.isActive()
+                contract.getAirdropStats()
             ]);
 
-            const [isEligible, hasClaimed, hasMinBalance, userBalance] = eligibilityCheck;
+            const [isRegistered, hasClaimed, hasMinBalance, userBalance] = eligibilityCheck;
+            const [, , , isActive, isFunded] = airdropStats;
 
             console.log('Airdrop Status:', {
-                isEligible,
+                isRegistered,
                 hasClaimed,
                 hasMinBalance,
                 userBalance: ethers.formatEther(userBalance),
-                isActive
+                isActive,
+                isFunded
             });
 
-            // Un usuario es elegible para reclamar si:
-            // 1. Está registrado (isEligible)
+            // Usuario puede reclamar si:
+            // 1. Está registrado (isRegistered)
             // 2. No ha reclamado aún (!hasClaimed)
             // 3. Tiene el balance mínimo (hasMinBalance)
             // 4. El airdrop está activo (isActive)
-            const canClaim = isEligible && !hasClaimed && hasMinBalance && isActive;
+            // 5. El contrato tiene fondos suficientes (isFunded)
+            const canClaim = isRegistered && !hasClaimed && hasMinBalance && isActive && isFunded;
 
             setUserEligibilityStatus({
                 isEligible: canClaim,
                 hasClaimed,
                 isChecked: true,
                 isActive,
-                hasMinBalance
+                hasMinBalance,
+                isRegistered
             });
 
-            // Actualizar mensajes de error
+            // Update error messages based on conditions
             if (!hasMinBalance) {
                 setErrorMessage(`Insufficient balance. Need 1 MATIC. Current: ${ethers.formatEther(userBalance)} MATIC`);
-            } else if (!isEligible) {
+            } else if (!isRegistered) {
                 setErrorMessage('Please register for the airdrop first');
             } else if (hasClaimed) {
                 setErrorMessage('You have already claimed this airdrop');
             } else if (!isActive) {
                 setErrorMessage('Airdrop is not active at this moment');
+            } else if (!isFunded) {
+                setErrorMessage('Airdrop contract has insufficient funds');
             } else {
                 setErrorMessage('');
             }
@@ -183,69 +198,79 @@ const AirdropPoolStatusCard = ({ account }) => {
         return null;
     };
 
+    const PhaseRequirements = () => (
+        <div className="bg-black/20 rounded-lg p-3 mb-4">
+            <div className="text-sm font-medium text-gray-200 mb-2">Claim Requirements</div>
+            <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                    <FaCheckCircle className="text-green-400" />
+                    <span className="text-gray-300">Registered wallet</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                    <FaCheckCircle className="text-green-400" />
+                    <span className="text-gray-300">Minimum 1 MATIC balance</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                    <FaCheckCircle className="text-green-400" />
+                    <span className="text-gray-300">Within claim period</span>
+                </div>
+            </div>
+        </div>
+    );
+
+    const ClaimStatus = () => (
+        <div className="bg-black/20 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+                <span className="text-gray-300">Claim Status:</span>
+                <div className={`px-3 py-1 rounded-full ${
+                    userEligibilityStatus.hasClaimed 
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-yellow-500/20 text-yellow-400'
+                }`}>
+                    {userEligibilityStatus.hasClaimed ? 'Claimed' : 'Available'}
+                </div>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Reward Amount:</span>
+                <span className="text-purple-400 font-medium">5 POL</span>
+            </div>
+        </div>
+    );
+
+    const RewardUtility = () => (
+        <div className="bg-black/20 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2 mb-3">
+                <FaTrophy className="text-purple-400" />
+                <h3 className="text-gray-200 font-medium">Reward Utility</h3>
+            </div>
+            <div className="space-y-2 text-sm">
+                <div className="flex items-start gap-2">
+                    <FaChartLine className="text-green-400 mt-1" />
+                    <span className="text-gray-300">Stake for up to 125% APY</span>
+                </div>
+                <div className="flex items-start gap-2">
+                    <FaRocket className="text-blue-400 mt-1" />
+                    <span className="text-gray-300">Access exclusive features</span>
+                </div>
+            </div>
+        </div>
+    );
+
     return (
         <div className="space-y-4">
-            {/* Add a status badge at the top */}
-            <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-lg text-center">
-                <span className="font-medium">🎉 Airdrop is now LIVE!</span>
-            </div>
-
-            {/* New Platform Benefits Section */}
-            <div className="bg-purple-900/30 rounded-lg p-4">
-                <div className="flex items-center gap-2 mb-4">
-                    <FaGift className="text-green-200 text-xl" />
-                    <h3 className="text-lg font-semibold text-purple-200">Platform Benefits</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                        <FaChartLine className="text-green-400 mt-1" />
-                        <div>
-                            <h4 className="text-green-400 font-medium">Smart Staking</h4>
-                            <p className="text-gray-300 text-sm">Earn up to 125% APY by staking your POL tokens</p>
-                        </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                        <FaLock className="text-green-400 mt-1" />
-                        <div>
-                            <h4 className="text-green-400 font-medium">Early Access</h4>
-                            <p className="text-gray-300 text-sm">Get priority access to new features and pools</p>
-                        </div>
-                    </div>
+            <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-200">Claim Airdrop</h3>
+                <div className="flex items-center gap-2">
+                    <FaGift className="text-purple-400" />
+                    <span className="text-sm text-gray-400">Rewards</span>
                 </div>
             </div>
 
-            {/* User Allocation - existing code */}
-            <div className="bg-purple-900/30 rounded-lg p-4">
-                {/* ...existing user allocation code... */}
-            </div>
+            <PhaseRequirements />
+            <ClaimStatus />
+            <RewardUtility />
 
-            {/* New Enhanced Info Section */}
-            <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/20">
-                <div className="flex items-start gap-2">
-                    <FaInfoCircle className="text-purple-400 mt-1" />
-                    <div className="text-sm">
-                        <h3 className="text-purple-200 font-semibold mb-2">Maximize Your POL Tokens</h3>
-                        <ul className="space-y-2 text-gray-300">
-                            <li className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                                Stake POL tokens for up to 125% APY
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                                Participate in governance voting
-                            </li>
-                            <li className="flex items-center gap-2">
-                                <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                                Access exclusive platform features
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-             {/* Claim Button - existing code */}
-             {errorMessage && (
+            {errorMessage && (
                 <div className="bg-red-900/30 text-red-400 px-4 py-2 rounded-lg">
                     {errorMessage}
                 </div>
@@ -276,7 +301,6 @@ const AirdropPoolStatusCard = ({ account }) => {
                 airdropAmount={airdropInfo.airdropAmount}
             />
 
-            {/* Post Claim Actions */}
             {renderPostClaimActions()}
         </div>
     );

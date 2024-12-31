@@ -31,7 +31,7 @@ const AnnouncementModal = () => {
             transition={{ type: "spring", duration: 0.5 }}
           >
             <h2 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-              Nuvo Beta Live v0.3
+              Nuvo Beta Live v0.4
             </h2>
             
             <div className="space-y-4 text-gray-100 mb-6">

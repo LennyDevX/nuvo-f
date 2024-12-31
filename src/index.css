@@ -1,8 +1,0 @@
-@keyframes grow {
-  0% { transform: scaleY(0); }
-  100% { transform: scaleY(1); }
-}
-
-.animate-grow {
-  animation: grow 1.5s ease-in-out infinite alternate;
-}

@@ -56,21 +56,23 @@
     - ✅ Wallet Integration
     
     ### In Progress (Q4-Q1 2024-2025)
-    - 🟡 Developer portal Beta
-    - 🟡 Staking Protocol 2.0
+    - 🟡 Developer portal Beta 1
+    - 🟡 Enhanced UI/UX
+    - 🟡 More Routes and components
     - 🟡 Fix all bugs Knows
-    - 🟡 NuvOS Phase 1
+    - 🟡 Better conecction to wallet apps
+    - 🟡 Airdrops Contracts
     
-    ### Next Steps (Q3 2024 - Q2 2025)
-    1. Tokenized Assets Platform
-    2. NFT Marketplace Integration
-    3. Cross-chain Compatibility
-    4. Mobile App Development
-    5. Advanced Analytics Dashboard
+    ### Next Steps (Q4 2024 - Q2 2025)
+    1. Smart Staking v2 Release
+    2. News Smarts Contracts
+    3. NuvOS 1.0
+    4. Funds Strategies Tools
+    5. Nuvos Core
     6. Community Governance Implementation
     7. Real-world Asset Integration
-    8. Educational Platform Launch
-    9. Global Marketing Campaign
+    8. Experimental IA with Blockchain
+    9. Developer Portal Launch
     10. Strategic Partnerships
     11. DeFi 2.0 Features
     

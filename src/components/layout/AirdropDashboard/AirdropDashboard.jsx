@@ -1,11 +1,11 @@
 // src/components/layout/AirdropDashboard/AirdropDashboard.jsx
 import React, { useContext, useState } from 'react';
-import AirdropForm from './AirdropForm/AirdropForm';
 import { WalletContext } from '../../../context/WalletContext';
 import { useAirdropData } from '../../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
-import DashboardCards from './AirdropCards';
 import { FaTimes } from 'react-icons/fa';
+import AirdropCards from './AirdropCards'; // Updated import
+import AirdropForm from './AirdropForm/AirdropForm'; // Updated import
 
 const AirdropDashboard = () => {
     const { account } = useContext(WalletContext);
@@ -48,7 +48,7 @@ const AirdropDashboard = () => {
                             <FaTimes size={24} />
                         </button>
                         <div className="mt-16 md:mt-20">
-                            <AirdropForm />
+                            <AirdropForm onClose={() => setIsSidebarOpen(false)} />
                         </div>
                     </div>
                 </motion.div>
@@ -79,7 +79,7 @@ const AirdropDashboard = () => {
                 </motion.div>
 
                 <div className="container mx-auto">
-                    <DashboardCards 
+                    <AirdropCards 
                         account={account}
                         airdropData={airdropData}
                         formatAddress={formatAddress}

@@ -30,16 +30,15 @@ export const WalletProvider = ({ children }) => {
         const initProvider = async () => {
             if (window.ethereum) {
                 try {
-                    const alchemyProvider = new ethers.JsonRpcProvider(
-                        `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`
-                    );
                     const provider = new ethers.BrowserProvider(window.ethereum);
-                    // Fallback al proveedor de Alchemy si hay error
-                    provider.getFallbackProvider = () => alchemyProvider;
+                    // Wait for provider to initialize
+                    await provider.ready;
                     setProvider(provider);
                 } catch (error) {
                     console.error("Error initializing provider:", error);
                 }
+            } else {
+                console.log('Please install MetaMask!');
             }
         };
         initProvider();
