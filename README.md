@@ -3,7 +3,7 @@
    ## Vision
    NUVO DeFi is revolutionizing the blockchain space by creating an integrated ecosystem that combines smart staking, rewards systems, exclusive access, and tokenized real-world assets. Built on Polygon, we're developing a secure, efficient, and user-friendly platform that bridges DeFi with everyday applications.
     
-   ## 🎯 Current Status: Beta v0.3
+   ## 🎯 Current Status: Beta v1.0
    - Weekly updates and improvements
     - Beta program runs until Q2 2025
     - Active developer community
