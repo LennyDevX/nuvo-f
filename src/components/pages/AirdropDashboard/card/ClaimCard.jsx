@@ -10,10 +10,10 @@ import {
     FaClock
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import { WalletContext } from '../../../context/WalletContext';
+import { WalletContext } from '../../../../context/WalletContext';
 import { ethers } from 'ethers';
-import AirdropABI from '../../../Abi/Airdrop.json';
-import AirdropClaimModal from '../../modals/AirdropClaimModal';
+import AirdropABI from '../../../../Abi/Airdrop.json';
+import AirdropClaimModal from '../../../modals/AirdropClaimModal';
 
 const AirdropPoolStatusCard = ({ account }) => {
     const { provider } = useContext(WalletContext);

@@ -23,7 +23,7 @@ const preloadRoute = (importFn) => {
 const Home = preloadRoute(() => import('../components/pages/home/Home'));
 const SwapToken = preloadRoute(() => import('../components/pages/SwapToken'));
 const About = preloadRoute(() => import('../components/pages/about/About'));
-const AirdropDashboard = preloadRoute(() => import('../components/layout/AirdropDashboard/AirdropDashboard'));
+const AirdropDashboard = preloadRoute(() => import('../components/pages/AirdropDashboard/AirdropDashboard'));
 const TokenomicsDashboard = preloadRoute(() => import('../components/pages/tokenomics/TokenomicsDashboard'));
 // Fix DashboardStaking path
 const DashboardStaking = preloadRoute(() => import('../components/pages/StakingDashboard/DashboardStaking'));

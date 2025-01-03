@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { calculateROIProgress } from '../../../utils/roiCalculations';
-import StakingStatusCard from './card/StakingStatusCard';
-import RewardsCard from './card/RewardsCard';
-import PoolMetricsCard from './card/PoolMetricsCard';
-import StakingActionsCard from './card/StakingActionsCard';
-import ROICard from './card/ROICard';
-import TreasuryCard from './card/TreasuryCard';
+import { calculateROIProgress } from '../../../../utils/roiCalculations';
+import StakingStatusCard from './StakingStatusCard';
+import RewardsCard from './RewardsCard';
+import PoolMetricsCard from './PoolMetricsCard';
+import StakingActionsCard from './StakingActionsCard';
+import ROICard from './ROICard';
+import TreasuryCard from './TreasuryCard';
 
 const DashboardCards = ({
     account,

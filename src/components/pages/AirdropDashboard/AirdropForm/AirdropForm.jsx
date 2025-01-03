@@ -38,6 +38,7 @@ const AirdropForm = ({ onClose }) => {
     const [submitCount, setSubmitCount] = useState(0);
     const [lastSubmitTime, setLastSubmitTime] = useState(null);
     const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+    const [registrationCompleted, setRegistrationCompleted] = useState(false);
 
     const handleChange = (nameOrEvent, value) => {
         // If it's an event (from normal inputs)
@@ -323,6 +324,9 @@ const AirdropForm = ({ onClose }) => {
     const handleSubmit = async (data) => {
         try {
             await processRegistration(data);
+            setRegistrationCompleted(true);
+            // Removemos el cierre automático
+            // El usuario cerrará manualmente
         } catch (error) {
             console.error('Error in handleSubmit:', error);
             setError('Registration failed. Please try again.');
@@ -333,15 +337,6 @@ const AirdropForm = ({ onClose }) => {
                         formData.email.trim() !== '' &&
                         formData.airdropType !== '' &&
                         walletConnected;
-
-    // Cerrar el formulario después de un registro exitoso
-    useEffect(() => {
-        if (isSubmitted) {
-            setTimeout(() => {
-                onClose?.();
-            }, 2000);
-        }
-    }, [isSubmitted, onClose]);
 
     return (
         <div className="min-h-screen">
@@ -354,8 +349,8 @@ const AirdropForm = ({ onClose }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    {isSubmitted ? (
-                        <SubmissionSuccess />
+                    {registrationCompleted ? (
+                        <SubmissionSuccess onClose={onClose} />
                     ) : (
                         <>
                             <AirdropTypeSelector 

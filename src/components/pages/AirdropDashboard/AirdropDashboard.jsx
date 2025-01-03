@@ -4,8 +4,8 @@ import { WalletContext } from '../../../context/WalletContext';
 import { useAirdropData } from '../../../hooks/useAirdropData';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes } from 'react-icons/fa';
-import AirdropCards from './AirdropCards'; // Updated import
-import AirdropForm from './AirdropForm/AirdropForm'; // Updated import
+import AirdropCards from './card/AirdropCards'; // Updated import 
+import AirdropForm from '../../pages/AirdropDashboard/AirdropForm/AirdropForm'; // Updated import
 
 const AirdropDashboard = () => {
     const { account } = useContext(WalletContext);

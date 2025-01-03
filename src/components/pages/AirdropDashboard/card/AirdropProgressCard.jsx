@@ -12,7 +12,6 @@ const AirdropProgressCard = ({
     TOKENS_PER_WALLET, 
     remainingTokens 
 }) => {
-    const TOKENS_PER_WALLET_UPDATED = 5; // Updated token amount per wallet
 
     const InfoItem = ({ icon: Icon, label, value, subtext, className = "" }) => (
         <div className="flex items-center justify-between p-2 rounded-lg bg-black/20">
@@ -77,7 +76,7 @@ const AirdropProgressCard = ({
                 <InfoItem 
                     icon={FaGift}
                     label="Reward Per Wallet"
-                    value={`${TOKENS_PER_WALLET_UPDATED} ${TOKEN_SYMBOL}`}
+                    value={`${TOKENS_PER_WALLET} ${TOKEN_SYMBOL}`}
                     subtext="One-time registration"
                 />
 
