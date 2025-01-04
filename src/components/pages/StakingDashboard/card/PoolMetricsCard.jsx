@@ -55,7 +55,9 @@ const PoolMetricsCard = () => {
               </Tooltip>
             </div>
             <div className="flex items-baseline gap-2">
-              <div className="text-2xl font-bold text-red-50">{formatBalance(metrics.totalStaked)}</div>
+              <div className="text-2xl font-bold text-red-50">
+                {Number(formatBalance(metrics.totalStaked)).toFixed(4)}
+              </div>
               <div className="text-sm text-red-300">POL</div>
             </div>
           </div>

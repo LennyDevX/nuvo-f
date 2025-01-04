@@ -24,7 +24,7 @@ export default defineConfig({
         })
       ]
     },
-    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
+    include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'recharts'],
   },
   server: {
     port: 5173,
@@ -56,6 +56,9 @@ export default defineConfig({
         }
       }
     },
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 1000,
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
   }
 });

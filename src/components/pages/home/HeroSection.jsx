@@ -7,9 +7,7 @@ import StakingCalculator from '../../layout/StakingCalculator';
 const HeroSection = () => {
   return (
     <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-22 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
-      <div className="absolute inset-0 bg-gradient-radial from-purple-600/20 via-transparent to-transparent" />
-      
-      <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start lg:items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start lg:items-center">
         {/* Left Column - Content */}
         <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6">
           <motion.div

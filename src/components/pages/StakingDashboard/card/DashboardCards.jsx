@@ -39,8 +39,8 @@ const DashboardCards = ({
     };
 
     return (
+        // Updated background styles to be more consistent
         <div className="grid grid-cols-12 gap-6">
-            {/* Top Row - Key Metrics */}
             <motion.div className="col-span-12 md:col-span-6 lg:col-span-3" custom={0} variants={cardVariants} initial="hidden" animate="visible">
                 <StakingStatusCard {...{account, depositAmount, network}} />
             </motion.div>

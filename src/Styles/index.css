@@ -149,3 +149,23 @@
 .grecaptcha-badge {
   visibility: hidden !important;
 }
+
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
+  100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+@keyframes bounce-x {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(25%); }
+}
+
+.animate-bounce-x {
+  animation: bounce-x 1s infinite;
+}
