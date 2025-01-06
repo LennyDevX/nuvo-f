@@ -169,3 +169,23 @@
 .animate-bounce-x {
   animation: bounce-x 1s infinite;
 }
+
+/* Add to your styles */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(139, 92, 246, 0.2);
+  border-radius: 20px;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .modal-content {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
