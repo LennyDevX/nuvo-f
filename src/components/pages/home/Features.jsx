@@ -11,21 +11,21 @@ import {
 
 const Features = () => {
   return (
-    <section className="max-w-7xl mx-auto px-4 py-20">
+    <section className="max-w-7xl mx-auto px-4 py-12 sm:py-20">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="text-center mb-16"
+        className="text-center mb-10 sm:mb-16"
       >
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">
           Building the Future of <span className="text-purple-400">DeFi</span>
         </h2>
-        <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+        <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto px-4">
           Explore our ecosystem of innovative blockchain products and services
         </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
         {[
           {
             icon: <FaCoins />,
@@ -86,30 +86,30 @@ const Features = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.2 }}
-            className="group relative bg-black/30 rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300"
+            className="group relative bg-black/20 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300"
           >
             {/* Status Badge */}
-            <div className={`absolute top-4 right-4 px-3 py-1 rounded-full ${product.statusColor} 
-              text-white text-xs font-semibold flex items-center gap-1`}
+            <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 px-2 sm:px-3 py-1 rounded-full ${product.statusColor} 
+              text-white text-[10px] sm:text-xs font-semibold flex items-center gap-1`}
             >
-              {product.status === "LIVE" ? <FaCheckCircle /> : <FaClock />}
+              {product.status === "LIVE" ? <FaCheckCircle className="text-[10px] sm:text-xs" /> : <FaClock className="text-[10px] sm:text-xs" />}
               {product.status}
             </div>
 
             {/* Content */}
-            <div className="flex items-start gap-4">
-              <div className="p-4 bg-purple-500/20 rounded-xl text-purple-400 text-2xl 
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-purple-500/20 rounded-lg sm:rounded-xl text-purple-400 text-xl sm:text-2xl 
                 group-hover:scale-110 transition-transform duration-300">
                 {product.icon}
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold text-white mb-2">{product.title}</h3>
-                <p className="text-gray-300 mb-4">{product.description}</p>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{product.title}</h3>
+                <p className="text-gray-300 text-sm sm:text-base mb-3 sm:mb-4">{product.description}</p>
                 
                 {/* Features List */}
-                <ul className="space-y-2">
+                <ul className="space-y-1.5 sm:space-y-2">
                   {product.features.map((feature, i) => (
-                    <li key={i} className="text-gray-400 text-sm flex items-center gap-2">
+                    <li key={i} className="text-gray-400 text-xs sm:text-sm flex items-center gap-2">
                       <span className="w-1 h-1 bg-purple-400 rounded-full"></span>
                       {feature}
                     </li>
@@ -120,7 +120,7 @@ const Features = () => {
 
             {/* Hover Effect Gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 
-              opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl pointer-events-none" />
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl sm:rounded-2xl pointer-events-none" />
           </motion.div>
         ))}
       </div>

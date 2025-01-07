@@ -2,9 +2,8 @@
 import React from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { router } from '../router/config';
-import ErrorBoundary from './ErrorBoundary';
+import ErrorBoundary from './ui/ErrorBoundary';
 import LoadingSpinner from './LoadOverlay/LoadingSpinner';
-import { Toaster } from 'react-hot-toast';
 
 const App = () => {
   return (

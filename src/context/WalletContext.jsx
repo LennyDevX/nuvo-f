@@ -11,6 +11,7 @@ export const WalletContext = createContext({
     setBalance: () => {},
     setNetwork: () => {},
     setWalletConnected: () => {},
+    ensureProvider: async () => {},  // Add this line
 });
 
 export const WalletProvider = ({ children }) => {
@@ -72,6 +73,24 @@ export const WalletProvider = ({ children }) => {
         initProvider();
     }, []);
 
+    const ensureProvider = async () => {
+        if (!provider && window.ethereum && account) {
+            try {
+                const newProvider = new ethers.BrowserProvider(window.ethereum);
+                await newProvider.ready;
+                setProvider(newProvider);
+                return newProvider;
+            } catch (error) {
+                console.error("Error creating provider:", error);
+                throw new Error("Failed to initialize provider");
+            }
+        }
+        if (!provider) {
+            throw new Error("Provider not available");
+        }
+        return provider;
+    };
+
     const handleDisconnect = () => {
         setAccount(null);
         setBalance(null);
@@ -94,7 +113,8 @@ export const WalletProvider = ({ children }) => {
         setBalance,
         setNetwork,
         setWalletConnected,
-        handleDisconnect
+        handleDisconnect,
+        ensureProvider,  // Add this line
     };
 
     return (

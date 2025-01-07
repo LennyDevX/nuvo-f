@@ -5,7 +5,7 @@ import { WalletContext } from "../../../context/WalletContext";
 import useContractData from "../../../hooks/useContractData";
 import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
 import { getStakingDuration } from "../../../utils/utils";
-import DashboardCards from "./DashboardCards";
+import DashboardCards from "./card/DashboardCards";
 import ActionButtons from "./ActionButtons";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";

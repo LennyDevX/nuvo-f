@@ -39,6 +39,35 @@ const WalletConnect = ({ className }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getBalanceWithRetry = async (provider, account) => {
+    const rpcUrls = [
+      `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
+      'https://polygon-rpc.com',
+      'https://rpc-mainnet.matic.network',
+      'https://rpc-mainnet.maticvigil.com'
+    ];
+
+    for (const rpcUrl of rpcUrls) {
+      try {
+        const customProvider = new ethers.JsonRpcProvider(rpcUrl);
+        const balance = await customProvider.getBalance(account);
+        return ethers.formatEther(balance);
+      } catch (error) {
+        console.warn(`Failed to fetch balance using RPC: ${rpcUrl}`, error);
+        continue;
+      }
+    }
+
+    // If all RPCs fail, try one last time with the original provider
+    try {
+      const balance = await provider.getBalance(account);
+      return ethers.formatEther(balance);
+    } catch (error) {
+      console.error('Failed to fetch balance with all providers', error);
+      return '0';
+    }
+  };
+
   const handleConnect = async (provider, account, networkName) => {
     try {
       setIsLoading(true);
@@ -97,19 +126,8 @@ const WalletConnect = ({ className }) => {
         }
       }
 
-      let retries = 3;
-      while (retries > 0) {
-        try {
-          const balance = await provider.getBalance(account);
-          const formattedBalance = ethers.formatEther(balance);
-          setBalance(formattedBalance);
-          break;
-        } catch (error) {
-          retries--;
-          if (retries === 0) throw error;
-          await new Promise(r => setTimeout(r, 1000));
-        }
-      }
+      const formattedBalance = await getBalanceWithRetry(provider, account);
+      setBalance(formattedBalance);
   
       setAccounts([account]);
       setConnected(true);

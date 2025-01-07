@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { calculateROIProgress } from '../../../utils/roiCalculations';
-import StakingStatusCard from './card/StakingStatusCard';
-import RewardsCard from './card/RewardsCard';
-import PoolMetricsCard from './card/PoolMetricsCard';
-import StakingActionsCard from './card/StakingActionsCard';
-import ROICard from './card/ROICard';
-import TreasuryCard from './card/TreasuryCard';
+import { calculateROIProgress } from '../../../../utils/roiCalculations';
+import StakingStatusCard from './StakingStatusCard';
+import RewardsCard from './RewardsCard';
+import PoolMetricsCard from './PoolMetricsCard';
+import StakingActionsCard from './StakingActionsCard';
+import ROICard from './ROICard';
+import TreasuryCard from './TreasuryCard';
 
 const DashboardCards = ({
     account,
@@ -39,8 +39,8 @@ const DashboardCards = ({
     };
 
     return (
+        // Updated background styles to be more consistent
         <div className="grid grid-cols-12 gap-6">
-            {/* Top Row - Key Metrics */}
             <motion.div className="col-span-12 md:col-span-6 lg:col-span-3" custom={0} variants={cardVariants} initial="hidden" animate="visible">
                 <StakingStatusCard {...{account, depositAmount, network}} />
             </motion.div>

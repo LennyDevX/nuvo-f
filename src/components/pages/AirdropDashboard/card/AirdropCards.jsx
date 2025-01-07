@@ -18,9 +18,9 @@ import {
     FaMoneyBill
 } from 'react-icons/fa';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { airdropsCollection } from '../../firebase/config';
-import useTreasuryBalance from '../../../hooks/useTreasuryBalance';
-import ButtonClaimAirdrop from '../../web3/ButtonClaimAirdrop';
+import { airdropsCollection } from '../../../firebase/config';
+import useTreasuryBalance from '../../../../hooks/useTreasuryBalance';
+import ButtonClaimAirdrop from '../../../web3/ButtonClaimAirdrop';
 import WalletStatusCard from './WalletStatusCard';
 import AirdropProgressCard from './AirdropProgressCard';
 import RewardsBenefitsCard from './RewardsBenefitsCard';
@@ -145,13 +145,13 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
     // Constantes actualizadas para el airdrop
     const TOTAL_AIRDROP_TOKENS = 500; // 250 POL tokens en total
     const TOKEN_SYMBOL = 'POL';
-    const TOKENS_PER_WALLET = 10; // 10 POL por wallet
-    const MAX_PARTICIPANTS = Math.floor(TOTAL_AIRDROP_TOKENS / TOKENS_PER_WALLET); // 25 participantes máximo
+    const TOKENS_PER_WALLET = 5; // Cambiado de 10 a 5 POL por wallet
+    const MAX_PARTICIPANTS = Math.floor(TOTAL_AIRDROP_TOKENS / TOKENS_PER_WALLET); // Ahora será 100 participantes máximo
     
     // Calcular el porcentaje de tokens distribuidos
-    const distributionProgress = (totalParticipants * TOKENS_PER_WALLET / TOTAL_AIRDROP_TOKENS) * 100;
     const tokensDistributed = totalParticipants * TOKENS_PER_WALLET;
     const remainingTokens = TOTAL_AIRDROP_TOKENS - tokensDistributed;
+    const distributionProgress = (tokensDistributed / TOTAL_AIRDROP_TOKENS) * 100;
 
     const getDateClassName = (day) => {
         if (!day) return 'text-transparent';

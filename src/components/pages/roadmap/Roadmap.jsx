@@ -59,16 +59,16 @@ const roadmapData = {
       {
         title: "Beta Live Launch",
         icon: "🌟",
-        status: "Active",
-        progress: 85,
+        status: "completed",
+        progress: 100,
         phase: "Launch Phase",
         items: [
           { text: "Beta Platform Launch", status: "completed", date: "Oct 2024" },
           { text: "Beta Mining Program", status: "completed", date: "Oct 2024" },
           { text: "Community Testing Phase", status: "completed", date: "Nov 2024" },
           { text: "Initial research Nuvo-Token", status: "completed", date: "Nov 2024" },
-          { text: "Platform Optimization", status: "in-progress", date: "Dec 2024" },
-          { text: "Fixed all bugs", status: "in-progress", date: "Dec 2024" }
+          { text: "Platform Optimization", status: "completed", date: "Dec 2024" },
+          { text: "Fixed all bugs", status: "completed", date: "Dec 2024" }
         ]
       }
     ]
@@ -79,7 +79,7 @@ const roadmapData = {
         title: "Protocol Scaling",
         icon: "📈",
         status: "Active",
-        progress: 40,
+        progress: 20,
         phase: "Scaling Phase",
         items: [
           { text: "Developer Portal Launch", status: "in-progress", date: "Jan 2025" },

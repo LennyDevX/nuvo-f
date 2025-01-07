@@ -131,29 +131,40 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden">
         <motion.div
           key={isSubmissionComplete ? 'success' : 'form'}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="relative w-full max-w-md bg-gradient-to-b from-purple-900/90 to-black/90 rounded-xl shadow-xl border border-purple-500/20 p-6"
+          className="relative w-full max-w-md bg-gradient-to-b from-purple-900/90 to-black/90 rounded-xl shadow-xl border border-purple-500/20 mx-2 my-2 sm:m-4 flex flex-col max-h-[95vh]"
         >
-          <button
-            onClick={handleModalClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-          >
-            <FaTimes />
-          </button>
+          {/* Fixed Header */}
+          <div className="flex-shrink-0 bg-gradient-to-b from-purple-900/90 via-purple-900/80 to-transparent px-4 pt-4 pb-2 rounded-t-xl relative z-20">
+            <div className="flex justify-between items-start">
+              <div className="pr-8">
+                <h2 className="text-xl sm:text-2xl font-bold text-white text-gradient">
+                  Apply - {roleTitle}
+                </h2>
+                <p className="text-purple-300 text-sm sm:text-base mt-1">
+                  Please fill in your details below
+                </p>
+              </div>
+              <button
+                onClick={handleModalClose}
+                className="absolute top-3 right-3 p-2 hover:bg-purple-500/20 rounded-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <FaTimes className="text-gray-400 hover:text-white text-xl" />
+              </button>
+            </div>
+          </div>
 
-          {!isSubmissionComplete ? (
-            <>
-              <h2 className="text-2xl font-bold text-white text-gradient mb-2">
-                Apply - {roleTitle}
-              </h2>
-              <p className="text-purple-300 mb-6">Please fill in your details below</p>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+          {/* Scrollable Content */}
+          <div className="flex-grow overflow-y-auto px-4 pb-4 space-y-4 relative scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent">
+            {!isSubmissionComplete ? (
+              <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-purple-300 mb-1">
                       First Name
@@ -164,7 +175,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-base"
                     />
                   </div>
                   <div>
@@ -177,12 +188,12 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       required
                       value={formData.lastName}
                       onChange={handleChange}
-                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-base"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <label className="block text-sm font-medium text-purple-300 mb-1">
                       Email Address
@@ -193,7 +204,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-base"
                     />
                   </div>
                   <div>
@@ -206,7 +217,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       required
                       value={formData.country}
                       onChange={handleChange}
-                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40 text-base"
                     />
                   </div>
                 </div>
@@ -218,7 +229,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                   </label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-purple-400">
-                      <FaGithub />
+                      <FaGithub className="text-lg" />
                     </span>
                     <input
                       type="text"
@@ -227,7 +238,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       value={formData.githubUsername}
                       onChange={handleChange}
                       placeholder="your-github-username"
-                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg pl-10 pr-3 py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg pl-10 pr-3 py-3 sm:py-2 text-white placeholder-purple-300/50 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
                     />
                   </div>
                 </div>
@@ -240,14 +251,16 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                   <button
                     type="button"
                     onClick={() => setShowSpecializationDropdown(!showSpecializationDropdown)}
-                    className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-left text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                    className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-3 sm:py-2 text-left text-white flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-purple-500/40 min-h-[44px]"
                   >
-                    {formData.specialization || 'Select your specialization'}
-                    <FaChevronDown className={`transition-transform duration-200 ${showSpecializationDropdown ? 'rotate-180' : ''}`} />
+                    <span className="truncate">
+                      {formData.specialization || 'Select your specialization'}
+                    </span>
+                    <FaChevronDown className={`transition-transform duration-200 ml-2 ${showSpecializationDropdown ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {showSpecializationDropdown && (
-                    <div className="absolute z-10 w-full mt-1 bg-purple-900/90 border border-purple-500/20 rounded-lg shadow-xl">
+                    <div className="absolute z-10 w-full mt-1 bg-purple-900/90 border border-purple-500/20 rounded-lg shadow-xl max-h-48 overflow-y-auto">
                       {specializations.map((spec) => (
                         <button
                           key={spec}
@@ -256,7 +269,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                             setFormData({ ...formData, specialization: spec });
                             setShowSpecializationDropdown(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-white hover:bg-purple-700/50 first:rounded-t-lg last:rounded-b-lg"
+                          className="w-full px-3 py-3 sm:py-2 text-left text-white hover:bg-purple-700/50 first:rounded-t-lg last:rounded-b-lg min-h-[44px]"
                         >
                           {spec}
                         </button>
@@ -270,7 +283,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                   <label className="block text-sm font-medium text-purple-300 mb-1">
                     Wallet Address
                     {!walletConnected && (
-                      <span className="text-red-400 ml-2 text-xs">
+                      <span className="text-red-400 ml-2 text-xs block sm:inline">
                         (Required - Please connect your wallet)
                       </span>
                     )}
@@ -282,13 +295,9 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                       required
                       value={censorWallet(formData.walletAddress)}
                       disabled
-                      className={`w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-2 text-white placeholder-purple-300/50 font-mono ${
-                        !walletConnected ? 'text-red-400' : 'text-white opacity-75'
-                      }`}
+                      className="w-full bg-purple-900/20 border border-purple-500/20 rounded-lg px-3 py-3 sm:py-2 text-white placeholder-purple-300/50 font-mono text-sm overflow-ellipsis"
                     />
-                    <div className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs ${
-                      walletConnected ? 'text-green-400' : 'text-red-400'
-                    }`}>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs">
                       {walletConnected ? 'Connected' : 'Not Connected'}
                     </div>
                   </div>
@@ -298,7 +307,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !isFormComplete()}
-                  className={`w-full font-semibold py-2 px-4 rounded-lg transition-all duration-300 mt-6 flex items-center justify-center ${
+                  className={`w-full font-semibold py-3 sm:py-2 px-4 rounded-lg transition-all duration-300 mt-4 sm:mt-6 flex items-center justify-center min-h-[44px] ${
                     isFormComplete() 
                       ? 'bg-purple-600 hover:bg-purple-700 text-white' 
                       : 'bg-gray-600 cursor-not-allowed text-gray-300'
@@ -325,59 +334,59 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
 
                 {/* Form Completion Message */}
                 {!isFormComplete() && !isSubmitting && (
-                  <p className="text-sm text-red-400 text-center mt-2">
+                  <p className="text-sm text-red-400 text-center mt-2 px-2">
                     {!walletConnected 
                       ? 'Please connect your wallet to submit the application'
                       : 'Please fill in all required fields'}
                   </p>
                 )}
               </form>
-            </>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="flex justify-center mb-4">
-                <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 bg-purple-600/20 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-white">Welcome to Nuvos Cloud!</h3>
-              
-              <div className="space-y-3 text-purple-200 text-sm">
-                <p>Thank you for joining our developer community! Here's what happens next:</p>
                 
-                <ul className="text-left space-y-2 pl-4">
-                  <li>• You'll receive an invitation to our Discord developer community</li>
-                  <li>• Access to our contribution guidelines and documentation</li>
-                  <li>• Opportunity to earn rewards for your contributions</li>
-                  <li>• Regular updates about new development opportunities</li>
-                </ul>
+                <h3 className="text-2xl font-bold text-white">Welcome to Nuvos Cloud!</h3>
+                
+                <div className="space-y-3 text-purple-200 text-sm">
+                  <p>Thank you for joining our developer community! Here's what happens next:</p>
+                  
+                  <ul className="text-left space-y-2 pl-4">
+                    <li>• You'll receive an invitation to our Discord developer community</li>
+                    <li>• Access to our contribution guidelines and documentation</li>
+                    <li>• Opportunity to earn rewards for your contributions</li>
+                    <li>• Regular updates about new development opportunities</li>
+                  </ul>
 
-                <a
-                  href="https://discord.gg/ee5uZXej"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] transition-colors rounded-lg text-white font-medium mt-4"
+                  <a
+                    href="https://discord.gg/ee5uZXej"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#5865F2] hover:bg-[#4752C4] transition-colors rounded-lg text-white font-medium mt-4"
+                  >
+                    <FaDiscord className="text-xl" />
+                    Join our Discord Community
+                  </a>
+
+                  <p className="text-purple-300 mt-4">
+                    Check your email for further instructions on how to get started!
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleModalClose}
+                  className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                 >
-                  <FaDiscord className="text-xl" />
-                  Join our Discord Community
-                </a>
-
-                <p className="text-purple-300 mt-4">
-                  Check your email for further instructions on how to get started!
-                </p>
+                  Got it, thanks!
+                </button>
               </div>
-
-              <button
-                onClick={handleModalClose}
-                className="mt-6 w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-              >
-                Got it, thanks!
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </motion.div>
       </div>
     </AnimatePresence>
