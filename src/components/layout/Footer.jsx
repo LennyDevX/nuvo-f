@@ -63,6 +63,15 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+              <Link 
+                  to="/game" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Nuvos Mining
+                </Link>
+              </li>
+              <li>
                 <Link 
                   to="/about" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"

@@ -189,3 +189,13 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* Add to your styles games */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
