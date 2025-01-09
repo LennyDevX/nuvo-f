@@ -25,9 +25,9 @@ const SwapToken = preloadRoute(() => import('../components/pages/SwapToken'));
 const About = preloadRoute(() => import('../components/pages/about/About'));
 const AirdropDashboard = preloadRoute(() => import('../components/pages/AirdropDashboard/AirdropDashboard'));
 const TokenomicsDashboard = preloadRoute(() => import('../components/pages/tokenomics/TokenomicsDashboard'));
-// Fix DashboardStaking path
 const DashboardStaking = preloadRoute(() => import('../components/pages/StakingDashboard/DashboardStaking'));
 const Roadmap = preloadRoute(() => import('../components/pages/roadmap/Roadmap'));
+const P2E = preloadRoute(() => import('../components/pages/P2E/Game'));
 const NotFound = preloadRoute(() => import('../components/pages/NotFound'));
 
 export const routes = [
@@ -62,6 +62,10 @@ export const routes = [
   {
     path: "/roadmap",
     element: withSuspense(<MainLayout showFooter={true}><Roadmap /></MainLayout>),
+  },
+  {
+    path: "/game",
+    element: withSuspense(<MainLayout><P2E/></MainLayout>),
   },
   {
     path: "*",
