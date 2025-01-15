@@ -5,18 +5,18 @@ import { FaRocket, FaShieldAlt, FaUsers } from 'react-icons/fa';
 const MissionSection = () => {
   const missionItems = [
     {
-      title: "Pioneering Innovation",
-      content: "We're pushing the boundaries of DeFi through cutting-edge research and development. Our innovative staking mechanisms and algorithmic trading strategies are designed to maximize returns while minimizing risks. By leveraging advanced blockchain technology, we're creating for Community first.",
+      title: "Smart Contract Innovation",
+      content: "We're developing a new generation of modular smart contracts that enable unique interactions within our ecosystem. Our microservices architecture allows users to seamlessly engage with multiple DeFi protocols, from yield farming to liquidity provision, all through a unified and intuitive interface.",
       icon: <FaRocket className="text-4xl" />
     },
     {
-      title: "Uncompromising Security",
-      content: "Security is at the core of everything we do. Our multi-layered security architecture includes regular smart contract audits, real-time monitoring systems, and automated fail-safes. We implement industry-leading security practices and maintain transparency through open-source development.",
+      title: "Multi-Layer Rewards",
+      content: "Our platform features diverse reward mechanisms across different smart contract layers. Users can earn through various activities: providing liquidity, participating in governance, contributing to protocol security, and engaging in community-driven initiatives. Each interaction is designed to maximize value for participants.",
       icon: <FaShieldAlt className="text-4xl" />
     },
     {
-      title: "Community Empowerment",
-      content: "We believe in the power of collective growth. Our DAO governance model ensures that every community member has a voice in shaping the platform's future. Through educational initiatives, developer grants, and community rewards, we're building an ecosystem that grows stronger together.",
+      title: "Interactive Ecosystem",
+      content: "We're building an interconnected network of smart contracts where users actively shape the platform's evolution. Through our innovative staking mechanisms, prediction markets, and social trading features, community members can earn rewards while contributing to the ecosystem's growth and sustainability.",
       icon: <FaUsers className="text-4xl" />
     }
   ];

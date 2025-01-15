@@ -30,7 +30,7 @@ const TransactionToast = ({ message, type, details, hash }) => {
       initial={{ opacity: 0, y: -50, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className={`fixed top-4 right-4 z-50 p-4 rounded-xl backdrop-blur-sm border 
+      className={`fixed bottom-4 left-0 right-0 mx-auto z-50 p-4 rounded-xl backdrop-blur-sm border 
         ${toastStyles[type]} shadow-lg max-w-md w-full`}
     >
       <div className="flex items-start gap-3">
