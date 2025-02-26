@@ -26,9 +26,22 @@ const About = preloadRoute(() => import('../components/pages/about/About'));
 const AirdropDashboard = preloadRoute(() => import('../components/pages/AirdropDashboard/AirdropDashboard'));
 const TokenomicsDashboard = preloadRoute(() => import('../components/pages/tokenomics/TokenomicsDashboard'));
 const DashboardStaking = preloadRoute(() => import('../components/pages/StakingDashboard/DashboardStaking'));
-const Roadmap = preloadRoute(() => import('../components/pages/roadmap/Roadmap'));
+// Add loading delay for non-critical routes
+const Roadmap = preloadRoute(() => 
+  import('../components/pages/roadmap/Roadmap').then(module => {
+    // Add artificial delay only in development
+    if (process.env.NODE_ENV === 'development') {
+      return new Promise(resolve => {
+        setTimeout(() => resolve(module), 0);
+      });
+    }
+    return module;
+  })
+);
 const P2E = preloadRoute(() => import('../components/pages/P2E/Game'));
 const NotFound = preloadRoute(() => import('../components/pages/NotFound'));
+import AIHub from '../components/pages/AIHub';
+
 
 export const routes = [
   {
@@ -70,5 +83,9 @@ export const routes = [
   {
     path: "*",
     element: withSuspense(<MainLayout><NotFound /></MainLayout>),
+  },
+  {
+    path: "/ai",
+    element: withSuspense(<MainLayout><AIHub /></MainLayout>),
   }
 ];

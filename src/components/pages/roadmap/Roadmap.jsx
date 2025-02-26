@@ -76,69 +76,57 @@ const roadmapData = {
   "2025": {
     "Q1": [
       {
-        title: "Protocol Scaling",
-        icon: "📈",
+        title: "Stable Phase Foundation",
+        icon: "🏗️",
         status: "Active",
         progress: 20,
-        phase: "Scaling Phase",
+        phase: "Foundation Phase",
         items: [
-          { text: "Developer Portal Launch", status: "in-progress", date: "Jan 2025" },
-          { text: "Bounty Program Initiation", status: "in-progress", date: "Jan 2025" },
-          { text: "Marketing Campaign Launch", status: "pending", date: "Feb 2025" },
-          { text: "News Smarts Contracts ", status: "pending", date: "Feb 2025" },
-          { text: "Smart Staking v2 Release", status: "pending", date: "Mar 2025" },
-          { text: "Nuvos Token Strategies", status: "pending", date: "Mar 2025" }
+          { text: "Develop core infrastructure for stability", status: "in-progress", date: "Jan 2025" },
+          { text: "Launch initial marketing campaigns", status: "in-progress", date: "Feb 2025" },
+          { text: "Revise tokenomics for improvements", status: "pending", date: "Mar 2025" }
         ]
       }
     ],
     "Q2": [
       {
-        title: "Advanced Features",
-        icon: "⚡",
+        title: "NFT & UI/UX Development",
+        icon: "🎨",
         status: "Planned",
         progress: 0,
         phase: "Innovation Phase",
         items: [
-          { text: "AI Trading Integration", status: "pending", date: "Apr 2025" },
-          { text: "Experimental IA with Blockchain", status: "pending", date: "Apr 2025" },
-          { text: "NuvOS 1.0", status: "pending", date: "May 2025" },
-          { text: "Risk Management Suite", status: "pending", date: "May 2025" },
-          { text: "Funds Strategies Tools", status: "pending", date: "Jun 2025" },
-          { text: "Nuvos Core", status: "pending", date: "Jun 2025" }
+          { text: "Develop NFT system for digital products", status: "pending", date: "Apr 2025" },
+          { text: "Implement enhanced UI/UX designs", status: "pending", date: "May 2025" },
+          { text: "Integrate components for real digital benefits", status: "pending", date: "Jun 2025" }
         ]
       }
     ],
     "Q3": [
       {
-        title: "Ecosystem Growth",
-        icon: "🌱",
+        title: "Smart Staking 2.0 & Expansion",
+        icon: "🚀",
         status: "Planned",
         progress: 0,
-        phase: "Growth Phase",
+        phase: "Scaling Phase",
         items: [
-          { text: "Strategic DeFi Partnerships", status: "pending", date: "Jul 2025" },
-          { text: "Yield Optimization v2", status: "pending", date: "Jul 2025" },
-          { text: "Enhanced Liquidity Mining", status: "pending", date: "Aug 2025" },
-          { text: "Cross-Protocol Integration", status: "pending", date: "Aug 2025" },
-          { text: "Fees Strategies", status: "pending", date: "Sep 2025" },
-          { text: "Fiat On/Off Ramp", status: "pending", date: "Sep 2025" }
+          { text: "Launch Smart Staking 2.0", status: "pending", date: "Jul 2025" },
+          { text: "Prepare advanced marketing strategies", status: "pending", date: "Aug 2025" },
+          { text: "Initiate token launch and add liquidity", status: "pending", date: "Sep 2025" }
         ]
       }
     ],
     "Q4": [
       {
-        title: "Future Development",
-        icon: "🚀",
+        title: "Marketing & Post-Launch Optimization",
+        icon: "📈",
         status: "Planned",
         progress: 0,
-        phase: "Vision Phase",
+        phase: "Growth Phase",
         items: [
-          { text: "DAO Governance Launch", status: "pending", date: "Oct 2025" },
-          { text: "DeFi 2.0 Features", status: "pending", date: "Oct 2025" },
-          { text: "Metaverse Integration", status: "pending", date: "Nov 2025" },
-          { text: "NFT Finance Platform", status: "pending", date: "Nov 2025" },
-          { text: "Global Market Expansion", status: "pending", date: "Dec 2025" },
-          { text: "Enterprise Solutions", status: "pending", date: "Dec 2025" }
+          { text: "Expand marketing campaigns", status: "pending", date: "Oct 2025" },
+          { text: "Optimize platform after token launch", status: "pending", date: "Nov 2025" },
+          { text: "Implement further tokenomics revisions", status: "pending", date: "Dec 2025" }
         ]
       }
     ]

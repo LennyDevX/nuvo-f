@@ -1,5 +1,5 @@
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import WalletConnect from '../web3/WalletConnect';
 import AirdropDownloader from '../firebase/AirdropDownloader';
 import { 
@@ -9,7 +9,8 @@ import {
   FaExchangeAlt, 
   FaExternalLinkAlt,
   FaCode, 
-  FaGift,
+  FaGamepad,
+  FaRobot, // Add AI icon
   // ...existing imports...
 } from 'react-icons/fa'
 
@@ -69,8 +70,8 @@ const Navbar = () => {
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
-    { path: '/roadmap', label: 'Developer Portal', icon: FaCode },
-    { path: '/airdrops', label: 'Airdrops', icon: FaGift },
+    { path: '/game', label: 'Game', icon: FaGamepad },
+    { path: '/ai', label: 'AI Hub', icon: FaRobot }, // Updated path to match component
   ];
 
   return (
@@ -191,4 +192,5 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+// Export with React.memo to prevent unnecessary re-renders
+export default React.memo(Navbar);
