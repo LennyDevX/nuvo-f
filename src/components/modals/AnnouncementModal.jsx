@@ -34,7 +34,7 @@ const AnnouncementModal = () => {
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                Nuvos Update v1.1
+                Nuvos Update v1.5
               </h2>
               <span className="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
                 Beta
@@ -49,11 +49,11 @@ const AnnouncementModal = () => {
                 <ul className="text-sm space-y-2 text-gray-300">
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Treasury wallet founded </span>
+                    <span>Nuvo AI Hub - Preview </span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Redesigned Airdrop interface & claiming system</span>
+                    <span>Nuvo Loterry - mini game preview</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
@@ -61,7 +61,7 @@ const AnnouncementModal = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>New Homepage design & mobile responsiveness</span>
+                    <span>Roadmap Update</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>

@@ -68,7 +68,7 @@ const Footer = () => {
                   className="text-gray-400 hover:text-purple-400 transition-colors"
                   onClick={() => window.scrollTo(0, 0)}
                 >
-                  Nuvos Mining
+                  Game
                 </Link>
               </li>
               <li>
@@ -124,7 +124,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v1.1 - USE AT YOUR OWN RISK
+            BETA v1.2 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

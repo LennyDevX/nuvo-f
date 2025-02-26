@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { FaCode, FaCoins, FaStore, FaCrown, FaInfoCircle } from 'react-icons/fa';
 import { Tooltip } from 'react-tooltip';
-
+import useReducedMotion from '../../../hooks/useReducedMotion';
 
 const phases = [
   {
@@ -56,6 +56,7 @@ const CircleDeveloper = ({ activePhase }) => {
   const [isDetailedView, setIsDetailedView] = useState(false);
   const [selectedPhase, setSelectedPhase] = useState(null);
   const controls = useAnimation();
+  const prefersReducedMotion = useReducedMotion();
 
   // Touch gesture handling
   const handleTouchStart = useCallback((e) => {
@@ -69,11 +70,19 @@ const CircleDeveloper = ({ activePhase }) => {
   const handlePhaseClick = useCallback((phase) => {
     setSelectedPhase(phase.id);
     setIsDetailedView(true);
-    controls.start({
-      scale: [1, 1.05, 1],
-      transition: { duration: 0.3 }
-    });
-  }, [controls]);
+    
+    if (!prefersReducedMotion) {
+      controls.start({
+        scale: [1, 1.05, 1],
+        transition: { duration: 0.3 }
+      });
+    }
+  }, [controls, prefersReducedMotion]);
+
+  // Helper function for conditional animations
+  const getConditionalAnimation = (animationObject) => {
+    return prefersReducedMotion ? {} : animationObject;
+  };
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center">
@@ -84,13 +93,13 @@ const CircleDeveloper = ({ activePhase }) => {
       >
         <motion.div 
           className="absolute inset-0"
-          animate={{
+          animate={getConditionalAnimation({
             background: [
               'radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.15), transparent 50%)',
               'radial-gradient(circle at 70% 70%, rgba(99, 102, 241, 0.15), transparent 50%)',
               'radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.15), transparent 50%)',
             ],
-          }}
+          })}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
       </motion.div>
@@ -109,10 +118,10 @@ const CircleDeveloper = ({ activePhase }) => {
         >
           <motion.div
             className="absolute inset-0"
-            animate={{
+            animate={getConditionalAnimation({
               backgroundPosition: ['0% 0%', '100% 100%', '0% 0%'],
               scale: [1, 1.02, 1],
-            }}
+            })}
             transition={{ 
               backgroundPosition: { duration: 8, repeat: Infinity, ease: "linear" },
               scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
@@ -133,9 +142,9 @@ const CircleDeveloper = ({ activePhase }) => {
               initial={{ opacity: 0 }}
               animate={{ 
                 opacity: activePhase >= phase.id ? 1 : 0.1,
-                scale: activePhase === phase.id ? 1.02 : 1
+                scale: prefersReducedMotion ? 1 : (activePhase === phase.id ? 1.02 : 1)
               }}
-              whileHover={{ 
+              whileHover={prefersReducedMotion ? {} : { 
                 scale: 1.03,
                 filter: "brightness(1.2)",
                 transition: { duration: 0.2 }
@@ -168,10 +177,10 @@ const CircleDeveloper = ({ activePhase }) => {
                 
                 <motion.div
                   className={`absolute inset-0 bg-gradient-to-r ${phase.color}`}
-                  animate={{
+                  animate={getConditionalAnimation({
                     backgroundPosition: ['0% 0%', '100% 100%'],
                     scale: activePhase === phase.id ? [1, 1.02, 1] : 1
-                  }}
+                  })}
                   transition={{
                     backgroundPosition: { duration: 3, repeat: Infinity, repeatType: "reverse" },
                     scale: { duration: 2, repeat: Infinity, ease: "easeInOut" }
@@ -190,33 +199,33 @@ const CircleDeveloper = ({ activePhase }) => {
           <motion.div
             key={activePhase}
             className="absolute inset-0 flex items-center justify-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            initial={!prefersReducedMotion ? { scale: 0.8, opacity: 0 } : { opacity: 0 }}
+            animate={!prefersReducedMotion ? { scale: 1, opacity: 1 } : { opacity: 1 }}
+            exit={!prefersReducedMotion ? { scale: 0.8, opacity: 0 } : { opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0.2 : 0.5 }}
           >
             <motion.div 
               className={`w-40 h-40 sm:w-72 sm:h-72 rounded-full backdrop-blur-xl 
                         flex flex-col items-center justify-center p-3 sm:p-6
                         border border-white/10 sm:border-purple-500/30
                         ${phases[activePhase - 1].mobileColor} sm:bg-black/90`}
-              animate={{
+              animate={getConditionalAnimation({
                 boxShadow: [
                   "0 0 20px rgba(0, 0, 0, 0.3)",
                   "0 0 30px rgba(0, 0, 0, 0.4)",
                   "0 0 20px rgba(0, 0, 0, 0.3)"
                 ]
-              }}
+              })}
               transition={{ duration: 2, repeat: Infinity }}
             >
               <div className="flex flex-col items-center gap-1.5 sm:gap-2">
                 <motion.div
                   className={`text-lg sm:text-4xl ${phases[activePhase - 1].textColor} sm:text-current`}
                   style={{ color: phases[activePhase - 1].color.split(" ")[0].replace("from-", "") }}
-                  animate={{ 
+                  animate={getConditionalAnimation({ 
                     rotateY: 360,
                     scale: [1, 1.1, 1]
-                  }}
+                  })}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   {phases[activePhase - 1].icon}
