@@ -11,7 +11,7 @@ const Header = ({ title, subtitle }) => {
         transition={{ duration: 0.8 }}
         className="flex flex-col items-center text-center mb-12"
       >
-        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">
+        <h1 className="text-4xl sm:text-5xl font-bold text-white mb-2 m-4">
           {title || "Nuvos"}
         </h1>
         <p className="gradient-text text-xl sm:text-2xl font-medium">
