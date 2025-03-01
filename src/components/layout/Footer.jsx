@@ -124,7 +124,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v1.2 - USE AT YOUR OWN RISK
+            BETA v1.5 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

@@ -9,10 +9,12 @@ const AirdropInfo = lazy(() => import('./AirdropInfo'));
 const RewardDeveloper = lazy(() => import('./RewardDeveloper'));
 const AnnouncementModal = lazy(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazy(() => import('./TokenomicsSystem'));
+const Header = lazy(() => import('./Header'));
 
 const Home = () => {
   return (
     <div className="bg-nuvo-gradient">
+      <Header />
       <HeroSection />
       <Suspense fallback={<div>Loading...</div>}>
         <TokenomicsSystem />
