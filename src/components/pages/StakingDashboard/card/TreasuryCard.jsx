@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
-import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock } from 'react-icons/fa';
+import React, { useEffect, useState } from 'react';
+import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDown, FaChevronUp, FaExchangeAlt, FaShieldAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
+// Corrigiendo la importación para asegurarnos que sea correctaal';
+import TreasuryActivityModal from '../../../modals/TreasuryActivityModal';
 
 const TreasuryCard = () => {
   const { state, getTreasuryMetrics } = useStaking();
   const { treasuryMetrics } = state;
-
-  // Estilo para los números
-  const numberContainerStyle = "text-amber-100 font-medium text-base mt-1 text-center";
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     getTreasuryMetrics();
@@ -18,124 +18,148 @@ const TreasuryCard = () => {
 
   // Función para determinar el color del indicador de salud
   const getHealthColor = (score) => {
-    if (score >= 80) return 'bg-green-400';
-    if (score >= 50) return 'bg-yellow-400';
-    return 'bg-red-400';
+    if (score >= 80) return 'from-teal-400 to-teal-300';
+    if (score >= 50) return 'from-blue-400 to-teal-400';
+    return 'from-red-400 to-red-300';
   };
 
   // Función para determinar el estado del treasury
   const getTreasuryStatus = (score) => {
-    if (score >= 80) return 'Profits';
-    if (score >= 50) return 'Estable';
-    return 'Low Funds';
+    if (score >= 80) return 'Excellent';
+    if (score >= 50) return 'Stable';
+    return 'Caution';
   };
 
+  // Estos datos ya no son necesarios aquí porque se muestran en el modal
+  // Se mantiene una versión simplificada para la vista previa en la tarjeta
+  const recentTransactions = [
+    { type: 'Revenue', amount: '45.32', date: '2d ago' },
+    { type: 'Expense', amount: '18.75', date: '4d ago' },
+  ];
+
   return (
-    <BaseCard title="Treasury" icon={<FaPiggyBank className="text-amber-300" />}>
-      <div className="space-y-4">
-        {/* Main Balance */}
-        <div className="bg-amber-900/20 backdrop-blur-sm p-4 rounded-xl border border-amber-600/20 shadow-lg">
-          <div className="flex items-center">
-            <span className="text-amber-100/70">Total Balance</span>
-            <div className="ml-1.5 flex items-center">
-              <Tooltip content="Total funds secured in\ntreasury contract for\nprotocol operations">
-                <FaInfoCircle className="text-amber-400/60 hover:text-amber-300 w-3.5 h-3.5 cursor-help" />
+    <>
+      <BaseCard title="Treasury" icon={<FaPiggyBank className="text-teal-400" />}>
+        <div className="flex flex-col h-full space-y-5">
+          {/* Main Balance */}
+          <div className="bg-gradient-to-br from-blue-900/40 to-teal-900/30 p-5 rounded-2xl border border-teal-600/20 shadow-lg backdrop-blur-md hover:shadow-teal-700/10 transition-all duration-300">
+            <div className="flex items-center gap-2">
+              <span className="text-teal-100/70 text-sm font-medium tracking-wide">Total Balance</span>
+              <Tooltip content="Total funds secured in treasury contract for protocol operations">
+                <FaInfoCircle className="text-teal-400/80 hover:text-teal-300" />
               </Tooltip>
             </div>
-          </div>
-          <div className="flex items-baseline gap-2 mt-1">
-            <div className="text-3xl font-bold text-amber-50">
-              {formatBalance(treasuryMetrics?.balance)}
-            </div>
-            <div className="text-lg text-amber-300">POL</div>
-          </div>
-        </div>
-        
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-amber-900/20 backdrop-blur-sm p-4 rounded-xl border border-amber-600/20 shadow-lg relative">
-            <div className="flex items-center">
-              <span className="text-amber-100/70">24h Revenue</span>
-              <div className="ml-1.5 flex items-center">
-                <Tooltip content={`Revenue collected in the last 24h`}>
-                  <FaInfoCircle className="text-amber-400/60 hover:text-amber-300 w-3.5 h-3.5 cursor-help" />
-                </Tooltip>
+            <div className="flex items-baseline gap-2 transform hover:scale-105 transition-transform duration-300">
+              <div className="text-2xl font-bold text-teal-300 mt-1">
+                {formatBalance(treasuryMetrics?.balance)}
               </div>
-            </div>
-            <div className="text-xl font-bold text-amber-50 mt-1">
-              {formatBalance(treasuryMetrics?.dailyCommissions)}
+              <div className="text-sm text-teal-300/70">POL</div>
             </div>
           </div>
           
-          <div className="bg-amber-900/20 backdrop-blur-sm p-4 rounded-xl border border-amber-600/20 shadow-lg relative">
-            <div className="flex items-center">
-              <span className="text-amber-100/70">24h Growth</span>
-              <div className="ml-1.5 flex items-center">
-                <Tooltip content={`Net treasury balance change \nin the last 24 hours\n${treasuryMetrics?.dailyGrowth >= 0 ? 'Positive growth 📈' : 'Negative growth 📉'}`}>
-                  <FaInfoCircle className="text-amber-400/60 hover:text-amber-300 w-3.5 h-3.5 cursor-help" />
-                </Tooltip>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-blue-900/30 to-teal-900/20 p-5 rounded-2xl border border-blue-500/20 shadow-lg backdrop-blur-md hover:shadow-blue-700/10 transition-all duration-300">
+              <div className="flex items-center gap-2">
+                <FaChartLine className="w-4 h-4 text-teal-400" />
+                <span className="text-teal-100/70 text-sm font-medium tracking-wide">24h Revenue</span>
+              </div>
+              <div className="text-lg font-bold text-teal-300 mt-1">
+                {formatBalance(treasuryMetrics?.dailyCommissions)}
               </div>
             </div>
-            <div className={`text-xl font-bold mt-1 ${treasuryMetrics?.dailyGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {treasuryMetrics?.dailyGrowth > 0 ? '+' : ''}{treasuryMetrics?.dailyGrowth.toFixed(2)}%
+            
+            <div className="bg-gradient-to-br from-teal-900/30 to-blue-900/20 p-5 rounded-2xl border border-teal-500/20 shadow-lg backdrop-blur-md hover:shadow-teal-700/10 transition-all duration-300">
+              <div className="flex items-center gap-2">
+                <FaExchangeAlt className="w-4 h-4 text-teal-400" />
+                <span className="text-teal-100/70 text-sm font-medium tracking-wide">24h Growth</span>
+              </div>
+              <div className={`text-lg font-bold mt-1 ${treasuryMetrics?.dailyGrowth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {treasuryMetrics?.dailyGrowth > 0 ? '+' : ''}{treasuryMetrics?.dailyGrowth?.toFixed(2)}%
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Treasury Health */}
-        <div className="bg-amber-900/20 backdrop-blur-sm p-4 rounded-xl border border-amber-600/20 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center">
-              <div className={`w-2.5 h-2.5 rounded-full ${getHealthColor(treasuryMetrics?.healthScore)} animate-pulse`}></div>
-              <span className="text-amber-100/90 font-medium ml-2">{getTreasuryStatus(treasuryMetrics?.healthScore)}</span>
-              <div className="ml-1.5">
-                <Tooltip content="Treasury health indicates the overall stability and sustainability of the protocol's reserves">
-                  <FaInfoCircle className="text-amber-400/60 hover:text-amber-300 w-3.5 h-3.5 cursor-help" />
-                </Tooltip>
+          {/* Treasury Health */}
+          <div className="bg-gradient-to-br from-blue-900/30 to-teal-900/20 p-5 rounded-2xl border border-blue-600/20 shadow-lg backdrop-blur-md hover:shadow-blue-700/10 transition-all duration-300">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <FaShieldAlt className={`w-4 h-4 text-teal-400 ${treasuryMetrics?.healthScore >= 80 ? 'animate-pulse' : ''}`} />
+                <span className="text-teal-100/80 text-sm font-medium">Treasury Health</span>
+              </div>
+              <span className="text-sm px-3 py-1 bg-teal-900/40 text-teal-300 font-medium rounded-full">
+                {getTreasuryStatus(treasuryMetrics?.healthScore)}
+              </span>
+            </div>
+            
+            <div className="mb-3">
+              <div className="w-full bg-blue-900/40 rounded-full h-3 p-0.5">
+                <div 
+                  className={`h-2 rounded-full transition-all duration-1000 ease-out bg-gradient-to-r ${getHealthColor(treasuryMetrics?.healthScore)} shadow-inner shadow-teal-500/30`}
+                  style={{ width: `${Number(treasuryMetrics?.healthScore).toFixed(2)}%` }}
+                />
               </div>
             </div>
-            <span className="text-amber-50 font-bold">
-              {Number(treasuryMetrics?.healthScore).toFixed(2)}%
-            </span>
+            
+            <p className="text-xs text-teal-100/70 italic">
+              {treasuryMetrics?.healthScore >= 80 ? 'Treasury is in excellent condition with strong growth indicators' :
+              treasuryMetrics?.healthScore >= 50 ? 'Treasury is stable but monitoring is recommended' :
+              'Treasury requires attention - funds are below optimal levels'}
+            </p>
           </div>
-          
-          {/* Health Progress Bar */}
-          <div className="w-full h-2 bg-amber-900/40 rounded-full overflow-hidden">
-            <div 
-              className={`h-full ${getHealthColor(treasuryMetrics?.healthScore)} transition-all duration-500`}
-              style={{ width: `${Number(treasuryMetrics?.healthScore).toFixed(2)}%` }}
-            />
-          </div>
-          
-          {/* Status Description */}
-          <p className="text-xs text-amber-100/70 mt-2">
-            {treasuryMetrics?.healthScore >= 80 ? 'Treasury is in excellent condition with strong growth indicators' :
-             treasuryMetrics?.healthScore >= 50 ? 'Treasury is stable but monitoring is recommended' :
-             'Treasury requires attention - funds are below optimal levels'}
-          </p>
-        </div>
 
-        {/* Treasury Allocation */}
-        <div className="grid grid-cols-3 gap-3">
-          {['Locked', 'Funds', 'Airdrop'].map((label, index) => (
-            <div 
-              key={index} 
-              className="bg-amber-900/20 backdrop-blur-sm p-2.5 rounded-xl border border-amber-600/20 shadow-lg"
-            >
-              <div className="flex flex-col items-center">
-                {index === 0 && <FaLock className="w-4 h-4 mt-2 text-amber-300" />}
-                {index === 1 && <FaChartLine className="w-4 h-4 mt-2 text-amber-300" />}
-                {index === 2 && <FaHistory className="w-4 h-4 mt-2 text-amber-300" />}
-                <span className="text-amber-100/70 text-xs mt-1">{label}</span>
-                <div className="text-amber-50 font-medium text-base mt-1 text-center">
-                  {index === 0 ? '30%' : index === 1 ? '50%' : '20%'}
+          {/* Treasury Allocation - Grid de 3 columnas más moderna */}
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Locked', icon: <FaLock />, value: '30%', tooltip: 'Funds locked for long-term stability' },
+              { label: 'Operational', icon: <FaChartLine />, value: '50%', tooltip: 'Funds for day-to-day operations' },
+              { label: 'Rewards', icon: <FaHistory />, value: '20%', tooltip: 'Funds reserved for airdrops and rewards' }
+            ].map((item, index) => (
+              <div 
+                key={index} 
+                className="bg-gradient-to-br from-blue-900/20 to-teal-900/20 p-4 rounded-2xl border border-teal-600/20 
+                   hover:border-teal-500/40 transition-all duration-300 cursor-pointer shadow-lg backdrop-blur-md"
+              >
+                <div className="flex flex-col items-center">
+                  <div className="text-teal-400 mb-1">
+                    {item.icon}
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-teal-100/70 text-xs">{item.label}</span>
+                    <Tooltip content={item.tooltip}>
+                      <FaInfoCircle className="text-teal-400/60 hover:text-teal-300 w-3 h-3" />
+                    </Tooltip>
+                  </div>
+                  <div className="text-teal-300 font-bold text-lg mt-1">
+                    {item.value}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          
+          {/* Recent Transactions Preview */}
+          
+          
+          {/* Treasury Transactions - Botón para abrir modal */}
+          <div className="mt-auto">
+            <button 
+              onClick={() => setShowModal(true)}
+              className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-blue-900/40 to-teal-900/30 border border-blue-500/30 hover:border-teal-500/50 transition-all duration-300 text-teal-100 text-sm"
+            >
+              <FaFileInvoiceDollar className="text-teal-400 text-sm" />
+              Show Treasury Activity
+            </button>
+          </div>
         </div>
-      </div>
-    </BaseCard>
+      </BaseCard>
+
+      {/* Modal de actividad del tesoro */}
+      <TreasuryActivityModal 
+        isOpen={showModal} 
+        onClose={() => setShowModal(false)} 
+      />
+    </>
   );
 };
 

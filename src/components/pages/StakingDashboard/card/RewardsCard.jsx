@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaGift, FaInfoCircle } from 'react-icons/fa';
+import { FaGift, FaInfoCircle, FaCoins } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../Tooltip';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
-import { AnimatePresence } from 'framer-motion';
-import { ethers } from 'ethers'; // Añadir esta importación
+import { AnimatePresence, motion } from 'framer-motion';
+import { ethers } from 'ethers';
 
 const RewardsCard = ({ onClaim, showToast }) => {
   const [loading, setLoading] = useState(false);
@@ -152,6 +152,37 @@ const RewardsCard = ({ onClaim, showToast }) => {
     return { nextMilestone: 90, current: 0, bonus: 0, next: 1 };
   };
 
+  const buttonVariants = {
+    idle: { scale: 1 },
+    hover: { 
+      scale: 1.02,
+      boxShadow: '0 0 15px rgba(124, 58, 237, 0.6)',
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.98 },
+    disabled: { 
+      opacity: 0.5,
+      scale: 1,
+      boxShadow: 'none'
+    }
+  };
+
+  const shimmerAnimation = {
+    hidden: { 
+      backgroundPosition: '200% 0',
+      opacity: 0.8
+    },
+    visible: { 
+      backgroundPosition: '-200% 0',
+      opacity: 1,
+      transition: { 
+        repeat: Infinity, 
+        duration: 3,
+        ease: 'linear'
+      }
+    }
+  };
+
   return (
     <>
       <BaseCard title="Available Rewards" icon={<FaGift className="text-purple-300" />}>
@@ -220,30 +251,55 @@ const RewardsCard = ({ onClaim, showToast }) => {
             </div>
           </div>
 
-          {/* Claim Button */}
-          <button
+          {/* Claim Button - Redesigned */}
+          <motion.button
             onClick={handleClaim}
             disabled={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' || isPending}
+            variants={buttonVariants}
+            initial="idle"
+            whileHover={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' ? "disabled" : "hover"}
+            whileTap={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' ? "disabled" : "tap"}
             className={`
-              w-full bg-blue-800/30 backdrop-blur-sm p-4 rounded-xl 
-              border border-purple-600/20 shadow-lg
-              hover:bg-purple-800/30 hover:border-purple-500/40
+              relative w-full overflow-hidden
+              bg-gradient-to-r from-indigo-600/80 to-violet-500/80
+              backdrop-blur-sm p-4 rounded-xl 
+              border border-indigo-400/30
+              text-white font-medium 
+              shadow-lg shadow-indigo-900/30
               disabled:opacity-50 disabled:cursor-not-allowed
-              text-purple-100 font-medium transition-all duration-300
+              transition-all duration-300
               flex items-center justify-center gap-2
             `}
           >
             {loading ? (
-              <span className="text-purple-300/70">Claiming...</span>
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+                <span className="ml-2 text-white/90">Claiming...</span>
+              </div>
             ) : (
               <>
+                <FaCoins className="text-yellow-300" />
                 <span>Claim Rewards</span>
                 {userInfo.pendingRewards && userInfo.pendingRewards !== '0' && (
-                  <span className="text-purple-300">→</span>
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                    variants={shimmerAnimation}
+                    initial="hidden"
+                    animate="visible"
+                  />
+                )}
+                {userInfo.pendingRewards && userInfo.pendingRewards !== '0' && (
+                  <motion.span 
+                    className="absolute right-4"
+                    animate={{ x: [-5, 5], opacity: [0.7, 1] }}
+                    transition={{ repeat: Infinity, duration: 0.8, repeatType: "reverse" }}
+                  >
+                    →
+                  </motion.span>
                 )}
               </>
             )}
-          </button>
+          </motion.button>
         </div>
       </BaseCard>
 

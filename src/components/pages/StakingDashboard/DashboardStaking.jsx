@@ -1,21 +1,17 @@
-// src/components/layout/DashboardStaking/DashboardStaking.jsx
-import React, { useEffect, useState, useContext, useCallback, useRef } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { motion, AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
 import useContractData from "../../../hooks/useContractData";
 import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
-import { getStakingDuration } from "../../../utils/utils";
 import DashboardCards from "./card/DashboardCards";
-import ActionButtons from "./ActionButtons";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { formatBalance } from "../../../utils/formatters"; // Add this import
+import { formatBalance } from "../../../utils/formatters";
 import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
-import ROICard from './card/ROICard'; // Add this import
 import { calculateROIProgress } from '../../../utils/roiCalculations';
-import LoadingSpinner from "../../LoadOverlay/LoadingSpinner"; // Update this import
+import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
@@ -55,7 +51,7 @@ const DashboardStaking = () => {
     setIsConnected(account && network && balance !== null);
   }, [account, network, balance]);
 
-  // Modify the existing effect to include rewards fetching
+  // Modified effect to include rewards fetching
   useEffect(() => {
     if (isConnected) {
       const fetchDataAndRewards = async () => {
@@ -67,7 +63,7 @@ const DashboardStaking = () => {
           if (now - lastRewardsFetch.current >= REWARDS_UPDATE_INTERVAL) {
             lastRewardsFetch.current = now;
             // Force rewards update
-            await fetchContractData(false, true); // Add a parameter to specifically fetch rewards
+            await fetchContractData(false, true);
           }
         } catch (err) {
           console.error("Error fetching data:", err);
@@ -89,7 +85,7 @@ const DashboardStaking = () => {
     }
   }, [safeDepositAmount, safeTotalWithdrawn]);
 
-  // Verificar y validar la dirección del tesoro
+  // Verify and validate treasury address
   useEffect(() => {
     if (!TREASURY_ADDRESS) {
       console.error('Treasury address is not configured in environment variables');
@@ -105,19 +101,6 @@ const DashboardStaking = () => {
       }
     }
   }, []);
-
-  const handleWithdrawalSuccess = useCallback(async () => {
-    try {
-      // Actualizar todos los datos relevantes
-      await fetchContractData(true);
-      
-      // Recalcular ROI después de la actualización
-      const newRoi = calculateROIProgress(depositAmount, totalWithdrawn);
-      setRoiProgress(newRoi);
-    } catch (error) {
-      console.error("Error updating dashboard after withdrawal:", error);
-    }
-  }, [fetchContractData, depositAmount, totalWithdrawn]);
 
   // Simplified logging
   useEffect(() => {
@@ -172,19 +155,6 @@ const DashboardStaking = () => {
     treasuryBalance
   });
 
-  // Pre-define animation variants
-  const headerVariants = {
-    hidden: { opacity: 0, y: -20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    }
-  };
-
   return (
     <div className="bg-nuvo-gradient pt-24 pb-16 px-4 md:px-8">
       <div className="max-w-[1440px] mx-auto">
@@ -200,9 +170,7 @@ const DashboardStaking = () => {
               <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
                 Smart Staking
               </h1>
-              <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
-                BETA v1.0
-              </span>
+              
             </div>
             
             <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
