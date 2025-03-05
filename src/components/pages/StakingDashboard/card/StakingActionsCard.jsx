@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { FaExchangeAlt, FaInfoCircle } from 'react-icons/fa';
-import { AnimatePresence } from 'framer-motion';
+import { FaExchangeAlt, FaInfoCircle, FaArrowDown, FaArrowUp } from 'react-icons/fa';
+import { AnimatePresence, motion } from 'framer-motion';
 import BaseCard from './BaseCard';
 import { useStaking } from '../../../../context/StakingContext';
 import { parseEther } from 'ethers';
@@ -160,6 +160,16 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
     }
   };
 
+  const buttonVariants = {
+    idle: { scale: 1 },
+    hover: { 
+      scale: 1.02,
+      boxShadow: '0 0 15px rgba(149, 76, 233, 0.6)',
+      transition: { duration: 0.2 }
+    },
+    tap: { scale: 0.98 }
+  };
+
   return (
     <>
       <BaseCard title="Staking Actions" icon={<FaExchangeAlt className="text-purple-300" />}>
@@ -182,51 +192,87 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
             />
           </div>
 
-          {/* Action Buttons */}
+          {/* Action Buttons - Redesigned */}
           <div className="grid grid-cols-2 gap-3">
-            <button
+            <motion.button
               onClick={handleDeposit}
+              variants={buttonVariants}
+              initial="idle"
+              whileHover="hover"
+              whileTap="tap"
               className={`
-                bg-green-800/40 backdrop-blur-sm p-4 rounded-xl border border-purple-700/30
-                hover:bg-purple-800/30 hover:border-purple-500/40
+                bg-gradient-to-r from-emerald-600/80 to-teal-500/80 
+                backdrop-blur-sm p-4 rounded-xl 
+                border border-emerald-400/30
+                text-white font-medium 
+                shadow-lg shadow-emerald-900/30
                 disabled:opacity-50 disabled:cursor-not-allowed
-                text-purple-100 font-medium transition-all duration-300
+                transition-all duration-300
                 flex items-center justify-center gap-2
+                overflow-hidden relative
               `}
               disabled={loading || isContractPaused || !amount || parseFloat(amount) < MIN_DEPOSIT || parseFloat(amount) > MAX_DEPOSIT}
             >
               {loading ? (
-                <span className="text-purple-300/70">Processing...</span>
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+                  <span className="ml-2 text-white/90">Processing...</span>
+                </div>
               ) : (
                 <>
+                  <FaArrowDown className="text-white/80" />
                   <span>Deposit</span>
                   {amount && parseFloat(amount) >= MIN_DEPOSIT && parseFloat(amount) <= MAX_DEPOSIT && (
-                    <span className="text-purple-300">→</span>
+                    <motion.span 
+                      className="absolute right-4 opacity-0"
+                      animate={{ x: [10, 0], opacity: [0, 1] }}
+                      transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }}
+                    >
+                      →
+                    </motion.span>
                   )}
                 </>
               )}
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
               onClick={() => setShowWithdrawModal(true)}
+              variants={buttonVariants}
+              initial="idle"
+              whileHover="hover"
+              whileTap="tap"
               className={`
-                bg-pink-800/30 backdrop-blur-sm p-4 rounded-xl border border-pink-600/20
-                hover:bg-pink-800/30 hover:border-pink-500/40
+                bg-gradient-to-r from-rose-600/80 to-pink-500/80
+                backdrop-blur-sm p-4 rounded-xl 
+                border border-rose-400/30
+                text-white font-medium 
+                shadow-lg shadow-rose-900/30
                 disabled:opacity-50 disabled:cursor-not-allowed
-                text-pink-100 font-medium transition-all duration-300
+                transition-all duration-300
                 flex items-center justify-center gap-2
+                overflow-hidden relative
               `}
               disabled={loading}
             >
               {loading ? (
-                <span className="text-pink-300/70">Processing...</span>
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+                  <span className="ml-2 text-white/90">Processing...</span>
+                </div>
               ) : (
                 <>
+                  <FaArrowUp className="text-white/80" />
                   <span>Withdraw All</span>
-                  <span className="text-pink-300">←</span>
+                  <motion.span 
+                    className="absolute right-4 opacity-0"
+                    animate={{ x: [-10, 0], opacity: [0, 1] }}
+                    transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }}
+                  >
+                    ←
+                  </motion.span>
                 </>
               )}
-            </button>
+            </motion.button>
           </div>
         </div>
       </BaseCard>
