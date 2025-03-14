@@ -11,12 +11,18 @@ export const cspConfig = {
       'https://*.firebase.com',
       'https://*.firebaseio.com',
       'https://identitytoolkit.googleapis.com',
-      'https://polygon-rpc.com'
+      'https://polygon-rpc.com',
+      'https://rpc-mainnet.matic.network',
+      'https://matic-mainnet.chainstacklabs.com',
+      'https://rpc-mumbai.maticvigil.com',
+      'https://matic-mumbai.chainstacklabs.com'
     ],
     'img-src': [
       "'self'",
       'data:',
       'https://images.dodoex.io',
+      'https://*.dodoex.io',
+      'https://static.okx.com',
       'https://polygonscan.com',
       'https://*.googleapis.com'
     ],

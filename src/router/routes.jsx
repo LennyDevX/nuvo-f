@@ -28,7 +28,7 @@ const TokenomicsDashboard = preloadRoute(() => import('../components/pages/token
 const DashboardStaking = preloadRoute(() => import('../components/pages/StakingDashboard/DashboardStaking'));
 // Add loading delay for non-critical routes
 const Roadmap = preloadRoute(() => 
-  import('../components/pages/roadmap/Roadmap').then(module => {
+  import('../components/pages/roadmap/roadmap').then(module => {
     // Add artificial delay only in development
     if (process.env.NODE_ENV === 'development') {
       return new Promise(resolve => {

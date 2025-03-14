@@ -5,8 +5,34 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { FaGithub, FaCode, FaBug, FaBook, FaServer, FaShieldAlt, FaRocket, FaCogs, FaInfoCircle } from 'react-icons/fa';
 import { Tooltip } from 'react-tooltip';
-import HeroSection from './HeroSection';
 import ApplicationModal from '../../modals/ApplicationModal';
+
+const HeroSection = () => {
+  return (
+    <section className="py-16 md:py-24">
+      <div className="container mx-auto px-4">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center max-w-4xl mx-auto"
+        >
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+            Nuvo Roadmap
+          </h1>
+          
+          <p className="text-xl text-gray-300 mb-8">
+            Our journey to building the future of decentralized finance
+          </p>
+          
+          <div className="flex justify-center space-x-4 text-purple-400">
+            {/* Add any icons you need here without using SiPolygon */}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
 
 const Carrousel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);

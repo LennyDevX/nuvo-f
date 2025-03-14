@@ -11,16 +11,21 @@
 
     <!-- Optimized CSP -->
     <meta http-equiv="Content-Security-Policy" content="
-      default-src 'self';
-      connect-src 'self' 
-        https://*.dodoex.io 
-        https://*.alchemy.com 
-        wss://*.alchemy.com 
-        https://*.googleapis.com 
-        https://*.firebase.com 
-        https://*.firebaseio.com 
-        https://identitytoolkit.googleapis.com;
-      img-src 'self' data: https://*.dodoex.io https://polygonscan.com https://*.googleapis.com;
+    default-src 'self';
+    connect-src 'self' 
+      https://*.dodoex.io 
+      https://*.alchemy.com 
+      wss://*.alchemy.com 
+      https://*.googleapis.com 
+      https://*.firebase.com 
+      https://*.firebaseio.com 
+      https://identitytoolkit.googleapis.com
+      https://polygon-rpc.com
+      https://rpc-mainnet.matic.network
+      https://matic-mainnet.chainstacklabs.com
+      https://rpc-mumbai.maticvigil.com
+      https://matic-mumbai.chainstacklabs.com;
+    img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com;
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com;
       style-src 'self' 'unsafe-inline';
       font-src 'self' data:;
@@ -34,6 +39,7 @@
     <!-- Performance optimizations -->
     <link rel="dns-prefetch" href="https://api.dodoex.io">
     <link rel="dns-prefetch" href="https://polygon-mainnet.g.alchemy.com">
+    <link rel="dns-prefetch" href="https://static.okx.com">
     
     <!-- Preload critical content -->
     <link 
