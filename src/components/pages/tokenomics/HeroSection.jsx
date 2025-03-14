@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaRocket, FaLock, FaUsers } from 'react-icons/fa';
 
-const HeroSection = () => {
+const HeroSection = ({ onOpenTokenModal }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -40,15 +40,15 @@ const HeroSection = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold gradient-text">
             NUVOS Token
           </h1>
-          <p className="text-xl md:text-2xl  mt-4">
-            The Foundation of Our Digital Economy
+          <p className="text-xl md:text-2xl mt-4">
+            Powering Our Digital Ecosystem Today
           </p>
         </motion.div>
 
         <motion.div variants={itemVariants} className="max-w-3xl">
           <p className="text-gray-300 text-lg mb-6">
-            Introducing NUVOS, the cornerstone of our ecosystem with a fixed supply of 21M tokens.
-            Built for sustainability, transparency, and community-driven growth.
+            Experience NUVOS, the active cornerstone of our ecosystem with a fixed supply of 21M tokens.
+            Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.
           </p>
         </motion.div>
 
@@ -64,13 +64,13 @@ const HeroSection = () => {
             },
             {
               icon: <FaRocket className="text-purple-400 text-2xl mb-4" />,
-              title: "Launch Timeline",
-              description: "Pre-release: Q2 2025\nOfficial Launch: Q3 2025"
+              title: "Active Utility",
+              description: "Currently powering transactions and services across the Nuvos Cloud ecosystem"
             },
             {
               icon: <FaUsers className="text-purple-400 text-2xl mb-4" />,
-              title: "Community First",
-              description: "Priority access for community members during pre-release"
+              title: "Community Governed",
+              description: "Token holders participate in governance decisions and ecosystem development"
             }
           ].map((item, index) => (
             <div key={index} className="card-purple-gradient card-purple-wrapper">
@@ -85,11 +85,11 @@ const HeroSection = () => {
           variants={itemVariants}
           className="mt-8 flex flex-wrap gap-4"
         >
-          <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20">
+          <button 
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20"
+            onClick={onOpenTokenModal}
+          >
             Learn More
-          </button>
-          <button className="bg-transparent border border-purple-500 text-purple-400 hover:bg-purple-500/10 px-6 py-3 rounded-lg font-semibold transition-all duration-300">
-            Join Waitlist
           </button>
         </motion.div>
       </div>

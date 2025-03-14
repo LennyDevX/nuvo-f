@@ -57,11 +57,7 @@ const Footer = () => {
                   Documentation
                 </a>
               </li>
-              <li>
-                <Link to="/about#team" className="text-gray-400 hover:text-purple-400 transition-colors">
-                  Team
-                </Link>
-              </li>
+              
               <li>
               <Link 
                   to="/game" 

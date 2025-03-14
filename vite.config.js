@@ -35,7 +35,17 @@ export default defineConfig({
         .join('; '),
     },
     open: true,
-    cors: true
+    cors: true,
+    hmr: {
+      // Use manual to ensure WebSocket works properly
+      protocol: 'ws',
+      host: 'localhost',
+      port: 5173
+    },
+    watch: {
+      // Required for some Windows setups
+      usePolling: true
+    }  
   },
   build: {
     cssCodeSplit: true,

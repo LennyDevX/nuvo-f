@@ -79,12 +79,12 @@ const roadmapData = {
         title: "Stable Phase Foundation",
         icon: "🏗️",
         status: "Active",
-        progress: 20,
+        progress: 75,
         phase: "Foundation Phase",
         items: [
-          { text: "Develop core infrastructure for stability", status: "in-progress", date: "Jan 2025" },
-          { text: "Launch initial marketing campaigns", status: "in-progress", date: "Feb 2025" },
-          { text: "Revise tokenomics for improvements", status: "pending", date: "Mar 2025" }
+          { text: "Develop core infrastructure for stability", status: "completed", date: "Jan 2025" },
+          { text: "Create initial marketing campaigns", status: "completed", date: "Feb 2025" },
+          { text: "Revise tokenomics for improvements", status: "in-progress", date: "Mar 2025" }
         ]
       }
     ],
