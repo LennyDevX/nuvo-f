@@ -4,10 +4,10 @@
 
 NUVO DeFi aims to revolutionize the blockchain space by creating an integrated ecosystem that combines smart staking, rewards systems, exclusive access, and tokenized real-world assets. Built on the Polygon network, our goal is to develop a secure, efficient, and user-friendly platform that bridges decentralized finance (DeFi) with everyday applications.
 
-## 🚀 Current Status: Beta v1.6
+## 🚀 Current Status: Beta v1.7
 
 - **Weekly Updates:** Continuous improvements to optimize the platform.
-- **Beta Program Until Q1 2026:** Ongoing beta phase until the first quarter of 2026.
+- **Beta Program Until Q2 2026:** Ongoing beta phase until the first quarter of 2026.
 - **Active Developer Community:** A growing community of dedicated developers.
 - **Expanding User Base:** Consistent growth in our user community.
 
@@ -69,6 +69,7 @@ NUVO DeFi aims to revolutionize the blockchain space by creating an integrated e
 - **Discord:** [discord.gg/nuvodefi](https://discord.gg/ee5uZXej)
 - **Twitter:** [@nuvos_eth](https://x.com/nuvos_eth)
 - **GitHub:** [github.com/nuvo-defi](https://github.com/nuvo-defi)
+- **Telegram:**  [telegram.com/NuvoCloud](https://t.me/nuvoNFT)
 
 ---
 
