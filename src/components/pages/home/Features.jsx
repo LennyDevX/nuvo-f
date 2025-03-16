@@ -56,7 +56,7 @@ const Features = () => {
           {
             icon: <FaCode />,
             title: "Core Development",
-            status: "COMING SOON",
+            status: "LIVE",
             statusColor: "bg-blue-500",
             description: "Open-source platform for blockchain developers",
             features: [

@@ -5,7 +5,7 @@ import {
   FaExchangeAlt
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { formatBalance } from '../../utils/formatters';
+import { formatBalance } from '../../utils/Formatters';
 import { useStaking } from '../../context/StakingContext';
 import { ethers } from 'ethers';
 import useProvider from '../../hooks/useProvider';

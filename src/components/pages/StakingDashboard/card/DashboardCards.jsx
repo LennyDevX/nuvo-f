@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { calculateROIProgress } from '../../../../utils/roiCalculations';
+import { calculateROIProgress } from '../../../../utils/RoiCalculations';
 import StakingStatusCard from './StakingStatusCard';
 import RewardsCard from './RewardsCard';
 import PoolMetricsCard from './PoolMetricsCard';

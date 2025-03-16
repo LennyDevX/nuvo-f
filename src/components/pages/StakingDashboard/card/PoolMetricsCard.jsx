@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaTrophy, FaArrowUp, FaHistory, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
-import { formatBalance } from '../../../../utils/formatters';
+import { formatBalance } from '../../../../utils/Formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 

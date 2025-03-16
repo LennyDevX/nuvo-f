@@ -124,7 +124,7 @@ const AIHub = () => {
       <div className="text-center mb-16">
         <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
           <span className="bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text">
-            NUVO AI Ecosystem
+            NUVOS AI Ecosystem
           </span>
         </h1>
         <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto mb-6 rounded-full" />
@@ -266,15 +266,13 @@ const AIHub = () => {
   );
 };
 
-// Add this to your CSS or Tailwind config
-const styles = {
-  '@keyframes fadeIn': {
-    from: { opacity: 0, transform: 'translateY(20px)' },
-    to: { opacity: 1, transform: 'translateY(0)' }
-  },
-  '.animate-fade-in': {
-    animation: 'fadeIn 0.6s ease-out forwards'
-  }
-};
+// Add this animation to your CSS or Tailwind config
+// '@keyframes fadeIn': {
+//   from: { opacity: 0, transform: 'translateY(20px)' },
+//   to: { opacity: 1, transform: 'translateY(0)' }
+// },
+// '.animate-fade-in': {
+//   animation: 'fadeIn 0.6s ease-out forwards'
+// }
 
 export default AIHub;

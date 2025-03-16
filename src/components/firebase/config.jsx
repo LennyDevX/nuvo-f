@@ -1,6 +1,6 @@
 // src/firebase/config.jsx
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { collection, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { collection, getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 // Firebase configuration validation
@@ -30,7 +30,6 @@ const validateEnvVariables = () => {
     'VITE_FIREBASE_MESSAGING_SENDER_ID',
     'VITE_FIREBASE_APP_ID',
     'VITE_FIREBASE_MEASUREMENT_ID'
-
   ];
 
   const missing = required.filter(key => !import.meta.env[key]);
@@ -39,34 +38,34 @@ const validateEnvVariables = () => {
   }
 };
 
-
-
-// Validate before initializing
-validateEnvVariables();
-
-// Create Firebase config from environment variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE,
-  authDomain: import.meta.env.VITE_FIREBASE_AD,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-
 // Collection names
 const COLLECTION_NAMES = {
-  AIRDROPS: 'airdrops'
+  AIRDROPS: 'airdrops',
+  WHITELIST: 'whitelist'
 };
 
-// Initialize Firebase variables
+// Initialize Firebase variables - using singleton pattern
 let app;
 let db;
 let auth;
 let airdropsCollection;
+let whitelistCollection;
 
 try {
+  // Validate before initializing
+  validateEnvVariables();
+
+  // Create Firebase config from environment variables
+  const firebaseConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE,
+    authDomain: import.meta.env.VITE_FIREBASE_AD,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  };
+
   // Log configuration for debugging
   console.log('Initializing Firebase with config:', {
     apiKey: firebaseConfig.apiKey ? '***' : undefined,
@@ -80,21 +79,18 @@ try {
   // Validate configuration
   validateConfig(firebaseConfig);
 
-  // Initialize Firebase app
+  // Initialize Firebase app with singleton pattern
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   
-  // Initialize Firestore with persistence
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
-  });
-
+  // Initialize Firestore - USE GETFIRESTORE INSTEAD
+  db = getFirestore(app);
+  
   // Initialize Auth
   auth = getAuth(app);
   
   // Initialize collections
   airdropsCollection = collection(db, COLLECTION_NAMES.AIRDROPS);
+  whitelistCollection = collection(db, COLLECTION_NAMES.WHITELIST);
   
   console.log('Firebase initialized successfully');
 } catch (error) {
@@ -108,6 +104,7 @@ export {
   db, 
   auth,
   airdropsCollection,
+  whitelistCollection,
   COLLECTION_NAMES 
 };
 

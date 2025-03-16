@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaCoins, FaPuzzlePiece, FaRocket, FaArrowRight } from 'react-icons/fa';
+import { FaCoins, FaPuzzlePiece, FaRocket, FaArrowRight, FaList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import AirdropBox from './AirdropBox';
+import WhitelistModal from './WhitelistModal';
 
 const AirdropInfo = () => {
   const [isOpening, setIsOpening] = useState(false);
   const [showReward, setShowReward] = useState(false);
   const [expandedReward, setExpandedReward] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
   const handleBoxClick = () => {
@@ -34,18 +36,8 @@ const AirdropInfo = () => {
     }
   };
 
-  const handleAirdropNavigation = () => {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.3s ease';
-    
-    setTimeout(() => {
-      navigate('/airdrops');
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      
-      requestAnimationFrame(() => {
-        document.body.style.opacity = '1';
-      });
-    }, 300);
+  const openWhitelistModal = () => {
+    setShowModal(true);
   };
 
   const rewards = [
@@ -53,22 +45,22 @@ const AirdropInfo = () => {
       icon: <FaCoins />,
       text: "500 NUVO Tokens",
       color: "text-amber-400",
-      description: "Get 500 NUVO tokens instantly credited to your wallet. Use them for staking, governance, or trading. Early participants receive additional 20% bonus.",
-      highlight: "With incredib rewards and benefits"
+      description: "Reserve your NUVO tokens for the official launch in Q1 2026. Pre-sale will begin in Q4 2025. Early whitelist members receive an additional 20% bonus allocation.",
+      highlight: "Available after official launch in 2026"
     },
     {
       icon: <FaPuzzlePiece />,
       text: "Exclusive NFT",
       color: "text-purple-400",
-      description: "Receive a limited edition NFT that grants special access to platform features and future airdrops. Only available during launch phase.",
-      highlight: "Includes governance voting rights"
+      description: "Join the whitelist now to secure a limited edition NFT that will grant special access to platform features and future token allocations.",
+      highlight: "Priority access to pre-sale in Q4 2025"
     },
     {
       icon: <FaRocket />,
       text: "Staking Boost",
       color: "text-cyan-400",
-      description: "Enjoy up to 5% bonus on your staking rewards for the first 3 months. Stack with other bonuses for maximum yield.",
-      highlight: "Up to 125% APY boost"
+      description: "Whitelist members will enjoy up to 5% bonus on staking rewards upon token launch. Plan ahead for maximum yield potential.",
+      highlight: "Benefits available at launch in 2026"
     }
   ];
 
@@ -94,16 +86,22 @@ const AirdropInfo = () => {
             className="space-y-4"
           >
             <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] tracking-tight">
-              <span className="block mb-2">Claim Your</span>
-              <span className="gradient-text block mb-2">Exclusive Rewards</span>
-              <span className="block">In Our Airdrop</span>
+              <span className="block mb-2">Prepare For</span>
+              <span className="gradient-text block mb-2">Future Rewards</span>
+              <span className="block">Join Our Whitelist</span>
             </h2>
             
             <p className="text-sm sm:text-lg text-gray-300 max-w-xl mt-4 sm:mt-6">
-              Join our community and unlock exclusive rewards including NUVO tokens, 
-              rare NFTs, and special staking privileges. Don't miss out on this 
-              limited-time opportunity.
+              Get ready for our token launch with pre-sale in Q4 2025 and official DEX launch in Q1 2026. 
+              Join our whitelist now to secure your position for exclusive NUVO tokens, 
+              rare NFTs, and special staking privileges when we launch.
             </p>
+            
+            <div className="bg-black/30 border border-purple-500/20 rounded-lg p-3 sm:p-4">
+              <h3 className="text-amber-400 text-sm sm:text-base font-medium">Important Timeline:</h3>
+              <p className="text-xs sm:text-sm text-white">• Token Pre-sale: Q4 2025</p>
+              <p className="text-xs sm:text-sm text-white">• Official DEX Launch: Q1 2026</p>
+            </div>
           </motion.div>
 
           <motion.div
@@ -113,10 +111,10 @@ const AirdropInfo = () => {
             className="grid grid-cols-2 gap-2 sm:gap-4"
           >
             {[
-              { title: "NUVO Tokens", desc: "Get instant tokens" },
-              { title: "Rare NFTs", desc: "Exclusive collectibles" },
-              { title: "Staking Boost", desc: "Enhanced APY rates" },
-              { title: "Early Access", desc: "Platform features" }
+              { title: "NUVO Tokens", desc: "Future allocation" },
+              { title: "Rare NFTs", desc: "Pre-launch access" },
+              { title: "Priority Status", desc: "Guaranteed spots" },
+              { title: "Early Benefits", desc: "Launch advantages" }
             ].map((item, index) => (
               <div
                 key={index}
@@ -130,7 +128,7 @@ const AirdropInfo = () => {
 
           {showReward && (
             <motion.button
-              onClick={handleAirdropNavigation}
+              onClick={openWhitelistModal}
               className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full
                        text-sm sm:text-base text-white font-medium hover:from-purple-700 hover:to-pink-700
                        transition-all transform hover:-translate-y-1 flex items-center justify-center sm:justify-start gap-2
@@ -138,11 +136,13 @@ const AirdropInfo = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Register for Airdrop <FaArrowRight className="animate-bounce-x" />
+              Join Whitelist <FaList className="ml-1" />
             </motion.button>
           )}
         </div>
       </div>
+
+      {showModal && <WhitelistModal onClose={() => setShowModal(false)} />}
     </section>
   );
 };

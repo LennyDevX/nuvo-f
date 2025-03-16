@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDown, FaChevronUp, FaExchangeAlt, FaShieldAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
-import { formatBalance } from '../../../../utils/formatters';
+import { formatBalance } from '../../../../utils/Formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 // Corrigiendo la importación para asegurarnos que sea correctaal';

@@ -1,7 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
-import { checkRegionalEligibility } from '../../../../utils/regionCheck';
+import { checkRegionalEligibility } from '../../../../utils/RegionCheck';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../../Abi/Airdrop.json';
 

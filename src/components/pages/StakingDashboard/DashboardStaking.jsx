@@ -7,10 +7,10 @@ import DashboardCards from "./card/DashboardCards";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { formatBalance } from "../../../utils/formatters";
+import { formatBalance } from "../../../utils/Formatters";
 import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import Toast from '../../ui/Toast';
-import { calculateROIProgress } from '../../../utils/roiCalculations';
+import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
