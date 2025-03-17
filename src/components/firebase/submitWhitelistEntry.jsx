@@ -70,4 +70,42 @@ const submitWhitelistEntry = async (data) => {
   }
 };
 
+/**
+ * Checks if a wallet address has a pending whitelist submission
+ * 
+ * @param {string} walletAddress - The wallet address to check
+ * @returns {Promise<Object|null>} - The pending submission or null if none exists
+ */
+const getPendingSubmission = async (walletAddress) => {
+  try {
+    if (!walletAddress) {
+      throw new Error('Wallet address is required');
+    }
+
+    // Get reference to whitelist collection
+    const whitelistRef = collection(db, COLLECTION_NAMES.WHITELIST);
+    
+    // Create a query to find submissions for this wallet address
+    const walletQuery = query(whitelistRef, where('walletAddress', '==', walletAddress));
+    const querySnapshot = await getDocs(walletQuery);
+    
+    // If no submission exists, return null
+    if (querySnapshot.empty) {
+      return null;
+    }
+    
+    // Return the first matching submission
+    const submission = querySnapshot.docs[0].data();
+    return {
+      id: querySnapshot.docs[0].id,
+      ...submission,
+      submittedAt: submission.submittedAt ? submission.submittedAt.toDate().toISOString() : null
+    };
+  } catch (error) {
+    console.error('Error checking pending submission:', error);
+    throw error;
+  }
+};
+
 export default submitWhitelistEntry;
+export { getPendingSubmission };
