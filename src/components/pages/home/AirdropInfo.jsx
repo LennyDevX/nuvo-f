@@ -67,7 +67,13 @@ const AirdropInfo = () => {
   return (
     <section className="relative w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-6 sm:pb-16 lg:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start lg:items-center">
-        <div className="order-2 lg:order-1">
+        <motion.div 
+          initial={{ opacity: 0, x: -30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="order-2 lg:order-1"
+        >
           <AirdropBox
             isOpening={isOpening}
             showReward={showReward}
@@ -76,9 +82,15 @@ const AirdropInfo = () => {
             expandedReward={expandedReward}
             setExpandedReward={setExpandedReward}
           />
-        </div>
+        </motion.div>
 
-        <div className="space-y-4 sm:space-y-8 order-1 lg:order-2">
+        <motion.div 
+          initial={{ opacity: 0, x: 30 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="space-y-4 sm:space-y-8 order-1 lg:order-2"
+        >
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -139,7 +151,7 @@ const AirdropInfo = () => {
               Join Whitelist <FaList className="ml-1" />
             </motion.button>
           )}
-        </div>
+        </motion.div>
       </div>
 
       {showModal && <WhitelistModal onClose={() => setShowModal(false)} />}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import WalletConnect from '../web3/WalletConnect';
 import AirdropDownloader from '../firebase/AirdropDownloader';
+import BetaBadge from '../ui/BetaBadge'; // Import BetaBadge component
 import { 
   FaHome, 
   FaCoins, 
@@ -99,7 +100,13 @@ const Navbar = () => {
               </Link>
             ))}
             
-            
+            {/* Beta Badge in Desktop View */}
+            <div className="flex items-center ml-4">
+              <BetaBadge 
+                pulsate={true} 
+                className="border border-purple-400/30" 
+              />
+            </div>
           </div>
 
           {/* Wallet Connect - Modificado */}
@@ -184,7 +191,17 @@ const Navbar = () => {
               </a>
             </div>
 
-            
+            {/* Beta Badge in Mobile View */}
+            <div className="flex items-center justify-center p-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-400">Platform Status:</span>
+                <BetaBadge 
+                  size="normal" 
+                  pulsate={true}
+                  className="border border-purple-400/30" 
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

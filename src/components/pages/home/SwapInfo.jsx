@@ -9,20 +9,20 @@ const SwapInfo = () => {
       <div className="max-w-7xl mx-auto relative px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 items-center">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
             className="relative order-2 lg:order-1"
           >
             <DodoCarrousel />
           </motion.div>
 
           <motion.div 
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.8 }}
             className="space-y-4 sm:space-y-6 order-1 lg:order-2"
           >
             <h2 className="text-3xl sm:text-4xl lg:text-6xl font-bold leading-tight">
