@@ -39,8 +39,8 @@ const DashboardCards = ({
     };
 
     return (
-        // Updated background styles to be more consistent
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-5">
+            {/* First row - 4 equal cards */}
             <motion.div className="col-span-12 md:col-span-6 lg:col-span-3" custom={0} variants={cardVariants} initial="hidden" animate="visible">
                 <StakingStatusCard {...{account, depositAmount, network}} />
             </motion.div>
@@ -59,12 +59,12 @@ const DashboardCards = ({
                 <TreasuryCard treasuryBalance={treasuryBalance} />
             </motion.div>
 
-            {/* Bottom Row - Actions & Rewards with equal width */}
+            {/* Second row - 2 equal cards */}
             <motion.div className="col-span-12 md:col-span-6" custom={4} variants={cardVariants} initial="hidden" animate="visible">
                 <StakingActionsCard 
                     onDeposit={onDepositSuccess}
                     onWithdraw={onFetchData}
-                    showToast={showToast} // Asegurarse de que showToast se pasa correctamente
+                    showToast={showToast}
                 />
             </motion.div>
             <motion.div className="col-span-12 md:col-span-6" custom={5} variants={cardVariants} initial="hidden" animate="visible">

@@ -175,33 +175,33 @@ const PoolMetricsCard = () => {
   }, [showLeaderboard, stakingContract, state.provider, state.userDeposits]);
 
   return (
-    <BaseCard title="Pool Statistics" icon={<FaChartBar className="text-amber-400" />}>
-      <div className="flex flex-col h-full space-y-5">
+    <BaseCard title="Pool Statistics" icon={<FaChartBar className="text-indigo-400" />}>
+      <div className="flex flex-col h-full space-y-4">
         {/* TVL and Users Row */}
         <div className="grid grid-cols-3 gap-3">
           {/* TVL - 2/3 width */}
-          <div className="col-span-2 bg-gradient-to-br from-amber-900/40 to-yellow-900/30 p-5 rounded-2xl border border-amber-600/20 shadow-lg backdrop-blur-md hover:shadow-amber-700/10 transition-all duration-300">
+          <div className="col-span-2 bg-gradient-to-br from-indigo-900/30 to-violet-900/20 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
-              <span className="text-amber-100/70 text-sm font-medium tracking-wide">Total Value Locked</span>
-              <Tooltip content="Total amount of POL tokens\ncurrently staked in the\nstaking pool">
-                <FaInfoCircle className="text-amber-400/80 hover:text-amber-300" />
+              <span className="text-slate-400 text-xs font-medium">Total Value Locked</span>
+              <Tooltip content="Total amount of POL tokens currently staked in the staking pool">
+                <FaInfoCircle className="text-slate-400 hover:text-indigo-400" />
               </Tooltip>
             </div>
-            <div className="flex items-baseline gap-2 transform hover:scale-105 transition-transform duration-300">
-              <div className="text-2xl font-bold text-amber-300 mt-1">
-                {Number(formatBalance(metrics.totalStaked)).toFixed(4)}
+            <div className="flex items-baseline gap-2 mt-1">
+              <div className="text-2xl font-medium text-slate-100">
+                {Number(formatBalance(metrics.totalStaked)).toFixed(3)}
               </div>
-              <div className="text-sm text-amber-300/70">POL</div>
+              <div className="text-sm text-slate-400">POL</div>
             </div>
           </div>
 
           {/* Users - 1/3 width */}
-          <div className="bg-gradient-to-br from-yellow-900/30 to-amber-900/30 p-5 rounded-2xl border border-yellow-600/20 shadow-lg backdrop-blur-md hover:shadow-yellow-700/10 transition-all duration-300">
+          <div className="bg-gradient-to-br from-indigo-900/30 to-violet-900/20 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
-              <FaUsers className="w-4 h-4 text-yellow-400" />
-              <span className="text-amber-100/70 text-sm font-medium tracking-wide">Users</span>
+              <FaUsers className="w-4 h-4 text-indigo-400" />
+              <span className="text-slate-400 text-xs font-medium">Users</span>
             </div>
-            <div className="text-xl font-bold text-amber-300 mt-1 transform hover:scale-105 transition-transform duration-300">
+            <div className="text-xl font-medium text-slate-100 mt-1">
               {metrics.totalUsers}
             </div>
           </div>
@@ -209,52 +209,50 @@ const PoolMetricsCard = () => {
 
         {/* Rewards and Withdrawals Row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gradient-to-br from-amber-900/30 to-orange-900/20 p-5 rounded-2xl border border-amber-600/20 shadow-lg backdrop-blur-md hover:shadow-amber-700/10 transition-all duration-300">
+          <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
-              <FaCoins className="w-4 h-4 text-yellow-400" />
-              <span className="text-amber-100/70 text-sm font-medium tracking-wide">Rewards</span>
-              <Tooltip content="Total rewards distributed\nto stakers since pool\ndeployment">
-                <FaInfoCircle className="text-amber-400/80 hover:text-amber-300" />
+              <FaCoins className="w-4 h-4 text-indigo-400" />
+              <span className="text-slate-400 text-xs font-medium">Rewards</span>
+              <Tooltip content="Total rewards distributed to stakers since pool deployment">
+                <FaInfoCircle className="text-slate-400 hover:text-indigo-400" />
               </Tooltip>
             </div>
-            <div className="text-lg font-bold text-amber-300 mt-1">
+            <div className="text-lg font-medium text-slate-100 mt-1">
               {formatBalance(metrics.rewardsDistributed)} POL
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-orange-900/30 to-amber-900/30 p-5 rounded-2xl border border-orange-600/20 shadow-lg backdrop-blur-md hover:shadow-orange-700/10 transition-all duration-300">
+          <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <div className="relative">
-                <FaHistory className="w-4 h-4 text-amber-400" />
-                <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping"></div>
+                <FaHistory className="w-4 h-4 text-indigo-400" />
+                <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-indigo-400 rounded-full animate-ping"></div>
               </div>
-              <span className="text-amber-100/70 text-sm font-medium tracking-wide">Withdrawn</span>
+              <span className="text-slate-400 text-xs font-medium">Withdrawn</span>
             </div>
-            <div className="text-lg font-bold text-amber-300 mt-1">
+            <div className="text-lg font-medium text-slate-100 mt-1">
               {formatBalance(metrics.totalWithdrawn)} POL
             </div>
           </div>
         </div>
 
         {/* Community Goal Section */}
-        <div className="bg-gradient-to-br from-yellow-900/30 to-amber-900/20 p-5 rounded-2xl border border-yellow-600/20 shadow-lg backdrop-blur-md hover:shadow-yellow-700/10 transition-all duration-300">
+        <div className="bg-gradient-to-br from-violet-900/30 to-fuchsia-900/20 p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <FaGift className={`w-4 h-4 text-yellow-400 ${goalMetrics.isCompleted ? 'animate-bounce' : ''}`} />
-              <span className="text-amber-100/80 text-sm font-medium">Community Goal</span>
+              <FaGift className={`w-4 h-4 text-fuchsia-400 ${goalMetrics.isCompleted ? 'animate-bounce' : ''}`} />
+              <span className="text-slate-300 text-sm font-medium">Community Goal</span>
             </div>
-            <span className="text-sm px-3 py-1 bg-amber-900/40 text-amber-300 font-medium rounded-full">
+            <span className="text-xs px-2 py-0.5 bg-fuchsia-900/30 text-fuchsia-400 font-medium rounded-full">
               {goalMetrics.progressPercentage.toFixed(1)}%
             </span>
           </div>
 
           <div className="mb-3">
-            <div className="w-full bg-amber-900/40 rounded-full h-3 p-0.5">
+            <div className="w-full bg-slate-800/60 rounded-full h-2">
               <div 
                 className={`h-2 rounded-full transition-all duration-1000 ease-out
-                  ${goalMetrics.isCompleted 
-                    ? 'bg-gradient-to-r from-amber-400 to-yellow-300 animate-pulse shadow-inner shadow-yellow-500/50' 
-                    : 'bg-gradient-to-r from-amber-400 to-yellow-300 shadow-inner shadow-amber-500/30'}`}
+                  bg-gradient-to-r from-indigo-500 to-fuchsia-400`}
                 style={{ width: `${goalMetrics.progressPercentage}%` }}
               />
             </div>
@@ -262,12 +260,12 @@ const PoolMetricsCard = () => {
           
           <div className="flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-xs text-amber-100/70">Current: <b className="text-amber-300">{Number(goalMetrics.currentAmount).toFixed(2)} POL</b></span>
-              <span className="text-xs text-amber-100/70">Goal: <b className="text-amber-300">{Number(goalMetrics.goalAmount).toFixed(2)} POL</b></span>
+              <span className="text-xs text-slate-400">Current: <b className="text-slate-300">{Number(goalMetrics.currentAmount).toFixed(2)} POL</b></span>
+              <span className="text-xs text-slate-400">Goal: <b className="text-slate-300">{Number(goalMetrics.goalAmount).toFixed(2)} POL</b></span>
             </div>
-            <div className="bg-amber-900/40 px-3 py-1 rounded-lg flex items-center gap-2">
-              <span className="text-sm text-amber-100/80">Airdrop:</span>
-              <span className="text-sm font-bold text-amber-300">
+            <div className="bg-violet-900/30 px-2 py-1 rounded-lg flex items-center gap-2">
+              <span className="text-xs text-slate-400">Airdrop:</span>
+              <span className="text-sm font-medium text-violet-400">
                 {goalMetrics.airdropReward} POL
               </span>
             </div>
@@ -278,11 +276,11 @@ const PoolMetricsCard = () => {
         <div className="mt-auto">
           <button 
             onClick={() => setShowLeaderboard(!showLeaderboard)}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-amber-900/40 to-yellow-900/30 border border-amber-500/30 hover:border-yellow-500/50 transition-all duration-300 text-amber-100 text-sm"
+            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-indigo-900/30 to-violet-900/20 border border-indigo-700/20 hover:border-violet-600/30 transition-all duration-300 text-slate-300 text-sm hover:shadow-md hover:shadow-violet-900/5"
           >
-            <FaTrophy className="text-yellow-400 text-sm" />
+            <FaTrophy className="text-indigo-400 text-sm" />
             {showLeaderboard ? "Hide Pool Insights" : "Show Pool Insights"}
-            {showLeaderboard ? <FaChevronUp className="text-amber-300" /> : <FaChevronDown className="text-amber-300" />}
+            {showLeaderboard ? <FaChevronUp className="text-indigo-400" /> : <FaChevronDown className="text-indigo-400" />}
           </button>
           
           {showLeaderboard && (

@@ -156,7 +156,7 @@ const DashboardStaking = () => {
   });
 
   return (
-    <div className="bg-nuvo-gradient pt-24 pb-16 px-4 md:px-8">
+    <div className="bg-gradient-to-b from-slate-900 to-slate-800/95 min-h-screen pt-24 pb-16 px-4 md:px-8">
       <div className="max-w-[1440px] mx-auto">
         <LazyMotion features={domAnimation}>
           {/* Updated Hero Section */}
@@ -167,16 +167,15 @@ const DashboardStaking = () => {
             transition={{ duration: 0.6 }}
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+              <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-500">
                 Smart Staking
               </h1>
-              
             </div>
             
-            <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
+            <p className="text-lg text-slate-300/80 max-w-2xl mx-auto mb-2">
               Stake your tokens and earn rewards in our decentralized staking platform
             </p>
-            <p className="text-sm text-purple-200/40">
+            <p className="text-sm text-slate-400/60">
               Manage your staking positions and track your rewards in real-time
             </p>
           </m.div>
@@ -193,7 +192,6 @@ const DashboardStaking = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                     >
-                    
                       <DashboardCards
                         account={account}
                         network={network}
@@ -208,19 +206,23 @@ const DashboardStaking = () => {
                         onFetchData={fetchContractData}
                       />
                       <Tag network={network} />
-                      
                     </motion.div>
                   )}
                 </AnimatePresence>
               </>
             ) : (
               <motion.div
-                className="text-center py-8 bg-pink-400/5 rounded-xl p-6 border border-purple-500"
+                className="text-center py-20 bg-gradient-to-br from-indigo-900/20 to-violet-900/10 rounded-xl border border-indigo-700/20 shadow-md"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                <p className="text-lg text-white mb-4">
+                <div className="mb-8">
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
+                    <FaCoins className="h-10 w-10" />
+                  </div>
+                </div>
+                <p className="text-lg text-slate-300 mb-4">
                   Connect your wallet to view the dashboard information
                 </p>
               </motion.div>
