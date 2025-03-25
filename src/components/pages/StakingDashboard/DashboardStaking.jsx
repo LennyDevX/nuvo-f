@@ -7,7 +7,7 @@ import DashboardCards from "./card/DashboardCards";
 import Tag from "./Tag";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { formatBalance } from "../../../utils/Formatters";
+import { formatBalance } from "../../../utils/formatters"; // Changed from "../../../utils/Formatters"
 import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";

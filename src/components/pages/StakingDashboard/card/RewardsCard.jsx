@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { FaGift, FaInfoCircle, FaCoins } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../Tooltip';
-import { formatBalance } from '../../../../utils/Formatters';
+import { formatBalance } from '../../../../utils/formatters'; // Changed from "Formatters" to "formatters"
 import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
 import { AnimatePresence, motion } from 'framer-motion';
