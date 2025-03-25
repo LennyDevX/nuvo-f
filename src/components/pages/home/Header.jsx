@@ -12,8 +12,8 @@ const Header = ({ title, subtitle, openUpdatesModal }) => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.15, // Faster delay between letters
-        duration: 0.4,   // Shorter duration for smoother effect
+        delay: i * 0.20, // Faster delay between letters
+        duration: 0.2,   // Shorter duration for smoother effect
         ease: "easeIn"  // Smoother easing function
       }
     })
@@ -25,8 +25,8 @@ const Header = ({ title, subtitle, openUpdatesModal }) => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.4
+        staggerChildren: 0.20,
+        delayChildren: 0.2
       }
     }
   };
@@ -36,7 +36,7 @@ const Header = ({ title, subtitle, openUpdatesModal }) => {
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 2 }}
+        transition={{ duration: 5 }}
         className="flex flex-col items-center text-center mb-12"
       >
         <motion.div 
@@ -64,7 +64,7 @@ const Header = ({ title, subtitle, openUpdatesModal }) => {
         <motion.p 
           initial={{ opacity: 0, y: 0, x: 5 }}
           animate={{ opacity: 1, y: 0, x: 0 }}
-          transition={{ delay: 1.7, duration: 1 }} // Simplified timing
+          transition={{ delay: 1.7, duration: 1}} // Simplified timing
           className="gradient-text text-xl sm:text-2xl font-medium"
         >
           {subtitle || "Build your own blockchain ecosystem"}

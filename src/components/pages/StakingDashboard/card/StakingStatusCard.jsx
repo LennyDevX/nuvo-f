@@ -105,41 +105,6 @@ const StakingStatusCard = ({ account, depositAmount }) => {
         </div>
 
         {/* Deposits Overview */}
-        <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-slate-300 flex items-center gap-2 text-sm font-medium">
-              Deposit Utilization
-              <Tooltip content="Your deposit slot usage efficiency">
-                <FaInfoCircle className="text-slate-400 hover:text-violet-400" />
-              </Tooltip>
-            </span>
-            <span className="text-violet-400 font-medium px-2 py-0.5 bg-violet-900/30 rounded-full text-xs">
-              {memoizedValues.efficiency.toFixed(1)}%
-            </span>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="w-full bg-slate-800/60 rounded-full h-2">
-              <div
-                className="bg-gradient-to-r from-violet-500 to-fuchsia-400 h-2 rounded-full transition-all duration-1000"
-                style={{
-                  width: `${memoizedValues.efficiency}%`
-                }}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 text-sm mt-2">
-              <div className="bg-gradient-to-br from-indigo-900/20 to-violet-900/10 p-3 rounded-lg border border-indigo-700/15 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
-                <span className="text-slate-400 text-xs">Active Deposits</span>
-                <div className="text-slate-200 font-medium text-lg">{memoizedValues.actualDepositsCount}</div>
-              </div>
-              <div className="bg-gradient-to-br from-indigo-900/20 to-violet-900/10 p-3 rounded-lg border border-indigo-700/15 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
-                <span className="text-slate-400 text-xs">Available Slots</span>
-                <div className="text-slate-200 font-medium text-lg">{memoizedValues.actualRemainingSlots}</div>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Activity Summary */}
         <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">

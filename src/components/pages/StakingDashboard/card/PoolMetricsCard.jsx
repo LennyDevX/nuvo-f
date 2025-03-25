@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaTrophy, FaArrowUp, FaHistory, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import React, { useMemo } from 'react';
+import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaHistory, FaCalendarAlt, FaShieldAlt, FaLock, FaStar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
 import { formatBalance } from '../../../../utils/Formatters';
@@ -7,11 +7,7 @@ import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../Tooltip';
 
 const PoolMetricsCard = () => {
-  const { state, stakingContract } = useStaking();
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [topStakers, setTopStakers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { state } = useStaking();
   
   const metrics = useMemo(() => ({
     totalStaked: state?.totalPoolBalance || '0',
@@ -44,135 +40,6 @@ const PoolMetricsCard = () => {
       airdropReward: airdropReward.toFixed(2)
     };
   }, [state.totalPoolBalance]);
-
-  // Función para obtener actividad reciente del contrato
-  useEffect(() => {
-    const fetchRecentActivity = async () => {
-      if (!stakingContract || !state.provider) return;
-      
-      try {
-        setLoading(true);
-        
-        // Obtener eventos recientes (últimos 10)
-        const depositFilter = stakingContract.filters.DepositMade();
-        const withdrawFilter = stakingContract.filters.WithdrawalMade();
-        const rewardFilter = stakingContract.filters.RewardPaid();
-        
-        // Obtener el bloque actual
-        const currentBlock = await state.provider.getBlockNumber();
-        const blockRange = 10000; // Buscar en los últimos 10000 bloques
-        
-        // Consultar eventos
-        const [depositEvents, withdrawEvents, rewardEvents] = await Promise.all([
-          stakingContract.queryFilter(depositFilter, currentBlock - blockRange, currentBlock),
-          stakingContract.queryFilter(withdrawFilter, currentBlock - blockRange, currentBlock),
-          stakingContract.queryFilter(rewardFilter, currentBlock - blockRange, currentBlock)
-        ]);
-        
-        // Procesar y combinar eventos
-        let allEvents = [];
-        
-        // Procesar depósitos
-        for (const event of depositEvents) {
-          const block = await state.provider.getBlock(event.blockNumber);
-          allEvents.push({
-            type: 'deposit',
-            amount: ethers.formatEther(event.args?.amount || 0).substring(0, 6),
-            address: event.args?.user?.substring(0, 6) + '...' + event.args?.user?.substring(38),
-            time: new Date(block.timestamp * 1000),
-            timestamp: block.timestamp
-          });
-        }
-        
-        // Procesar retiros
-        for (const event of withdrawEvents) {
-          const block = await state.provider.getBlock(event.blockNumber);
-          allEvents.push({
-            type: 'withdraw',
-            amount: ethers.formatEther(event.args?.amount || 0).substring(0, 6),
-            address: event.args?.user?.substring(0, 6) + '...' + event.args?.user?.substring(38),
-            time: new Date(block.timestamp * 1000),
-            timestamp: block.timestamp
-          });
-        }
-        
-        // Procesar recompensas
-        for (const event of rewardEvents) {
-          const block = await state.provider.getBlock(event.blockNumber);
-          allEvents.push({
-            type: 'rewards',
-            amount: ethers.formatEther(event.args?.reward || 0).substring(0, 6),
-            address: event.args?.user?.substring(0, 6) + '...' + event.args?.user?.substring(38),
-            time: new Date(block.timestamp * 1000),
-            timestamp: block.timestamp
-          });
-        }
-        
-        // Ordenar por timestamp (más reciente primero)
-        allEvents.sort((a, b) => b.timestamp - a.timestamp);
-        
-        // Tomar los 5 eventos más recientes
-        const recentEvents = allEvents.slice(0, 5);
-        
-        // Formatear las horas para mostrar hace cuánto tiempo ocurrió
-        const formatTime = (timestamp) => {
-          const now = Math.floor(Date.now() / 1000);
-          const diff = now - timestamp;
-          
-          if (diff < 60) return `${diff}s ago`;
-          if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-          if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-          return `${Math.floor(diff / 86400)}d ago`;
-        };
-        
-        // Actualizar formato de tiempo
-        const formattedEvents = recentEvents.map(event => ({
-          ...event,
-          timeAgo: formatTime(event.timestamp)
-        }));
-        
-        setRecentActivity(formattedEvents);
-        
-        // También podemos intentar obtener los top stakers
-        // Esta lógica dependerá de cómo el contrato almacena esta información
-        if (state.userDeposits && state.userDeposits.length > 0) {
-          // Agrupar por dirección y sumar montos
-          const userTotals = {};
-          state.userDeposits.forEach(deposit => {
-            const addr = deposit.user;
-            if (!userTotals[addr]) {
-              userTotals[addr] = 0;
-            }
-            userTotals[addr] += parseFloat(ethers.formatEther(deposit.amount));
-          });
-          
-          // Convertir a array y ordenar
-          const sortedUsers = Object.entries(userTotals)
-            .map(([address, amount]) => ({ 
-              address: address.substring(0, 6) + '...' + address.substring(38),
-              amount: amount.toFixed(2)
-            }))
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 5)
-            .map((user, index) => ({
-              ...user,
-              rank: index + 1
-            }));
-          
-          setTopStakers(sortedUsers);
-        }
-        
-      } catch (error) {
-        console.error("Error fetching recent activity:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    if (showLeaderboard) {
-      fetchRecentActivity();
-    }
-  }, [showLeaderboard, stakingContract, state.provider, state.userDeposits]);
 
   return (
     <BaseCard title="Pool Statistics" icon={<FaChartBar className="text-indigo-400" />}>
@@ -263,93 +130,12 @@ const PoolMetricsCard = () => {
               <span className="text-xs text-slate-400">Current: <b className="text-slate-300">{Number(goalMetrics.currentAmount).toFixed(2)} POL</b></span>
               <span className="text-xs text-slate-400">Goal: <b className="text-slate-300">{Number(goalMetrics.goalAmount).toFixed(2)} POL</b></span>
             </div>
-            <div className="bg-violet-900/30 px-2 py-1 rounded-lg flex items-center gap-2">
-              <span className="text-xs text-slate-400">Airdrop:</span>
-              <span className="text-sm font-medium text-violet-400">
-                {goalMetrics.airdropReward} POL
-              </span>
-            </div>
+            
           </div>
         </div>
 
-        {/* Nuevo elemento: Top Contributors y Recent Activity */}
-        <div className="mt-auto">
-          <button 
-            onClick={() => setShowLeaderboard(!showLeaderboard)}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-indigo-900/30 to-violet-900/20 border border-indigo-700/20 hover:border-violet-600/30 transition-all duration-300 text-slate-300 text-sm hover:shadow-md hover:shadow-violet-900/5"
-          >
-            <FaTrophy className="text-indigo-400 text-sm" />
-            {showLeaderboard ? "Hide Pool Insights" : "Show Pool Insights"}
-            {showLeaderboard ? <FaChevronUp className="text-indigo-400" /> : <FaChevronDown className="text-indigo-400" />}
-          </button>
-          
-          {showLeaderboard && (
-            <div className="grid grid-cols-2 gap-3 mt-2">
-              {/* Top Contributors */}
-              <div className="bg-gradient-to-br from-amber-900/30 to-yellow-900/20 p-3 rounded-xl border border-amber-500/30 shadow-lg backdrop-blur-md">
-                <h4 className="text-amber-200 font-medium text-xs mb-2 flex items-center gap-1 uppercase tracking-wider">
-                  <FaTrophy className="text-yellow-400 text-xs" /> Top Stakers
-                </h4>
-                <div className="space-y-1">
-                  {loading && <div className="text-amber-100/60 text-xs text-center py-2">Loading...</div>}
-                  
-                  {!loading && topStakers.length === 0 && (
-                    <div className="text-amber-100/60 text-xs text-center py-2">No data available</div>
-                  )}
-                  
-                  {!loading && topStakers.map((user) => (
-                    <div key={user.rank} className="flex justify-between items-center text-xs py-1 border-b border-amber-700/20 last:border-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 rounded-full flex items-center justify-center 
-                          ${user.rank === 1 ? 'bg-yellow-500/80 text-yellow-900' : 
-                            user.rank === 2 ? 'bg-amber-400/70 text-amber-900' : 'bg-orange-300/60 text-orange-900'} 
-                          font-bold text-[10px]`}
-                        >
-                          {user.rank}
-                        </span>
-                        <span className="text-amber-100/80 font-medium">{user.address}</span>
-                      </div>
-                      <span className="text-amber-300 font-medium">{user.amount}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              {/* Recent Activity */}
-              <div className="bg-gradient-to-br from-yellow-900/30 to-amber-900/20 p-3 rounded-xl border border-yellow-500/30 shadow-lg backdrop-blur-md">
-                <h4 className="text-amber-200 font-medium text-xs mb-2 flex items-center gap-1 uppercase tracking-wider">
-                  <FaHistory className="text-yellow-400 text-xs" /> Recent Activity
-                </h4>
-                <div className="space-y-1">
-                  {loading && <div className="text-amber-100/60 text-xs text-center py-2">Loading...</div>}
-                  
-                  {!loading && recentActivity.length === 0 && (
-                    <div className="text-amber-100/60 text-xs text-center py-2">No recent activity</div>
-                  )}
-                  
-                  {!loading && recentActivity.map((activity, i) => (
-                    <div key={i} className="flex justify-between items-center text-xs py-1 border-b border-amber-700/20 last:border-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`w-4 h-4 rounded-full flex items-center justify-center 
-                          ${activity.type === 'deposit' ? 'bg-green-500/20 text-green-300' : 
-                            activity.type === 'withdraw' ? 'bg-red-500/20 text-red-300' : 'bg-blue-500/20 text-blue-300'}`}
-                        >
-                          {activity.type === 'deposit' ? <FaArrowUp className="w-2 h-2" /> : 
-                            activity.type === 'withdraw' ? "-" : "+"}
-                        </span>
-                        <span className="text-amber-100/80 font-medium capitalize">{activity.type}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-300 font-medium">{activity.amount}</span>
-                        <span className="text-amber-100/50 text-[10px]">{activity.timeAgo}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* New Staking Information Section */}
+        
       </div>
     </BaseCard>
   );

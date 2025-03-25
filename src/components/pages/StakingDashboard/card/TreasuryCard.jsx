@@ -109,34 +109,7 @@ const TreasuryCard = () => {
           </div>
 
           {/* Treasury Allocation Grid */}
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: 'Locked', icon: <FaLock />, value: '30%', tooltip: 'Funds locked for long-term stability' },
-              { label: 'Operational', icon: <FaChartLine />, value: '50%', tooltip: 'Funds for day-to-day operations' },
-              { label: 'Rewards', icon: <FaHistory />, value: '20%', tooltip: 'Funds reserved for airdrops and rewards' }
-            ].map((item, index) => (
-              <div 
-                key={index} 
-                className="bg-gradient-to-br from-violet-900/20 to-fuchsia-900/10 p-3 rounded-xl border border-violet-700/15 
-                   hover:border-fuchsia-600/30 hover:shadow-md hover:shadow-fuchsia-900/5 transition-all duration-300 cursor-pointer shadow-sm"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="text-purple-400 mb-1">
-                    {item.icon}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-400 text-xs">{item.label}</span>
-                    <Tooltip content={item.tooltip}>
-                      <FaInfoCircle className="text-slate-500 hover:text-purple-400 w-3 h-3" />
-                    </Tooltip>
-                  </div>
-                  <div className="text-slate-200 font-medium text-lg mt-1">
-                    {item.value}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          
           
           {/* Treasury Transactions - Button */}
           <div className="mt-auto">

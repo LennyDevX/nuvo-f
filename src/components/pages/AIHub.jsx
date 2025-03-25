@@ -53,7 +53,7 @@ const AIHub = () => {
       x: 0,
       transition: {
         delay: i * 0.15,
-        duration: 0.4,
+        duration: 0.2,
         ease: "easeIn"
       }
     })
@@ -66,7 +66,7 @@ const AIHub = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.10,
-        delayChildren: 0.4
+        delayChildren: 0.2
       }
     }
   };
@@ -174,7 +174,6 @@ const AIHub = () => {
             ))}
           </motion.div>
           
-          <div className="w-24 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto mb-6 rounded-full" />
           
           <motion.p 
             initial={{ opacity: 0, y: 0, x: 5 }}
