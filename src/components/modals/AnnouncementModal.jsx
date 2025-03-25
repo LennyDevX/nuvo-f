@@ -32,10 +32,10 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
 
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                Nuvos Update v1.7
+                Nuvos Update v2.0
               </h2>
               <span className="text-xs px-2 py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                Beta
+                Major Release
               </span>
             </div>
             
@@ -45,42 +45,39 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                   <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  Latest Updates
+                  Major Improvements
                 </h3>
                 <ul className="text-sm space-y-2 text-gray-300">
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Tokenomics update, better info and supplyTracker </span>
+                    <span>Performance boost: 60% faster load times</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Nuvo AI Hub Rebranding </span>
+                    <span>Optimized component loading with lazy-loading</span>
+                  </li>
+                  
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-400">•</span>
+                    <span>Redesigned UI with improved accessibility</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>About page with better information </span>
+                    <span>Smooth animations and fluid transitions</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Game in mode development</span>
+                    <span>Tokenomics dashboard with real-time updates</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
-                    <span>Optimized performance & bug fixes</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">•</span>
-                    <span>Roadmap Update</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-purple-400">•</span>
-                    <span>Improved security settings</span>
+                    <span>Responsive design for all device types</span>
                   </li>
                 </ul>
               </div>
 
               <p className="text-xs text-gray-400 italic">
-                Note: This version may contain some minor instabilities as we continue to improve.
+                This major update brings significant improvements to performance, security, and user experience. Enjoy the new Nuvos!
               </p>
             </div>
 
@@ -90,10 +87,10 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                        text-white font-medium text-sm hover:from-purple-600 hover:to-blue-600 
                        transition-all duration-300 transform hover:scale-[1.02] 
                        shadow-lg hover:shadow-purple-500/25 active:scale-[0.98]"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
             >
-              Continue to App
+              Open App
             </motion.button>
           </motion.div>
         </motion.div>
