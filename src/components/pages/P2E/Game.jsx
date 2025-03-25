@@ -7,6 +7,32 @@ const Game = () => {
   const { walletConnected } = useContext(WalletContext);
   const [showAlert, setShowAlert] = useState(false);
 
+  // Letter-by-letter animation variants
+  const letterVariants = {
+    hidden: { opacity: 0, x: 3 },
+    visible: (i) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.15,
+        duration: 0.4,
+        ease: "easeIn"
+      }
+    })
+  };
+
+  // Container animation for title
+  const titleContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.10,
+        delayChildren: 0.4
+      }
+    }
+  };
+
   useEffect(() => {
     // Show alert after a short delay
     const timer = setTimeout(() => setShowAlert(true), 500);
@@ -15,16 +41,16 @@ const Game = () => {
 
   if (!walletConnected) {
     return (
-      <div className="flex items-center justify-center h-[70vh] text-white">
+      <div className="bg-nuvo-gradient flex items-center justify-center h-[70vh] text-white">
         <p>Por favor conecta tu wallet para acceder al juego.</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 mt-16 mb-24">
-      <div className="max-w-6xl mx-auto">
-        {/* Header section */}
+    <div className="bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
+      <div className="container mx-auto px-4 py-6 max-w-6xl">
+        {/* Header section with animated title */}
         <motion.div 
           className="text-center mb-16"
           initial={{ opacity: 0, y: -20 }}
@@ -37,13 +63,40 @@ const Game = () => {
           >
             <FaGamepad className="text-4xl text-purple-400" />
           </motion.div>
-          <h1 className="text-5xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500">
-            Nuvo Gaming
-          </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+          
+          {/* Animated title */}
+          <motion.div
+            variants={titleContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 overflow-hidden"
+          >
+            {Array.from("Nuvo Gaming").map((char, index) => (
+              <motion.span
+                key={index}
+                custom={index}
+                variants={letterVariants}
+                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500 
+                         drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
+                         transition-all duration-600 text-5xl font-bold"
+                style={{
+                  textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </motion.span>
+            ))}
+          </motion.div>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 0, x: 5 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            transition={{ delay: 1.7, duration: 1 }}
+            className="text-gray-400 text-lg max-w-2xl mx-auto"
+          >
             Prepárate para una experiencia de juego revolucionaria en la blockchain. 
             Gana tickets, participa en sorteos y obtén recompensas exclusivas.
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* Development Status Card */}
@@ -123,7 +176,7 @@ const Game = () => {
 };
 
 // Helper component for feature cards
-const FeatureCard = ({ title, description, color }) => s(
+const FeatureCard = ({ title, description, color }) => (
   <motion.div
     whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(139, 92, 246, 0.2)" }}
     className={`bg-gradient-to-br ${color} p-6 rounded-xl border border-slate-700/50`}

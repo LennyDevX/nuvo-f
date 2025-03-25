@@ -28,8 +28,11 @@ const TokenomicsSystem = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-4xl font-bold text-white mb-6">
-              Tokenomics That Drive Value
+            {/* Título con degradado */}
+            <h2 className="text-4xl font-bold mb-6">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
+                Tokenomics That Drive Value
+              </span>
             </h2>
             <p className="text-gray-300 mb-8">
               Our token distribution is designed to ensure long-term sustainability and 
@@ -57,7 +60,7 @@ const TokenomicsSystem = () => {
             </div>
             <button
               onClick={() => navigate('/tokenomics')}
-              className="px-4 py-4 mt-8 bg-purple-600 hover:bg-purple-700 text-white rounded-full transition-colors duration-200"
+              className="px-6 py-4 mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
             >
               Learn More About Tokenomics
             </button>
@@ -97,8 +100,10 @@ const TokenomicsSystem = () => {
                   content={({ payload }) => {
                     if (payload && payload[0]) {
                       return (
-                        <div className="bg-gray-800 p-2 rounded-lg">
-                          <p className="text-white">{`${payload[0].name}: ${payload[0].value}%`}</p>
+                        <div className="bg-gray-900 p-3 rounded-lg shadow-md">
+                          <p className="text-white text-sm font-semibold">
+                            {`${payload[0].name}: ${payload[0].value}%`}
+                          </p>
                         </div>
                       );
                     }

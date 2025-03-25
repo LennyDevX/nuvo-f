@@ -11,6 +11,32 @@ const SwapToken = () => {
   const [showTooltip, setShowTooltip] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState(null);
 
+  // Letter-by-letter animation variants
+  const letterVariants = {
+    hidden: { opacity: 0, x: 3 },
+    visible: (i) => ({
+      opacity: 1,
+      x: 0,
+      transition: {
+        delay: i * 0.15,
+        duration: 0.4,
+        ease: "easeIn"
+      }
+    })
+  };
+
+  // Container animation for title
+  const titleContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.10,
+        delayChildren: 0.4
+      }
+    }
+  };
+
   const isWalletConnected = useMemo(() => 
     Boolean(account && network && balance !== null),
     [account, network, balance]
@@ -112,12 +138,38 @@ const SwapToken = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-3 sm:mb-4 gradient-text px-2">
-            Nuvos Swap
-          </h1>
-          <p className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4">
+          {/* Animated title */}
+          <motion.div
+            variants={titleContainerVariants}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 overflow-hidden"
+          >
+            {Array.from("Nuvos Swap").map((char, index) => (
+              <motion.span
+                key={index}
+                custom={index}
+                variants={letterVariants}
+                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
+                         drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
+                         transition-all duration-600 text-2xl sm:text-4xl md:text-5xl font-bold"
+                style={{
+                  textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
+                }}
+              >
+                {char === ' ' ? '\u00A0' : char}
+              </motion.span>
+            ))}
+          </motion.div>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 0, x: 5 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            transition={{ delay: 1.7, duration: 1 }}
+            className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4"
+          >
             Intercambia tus tokens de manera rápida y segura
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* Adjust NetworkBadge margins */}

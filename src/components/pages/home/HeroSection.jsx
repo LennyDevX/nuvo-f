@@ -11,9 +11,9 @@ const HeroSection = () => {
         {/* Left Column - Content */}
         <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}  // Notice 'animate' instead of 'whileInView' for first view
+            transition={{ duration: 0.8 }}
             className="space-y-4"
           >
             <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] sm:leading-tight tracking-tight">
@@ -29,9 +29,9 @@ const HeroSection = () => {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}  // Notice 'animate' instead of 'whileInView' for first view
+            transition={{ duration: 0.8, delay: 0.2 }}
             className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 mt-8"
           >
             {[
@@ -55,9 +55,9 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}  // Notice 'animate' instead of 'whileInView' for first view
+            transition={{ duration: 0.8, delay: 0.4 }}
             className="flex flex-col xs:flex-row gap-3 sm:gap-4 mt-8 sm:mt-10"
           >
             <Link
@@ -77,9 +77,9 @@ const HeroSection = () => {
 
         {/* Right Column - Calculator */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}  // Notice 'animate' instead of 'whileInView' for first view
+          transition={{ duration: 1, delay: 0.2 }}
           className="relative mt-8 lg:mt-0"
         >
           <div className="relative max-w-md mx-auto">

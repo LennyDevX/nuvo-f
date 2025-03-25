@@ -1,18 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AnnouncementModal = () => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    setIsOpen(true);
-  }, []);
-
-  const closeModal = () => {
-    setIsOpen(false);
-  };
-
+const AnnouncementModal = ({ isOpen, closeModal }) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -21,17 +11,25 @@ const AnnouncementModal = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.3 }}
+          onClick={closeModal}
         >
           <motion.div
             className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-gray-900/95 rounded-xl 
-                     p-6 sm:p-8 max-w-md w-full border border-purple-500/20 
-                     shadow-[0_0_3rem_-0.5rem_#8b5cf6] relative"
-            initial={{ scale: 0.9, y: 20 }}
+                     p-6 sm:p-8 max-w-md w-full border border-purple-500/30 
+                     shadow-[0_0_4rem_-0.5rem_rgba(139,92,246,0.7)] relative
+                     backdrop-blur-sm"
+            initial={{ scale: 0.9, y: 30 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            transition={{ type: "spring", duration: 0.4 }}
+            exit={{ scale: 0.9, y: 20, opacity: 0 }}
+            transition={{ 
+              type: "spring", 
+              damping: 25, 
+              stiffness: 300 
+            }}
+            onClick={(e) => e.stopPropagation()}
           >
+
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
                 Nuvos Update v1.7
@@ -43,11 +41,14 @@ const AnnouncementModal = () => {
             
             <div className="space-y-4 text-gray-100">
               <div className="bg-purple-500/10 p-4 rounded-lg border border-purple-500/20">
-                <h3 className="text-sm font-medium text-purple-400 mb-2">
-                  � Latest Updates
+                <h3 className="text-sm font-medium text-purple-400 mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Latest Updates
                 </h3>
                 <ul className="text-sm space-y-2 text-gray-300">
-                <li className="flex items-start gap-2">
+                  <li className="flex items-start gap-2">
                     <span className="text-purple-400">•</span>
                     <span>Tokenomics update, better info and supplyTracker </span>
                   </li>

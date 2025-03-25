@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
-import { revenueStreamsData, chartOptions } from '../../../utils/chartConfig';
-import '../../../utils/chartSetup';
+import { revenueStreamsData, chartOptions } from '../../../utils/ChartConfig';
+import '../../../utils/ChartSetup';
 
 const RevenueStreams = () => {
   const chartRef = useRef(null);

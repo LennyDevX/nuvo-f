@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import HeroSection from '../home/HeroSection';
 
@@ -12,9 +12,14 @@ const TokenomicsSystem = lazy(() => import('./TokenomicsSystem'));
 const Header = lazy(() => import('./Header'));
 
 const Home = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
   return (
     <div className="bg-nuvo-gradient">
-      <Header />
+      <Header openUpdatesModal={openModal} />
       <HeroSection />
       <Suspense fallback={<div>Loading...</div>}>
         <TokenomicsSystem />
@@ -22,7 +27,7 @@ const Home = () => {
         <RewardDeveloper />
         <AirdropInfo />
         <Features />
-        <AnnouncementModal />
+        <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
       </Suspense> 
     </div>
   );

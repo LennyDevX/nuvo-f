@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { FaInfoCircle, FaStar, FaCalendarAlt, FaPercent, FaLightbulb, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaInfoCircle, FaStar, FaCalendarAlt, FaPercent, FaCheck } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../Tooltip';
 
@@ -125,75 +125,7 @@ function ROICard({ firstDepositTime }) {
         )}
 
         {/* Bonus Tiers Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { days: 90, bonus: 1, roi: (0.01 * (1 + 1/100)) * 24 },
-            { days: 180, bonus: 3, roi: (0.01 * (1 + 3/100)) * 24 },
-            { days: 365, bonus: 5, roi: (0.01 * (1 + 5/100)) * 24 }
-          ].map((level, index) => (
-            <div
-              key={level.days}
-              className={`group bg-gradient-to-br from-indigo-900/20 to-violet-900/20 p-4 rounded-2xl border border-violet-600/20 
-                 hover:border-fuchsia-500/40 transition-all duration-300 cursor-pointer shadow-lg backdrop-blur-md 
-                 ${stakingInfo.days >= level.days ? 'ring-2 ring-fuchsia-500/30' : ''}`}
-            >
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-lg font-bold text-violet-50 flex items-center gap-2">
-                  {level.days}d
-                  {stakingInfo.days >= level.days && (
-                    <span className="bg-fuchsia-900/40 text-fuchsia-300 text-xs px-2 py-0.5 rounded-full">Active</span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <FaPercent className="text-purple-400/70" />
-                <div className="text-xl font-bold text-fuchsia-300">
-                  +{level.bonus}%
-                </div>
-              </div>
-              
-              <div className="text-sm text-purple-400/80 mt-2 font-medium group-hover:text-fuchsia-300 transition-colors duration-300">
-                {level.roi.toFixed(3)}% ROI 
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Bonus Info Button - Reemplaza la sección informativa con un botón */}
-        <div className="mt-auto">
-          <button 
-            onClick={() => setShowDetails(!showDetails)}
-            className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-violet-900/40 to-fuchsia-900/30 border border-violet-500/30 hover:border-fuchsia-500/50 transition-all duration-300 text-violet-100 text-sm"
-          >
-            <FaLightbulb className="text-yellow-400 text-sm" />
-            {showDetails ? "Hide Bonus Details" : "How Time Bonuses Work"}
-            {showDetails ? <FaChevronUp className="text-fuchsia-300" /> : <FaChevronDown className="text-fuchsia-300" />}
-          </button>
-          
-          {/* Información condensada que aparece solo cuando se expande */}
-          {showDetails && (
-            <div className="bg-gradient-to-br from-purple-900/30 to-violet-900/20 p-3 rounded-xl border border-violet-500/30 shadow-lg backdrop-blur-md mt-2 text-sm">
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400"></div>
-                  <span><b className="text-fuchsia-300">90d:</b> +1% (0.242%)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400"></div>
-                  <span><b className="text-fuchsia-300">180d:</b> +3% (0.247%)</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400"></div>
-                  <span><b className="text-fuchsia-300">365d:</b> +5% (0.252%)</span>
-                </div>
-              </div>
-              <div className="text-violet-100/70 text-xs mt-2 leading-tight border-l-2 border-fuchsia-400/30 pl-2">
-                Bonuses apply automatically at each milestone. The longer you stake, the higher your returns!
-              </div>
-            </div>
-          )}
-        </div>
+        
       </div>
     </BaseCard>
   );

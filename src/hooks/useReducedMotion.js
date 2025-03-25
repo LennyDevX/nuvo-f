@@ -1,33 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
- * Custom hook that detects if the user prefers reduced motion
- * @returns {boolean} True if the user prefers reduced motion
+ * Custom hook that checks if the user prefers reduced motion
+ * @returns {Boolean} Whether reduced motion is preferred
  */
-export default function useReducedMotion() {
+const useReducedMotion = () => {
+  // Default to false to ensure animations work when query isn't supported
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    // Check if window is defined (for SSR)
-    if (typeof window !== 'undefined') {
-      // Get initial value
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      setPrefersReducedMotion(mediaQuery.matches);
-      
-      // Define a callback for changes
-      const handleChange = (e) => {
-        setPrefersReducedMotion(e.matches);
-      };
-      
-      // Add the callback as a listener
+    // Check if the browser supports matchMedia
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    // Set initial value
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    // Listen for changes
+    const handleChange = (event) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    // Add event listener (with browser compatibility)
+    if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
-      
       // Clean up
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange);
-      };
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    } else {
+      // For older browsers
+      mediaQuery.addListener(handleChange);
+      // Clean up
+      return () => mediaQuery.removeListener(handleChange);
     }
   }, []);
 
   return prefersReducedMotion;
-}
+};
+
+export default useReducedMotion;

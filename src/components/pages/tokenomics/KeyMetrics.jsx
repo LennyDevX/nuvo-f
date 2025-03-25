@@ -38,25 +38,25 @@ const KeyMetrics = () => {
                 <span className="text-purple-300">Platform Services</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
-                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '15%' }}></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-400">Q3 2024</span>
-                <span className="text-purple-300">Ecosystem Integration</span>
-              </div>
-              <div className="h-2 bg-gray-800 rounded-full">
-                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '40%' }}></div>
+                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '10%' }}></div>
               </div>
             </div>
             <div>
               <div className="flex justify-between text-xs mb-1">
                 <span className="text-gray-400">Q1 2025</span>
+                <span className="text-purple-300">Ecosystem Integration</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded-full">
+                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '10%' }}></div>
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-400">Q4 2027</span>
                 <span className="text-purple-300">Full Adoption</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
-                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '85%' }}></div>
+                <div className="h-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full" style={{ width: '10%' }}></div>
               </div>
             </div>
           </div>
@@ -80,22 +80,22 @@ const KeyMetrics = () => {
               { 
                 name: "Developer Rewards Program", 
                 status: "Coming Soon",
-                date: "Q3 2024" 
+                date: "Q3 2025" 
               },
               { 
                 name: "NFT Infrastructure", 
                 status: "Planned",
-                date: "Q4 2024" 
+                date: "Q4 2025" 
               },
               { 
                 name: "DeFi Integration Suite", 
                 status: "Planned",
-                date: "Q1 2025" 
+                date: "Q2 2026" 
               },
               { 
                 name: "Enterprise Solutions", 
                 status: "Roadmap",
-                date: "Q2 2025" 
+                date: "Q3 2026" 
               }
             ].map((service, index) => (
               <li key={index} className="flex justify-between items-center">
@@ -125,11 +125,11 @@ const KeyMetrics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-400">Initial Services Integration</p>
-                <p className="text-xl font-semibold text-white">3</p>
+                <p className="text-xl font-semibold text-white">1</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400">Target EOY 2024</p>
-                <p className="text-xl font-semibold text-white">12+</p>
+                <p className="text-sm text-gray-400">Target 2025</p>
+                <p className="text-xl font-semibold text-white">3</p>
               </div>
             </div>
             <div className="h-px w-full bg-purple-500/20"></div>
@@ -151,19 +151,19 @@ const KeyMetrics = () => {
                   
                   <div className="absolute left-1/4 flex flex-col items-center">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <p className="text-xs text-blue-300 mt-1 whitespace-nowrap">Q3 2024</p>
+                    <p className="text-xs text-blue-300 mt-1 whitespace-nowrap">Q4 2025</p>
                     <p className="text-xs text-gray-500">Early Adopters</p>
                   </div>
                   
                   <div className="absolute left-2/4 flex flex-col items-center">
                     <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
-                    <p className="text-xs text-indigo-300 mt-1 whitespace-nowrap">Q1 2025</p>
+                    <p className="text-xs text-indigo-300 mt-1 whitespace-nowrap">Q1 2026</p>
                     <p className="text-xs text-gray-500">Expansion</p>
                   </div>
                   
                   <div className="absolute right-0 flex flex-col items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <p className="text-xs text-green-300 mt-1 whitespace-nowrap">Q3 2025</p>
+                    <p className="text-xs text-green-300 mt-1 whitespace-nowrap">Q2 2027</p>
                     <p className="text-xs text-gray-500">Mass Adoption</p>
                   </div>
                 </div>
@@ -225,12 +225,12 @@ const KeyMetrics = () => {
             <div className="relative pt-1">
               <div className="flex justify-between mb-1">
                 <span className="text-xs font-medium text-purple-300">Developer Tools Integration</span>
-                <span className="text-xs font-medium text-purple-300">80%</span>
+                <span className="text-xs font-medium text-purple-300">50%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
-                  style={{ width: "80%" }}
+                  style={{ width: "50%" }}
                 ></div>
               </div>
             </div>
@@ -238,12 +238,12 @@ const KeyMetrics = () => {
             <div className="relative pt-1">
               <div className="flex justify-between mb-1">
                 <span className="text-xs font-medium text-blue-300">Cloud Services API</span>
-                <span className="text-xs font-medium text-blue-300">65%</span>
+                <span className="text-xs font-medium text-blue-300">10%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                  style={{ width: "65%" }}
+                  style={{ width: "10%" }}
                 ></div>
               </div>
             </div>
@@ -251,12 +251,12 @@ const KeyMetrics = () => {
             <div className="relative pt-1">
               <div className="flex justify-between mb-1">
                 <span className="text-xs font-medium text-indigo-300">Governance Portal</span>
-                <span className="text-xs font-medium text-indigo-300">45%</span>
+                <span className="text-xs font-medium text-indigo-300">5%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500"
-                  style={{ width: "45%" }}
+                  style={{ width: "5%" }}
                 ></div>
               </div>
             </div>
@@ -264,12 +264,12 @@ const KeyMetrics = () => {
             <div className="relative pt-1">
               <div className="flex justify-between mb-1">
                 <span className="text-xs font-medium text-pink-300">Web3 Marketplace</span>
-                <span className="text-xs font-medium text-pink-300">30%</span>
+                <span className="text-xs font-medium text-pink-300">10%</span>
               </div>
               <div className="h-2 bg-gray-800 rounded-full">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-pink-500 to-purple-500"
-                  style={{ width: "30%" }}
+                  style={{ width: "10%" }}
                 ></div>
               </div>
             </div>

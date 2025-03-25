@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
-import { tokenDistributionData, chartOptions } from '../../../utils/chartConfig';
-import '../../../utils/chartSetup';
+import { tokenDistributionData, chartOptions } from '../../../utils/ChartConfig';
+import '../../../utils/ChartSetup';
 
 const TokenDistribution = () => {
   const chartRef = useRef(null);
