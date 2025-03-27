@@ -4,16 +4,19 @@
 
 NUVO DeFi aims to revolutionize the blockchain space by creating an integrated ecosystem that combines smart staking, rewards systems, exclusive access, and tokenized real-world assets. Built on the Polygon network, our goal is to develop a secure, efficient, and user-friendly platform that bridges decentralized finance (DeFi) with everyday applications.
 
-## 🚀 Current Status: Beta v1.7
+## 🚀 Current Status: Beta v2.0
 
 - **Weekly Updates:** Continuous improvements to optimize the platform.
-- **Beta Program Until Q2 2026:** Ongoing beta phase until the first quarter of 2026.
+- **Beta Program Until Q4 2026:** Ongoing beta phase until the first quarter of 2027.
 - **Active Developer Community:** A growing community of dedicated developers.
 - **Expanding User Base:** Consistent growth in our user community.
+- **Beta 2.0 Enhancements:** Integration of additional DeFi services, including our own NUvos token.
+Development Team Expansion: Growing our development team to support ongoing innovation.
 
 ## 🔥 Core Features
 
-### Smart Staking (Live)
+
+### Smart Staking 1.0  (Live)
 
 - **Automated Reward Distribution:** Systematically manages the distribution of rewards.
 - **Time-Based Bonus System:** Offers bonuses of up to 5% based on staking duration.
@@ -21,11 +24,44 @@ NUVO DeFi aims to revolutionize the blockchain space by creating an integrated e
 - **Real-Time Performance Tracking:** Allows users to monitor their investments instantly.
 - **Emergency Withdrawal System:** Facilitates fund withdrawal in unforeseen situations.
 
-### Security (Implemented)
+### Security (improvement)
 
 - **Polygon Network Integration:** Leverages Polygon's scalability and efficiency for our operations.
 - **OpenZeppelin Standards Compliance:** Adheres to best security practices in smart contracts.
 - **Real-Time Monitoring:** Continuous oversight to ensure platform integrity and security.
+
+### Optimized Performance  
+- Improved route handling for faster navigation  
+- Priority loading for specific pages  
+- Enhanced component rendering efficiency  
+- Reduced network resource usage  
+- Lower CPU consumption for better performance
+
+### Better Style
+
+- Minor upgrades to title styling for enhanced clarity and modern appearance  
+- Refined animations for smoother transitions  
+- Adjusted background colors adopting a more minimalist and balanced palette  
+- Simplified components to achieve a cleaner and more efficient aesthetic
+
+## 🚀 Project Status
+
+### Active Features
+
+- **Staking Protocol:** Fully operational staking system.
+- **Reward System:** Active mechanism for distributing incentives.
+- **Developer Portal:** Platform dedicated to developer collaboration and contribution.
+- **Community Hub:** Interactive space for user support and engagement.
+
+### Upcoming Implementations
+
+- **NFT Collections:** Launch of exclusive non-fungible token series.
+- **Merchandise Store:** Availability of official NUVO DeFi products.
+- **Educational Platform:** Resources and courses on DeFi and blockchain.
+- **Mobile Applications:** Development of applications for mobile devices.
+- **Trading Tools:** Advanced instruments for trading within the platform.
+- **Asset Management:** Solutions for efficient management of digital assets and investments.
+
 
 ## 💻 Developer Program
 
@@ -45,24 +81,6 @@ NUVO DeFi aims to revolutionize the blockchain space by creating an integrated e
 - **Documentation:** Create guides and manuals for users and developers.
 - **Testing and Quality Assurance:** Verify functionalities and ensure software quality.
 - **Community Tools:** Develop utilities to facilitate platform interaction and usability.
-
-## 🚀 Project Status
-
-### Active Features
-
-- **Staking Protocol:** Fully operational staking system.
-- **Reward System:** Active mechanism for distributing incentives.
-- **Developer Portal:** Platform dedicated to developer collaboration and contribution.
-- **Community Hub:** Interactive space for user support and engagement.
-
-### Upcoming Implementations
-
-- **NFT Collections:** Launch of exclusive non-fungible token series.
-- **Merchandise Store:** Availability of official NUVO DeFi products.
-- **Educational Platform:** Resources and courses on DeFi and blockchain.
-- **Mobile Applications:** Development of applications for mobile devices.
-- **Trading Tools:** Advanced instruments for trading within the platform.
-- **Asset Management:** Solutions for efficient management of digital assets and investments.
 
 ## 🤝 Community & Support
 
