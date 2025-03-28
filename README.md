@@ -1,6 +1,6 @@
   # 🌟 NUVOS CLOUD - Your Blockchain Ecosystem
 
-## Vision 🎯
+## What is this? 
 
 NUVOS CLOUD empowers every user to create a unique blockchain profile—a personal digital ID that serves as the cornerstone for building your own NFT ecosystem. Built on the Polygon network, our platform lets you curate and manage a diverse collection of NFTs while accessing smart staking, rewards, exclusive privileges, and tokenized real-world assets. With a focus on security, efficiency, and user-friendliness, NUVOS CLOUD bridges decentralized finance (DeFi) with everyday applications, enabling you to build, grow, and customize your personalized blockchain ecosystem.
 
