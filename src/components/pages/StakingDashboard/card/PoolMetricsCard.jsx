@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaHistory, FaCalendarAlt, FaShieldAlt, FaLock, FaStar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
-import { formatBalance } from '../../../../utils/Formatters';
+import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 
 const PoolMetricsCard = () => {
   const { state } = useStaking();

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { FaInfoCircle, FaStar, FaCalendarAlt, FaPercent, FaCheck } from 'react-icons/fa';
 import BaseCard from './BaseCard';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 
 function ROICard({ firstDepositTime }) {
   const [showDetails, setShowDetails] = useState(false);
