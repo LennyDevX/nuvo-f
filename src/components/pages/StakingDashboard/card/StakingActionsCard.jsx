@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import BaseCard from './BaseCard';
 import { useStaking } from '../../../../context/StakingContext';
 import { parseEther } from 'ethers';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 import WithdrawModal from '../../../modals/WithdrawModal';
 import TransactionToast from '../../../ui/TransactionToast';
 

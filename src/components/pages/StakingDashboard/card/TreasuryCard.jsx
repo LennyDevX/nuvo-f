@@ -3,7 +3,7 @@ import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDow
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 // Corrigiendo la importación para asegurarnos que sea correctaal';
 import TreasuryActivityModal from '../../../modals/TreasuryActivityModal';
 

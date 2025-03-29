@@ -1,10 +1,7 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import { FaGithub, FaCode, FaBug, FaBook, FaServer, FaShieldAlt, FaRocket, FaCogs, FaInfoCircle } from 'react-icons/fa';
-import { Tooltip } from 'react-tooltip';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaGithub, FaCode, FaBug, FaBook, FaServer, FaShieldAlt, FaRocket, FaCogs, FaInfoCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import Tooltip from '../../ui/Tooltip';
 import ApplicationModal from '../../modals/ApplicationModal';
 
 const HeroSection = () => {
@@ -37,18 +34,8 @@ const HeroSection = () => {
 const Carrousel = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
-
-  const carouselSettings = {
-    dots: true,
-    infinite: true,
-    speed: 900,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 10000,
-    pauseOnHover: true,
-    fade: true,
-  };
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   const slides = [
     {
@@ -137,9 +124,39 @@ const Carrousel = () => {
     }
   ];
 
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+  }, [slides.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+  }, [slides.length]);
+
+  // Auto-play functionality
+  useEffect(() => {
+    let intervalId;
+    if (isAutoPlaying) {
+      intervalId = setInterval(() => {
+        nextSlide();
+      }, 10000); // 10 seconds, matching the original autoplaySpeed
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isAutoPlaying, nextSlide]);
+
+  // Pause auto-play on hover
+  const handleMouseEnter = () => setIsAutoPlaying(false);
+  const handleMouseLeave = () => setIsAutoPlaying(true);
+
   const handleApplyClick = (title) => {
     setSelectedRole(title);
     setIsModalOpen(true);
+  };
+
+  const handleDotClick = (index) => {
+    setCurrentSlide(index);
   };
 
   return (
@@ -153,115 +170,120 @@ const Carrousel = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <Slider {...carouselSettings} className="hero-carousel">
-            {slides.map((slide, index) => (
-              <div key={index} className="focus:outline-none px-2 py-1 sm:px-3">
-                <div className="card-purple-gradient card-purple-wrapper">
-                  {/* Header */}
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="text-4xl w-14 h-14 flex items-center justify-center bg-purple-900/20 rounded-xl border border-purple-500/20">
-                      {slide.icon}
-                    </div>
-                    <div>
-                      <h2 className="text-2xl font-bold text-white">{slide.title}</h2>
-                      <p className="text-purple-300">{slide.subtitle}</p>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-gray-300 mb-6 text-lg">{slide.description}</p>
-
-                  {/* Main Content Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    {/* Features */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-white mb-3">Key Features</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        {slide.features.map((feature, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <span className="text-purple-400">{feature.icon}</span>
-                            <span className="text-gray-300 text-sm">{feature.text}</span>
-                          </div>
-                        ))}
+          <div 
+            className="custom-carousel relative"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {/* Carousel navigation buttons */}
+            <button 
+              onClick={prevSlide} 
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-purple-800/70 hover:bg-purple-700 p-3 rounded-full text-white focus:outline-none"
+              aria-label="Previous slide"
+            >
+              <FaChevronLeft />
+            </button>
+            
+            <button 
+              onClick={nextSlide} 
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-purple-800/70 hover:bg-purple-700 p-3 rounded-full text-white focus:outline-none"
+              aria-label="Next slide"
+            >
+              <FaChevronRight />
+            </button>
+            
+            <div className="overflow-hidden">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentSlide}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                  className="px-2 py-1 sm:px-3"
+                >
+                  <div className="card-purple-gradient card-purple-wrapper">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="text-4xl w-14 h-14 flex items-center justify-center bg-purple-900/20 rounded-xl border border-purple-500/20">
+                        {slides[currentSlide].icon}
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">{slides[currentSlide].title}</h2>
+                        <p className="text-purple-300">{slides[currentSlide].subtitle}</p>
                       </div>
                     </div>
 
-                    {/* Requirements */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-white mb-3">Requirements</h3>
-                      <div className="grid grid-cols-1 gap-2">
-                        {slide.requirements.map((req, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
-                            <span className="text-gray-300 text-sm">{req}</span>
-                          </div>
-                        ))}
+                    {/* Description */}
+                    <p className="text-gray-300 mb-6 text-lg">{slides[currentSlide].description}</p>
+
+                    {/* Main Content Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {/* Features */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white mb-3">Key Features</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                          {slides[currentSlide].features.map((feature, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <span className="text-purple-400">{feature.icon}</span>
+                              <span className="text-gray-300 text-sm">{feature.text}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Requirements */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-white mb-3">Requirements</h3>
+                        <div className="grid grid-cols-1 gap-2">
+                          {slides[currentSlide].requirements.map((req, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full bg-purple-500"></div>
+                              <span className="text-gray-300 text-sm">{req}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Updated Rewards Section */}
+                    <div className="border-t border-purple-500/20 pt-4 mt-6 bg-purple-900/5 rounded-b-xl">
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 pb-4">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold text-white">Base Bounty:</h3>
+                          <span className="text-purple-300 text-lg font-bold">{slides[currentSlide].bounty.amount}</span>
+                          <Tooltip content={slides[currentSlide].bounty.description}>
+                            <FaInfoCircle className="text-purple-400 cursor-help ml-2" />
+                          </Tooltip>
+                        </div>
+                        <button 
+                          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                          onClick={() => handleApplyClick(slides[currentSlide].title)}
+                        >
+                          <FaGithub />
+                          Apply Now
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  {/* Updated Rewards Section */}
-                  <div className="border-t border-purple-500/20 pt-4 mt-6 bg-purple-900/5 rounded-b-xl">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 pb-4">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-semibold text-white">Base Bounty:</h3>
-                        <span className="text-purple-300 text-lg font-bold">{slide.bounty.amount}</span>
-                        <FaInfoCircle 
-                          className="text-purple-400 cursor-help ml-2" 
-                          data-tooltip-id={`bounty-info-${index}`}
-                          data-tooltip-content={slide.bounty.description}
-                        />
-                        <Tooltip 
-                          id={`bounty-info-${index}`}
-                          place="top"
-                          className="max-w-xs bg-purple-900 text-white p-2 text-sm rounded-lg"
-                        />
-                      </div>
-                      <button 
-                        className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-                        onClick={() => handleApplyClick(slide.title)}
-                      >
-                        <FaGithub />
-                        Apply Now
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </Slider>
-
-          {/* Updated styles for better mobile experience */}
-          <style>{`
-            .hero-carousel .slick-dots {
-              bottom: -25px;
-            }
-            .hero-carousel .slick-dots li {
-              margin: 0 3px;
-            }
-            .hero-carousel .slick-dots li button:before {
-              color: #a855f7;
-              font-size: 5px;
-              opacity: 0.5;
-              transition: all 0.3s ease;
-            }
-            .hero-carousel .slick-dots li.slick-active button:before {
-              color: #7c3aed;
-              opacity: 1;
-              transform: scale(1.2);
-            }
-            @media (min-width: 640px) {
-              .hero-carousel .slick-dots {
-                bottom: -35px;
-              }
-              .hero-carousel .slick-dots li {
-                margin: 0 5px;
-              }
-              .hero-carousel .slick-dots li button:before {
-                font-size: 6px;
-              }
-            }
-          `}</style>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+            
+            {/* Dots navigation */}
+            <div className="flex justify-center mt-6">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleDotClick(index)}
+                  className={`h-2 w-2 mx-1 rounded-full transition-all ${
+                    currentSlide === index ? 'bg-purple-600 w-3' : 'bg-purple-400/50'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          </div>
         </motion.div>
       </div>
       <ApplicationModal 

@@ -3,7 +3,7 @@ import { FaWallet, FaChartLine, FaHistory, FaInfoCircle } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 
 
 const StakingStatusCard = ({ account, depositAmount }) => {

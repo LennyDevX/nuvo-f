@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
 import { FaCode, FaCoins, FaStore, FaCrown, FaInfoCircle } from 'react-icons/fa';
-import { Tooltip } from 'react-tooltip';
+import Tooltip from '../../../components/ui/Tooltip';
 import useReducedMotion from '../../../hooks/useReducedMotion';
 
 const phases = [

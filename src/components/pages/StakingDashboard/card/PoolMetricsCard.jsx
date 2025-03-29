@@ -4,7 +4,7 @@ import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import Tooltip from '../Tooltip';
+import Tooltip from '../../../ui/Tooltip';
 
 const PoolMetricsCard = () => {
   const { state } = useStaking();
