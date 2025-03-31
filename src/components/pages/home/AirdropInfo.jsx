@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { FaCoins, FaPuzzlePiece, FaRocket, FaArrowRight, FaList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import AirdropBox from './AirdropBox';
 import WhitelistModal from './WhitelistModal';
+import { buttonVariants, fadeIn } from '../../../utils/animationVariants';
 
 const AirdropInfo = () => {
   const [isOpening, setIsOpening] = useState(false);
@@ -11,6 +12,7 @@ const AirdropInfo = () => {
   const [expandedReward, setExpandedReward] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
 
   const handleBoxClick = () => {
     if (!isOpening) {
@@ -67,8 +69,8 @@ const AirdropInfo = () => {
   return (
     <section className="relative w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-6 sm:pb-16 lg:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start lg:items-center">
-        <motion.div 
-          initial={{ opacity: 0, x: -30 }}
+        <m.div 
+          initial={prefersReducedMotion ? {} : { opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
@@ -82,16 +84,16 @@ const AirdropInfo = () => {
             expandedReward={expandedReward}
             setExpandedReward={setExpandedReward}
           />
-        </motion.div>
+        </m.div>
 
-        <motion.div 
-          initial={{ opacity: 0, x: 30 }}
+        <m.div 
+          initial={prefersReducedMotion ? {} : { opacity: 0, x: 30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
           className="space-y-4 sm:space-y-8 order-1 lg:order-2"
         >
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
@@ -114,9 +116,9 @@ const AirdropInfo = () => {
               <p className="text-xs sm:text-sm text-white">• Token Pre-sale: Q4 2025</p>
               <p className="text-xs sm:text-sm text-white">• Official DEX Launch: Q1 2026</p>
             </div>
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -136,22 +138,23 @@ const AirdropInfo = () => {
                 <p className="text-xs sm:text-sm text-purple-300">{item.desc}</p>
               </div>
             ))}
-          </motion.div>
+          </m.div>
 
           {showReward && (
-            <motion.button
+            <m.button
               onClick={openWhitelistModal}
               className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full
                        text-sm sm:text-base text-white font-medium hover:from-purple-700 hover:to-pink-700
-                       transition-all transform hover:-translate-y-1 flex items-center justify-center sm:justify-start gap-2
+                       transition-all transform flex items-center justify-center sm:justify-start gap-2
                        shadow-lg hover:shadow-xl mt-4 sm:mt-6"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              variants={buttonVariants}
+              whileHover="hover"
+              whileTap="tap"
             >
               Join Whitelist <FaList className="ml-1" />
-            </motion.button>
+            </m.button>
           )}
-        </motion.div>
+        </m.div>
       </div>
 
       {showModal && <WhitelistModal onClose={() => setShowModal(false)} />}

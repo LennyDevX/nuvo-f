@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import AnimationProvider from '../../animation/AnimationProvider';
 import HeroSection from '../home/HeroSection';
 
 // Lazy load components below the fold
@@ -18,18 +18,20 @@ const Home = () => {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div className="bg-nuvo-gradient">
-      <Header openUpdatesModal={openModal} />
-      <HeroSection />
-      <Suspense fallback={<div>Loading...</div>}>
-        <TokenomicsSystem />
-        <SwapInfo />
-        <RewardDeveloper />
-        <AirdropInfo />
-        <Features />
-        <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
-      </Suspense> 
-    </div>
+    <AnimationProvider>
+      <div className="bg-nuvo-gradient">
+        <Header openUpdatesModal={openModal} />
+        <HeroSection />
+        <Suspense fallback={<div>Loading...</div>}>
+          <TokenomicsSystem />
+          <SwapInfo />
+          <RewardDeveloper />
+          <AirdropInfo />
+          <Features />
+          <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
+        </Suspense> 
+      </div>
+    </AnimationProvider>
   );
 };
 

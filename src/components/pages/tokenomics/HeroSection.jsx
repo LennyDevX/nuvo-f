@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaRocket, FaLock, FaUsers } from 'react-icons/fa';
 
 const HeroSection = ({ onOpenTokenModal }) => {
@@ -53,7 +53,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
   };
 
   return (
-    <motion.div
+    <m.div
       className="card-purple-gradient card-purple-wrapper mt-16 md:mt-24"
       initial="hidden"
       animate="visible"
@@ -64,16 +64,16 @@ const HeroSection = ({ onOpenTokenModal }) => {
       
       {/* Content */}
       <div className="relative z-10">
-        <motion.div variants={itemVariants} className="mb-8">
+        <m.div variants={itemVariants} className="mb-8">
           {/* Title with letter-by-letter animation */}
-          <motion.div
+          <m.div
             variants={titleContainerVariants}
             initial="hidden"
             animate="visible"
             className="mb-4 overflow-hidden"
           >
             {Array.from("NUVOS Token").map((char, index) => (
-              <motion.span
+              <m.span
                 key={index}
                 custom={index}
                 variants={letterVariants}
@@ -85,21 +85,21 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 }}
               >
                 {char === ' ' ? '\u00A0' : char}
-              </motion.span>
+              </m.span>
             ))}
-          </motion.div>
+          </m.div>
           
-          <motion.p 
+          <m.p 
             initial={{ opacity: 0, y: 0, x: 5 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
             transition={{ delay: 1.7, duration: 1 }}
             className="text-xl md:text-2xl mt-4"
           >
             Powering Our Digital Ecosystem Today
-          </motion.p>
-        </motion.div>
+          </m.p>
+        </m.div>
 
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 2.0, duration: 0.8 }}
@@ -109,10 +109,10 @@ const HeroSection = ({ onOpenTokenModal }) => {
             Experience NUVOS, the active cornerstone of our ecosystem with a fixed supply of 21M tokens.
             Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Feature cards - keep existing structure */}
-        <motion.div 
+        <m.div 
           variants={itemVariants}
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
         >
@@ -139,9 +139,9 @@ const HeroSection = ({ onOpenTokenModal }) => {
               <p className="text-gray-400">{item.description}</p>
             </div>
           ))}
-        </motion.div>
+        </m.div>
 
-        <motion.div 
+        <m.div 
           variants={itemVariants}
           className="mt-8 flex flex-wrap gap-4"
         >
@@ -151,9 +151,9 @@ const HeroSection = ({ onOpenTokenModal }) => {
           >
             Learn More
           </button>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

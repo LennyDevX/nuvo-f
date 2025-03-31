@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 // Remove unused SiPolymerproject import
 import { FaNetworkWired, FaRocket, FaGithub, FaUsers } from 'react-icons/fa';
 
@@ -22,7 +22,7 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
         
         {/* Animated accent elements */}
-        <motion.div 
+        <m.div 
           className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl"
           animate={{ 
             scale: [1, 1.2, 1], 
@@ -32,7 +32,7 @@ const HeroSection = () => {
           }}
           transition={{ duration: 8, repeat: Infinity }}
         />
-        <motion.div 
+        <m.div 
           className="absolute bottom-1/4 right-1/3 w-56 h-56 rounded-full bg-pink-500/10 blur-3xl"
           animate={{ 
             scale: [1, 1.3, 1], 
@@ -44,7 +44,7 @@ const HeroSection = () => {
         />
       </div>
       
-      <motion.div 
+      <m.div 
         className="max-w-7xl mx-auto text-center z-20 space-y-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -52,7 +52,7 @@ const HeroSection = () => {
       >
         {/* Enhanced title animation word by word */}
         <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8">
-          <motion.span 
+          <m.span 
             className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
             custom={0}
             initial="hidden"
@@ -60,9 +60,9 @@ const HeroSection = () => {
             variants={wordVariants}
           >
             Revolutionizing
-          </motion.span>
+          </m.span>
           <br />
-          <motion.span 
+          <m.span 
             className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
             custom={1}
             initial="hidden"
@@ -70,31 +70,31 @@ const HeroSection = () => {
             variants={wordVariants}
           >
             Digital Finance
-          </motion.span>
+          </m.span>
         </h1>
 
         <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4">
-          <motion.p 
+          <m.p 
             className="text-xl sm:text-2xl md:text-3xl text-gray-200 leading-relaxed font-light"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
             Nuvo is more than a DeFi platform - it's a paradigm shift in how we interact with digital assets. We're building the foundation for a new era of financial innovation.
-          </motion.p>
+          </m.p>
           
-          <motion.p 
+          <m.p 
             className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
             Through advanced blockchain technology and innovative smart contract architecture, we're creating a secure, transparent, and efficient ecosystem that empowers users to take control of their financial future.
-          </motion.p>
+          </m.p>
         </div>
 
         {/* Enhanced stats with hover effects */}
-        <motion.div 
+        <m.div 
           className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mt-8 md:mt-16 px-4"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -106,7 +106,7 @@ const HeroSection = () => {
             { label: "Open Source", value: "Web Apps", icon: <FaGithub className="text-2xl" /> },
             { label: "Community", value: "DAO", icon: <FaUsers className="text-2xl" /> }
           ].map((stat, index) => (
-            <motion.div 
+            <m.div 
               key={index} 
               className="bg-gradient-to-br from-purple-900/40 to-black/60 backdrop-blur-md p-4 rounded-xl border border-purple-500/20 shadow-xl hover:shadow-purple-500/10"
               whileHover={{ 
@@ -116,18 +116,18 @@ const HeroSection = () => {
               }}
               transition={{ duration: 0.2 }}
             >
-              <motion.div 
+              <m.div 
                 className="text-purple-400 mb-2"
                 whileHover={{ scale: 1.1, color: "#a855f7" }}
               >
                 {stat.icon}
-              </motion.div>
+              </m.div>
               <div className="text-purple-300 font-medium text-sm mb-1">{stat.label}</div>
               <div className="text-2xl font-bold text-white">{stat.value}</div>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   );
 };

@@ -1,10 +1,10 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaUsers, FaChartLine, FaLayerGroup, FaRocket, FaExchangeAlt, FaCalendarAlt } from 'react-icons/fa';
 
 const KeyMetrics = () => {
   return (
-    <motion.div
+    <m.div
       className="card-purple-gradient card-purple-wrapper mb-8"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -322,7 +322,7 @@ const KeyMetrics = () => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

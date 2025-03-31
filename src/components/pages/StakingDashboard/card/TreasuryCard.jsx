@@ -14,6 +14,7 @@ const TreasuryCard = () => {
 
   useEffect(() => {
     getTreasuryMetrics();
+    
   }, []);
 
   // Función para determinar el color del indicador de salud

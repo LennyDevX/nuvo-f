@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaLock, FaChartLine, FaVoteYea } from 'react-icons/fa';
 
 const StakingSection = () => {
@@ -25,28 +25,28 @@ const StakingSection = () => {
     <section className="relative py-28 px-4">
       {/* Enhanced background design */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-purple-950/5 to-black/80"></div>
-      <motion.div 
+      <m.div 
         className="absolute inset-0 bg-[url('/hexagon-pattern.svg')] opacity-5"
         animate={{ 
           backgroundPosition: ["0% 0%", "10% 10%"]
         }}
         transition={{ duration: 30, repeat: Infinity, repeatType: "reverse" }}
-      ></motion.div>
+      ></m.div>
       
       {/* Animated accent elements */}
-      <motion.div 
+      <m.div 
         className="absolute bottom-0 left-1/4 w-96 h-96 rounded-full bg-purple-600/5 blur-3xl"
         animate={{ 
           scale: [1, 1.2, 1], 
           opacity: [0.1, 0.15, 0.1] 
         }}
         transition={{ duration: 12, repeat: Infinity }}
-      ></motion.div>
+      ></m.div>
 
       <div className="container mx-auto relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <motion.h2 
+            <m.h2 
               className="text-5xl font-bold mb-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -56,9 +56,9 @@ const StakingSection = () => {
               <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
                 Staking Benefits
               </span>
-            </motion.h2>
+            </m.h2>
             
-            <motion.p 
+            <m.p 
               className="text-xl text-gray-300 max-w-3xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -66,12 +66,12 @@ const StakingSection = () => {
               viewport={{ once: true }}
             >
               Stake your NUVO tokens to earn rewards and participate in governance decisions.
-            </motion.p>
+            </m.p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {stakingFeatures.map((feature, index) => (
-              <motion.div
+              <m.div
                 key={index}
                 className="bg-gradient-to-br from-purple-900/40 to-black/60 backdrop-blur-md p-8 rounded-xl border border-purple-500/20 shadow-xl text-center"
                 initial={{ opacity: 0, y: 30 }}
@@ -84,27 +84,27 @@ const StakingSection = () => {
                   borderColor: "rgba(168, 85, 247, 0.5)"
                 }}
               >
-                <motion.div 
+                <m.div 
                   className="inline-flex justify-center items-center w-16 h-16 text-2xl mb-6 rounded-full bg-purple-900/30 text-purple-400"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   {feature.icon}
-                </motion.div>
+                </m.div>
                 <h3 className="text-2xl font-bold text-white mb-3">{feature.title}</h3>
                 <p className="text-gray-300">{feature.description}</p>
-              </motion.div>
+              </m.div>
             ))}
           </div>
 
-          <motion.div
+          <m.div
             className="mt-16 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            <motion.a
+            <m.a
               href="/staking"
               className="inline-block px-10 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-full shadow-lg shadow-purple-500/20"
               whileHover={{ 
@@ -114,8 +114,8 @@ const StakingSection = () => {
               transition={{ type: "spring", stiffness: 300 }}
             >
               Learn More About Staking
-            </motion.a>
-          </motion.div>
+            </m.a>
+          </m.div>
         </div>
       </div>
     </section>

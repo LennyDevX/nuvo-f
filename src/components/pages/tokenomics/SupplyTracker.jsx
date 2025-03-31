@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaCoins } from 'react-icons/fa';
 
 const SupplyTracker = () => {
@@ -51,7 +51,7 @@ const SupplyTracker = () => {
       : 0;
 
   return (
-    <motion.div 
+    <m.div 
       className="card-purple-gradient card-purple-wrapper"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -153,16 +153,16 @@ const SupplyTracker = () => {
           {isLoading ? (
             <div className="h-full bg-gradient-to-r from-purple-900/50 to-purple-600/50 rounded-full animate-pulse"></div>
           ) : (
-            <motion.div 
+            <m.div 
               className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${formattedPercentage}%` }}
               transition={{ duration: 0.8, type: "spring", stiffness: 50 }}
-            ></motion.div>
+            ></m.div>
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
