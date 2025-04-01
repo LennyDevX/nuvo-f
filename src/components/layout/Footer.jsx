@@ -1,6 +1,6 @@
 // src/components/layout/Footer.jsx
 import React from 'react';
-import { Link } from 'react-router-dom';
+import NavLink from '../navigation/NavLink'; // Import NavLink
 import { FaTelegramPlane, FaGithub, FaDiscord } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { motion } from 'framer-motion';
@@ -11,25 +11,36 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
-
           {/* Quick Links */}
           <div className="col-span-1">
             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/staking" className="text-gray-400 hover:text-purple-400 transition-colors">
+                <NavLink 
+                  to="/staking" 
+                  prefetchStrategy="intent"
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                >
                   Staking
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link to="/tokenomics" className="text-gray-400 hover:text-purple-400 transition-colors">
+                <NavLink 
+                  to="/tokenomics"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                >
                   Tokenomics
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link to="/airdrops" className="text-gray-400 hover:text-purple-400 transition-colors">
+                <NavLink 
+                  to="/airdrops"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                >
                   Airdrops
-                </Link>
+                </NavLink>
               </li>
             </ul>
           </div>
@@ -39,13 +50,14 @@ const Footer = () => {
             <h3 className="text-white font-semibold mb-4">Development</h3>
             <ul className="space-y-2">
               <li>
-                <Link 
+                <NavLink 
                   to="/roadmap" 
+                  prefetchStrategy="intent"
                   className="text-gray-400 hover:text-purple-400 transition-colors"
                   onClick={() => window.scrollTo(0, 0)}
                 >
                   Roadmap
-                </Link>
+                </NavLink>
               </li>
               <li>
                 <a 
@@ -59,22 +71,24 @@ const Footer = () => {
               </li>
               
               <li>
-              <Link 
-                  to="/game" 
+                <NavLink 
+                  to="/game"
+                  prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"
                   onClick={() => window.scrollTo(0, 0)}
                 >
                   Game
-                </Link>
+                </NavLink>
               </li>
               <li>
-                <Link 
-                  to="/about" 
+                <NavLink 
+                  to="/about"
+                  prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"
                   onClick={() => window.scrollTo(0, 0)}
                 >
                   About
-                </Link>
+                </NavLink>
               </li>
             </ul>
           </div>

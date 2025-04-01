@@ -1,6 +1,6 @@
 import React from 'react';
 import { m, useReducedMotion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import NavLink from '../../navigation/NavLink'; // Import NavLink
 import DodoCarrousel from './DodoCarrousel';
 import { fadeIn } from '../../../utils/animationVariants';
 
@@ -37,8 +37,9 @@ const SwapInfo = () => {
               in the DeFi space, leveraging PMM technology to get the 
               best market prices.
             </p>
-            <Link
+            <NavLink
               to="/swaptoken"
+              prefetchStrategy="render" // Immediately prefetch this important route
               className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 border border-yellow-500/50 
                        text-base sm:text-lg font-medium rounded-full text-white 
                        bg-gradient-to-r from-yellow-600 to-yellow-700 
@@ -61,7 +62,7 @@ const SwapInfo = () => {
                   clipRule="evenodd"
                 />
               </svg>
-            </Link>
+            </NavLink>
           </m.div>
         </div>
       </div>

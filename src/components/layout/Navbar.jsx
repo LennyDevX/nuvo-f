@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import NavLink from '../navigation/NavLink'; // Import NavLink instead of Link
 import WalletConnect from '../web3/WalletConnect';
 import AirdropDownloader from '../firebase/AirdropDownloader';
 import BetaBadge from '../ui/BetaBadge'; // Import BetaBadge component
@@ -12,8 +13,7 @@ import {
   FaCode, 
   FaGamepad,
   FaRobot, // Add AI icon
-  // ...existing imports...
-} from 'react-icons/fa'
+} from 'react-icons/fa';
 
 // Importa la variable de entorno
 const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
@@ -91,13 +91,19 @@ const Navbar = () => {
             />
           </div>
 
-          {/* Desktop Menu - Updated with icons */}
+          {/* Desktop Menu - Updated with NavLink and prefetching */}
           <div className="hidden md:flex items-center justify-center flex-grow space-x-4">
             {navigationItems.map(({ path, label, icon: Icon }) => (
-              <Link key={path} to={path} className={navLinkClasses}>
+              <NavLink 
+                key={path} 
+                to={path} 
+                prefetchStrategy="intent" // Prefetch on hover
+                className={navLinkClasses}
+                activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
+              >
                 <Icon className={navIconClasses} />
                 {label}
-              </Link>
+              </NavLink>
             ))}
             
             {/* Beta Badge in Desktop View */}
