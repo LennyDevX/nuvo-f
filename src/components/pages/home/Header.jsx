@@ -114,7 +114,7 @@ const Header = ({ title, subtitle, openUpdatesModal }) => {
             transition={{ delay: prefersReducedMotion ? 0.5 : 1, duration: 1 }}
             className="flex flex-wrap justify-center gap-8 mt-8 text-center"
           >
-            {[{ value: "10K+", label: "Users" }, { value: "99.9%", label: "Uptime" }, { value: "24/7", label: "Support" }].map((stat, index) => (
+            {[{ value: "Secure", label: "By POL" }, { value: "Fast", label: "Blockchain" }, { value: "24/7", label: "Open" }].map((stat, index) => (
               <div key={index} className="px-4">
                 <div className="text-3xl font-bold text-purple-400">{stat.value}</div>
                 <div className="text-gray-400 text-sm">{stat.label}</div>
