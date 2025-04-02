@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import DododexLogo from '/DododexLogo.png';
 
 const features = [
@@ -48,13 +48,16 @@ const variants = {
 
 const DodoCarrousel = () => {
   const [[page, direction], setPage] = useState([0, 0]);
+  const prefersReducedMotion = useReducedMotion();
 
   const paginate = (newDirection) => {
     const newPage = (page + newDirection + features.length) % features.length;
     setPage([newPage, newDirection]);
   };
 
-return (
+  const safeVariants = prefersReducedMotion ? {} : variants;
+
+  return (
     <div className="relative h-[400px] sm:h-[500px] w-full max-w-xl mx-auto">
         <div className="absolute inset-y-0 -left-2 sm:-left-4 flex items-center z-10">
             <button
@@ -70,13 +73,13 @@ return (
 
         <div className="relative w-full h-full overflow-hidden rounded-lg sm:rounded-xl">
             <AnimatePresence initial={false} custom={direction}>
-                <motion.div
+                <m.div
                     key={page}
                     custom={direction}
-                    variants={variants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
+                    variants={safeVariants}
+                    initial={prefersReducedMotion ? {} : "enter"}
+                    animate={prefersReducedMotion ? {} : "center"}
+                    exit={prefersReducedMotion ? {} : "exit"}
                     transition={{
                         x: { type: "spring", stiffness: 300, damping: 30 },
                         opacity: { duration: 0.2 }
@@ -139,7 +142,7 @@ return (
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </m.div>
             </AnimatePresence>
         </div>
 
@@ -170,7 +173,7 @@ return (
             ))}
         </div>
     </div>
-);
+  );
 };
 
 export default DodoCarrousel;

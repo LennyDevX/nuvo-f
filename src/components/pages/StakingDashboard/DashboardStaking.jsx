@@ -4,11 +4,11 @@ import { WalletContext } from "../../../context/WalletContext";
 import useContractData from "../../../hooks/useContractData";
 import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
 import DashboardCards from "./card/DashboardCards";
-import Tag from "./Tag";
+import NetworkBadge from "../../web3/NetworkBadge";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { formatBalance } from "../../../utils/formatters"; // Changed from "../../../utils/Formatters"
-import { FaCoins, FaUsers, FaChartLine, FaPiggyBank } from 'react-icons/fa';
+import { formatBalance } from "../../../utils/formatters"; 
+import { FaCoins } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 
@@ -100,7 +100,7 @@ const DashboardStaking = () => {
     }
   }, []);
 
-  // Simplified logging
+  // Development-only logging
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.debug("Dashboard State:", {
@@ -112,51 +112,15 @@ const DashboardStaking = () => {
     }
   }, [safeDepositAmount, safeTotalWithdrawn, treasuryBalance, roiProgress]);
 
-  // Add a debugging log for rewards
-  useEffect(() => {
-    if (availableRewards !== '0') {
-      console.debug('Available rewards updated:', availableRewards);
-    }
-  }, [availableRewards]);
-
-  const getQuickStats = () => [
-    {
-      icon: <FaCoins />,
-      label: "Total Staked",
-      value: `${formatBalance(totalPoolBalance)} POL`,
-    },
-    {
-      icon: <FaUsers />,
-      label: "Your Stake",
-      value: `${formatBalance(depositAmount)} POL`,
-    },
-    {
-      icon: <FaChartLine />,
-      label: "ROI Progress",
-      value: `${roiProgress.toFixed(2)}%`,
-    },
-    {
-      icon: <FaPiggyBank />,
-      label: "Available Rewards",
-      value: `${formatBalance(availableRewards || '0')} POL`,
-    }
-  ];
-
-  console.log("Dashboard Values:", {
-    depositAmount: safeDepositAmount,
-    totalWithdrawn: safeTotalWithdrawn,
-    treasuryBalance
-  });
-
-  // Letter-by-letter animation variants (similar to Header component)
+  // Letter-by-letter animation variants
   const letterVariants = {
     hidden: { opacity: 0, x: 3 },
     visible: (i) => ({
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.15,
-        duration: 0.4,
+        delay: i * 0.10,
+        duration: 0.2,
         ease: "easeIn"
       }
     })
@@ -169,7 +133,7 @@ const DashboardStaking = () => {
       opacity: 1,
       transition: {
         staggerChildren: 0.10,
-        delayChildren: 0.4
+        delayChildren: 0.1
       }
     }
   };
@@ -183,7 +147,7 @@ const DashboardStaking = () => {
             className="text-center mb-16"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 2 }}
+            transition={{ duration: 1 }}
           >
             <m.div
               variants={containerVariants}
@@ -251,7 +215,9 @@ const DashboardStaking = () => {
                         onDepositSuccess={handleDepositSuccess}
                         onFetchData={fetchContractData}
                       />
-                      <Tag network={network} />
+                      <div className="text-center mt-6 space-y-2">
+                        <NetworkBadge />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

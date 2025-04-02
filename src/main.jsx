@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './components/App';
 import './Styles/index.css';
+import { ToastProvider } from './context/ToastContext';
 
 // Performance monitoring
 const startTime = performance.now();
@@ -54,14 +55,15 @@ if (import.meta.env.DEV) {
   addResourceHints();
 }
 
-// Conditionally use StrictMode only in development
-const AppWithStrictMode = import.meta.env.DEV ? 
-  <React.StrictMode><App /></React.StrictMode> : 
-  <App />;
-
 // Initialize app with performance tracking
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(AppWithStrictMode);
+root.render(
+  <React.StrictMode>
+    <ToastProvider>
+      <App />
+    </ToastProvider>
+  </React.StrictMode>
+);
 
 // Report initial load metrics
 window.addEventListener('load', () => {

@@ -1,25 +1,28 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { m, useReducedMotion } from 'framer-motion';
+import NavLink from '../../navigation/NavLink'; // Import NavLink
 import DodoCarrousel from './DodoCarrousel';
+import { fadeIn } from '../../../utils/animationVariants';
 
 const SwapInfo = () => {
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
     <section className="relative overflow-hidden py-8 sm:py-16">
       <div className="max-w-7xl mx-auto relative px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
+          <m.div
+            initial={prefersReducedMotion ? {} : { opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
             className="relative order-2 lg:order-1"
           >
             <DodoCarrousel />
-          </motion.div>
+          </m.div>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 30 }}
+          <m.div 
+            initial={prefersReducedMotion ? {} : { opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
@@ -34,8 +37,9 @@ const SwapInfo = () => {
               in the DeFi space, leveraging PMM technology to get the 
               best market prices.
             </p>
-            <Link
+            <NavLink
               to="/swaptoken"
+              prefetchStrategy="render" // Immediately prefetch this important route
               className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 border border-yellow-500/50 
                        text-base sm:text-lg font-medium rounded-full text-white 
                        bg-gradient-to-r from-yellow-600 to-yellow-700 
@@ -58,8 +62,8 @@ const SwapInfo = () => {
                   clipRule="evenodd"
                 />
               </svg>
-            </Link>
-          </motion.div>
+            </NavLink>
+          </m.div>
         </div>
       </div>
     </section>

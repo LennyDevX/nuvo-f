@@ -1,12 +1,13 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FaTimes, FaCheckCircle, FaExclamationTriangle, FaWallet, FaLock, FaInfoCircle } from 'react-icons/fa';
 import submitWhitelistEntry, { getPendingSubmission } from '../../firebase/submitWhitelistEntry';
 import { WalletContext } from '../../../context/WalletContext';
 
 const WhitelistModal = ({ onClose }) => {
   const { account, walletConnected } = useContext(WalletContext);
-  
+  const prefersReducedMotion = useReducedMotion();
+
   const [formData, setFormData] = useState({
     email: '',
     walletAddress: account || '',
@@ -47,13 +48,13 @@ const WhitelistModal = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Verify wallet is connected
     if (!walletConnected || !account) {
       setError('Please connect your wallet to join the whitelist');
       return;
     }
-    
+
     setIsSubmitting(true);
     setError(null);
     setSavedLocally(false);
@@ -75,12 +76,12 @@ const WhitelistModal = ({ onClose }) => {
         name: formData.name || null,
         telegram: formData.telegram || null
       });
-      
+
       // Check if saved locally due to Firebase error
       if (result.savedLocally) {
         setSavedLocally(true);
       }
-      
+
       setIsSubmitted(true);
     } catch (err) {
       setError(err.message || 'Failed to submit. Please try again later.');
@@ -92,23 +93,23 @@ const WhitelistModal = ({ onClose }) => {
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
+      <m.div
+        initial={prefersReducedMotion ? {} : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
         onClick={onClose}
       >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+        <m.div
+          initial={prefersReducedMotion ? {} : { scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
+          exit={prefersReducedMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
           className="bg-gradient-to-b from-gray-900 to-black border border-purple-500/30 rounded-xl w-full max-w-md p-6"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-white">Join NUVO Whitelist</h2>
-            <button 
+            <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors"
             >
@@ -121,7 +122,7 @@ const WhitelistModal = ({ onClose }) => {
           {!isSubmitted ? (
             <>
               <p className="text-gray-300 text-sm mb-5">
-                Join our whitelist to secure your position for the NUVO token pre-sale in Q4 2025 and 
+                Join our whitelist to secure your position for the NUVO token pre-sale in Q4 2025 and
                 get exclusive benefits when we officially launch in Q1 2026.
               </p>
 
@@ -139,8 +140,8 @@ const WhitelistModal = ({ onClose }) => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-200 mb-1">Email *</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
@@ -149,15 +150,15 @@ const WhitelistModal = ({ onClose }) => {
                       placeholder="your@email.com"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="flex items-center text-sm font-medium text-gray-200 mb-1">
-                      Wallet Address * 
+                      Wallet Address *
                       <FaLock className="ml-1 text-gray-400 text-xs" title="Auto-filled from your connected wallet" />
                     </label>
                     <div className="relative">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="walletAddress"
                         value={account || 'No wallet connected'}
                         disabled
@@ -170,17 +171,17 @@ const WhitelistModal = ({ onClose }) => {
                       )}
                     </div>
                     <p className="text-xs text-gray-400 mt-1">
-                      {account 
-                        ? 'This address will receive your future rewards' 
+                      {account
+                        ? 'This address will receive your future rewards'
                         : 'Connect your wallet to continue'
                       }
                     </p>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-200 mb-1">Name</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
@@ -188,11 +189,11 @@ const WhitelistModal = ({ onClose }) => {
                       placeholder="Your name (optional)"
                     />
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-200 mb-1">Telegram Username</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="telegram"
                       value={formData.telegram}
                       onChange={handleChange}
@@ -216,9 +217,9 @@ const WhitelistModal = ({ onClose }) => {
                              transition-all transform hover:-translate-y-0.5
                              disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {isSubmitting 
-                      ? 'Submitting...' 
-                      : !walletConnected 
+                    {isSubmitting
+                      ? 'Submitting...'
+                      : !walletConnected
                         ? 'Connect Wallet First'
                         : 'Join Whitelist'
                     }
@@ -227,7 +228,7 @@ const WhitelistModal = ({ onClose }) => {
               </form>
             </>
           ) : (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-6"
@@ -237,7 +238,7 @@ const WhitelistModal = ({ onClose }) => {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">You're on the List!</h3>
               <p className="text-gray-300 text-sm mb-2">
-                Thank you for joining the NUVO whitelist. We'll keep you updated on our progress 
+                Thank you for joining the NUVO whitelist. We'll keep you updated on our progress
                 towards the Q4 2025 pre-sale and Q1 2026 launch.
               </p>
               <div className="bg-black/40 border border-green-500/20 rounded-lg p-3 mb-4 text-left">
@@ -246,20 +247,20 @@ const WhitelistModal = ({ onClose }) => {
                   <span className="text-white break-all">{account}</span>
                 </p>
               </div>
-              
+
               {savedLocally && (
                 <div className="bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-3 mb-4 flex items-start gap-2">
                   <FaInfoCircle className="text-yellow-500 mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-yellow-200 text-sm font-medium">Your submission is saved locally</p>
                     <p className="text-gray-300 text-xs mt-1">
-                      Due to a temporary connection issue, your submission has been saved on this device. 
+                      Due to a temporary connection issue, your submission has been saved on this device.
                       Our team will process it shortly. There's no need to submit again.
                     </p>
                   </div>
                 </div>
               )}
-              
+
               <button
                 onClick={onClose}
                 className="px-5 py-2 bg-purple-600/30 hover:bg-purple-600/50 rounded-lg
@@ -267,10 +268,10 @@ const WhitelistModal = ({ onClose }) => {
               >
                 Close
               </button>
-            </motion.div>
+            </m.div>
           )}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 };

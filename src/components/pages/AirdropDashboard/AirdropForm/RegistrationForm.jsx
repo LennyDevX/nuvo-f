@@ -1,7 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
-import { checkRegionalEligibility } from '../../../../utils/RegionCheck';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../../Abi/Airdrop.json';
 
@@ -174,24 +173,6 @@ const RegistrationForm = ({
         }
     };
 
-    useEffect(() => {
-        const checkEligibility = async () => {
-            const { isEligible, error } = await checkRegionalEligibility();
-            
-            if (error) {
-                setRegistrationStatus('Unable to verify region eligibility');
-                return;
-            }
-
-            if (!isEligible) {
-                setRegistrationStatus('Registration not available in your region');
-                return;
-            }
-        };
-
-        checkEligibility();
-    }, []);
-
     if (registrationComplete) {
         return (
             <div className="p-6 text-center">
@@ -217,6 +198,25 @@ const RegistrationForm = ({
     return (
         <form onSubmit={handleRegistration} className="space-y-6">
             <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-200">
+                    Name
+                </label>
+                <input
+                    type="text"
+                    name="name"
+                    id="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    onKeyDown={validateInput}
+                    maxLength={50}
+                    pattern="[a-zA-Z0-9\s]+"
+                    required
+                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-900 text-gray-100 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+                />
+            </div>
+
+            <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-200"></label>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-200">
                     Name
                 </label>

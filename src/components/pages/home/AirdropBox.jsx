@@ -1,11 +1,13 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FaGift } from 'react-icons/fa';
 
 const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedReward, setExpandedReward }) => {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
+    <m.div
+      initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8 }}
       className="relative py-4 sm:py-0"
@@ -13,7 +15,7 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
       <div className="relative max-w-[320px] sm:max-w-md mx-auto">
         {/* Background Effects */}
         <div className="absolute inset-0">
-          <motion.div
+          <m.div
             className="absolute inset-0"
             animate={{
               background: [
@@ -26,14 +28,14 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
         </div>
 
         {/* Enhanced Gift Box Container */}
-        <motion.div
+        <m.div
           className="relative w-52 h-52 sm:w-64 sm:h-64 mx-auto cursor-pointer"
           whileHover={{ scale: 1.05 }}
           onClick={!showReward ? handleBoxClick : undefined}
         >
           <AnimatePresence>
             {!isOpening && !showReward && (
-              <motion.div
+              <m.div
                 className="absolute inset-0 gift-box"
                 initial={{ scale: 0.9 }}
                 animate={{
@@ -48,17 +50,17 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                 <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-2xl shadow-xl
                               relative overflow-hidden">
                   {/* Animated ribbon */}
-                  <motion.div
+                  <m.div
                     className="absolute inset-0 pointer-events-none"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                   >
                     <div className="absolute top-0 left-1/2 w-8 h-full bg-white/10 -translate-x-1/2 transform rotate-45" />
                     <div className="absolute top-1/2 left-0 w-full h-8 bg-white/10 -translate-y-1/2" />
-                  </motion.div>
+                  </m.div>
 
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
+                    <m.div
                       animate={{
                         scale: [1, 1.2, 1],
                         rotate: [0, 5, -5, 0],
@@ -70,11 +72,11 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                       }}
                     >
                       <FaGift className="text-white text-6xl filter drop-shadow-lg" />
-                    </motion.div>
+                    </m.div>
                   </div>
 
                   {/* Shine effect */}
-                  <motion.div
+                  <m.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     animate={{
                       x: ['-200%', '200%'],
@@ -86,11 +88,11 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                     }}
                   />
                 </div>
-              </motion.div>
+              </m.div>
             )}
 
             {isOpening && (
-              <motion.div
+              <m.div
                 className="absolute inset-0"
                 initial={{ scale: 1 }}
                 animate={{
@@ -106,7 +108,7 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                   <div className="absolute inset-0 flex items-center justify-center">
                     <FaGift className="text-white text-6xl animate-pulse" />
                   </div>
-                  <motion.div
+                  <m.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
                     animate={{
                       x: ['-100%', '100%'],
@@ -118,26 +120,26 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                     }}
                   />
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
           {/* Rewards Display with Improved Mobile Layout */}
           <AnimatePresence>
             {showReward && (
-              <motion.div
+              <m.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 className="absolute inset-0 flex flex-col items-center justify-center gap-3 sm:gap-4"
               >
                 {rewards.map((reward, index) => (
-                  <motion.div
+                  <m.div
                     key={index}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.2 }}
                   >
-                    <motion.div
+                    <m.div
                       className={`bg-black/40 backdrop-blur-sm rounded-lg sm:rounded-xl border border-purple-500/30
                                 transition-all duration-300 overflow-hidden
                                 ${expandedReward === index ? 'w-[280px] sm:w-[300px]' : 'hover:bg-black/60 cursor-pointer'}`}
@@ -152,7 +154,7 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                       {/* Expanded Content */}
                       <AnimatePresence>
                         {expandedReward === index && (
-                          <motion.div
+                          <m.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -166,18 +168,18 @@ const AirdropBox = ({ isOpening, showReward, handleBoxClick, rewards, expandedRe
                             <p className={`${reward.color} text-xs sm:text-sm font-medium`}>
                               {reward.highlight}
                             </p>
-                          </motion.div>
+                          </m.div>
                         )}
                       </AnimatePresence>
-                    </motion.div>
-                  </motion.div>
+                    </m.div>
+                  </m.div>
                 ))}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

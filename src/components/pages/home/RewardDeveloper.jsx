@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { FaTasks, FaGift } from 'react-icons/fa';
 import CircleDeveloper from './CircleDeveloper';
+import { fadeIn } from '../../../utils/animationVariants';
 
 const RewardDeveloper = () => {
   const [activePhase, setActivePhase] = useState(1);
+  const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -18,8 +20,8 @@ const RewardDeveloper = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start lg:items-center">
         {/* Left Column - Content */}
         <div className="space-y-4 sm:space-y-8 pt-2 sm:pt-6">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+          <m.div
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7 }}
@@ -34,10 +36,10 @@ const RewardDeveloper = () => {
             <p className="text-sm sm:text-lg text-gray-300 max-w-xl mt-4 sm:mt-6">
               Join our developer community and earn rewards as you complete tasks and contribute to our project.
             </p>
-          </motion.div>
+          </m.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
+          <m.div
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.7, delay: 0.2 }}
@@ -47,7 +49,7 @@ const RewardDeveloper = () => {
               { value: "Tasks", label: "Complete Tasks", icon: <FaTasks /> },
               { value: "Rewards", label: "Earn Rewards", icon: <FaGift /> }
             ].map((stat, index) => (
-              <motion.div
+              <m.div
                 key={index}
                 whileHover={{ scale: 1.02 }}
                 className="flex items-center sm:flex-col sm:items-center p-4 bg-black/20 rounded-xl border border-purple-500/20 gap-3 sm:gap-2"
@@ -57,21 +59,21 @@ const RewardDeveloper = () => {
                   <div className="text-xl sm:text-2xl font-bold text-white">{stat.value}</div>
                   <div className="text-sm text-purple-300 sm:mt-1">{stat.label}</div>
                 </div>
-              </motion.div>
+              </m.div>
             ))}
-          </motion.div>
+          </m.div>
         </div>
 
         {/* Right Column - Interactive Progress Circle */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+        <m.div
+          initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
           className="relative mt-4 sm:mt-8 lg:mt-0 pb-8 sm:pb-0"
         >
           <CircleDeveloper activePhase={activePhase} />
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

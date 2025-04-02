@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m, useReducedMotion } from 'framer-motion';
 import { 
   FaCode, 
   FaCoins, 
@@ -8,15 +8,18 @@ import {
   FaCheckCircle, 
   FaClock 
 } from 'react-icons/fa';
+import { containerFadeIn, fadeIn } from '../../../utils/animationVariants';
 
 const Features = () => {
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
     <section className="max-w-7xl mx-auto px-4 py-12 sm:py-20">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+      <m.div
+        initial={prefersReducedMotion ? {} : "hidden"}
+        whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
+        variants={containerFadeIn}
         className="text-center mb-10 sm:mb-16"
       >
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">
@@ -25,7 +28,7 @@ const Features = () => {
         <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto px-4">
           Explore our ecosystem of innovative blockchain products and services
         </p>
-      </motion.div>
+      </m.div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
         {[
@@ -82,9 +85,9 @@ const Features = () => {
             ]
           }
         ].map((product, index) => (
-          <motion.div
+          <m.div
             key={index}
-            initial={{ opacity: 0, y: 30 }}
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -123,7 +126,7 @@ const Features = () => {
             {/* Hover Effect Gradient */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 
               opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl sm:rounded-2xl pointer-events-none" />
-          </motion.div>
+          </m.div>
         ))}
       </div>
     </section>

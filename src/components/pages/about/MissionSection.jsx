@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaRocket, FaShieldAlt, FaUsers } from 'react-icons/fa';
 
 const MissionSection = () => {
@@ -43,7 +43,7 @@ const MissionSection = () => {
       <div className="absolute inset-0 bg-[url('/dots-pattern.svg')] opacity-5"></div>
       
       {/* Animated accent shapes */}
-      <motion.div
+      <m.div
         className="absolute left-0 top-1/4 w-96 h-96 rounded-full bg-purple-600/5 blur-3xl"
         animate={{ 
           x: [-20, 0, -20], 
@@ -54,7 +54,7 @@ const MissionSection = () => {
       />
       
       <div className="container mx-auto px-4 relative z-10">
-        <motion.h2 
+        <m.h2 
           className="text-5xl font-bold text-center mb-8"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -64,9 +64,9 @@ const MissionSection = () => {
           <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
             Our Vision & Mission
           </span>
-        </motion.h2>
+        </m.h2>
         
-        <motion.p
+        <m.p
           className="text-xl text-center text-gray-300 max-w-3xl mx-auto mb-20"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -74,9 +74,9 @@ const MissionSection = () => {
           viewport={{ once: true }}
         >
           Transforming decentralized finance through innovative technology and user-centered design.
-        </motion.p>
+        </m.p>
 
-        <motion.div 
+        <m.div 
           className="grid grid-cols-1 md:grid-cols-3 gap-8"
           variants={containerVariants}
           initial="hidden"
@@ -84,7 +84,7 @@ const MissionSection = () => {
           viewport={{ once: true, margin: "-50px" }}
         >
           {missionItems.map((item, index) => (
-            <motion.div
+            <m.div
               key={index}
               variants={itemVariants}
               className="bg-gradient-to-br from-purple-900/40 to-black/60 backdrop-blur-md p-8 rounded-xl border border-purple-500/20 shadow-xl hover:shadow-purple-500/10 transition-all duration-300"
@@ -94,18 +94,18 @@ const MissionSection = () => {
                 borderColor: "rgba(168, 85, 247, 0.5)"
               }}
             >
-              <motion.div 
+              <m.div 
                 className="text-purple-400 mb-6"
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 {item.icon}
-              </motion.div>
+              </m.div>
               <h3 className="text-2xl font-bold text-white mb-4">{item.title}</h3>
               <p className="text-gray-300 leading-relaxed">{item.content}</p>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
     </section>
   );

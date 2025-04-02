@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
 import { revenueStreamsData, chartOptions } from '../../../utils/ChartConfig';
 import '../../../utils/ChartSetup';
@@ -75,7 +75,7 @@ const RevenueStreams = () => {
   };
 
   return (
-    <motion.div
+    <m.div
       className="card-purple-gradient card-purple-wrapper"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -102,7 +102,7 @@ const RevenueStreams = () => {
           <li>• Strategic partnerships</li>
         </ul>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
