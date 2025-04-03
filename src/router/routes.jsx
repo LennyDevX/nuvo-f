@@ -39,7 +39,8 @@ const AirdropDashboard = createLazyComponent(() => import('../components/pages/A
 const Roadmap = createLazyComponent(() => import('../components/pages/roadmap/Roadmap.jsx'));
 const P2E = createLazyComponent(() => import('../components/pages/P2E/Game'));
 const NotFound = createLazyComponent(() => import('../components/pages/NotFound'));
-import AIHub from '../components/pages/AIHub';
+const AIHub = createLazyComponent(() => import('../components/pages/AIHub'));
+const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTHome.jsx'));
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -97,5 +98,10 @@ export const routes = [
   {
     path: "/ai",
     element: withSuspense(<MainLayout><AIHub /></MainLayout>)
+  },
+  {
+    path: "/nfts",
+    element: withSuspense(<MainLayout><NFTsPage /></MainLayout>),
+    loader: async () => null
   }
 ];
