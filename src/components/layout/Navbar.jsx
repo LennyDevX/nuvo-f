@@ -12,7 +12,8 @@ import {
   FaExternalLinkAlt,
   FaCode, 
   FaGamepad,
-  FaRobot, // Add AI icon
+  FaRobot,
+  FaImage // Add NFT icon
 } from 'react-icons/fa';
 
 // Importa la variable de entorno
@@ -72,7 +73,8 @@ const Navbar = () => {
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
     { path: '/game', label: 'Game', icon: FaGamepad },
-    { path: '/ai', label: 'AI Hub', icon: FaRobot }, // Updated path to match component
+    { path: '/nfts', label: 'NFTs', icon: FaImage }, // Add NFT navigation item
+    { path: '/ai', label: 'AI Hub', icon: FaRobot },
   ];
 
   return (
