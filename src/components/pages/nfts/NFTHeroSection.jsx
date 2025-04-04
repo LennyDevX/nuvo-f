@@ -13,64 +13,38 @@ const NFTHeroSection = () => {
     })
   };
 
-  // Features para los NFTs
+  // Features para los NFTs with enhanced descriptions
   const nftFeatures = [
     { 
       icon: <FaGem />, 
       title: "Premium Access", 
-      description: "Exclusive access to premium features and advanced platform capabilities."
+      description: "Exclusive access to premium features and advanced tokenization capabilities for your physical assets."
     },
     { 
       icon: <FaFingerprint />, 
       title: "Unique & Verifiable", 
-      description: "Each NFT is cryptographically unique and verifiable on the blockchain."
+      description: "Each NFT is cryptographically unique and verifiable, creating a secure bridge between physical and digital."
     },
     { 
       icon: <FaShieldAlt />, 
       title: "Utility-Focused", 
-      description: "Real utility within the Nuvos ecosystem, not just collectibles."
+      description: "Real-world utility that transforms your physical assets into digital opportunities with tangible benefits."
     },
     { 
       icon: <FaCoins />, 
       title: "Staking Benefits", 
-      description: "Enhanced staking rewards and priority in yield distribution."
+      description: "Enhanced staking rewards and priority in yield distribution across the Nuvos Cloud ecosystem."
     },
     { 
       icon: <FaUserLock />, 
       title: "Governance Rights", 
-      description: "Voting power in platform decisions and future development."
+      description: "Shape the future of asset tokenization with weighted voting power in protocol decisions."
     }
   ];
 
   return (
     <section className="relative py-32 px-4 overflow-hidden">
-      {/* Enhanced background with animated effects */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-black/60"></div>
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
-        
-        {/* Animated accent elements */}
-        <m.div 
-          className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl"
-          animate={{ 
-            scale: [1, 1.2, 1], 
-            opacity: [0.2, 0.3, 0.2],
-            x: [0, 10, 0],
-            y: [0, -10, 0]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <m.div 
-          className="absolute bottom-1/4 right-1/3 w-56 h-56 rounded-full bg-pink-500/10 blur-3xl"
-          animate={{ 
-            scale: [1, 1.3, 1], 
-            opacity: [0.1, 0.2, 0.1],
-            x: [0, -15, 0],
-            y: [0, 15, 0]
-          }}
-          transition={{ duration: 9, delay: 1, repeat: Infinity }}
-        />
-      </div>
+      {/* Remove local background elements to use global space background */}
       
       <m.div 
         className="max-w-7xl mx-auto text-center z-20 space-y-12"
@@ -78,28 +52,36 @@ const NFTHeroSection = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        {/* Enhanced title animation word by word */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 md:mb-8">
-          <m.span 
-            className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
-            custom={0}
-            initial="hidden"
-            animate="visible"
-            variants={wordVariants}
-          >
-            NUVOS NFT
-          </m.span>
-          <br />
-          <m.span 
-            className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
-            custom={1}
-            initial="hidden"
-            animate="visible"
-            variants={wordVariants}
-          >
-            Collection
-          </m.span>
-        </h1>
+        {/* Enhanced title animation with better contrast against space background */}
+        <div className="relative">
+          <m.div 
+            className="absolute inset-0 w-full h-full bg-black/30 rounded-3xl blur-xl -z-10"
+            animate={{ opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
+          ></m.div>
+          
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 md:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-500 to-indigo-400">
+            <m.span 
+              className="inline-block"
+              custom={0}
+              initial="hidden"
+              animate="visible"
+              variants={wordVariants}
+            >
+              NUVOS NFT
+            </m.span>
+            <br />
+            <m.span 
+              className="inline-block"
+              custom={1}
+              initial="hidden"
+              animate="visible"
+              variants={wordVariants}
+            >
+              Collection
+            </m.span>
+          </h1>
+        </div>
 
         <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4">
           <m.p 
@@ -108,7 +90,7 @@ const NFTHeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Exclusive digital assets that unlock real utility within the Nuvos ecosystem.
+            Tokenize your physical assets and unlock their digital potential in the Nuvos ecosystem.
           </m.p>
           
           <m.p 
@@ -117,11 +99,11 @@ const NFTHeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            Own a piece of the future with our limited-edition collection that delivers genuine value, platform benefits, and governance rights.
+            Bridge the physical and digital worlds with our tokenization platform. Transform tangible objects into verified digital assets with real utility, ownership benefits, and interoperable value.
           </m.p>
         </div>
 
-        {/* Grid de características con efectos hover */}
+        {/* Grid de características with fluid animations */}
         <m.div 
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12"
           initial={{ opacity: 0, y: 20 }}
@@ -131,17 +113,24 @@ const NFTHeroSection = () => {
           {nftFeatures.map((feature, index) => (
             <m.div 
               key={index} 
-              className="bg-gradient-to-br from-purple-900/40 to-black/60 backdrop-blur-md p-6 rounded-xl border border-purple-500/20 shadow-xl hover:shadow-purple-500/10"
+              className="bg-gradient-to-br from-violet-900/50 to-indigo-900/50 backdrop-blur-md p-6 rounded-xl border border-violet-500/30 shadow-xl hover:shadow-violet-500/10"
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 + 0.9 }}
               whileHover={{ 
                 scale: 1.05, 
                 boxShadow: "0 0 20px 0 rgba(168, 85, 247, 0.3)",
                 borderColor: "rgba(168, 85, 247, 0.5)"
               }}
-              transition={{ duration: 0.2 }}
             >
               <m.div 
-                className="text-purple-400 text-3xl mb-4"
-                whileHover={{ scale: 1.1, color: "#a855f7" }}
+                className="text-fuchsia-400 text-3xl mb-4"
+                whileHover={{ scale: 1.1, color: "#d946ef" }}
+                animate={{ 
+                  y: [0, -5, 0],
+                  opacity: [0.8, 1, 0.8]
+                }}
+                transition={{ duration: 3, repeat: Infinity, delay: index * 0.2 }}
               >
                 {feature.icon}
               </m.div>

@@ -33,6 +33,22 @@
   font-weight: bold;
 }
 
+/* Apply consistent card styling throughout the About page */
+.about-card {
+  background: linear-gradient(to bottom right, rgba(76, 29, 149, 0.4), rgba(0, 0, 0, 0.6));
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.about-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 25px 0 rgba(168, 85, 247, 0.3);
+  border-color: rgba(139, 92, 246, 0.5);
+}
 
 /* Custom animations */
 @keyframes float {

@@ -4,8 +4,6 @@ import NFTHeroSection from './NFTHeroSection';
 import NFTExplainerSection from './NFTExplainerSection';
 import NFTCallToAction from './NFTCallToAction';
 import AnimationProvider from '../../animation/AnimationProvider';
-// Import the SpaceBackground component instead of CSS
-import SpaceBackground from '../../effects/SpaceBackground';
 
 const NFTsPage = () => {
   const { scrollYProgress } = useScroll();
@@ -23,8 +21,15 @@ const NFTsPage = () => {
     <AnimationProvider>
       <div className="bg-gradient-to-b from-black via-purple-950/20 to-black min-h-screen">
         <div className="relative">
-          {/* Use the SpaceBackground component */}
-          <SpaceBackground />
+          {/* Animated background elements */}
+          <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
+            <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+            <m.div 
+              className="absolute top-0 left-0 right-0 h-screen bg-gradient-radial from-purple-600/30 via-transparent to-transparent"
+              animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.3, 0.2] }}
+              transition={{ duration: 10, repeat: Infinity, repeatType: "reverse" }}
+            ></m.div>
+          </div>
           
           <m.div style={{ y }} className="relative z-10 pt-20">
             <NFTHeroSection />

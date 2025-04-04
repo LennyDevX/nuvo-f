@@ -5,18 +5,18 @@ import { FaRocket, FaShieldAlt, FaUsers } from 'react-icons/fa';
 const MissionSection = () => {
   const missionItems = [
     {
-      title: "Smart Contract Innovation",
-      content: "We're developing a new generation of modular smart contracts that enable unique interactions within our ecosystem. Our microservices architecture allows users to seamlessly engage with multiple DeFi protocols, from yield farming to liquidity provision, all through a unified and intuitive interface.",
+      title: "Bridging Physical & Digital",
+      content: "We're pioneering new ways to connect real-world assets with blockchain technology. Our infrastructure allows users to create digital representations of physical items, establishing verifiable ownership, provenance, and programmable utility that spans both worlds.",
       icon: <FaRocket className="text-4xl" />
     },
     {
-      title: "Multi-Layer Rewards",
-      content: "Our platform features diverse reward mechanisms across different smart contract layers. Users can earn through various activities: providing liquidity, participating in governance, contributing to protocol security, and engaging in community-driven initiatives. Each interaction is designed to maximize value for participants.",
+      title: "Democratized Tokenization",
+      content: "We're building tools that empower anyone to tokenize assets without technical expertise. From collectibles to real estate, from artwork to equipment, our platform enables users to transform physical value into digital opportunities through a seamless, accessible process.",
       icon: <FaShieldAlt className="text-4xl" />
     },
     {
-      title: "Interactive Ecosystem",
-      content: "We're building an interconnected network of smart contracts where users actively shape the platform's evolution. Through our innovative staking mechanisms, prediction markets, and social trading features, community members can earn rewards while contributing to the ecosystem's growth and sustainability.",
+      title: "Ecosystem of Possibilities",
+      content: "Our platform serves as a foundation where tokenized assets can interact with the broader digital economy. Users can showcase their tokenized items in our NFT marketplace, implement novel utility through smart contracts, or integrate with complementary services in the web3 ecosystem.",
       icon: <FaUsers className="text-4xl" />
     }
   ];
@@ -38,9 +38,9 @@ const MissionSection = () => {
 
   return (
     <section className="py-20 md:py-32 relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-purple-950/10 to-black/80 z-0"></div>
-      <div className="absolute inset-0 bg-[url('/dots-pattern.svg')] opacity-5"></div>
+      {/* Background elements - Remove grid pattern */}
+      <div className="absolute inset-0 bg-transparent z-0"></div>
+      {/* Remove the dots pattern that causes grid effect */}
       
       {/* Animated accent shapes */}
       <m.div
@@ -73,7 +73,7 @@ const MissionSection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Transforming decentralized finance through innovative technology and user-centered design.
+          Creating a world where every physical asset can unlock digital potential, generating new forms of value, utility, and experience.
         </m.p>
 
         <m.div 

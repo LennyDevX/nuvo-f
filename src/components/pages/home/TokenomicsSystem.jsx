@@ -1,22 +1,17 @@
-import React, { useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const TokenomicsSystem = () => {
   const navigate = useNavigate();
-  const [activeIndex, setActiveIndex] = useState(null);
 
+  // Data structure is maintained for potential future use, but we won't display the chart
   const tokenData = [
     { name: 'Community Rewards', value: 20, color: '#8B5CF6' },
     { name: 'Staking Growth', value: 40, color: '#6D28D9' },
     { name: 'Team & Development', value: 15, color: '#4C1D95' },
     { name: 'Liquidity', value: 25, color: '#5B21B6' },
   ];
-
-  const onPieEnter = (_, index) => {
-    setActiveIndex(index);
-  };
 
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8">
@@ -28,19 +23,19 @@ const TokenomicsSystem = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Título con degradado */}
-            <h2 className="text-4xl font-bold mb-6">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-500">
-                Tokenomics That Drive Value
-              </span>
+            {/* Título con degradado similar al de NftInfo */}
+            <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
+              <span className="block mb-2">Revolutionary</span>
+              <span className="gradient-text block mb-2">Tokenomics Ecosystem</span>
+              <span className="block">Built For The Future</span>
             </h2>
-            <p className="text-gray-300 mb-8">
-              Our token distribution is designed to ensure long-term sustainability and 
-              community benefits. With 60% allocated to community initiatives, we're 
-              building a truly decentralized ecosystem.
+            
+            <p className="text-sm sm:text-lg text-gray-300 max-w-xl mt-6">
+              Our innovative token distribution creates long-term value with a focus on community governance and sustainable growth. 
+              Experience the perfect balance of staking rewards, liquidity incentives, and ecosystem development. ✨💰
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-4 mt-8">
               {tokenData.map((item) => (
                 <div 
                   key={item.name}
@@ -53,65 +48,87 @@ const TokenomicsSystem = () => {
                   <span className="text-white">
                     {item.name} - {item.value}%
                   </span>
-                  
                 </div>
-                
               ))}
             </div>
             <button
               onClick={() => navigate('/tokenomics')}
               className="px-6 py-4 mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
             >
-              Learn More About Tokenomics
+              Explore Full Tokenomics
             </button>
           </motion.div>
 
-          {/* Right Content - Interactive Chart */}
+          {/* Right Content - 3D Animated Token Image */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="h-[400px]"
+            className="flex justify-center items-center relative"
+            style={{ perspective: '1000px' }}
           >
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={tokenData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={160}
-                  paddingAngle={5}
-                  dataKey="value"
-                  onMouseEnter={onPieEnter}
-                >
-                  {tokenData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      style={{
-                        filter: activeIndex === index ? 'brightness(1.2)' : 'none',
-                        cursor: 'pointer',
-                      }}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ payload }) => {
-                    if (payload && payload[0]) {
-                      return (
-                        <div className="bg-gray-900 p-3 rounded-lg shadow-md">
-                          <p className="text-white text-sm font-semibold">
-                            {`${payload[0].name}: ${payload[0].value}%`}
-                          </p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
+            <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]">
+              {/* Glowing background effect */}
+              <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+              
+              {/* 3D rotating token */}
+              <motion.div
+                className="w-full h-full relative"
+                animate={{ 
+                  rotateY: [0, 360],
+                  rotateX: [5, -5, 5]
+                }}
+                transition={{ 
+                  duration: 20, 
+                  repeat: Infinity, 
+                  ease: "linear",
+                  rotateX: {
+                    duration: 10,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                    ease: "easeInOut"
+                  }
+                }}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                <img 
+                  src="/NuvosToken.png" 
+                  alt="Nuvos Token" 
+                  className="absolute top-0 left-0 w-full h-full object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]"
                 />
-              </PieChart>
-            </ResponsiveContainer>
+              </motion.div>
+              
+              {/* Floating particles effect */}
+              <motion.div 
+                className="absolute w-4 h-4 rounded-full bg-purple-500/50 blur-sm"
+                animate={{
+                  x: [0, 50, -50, 0],
+                  y: [0, -50, 50, 0],
+                  opacity: [0.2, 0.8, 0.2]
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+                style={{ top: '20%', left: '20%' }}
+              />
+              <motion.div 
+                className="absolute w-3 h-3 rounded-full bg-indigo-500/50 blur-sm"
+                animate={{
+                  x: [0, -40, 40, 0],
+                  y: [0, 40, -40, 0],
+                  opacity: [0.2, 0.6, 0.2]
+                }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  delay: 1
+                }}
+                style={{ bottom: '20%', right: '20%' }}
+              />
+            </div>
           </motion.div>
         </div>
       </div>

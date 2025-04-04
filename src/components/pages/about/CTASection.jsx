@@ -5,12 +5,7 @@ const CTASection = () => {
   return (
     <section className="relative py-24 px-4">
       {/* Enhanced background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-950/20 to-black/80"></div>
-      <m.div 
-        className="absolute inset-0 bg-[url('/stars-pattern.svg')] opacity-10"
-        animate={{ opacity: [0.05, 0.1, 0.05] }}
-        transition={{ duration: 4, repeat: Infinity }}
-      ></m.div>
+      <div className="absolute inset-0 bg-transparent"></div>
       
       {/* Animated accent shapes */}
       <m.div
@@ -36,7 +31,7 @@ const CTASection = () => {
           viewport={{ once: true }}
         >
           <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
-            Join Our Community
+            Start Your Tokenization Journey
           </span>
         </m.h2>
         
@@ -47,7 +42,7 @@ const CTASection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Be part of the future of DeFi. Join our beta program and help shape the future of decentralized finance.
+          Transform your physical assets into digital opportunities. Join our platform and be among the first to bridge the gap between tangible value and blockchain technology.
         </m.p>
         
         <m.div
@@ -57,7 +52,7 @@ const CTASection = () => {
           viewport={{ once: true }}
         >
           <m.a
-            href="/beta-signup"
+            href="/tokenization-beta"
             className="inline-block px-12 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-lg font-bold rounded-full shadow-lg shadow-purple-500/20"
             whileHover={{ 
               scale: 1.05, 
@@ -70,7 +65,7 @@ const CTASection = () => {
               backgroundPosition: { duration: 0.8 } 
             }}
           >
-            Join Beta Program
+            Tokenize Your First Asset
           </m.a>
         </m.div>
       </div>

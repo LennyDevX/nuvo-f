@@ -6,32 +6,26 @@ const StakingSection = () => {
   const stakingFeatures = [
     {
       icon: <FaLock />,
-      title: "Secure Staking",
-      description: "Our staking contracts are audited and secured with industry-leading protection measures."
+      title: "Secure Asset Protocol",
+      description: "Stake NUVO tokens to enhance the security of our asset verification system that validates connections between physical items and digital tokens."
     },
     {
       icon: <FaChartLine />,
-      title: "Variable Rewards",
-      description: "Earn dynamic APY based on your staking duration and participation in protocol governance."
+      title: "Tokenization Rewards",
+      description: "Earn rewards from the platform's tokenization fees, incentivizing participation in the growth of our physical-to-digital ecosystem."
     },
     {
       icon: <FaVoteYea />,
-      title: "Voting Rights",
-      description: "Stakers receive voting power proportional to their stake in the DAO's governance decisions."
+      title: "Protocol Governance",
+      description: "Shape the future of physical asset tokenization by voting on proposed improvements to the verification processes and ecosystem features."
     }
   ];
 
   return (
     <section className="relative py-28 px-4">
-      {/* Enhanced background design */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-purple-950/5 to-black/80"></div>
-      <m.div 
-        className="absolute inset-0 bg-[url('/hexagon-pattern.svg')] opacity-5"
-        animate={{ 
-          backgroundPosition: ["0% 0%", "10% 10%"]
-        }}
-        transition={{ duration: 30, repeat: Infinity, repeatType: "reverse" }}
-      ></m.div>
+      {/* Enhanced background design - Remove hexagon pattern */}
+      <div className="absolute inset-0 bg-transparent"></div>
+      {/* Remove the hexagon pattern that causes grid effect */}
       
       {/* Animated accent elements */}
       <m.div 
@@ -54,7 +48,7 @@ const StakingSection = () => {
               viewport={{ once: true }}
             >
               <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
-                Staking Benefits
+                Securing the Bridge
               </span>
             </m.h2>
             
@@ -65,7 +59,7 @@ const StakingSection = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              Stake your NUVO tokens to earn rewards and participate in governance decisions.
+              Stake NUVO tokens to support and benefit from the growing ecosystem of tokenized physical assets.
             </m.p>
           </div>
 
@@ -113,7 +107,7 @@ const StakingSection = () => {
               }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              Learn More About Staking
+              Join Our Staking Program
             </m.a>
           </m.div>
         </div>
