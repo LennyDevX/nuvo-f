@@ -1,7 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaGift, FaRocket } from 'react-icons/fa';
-import { airdropInfo } from './AirdropConfig';
+import { airdropInfo } from './airdropConfig.js';
 
 const AirdropSection = () => {
   const cardVariants = {
