@@ -9,6 +9,7 @@ import SupplyTracker from './SupplyTracker';
 import TokenInfoModal from '../../modals/TokenInfoModal';
 import TokenomicsExplanation from './TokenomicsExplanation';
 import AnimationProvider from '../../animation/AnimationProvider';
+import SpaceBackground from '../../effects/SpaceBackground';
 
 const TokenomicsDashboard = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -16,12 +17,13 @@ const TokenomicsDashboard = () => {
   return (
     <MainLayout showFooter={true}>
       <AnimationProvider>
-        <div className="bg-nuvo-gradient">
+        <div className="bg-nuvo-gradient relative">
+          <SpaceBackground customClass="opacity-80" />
           <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full pt-16 pb-6 md:pt-20"
+            className="w-full pt-16 pb-6 md:pt-20 relative z-10"
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Hero Section */}

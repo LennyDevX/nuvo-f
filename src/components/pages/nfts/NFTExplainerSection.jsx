@@ -23,39 +23,37 @@ const NFTExplainerSection = () => {
     }
   };
 
-  // Steps to explain the NFT process
+  // Steps with enhanced colors for space theme
   const steps = [
     {
       icon: <FaWallet />,
       title: "Connect Your Wallet",
       description: "Link your compatible crypto wallet to our platform securely and easily.",
-      color: "from-purple-600 to-blue-600"
+      color: "from-violet-600 to-indigo-600"
     },
     {
       icon: <FaStore />,
-      title: "Browse the Collection",
-      description: "Explore our limited-edition NUVOS NFTs with different utility levels and benefits.",
-      color: "from-blue-600 to-cyan-600"
+      title: "Browse Asset Options",
+      description: "Explore ways to tokenize your physical assets with different utility levels and benefits.",
+      color: "from-indigo-600 to-fuchsia-600"
     },
     {
       icon: <FaKey />,
-      title: "Purchase & Mint",
-      description: "Secure your NFT with a simple transaction. Each is minted directly to your wallet.",
-      color: "from-cyan-600 to-purple-600"
+      title: "Tokenize & Mint",
+      description: "Transform your physical asset into a digital token with verifiable ownership and utility.",
+      color: "from-fuchsia-600 to-violet-600"
     },
     {
       icon: <FaUserShield />,
-      title: "Enjoy the Benefits",
-      description: "Immediately access exclusive features, discounts, and opportunities within the Nuvos ecosystem.",
-      color: "from-purple-600 to-blue-800"
+      title: "Bridge Both Worlds",
+      description: "Access the best of both physical and digital realms, unlocking new value and opportunities.",
+      color: "from-violet-600 to-indigo-800"
     }
   ];
 
   return (
     <div className="py-16 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute -right-64 -top-32 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl"></div>
-      <div className="absolute -left-64 top-1/2 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl"></div>
+      {/* Remove local background elements to use global space background */}
       
       <m.div 
         className="container mx-auto px-4 relative z-10"
@@ -65,16 +63,16 @@ const NFTExplainerSection = () => {
         variants={containerVariants}
       >
         <m.div variants={itemVariants} className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500">
-            How NUVOS NFTs Work
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-indigo-400">
+            How Asset Tokenization Works
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-gray-300">
-            Our NFTs combine digital collectibility with real utility. Here's how to get started and what 
-            you can expect when you own a NUVOS NFT.
+            Our NFTs form the bridge between your physical assets and their digital potential. Here's how 
+            to start transforming tangible value into tokenized opportunities.
           </p>
         </m.div>
 
-        {/* Process Steps */}
+        {/* Process Steps with fluid animations */}
         <m.div 
           variants={containerVariants}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
@@ -84,20 +82,39 @@ const NFTExplainerSection = () => {
               key={index} 
               variants={itemVariants}
               className="rounded-xl overflow-hidden"
-              whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              whileHover={{ 
+                y: -5, 
+                transition: { duration: 0.2 },
+                boxShadow: "0 20px 40px -15px rgba(139, 92, 246, 0.3)" 
+              }}
             >
-              <div className={`bg-gradient-to-br ${step.color} p-8 h-full rounded-xl`}>
-                <div className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-6 text-white text-2xl">
+              <m.div 
+                className={`bg-gradient-to-br ${step.color} p-8 h-full rounded-xl`}
+                initial={{ backgroundPosition: "0% 0%" }}
+                animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              >
+                <m.div 
+                  className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-6 text-white text-2xl"
+                  animate={{ 
+                    boxShadow: ["0 0 0 0 rgba(255,255,255,0.3)", "0 0 0 10px rgba(255,255,255,0)", "0 0 0 0 rgba(255,255,255,0.3)"]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
+                >
                   {step.icon}
-                </div>
+                </m.div>
                 <h3 className="text-xl font-bold mb-4 text-white">{step.title}</h3>
                 <p className="text-white/80">{step.description}</p>
                 <div className="mt-4 flex items-center">
-                  <span className="bg-white/20 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold">
+                  <m.span 
+                    className="bg-white/20 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 4, repeat: Infinity, delay: index * 0.7 }}
+                  >
                     {index + 1}
-                  </span>
+                  </m.span>
                 </div>
-              </div>
+              </m.div>
             </m.div>
           ))}
         </m.div>
@@ -106,5 +123,4 @@ const NFTExplainerSection = () => {
   );
 };
 
-// Asegúrate de incluir esta exportación default
 export default NFTExplainerSection;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaRobot, FaTools, FaChartLine, FaBrain, FaServer, FaGem, FaArrowRight, FaTshirt, FaGift, FaCoins, FaUsers } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import SpaceBackground from '../effects/SpaceBackground';
 
 const AITool = ({ title, description, icon: Icon, link }) => (
   <div className="p-8 rounded-xl bg-purple-900/20 border border-purple-500/30 
@@ -147,8 +148,9 @@ const AIHub = () => {
   ];
 
   return (
-    <div className="bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
-      <div className="w-full max-w-7xl mx-auto px-6">
+    <div className="relative min-h-screen pt-28 pb-16 flex flex-col items-center">
+      <SpaceBackground customClass="opacity-80" />
+      <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           {/* Title with letter-by-letter animation */}
           <motion.div

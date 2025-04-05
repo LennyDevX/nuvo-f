@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import HeroSection from './Carrousel';
 import { motion } from 'framer-motion';
+import SpaceBackground from '../../effects/SpaceBackground';
 
 const roadmapData = {
   "2024": {
@@ -154,71 +155,73 @@ const Roadmap = () => {
   const currentQuarterData = roadmapData[selectedYear]?.[selectedQuarter] || [];
 
   return (
-    <div className="min-h-screen bg-nuvo-gradient relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-900/10 to-transparent pointer-events-none" />
-      <div className="relative">
-        <HeroSection />
-        
-        <div className="max-w-6xl mx-auto px-4 pb-20">
-          <div className="mb-8 sm:mb-16 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
-              Development Roadmap
-            </h2>
-            <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto">
-              Track our progress and upcoming milestones
-            </p>
-          </div>
-
-          {/* Selector de Año y Trimestre */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-            <div className="flex justify-center gap-2">
-              {["2024", "2025"].map(year => (
-                <button
-                  key={year}
-                  onClick={() => setSelectedYear(year)}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    selectedYear === year 
-                      ? "bg-purple-600 text-white" 
-                      : "bg-black/20 text-gray-400 hover:bg-purple-900/30"
-                  }`}
-                >
-                  {year}
-                </button>
-              ))}
-            </div>
-            <div className="flex justify-center gap-2">
-              {["Q1", "Q2", "Q3", "Q4"].map(quarter => (
-                <button
-                  key={quarter}
-                  onClick={() => setSelectedQuarter(quarter)}
-                  className={`px-4 py-2 rounded-lg transition-all ${
-                    selectedQuarter === quarter 
-                      ? "bg-purple-600 text-white" 
-                      : "bg-black/20 text-gray-400 hover:bg-purple-900/30"
-                  }`}
-                >
-                  {quarter}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Timeline View */}
-          <div className="relative mt-12">
-            <div className="absolute left-4 sm:left-1/2 h-full w-px bg-purple-500/20" />
-            
-            <div className="space-y-8 sm:space-y-12">
-              {currentQuarterData.map((item, index) => (
-                <TimelineItem item={item} index={index} key={index} />
-              ))}
+    <div className="min-h-screen relative">
+      <SpaceBackground customClass="opacity-80" />
+      <div className="relative z-10">
+        <div className="relative">
+          <HeroSection />
+          
+          <div className="max-w-6xl mx-auto px-4 pb-20">
+            <div className="mb-8 sm:mb-16 text-center">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
+                Development Roadmap
+              </h2>
+              <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto">
+                Track our progress and upcoming milestones
+              </p>
             </div>
 
-            {/* Empty State */}
-            {currentQuarterData.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-400">No roadmap items available for this period yet.</p>
+            {/* Selector de Año y Trimestre */}
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+              <div className="flex justify-center gap-2">
+                {["2024", "2025"].map(year => (
+                  <button
+                    key={year}
+                    onClick={() => setSelectedYear(year)}
+                    className={`px-4 py-2 rounded-lg transition-all ${
+                      selectedYear === year 
+                        ? "bg-purple-600 text-white" 
+                        : "bg-black/20 text-gray-400 hover:bg-purple-900/30"
+                    }`}
+                  >
+                    {year}
+                  </button>
+                ))}
               </div>
-            )}
+              <div className="flex justify-center gap-2">
+                {["Q1", "Q2", "Q3", "Q4"].map(quarter => (
+                  <button
+                    key={quarter}
+                    onClick={() => setSelectedQuarter(quarter)}
+                    className={`px-4 py-2 rounded-lg transition-all ${
+                      selectedQuarter === quarter 
+                        ? "bg-purple-600 text-white" 
+                        : "bg-black/20 text-gray-400 hover:bg-purple-900/30"
+                    }`}
+                  >
+                    {quarter}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timeline View */}
+            <div className="relative mt-12">
+              <div className="absolute left-4 sm:left-1/2 h-full w-px bg-purple-500/20" />
+              
+              <div className="space-y-8 sm:space-y-12">
+                {currentQuarterData.map((item, index) => (
+                  <TimelineItem item={item} index={index} key={index} />
+                ))}
+              </div>
+
+              {/* Empty State */}
+              {currentQuarterData.length === 0 && (
+                <div className="text-center py-12">
+                  <p className="text-gray-400">No roadmap items available for this period yet.</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

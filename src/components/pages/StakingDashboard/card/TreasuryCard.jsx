@@ -1,20 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDown, FaChevronUp, FaExchangeAlt, FaShieldAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../../ui/Tooltip';
-// Corrigiendo la importación para asegurarnos que sea correctaal';
-import TreasuryActivityModal from '../../../modals/TreasuryActivityModal';
 
 const TreasuryCard = () => {
   const { state, getTreasuryMetrics } = useStaking();
   const { treasuryMetrics } = state;
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     getTreasuryMetrics();
-    
   }, []);
 
   // Función para determinar el color del indicador de salud
@@ -112,24 +108,10 @@ const TreasuryCard = () => {
           {/* Treasury Allocation Grid */}
           
           
-          {/* Treasury Transactions - Button */}
-          <div className="mt-auto">
-            <button 
-              onClick={() => setShowModal(true)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-violet-900/30 to-fuchsia-900/20 border border-violet-700/20 hover:border-fuchsia-600/30 transition-all duration-300 text-slate-300 text-sm hover:shadow-md hover:shadow-fuchsia-900/5"
-            >
-              <FaFileInvoiceDollar className="text-fuchsia-400 text-sm" />
-              Show Treasury Activity
-            </button>
-          </div>
+          {/* Modificamos o eliminamos el botón que abría el modal */}
+          
         </div>
       </BaseCard>
-
-      {/* Modal de actividad del tesoro */}
-      <TreasuryActivityModal 
-        isOpen={showModal} 
-        onClose={() => setShowModal(false)} 
-      />
     </>
   );
 };

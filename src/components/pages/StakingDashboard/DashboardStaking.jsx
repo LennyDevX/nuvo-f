@@ -11,6 +11,7 @@ import { formatBalance } from "../../../utils/formatters";
 import { FaCoins } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
+import SpaceBackground from "../../effects/SpaceBackground";
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
@@ -139,8 +140,9 @@ const DashboardStaking = () => {
   };
 
   return (
-    <div className="bg-nuvo-gradient min-h-screen pt-24 pb-16 flex flex-col items-center">
-      <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8">
+    <div className="relative min-h-screen pt-24 pb-16 flex flex-col items-center">
+      <SpaceBackground customClass="opacity-85" />
+      <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation}>
           {/* Redesigned Hero Section */}
           <m.div

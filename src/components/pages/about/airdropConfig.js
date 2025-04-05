@@ -1,22 +1,22 @@
 export const airdropInfo = {
-  schedule: "Bi-monthly",
-  amount: "10 POL per wallet",
-  eligibility: [
-    "Hold minimum 5 POL tokens",
-    "Active staking participation",
-    "Community contribution"
-  ],
-  nextDrop: "December 14, 2024",
   categories: [
     {
-      title: "User Airdrop",
-      amount: "10 POL",
-      requirements: "Active wallet with minimum stake"
+      title: "Early Tokenizers",
+      amount: "250 NUVO Tokens",
+      requirements: "For users who join our beta program and tokenize their first physical asset through our platform."
     },
     {
-      title: "Developer Airdrop",
-      amount: "15 POL",
-      requirements: "Contribute to protocol development"
+      title: "Digital Bridge Builders",
+      amount: "500 NUVO Tokens",
+      requirements: "For developers and creators who build experiences that utilize tokenized physical assets in innovative ways."
     }
+  ],
+  eligibility: [
+    "Connect your wallet to Nuvos Cloud",
+    "Complete profile verification",
+    "Participate in the tokenization beta",
+    "Provide feedback on the tokenization process",
+    "Share your tokenized asset on social media",
+    "Join our community discussions"
   ]
 };

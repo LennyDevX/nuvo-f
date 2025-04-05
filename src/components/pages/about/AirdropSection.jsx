@@ -9,15 +9,33 @@ const AirdropSection = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
 
+  const updatedCategories = [
+    {
+      title: "Early Tokenizers",
+      amount: "250 NUVO Tokens",
+      requirements: "For users who join our beta program and tokenize their first physical asset through our platform."
+    },
+    {
+      title: "Digital Bridge Builders",
+      amount: "500 NUVO Tokens",
+      requirements: "For developers and creators who build experiences that utilize tokenized physical assets in innovative ways."
+    }
+  ];
+
+  const updatedEligibility = [
+    "Connect your wallet to Nuvos Cloud",
+    "Complete profile verification",
+    "Participate in the tokenization beta",
+    "Provide feedback on the tokenization process",
+    "Share your tokenized asset on social media",
+    "Join our community discussions"
+  ];
+
   return (
     <section className="relative py-32 px-4">
-      {/* Enhanced background design */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-purple-950/10 to-black/80"></div>
-      <m.div 
-        className="absolute inset-0 bg-[url('/dots-pattern.svg')] opacity-5"
-        animate={{ opacity: [0.03, 0.06, 0.03] }}
-        transition={{ duration: 6, repeat: Infinity }}
-      ></m.div>
+      {/* Enhanced background design - Remove dots pattern */}
+      <div className="absolute inset-0 bg-transparent"></div>
+      {/* Remove the dots pattern that causes grid effect */}
       
       {/* Animated accent elements */}
       <m.div 
@@ -40,7 +58,7 @@ const AirdropSection = () => {
           viewport={{ once: true }}
         >
           <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
-            Airdrop Program
+            Tokenization Pioneers
           </span>
         </m.h2>
         
@@ -51,7 +69,7 @@ const AirdropSection = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
           viewport={{ once: true }}
         >
-          Participate in our community airdrop to get early access to NUVO tokens.
+          Join our early adopter program to start tokenizing your physical assets and earn NUVO tokens as you help build the bridge between worlds.
         </m.p>
 
         <m.div 
@@ -64,7 +82,7 @@ const AirdropSection = () => {
             visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
           }}
         >
-          {airdropInfo.categories.map((category, index) => (
+          {updatedCategories.map((category, index) => (
             <m.div
               key={index}
               variants={cardVariants}
@@ -100,9 +118,9 @@ const AirdropSection = () => {
           transition={{ delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <h3 className="text-2xl font-bold text-white mb-6">Eligibility Requirements</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">Tokenization Program Requirements</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {airdropInfo.eligibility.map((requirement, index) => (
+            {updatedEligibility.map((requirement, index) => (
               <m.div 
                 key={index} 
                 className="flex items-center gap-4 text-gray-300"

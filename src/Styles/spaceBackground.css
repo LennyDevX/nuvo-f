@@ -1,0 +1,144 @@
+/* Space Background Animation Styles */
+
+.space-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: linear-gradient(125deg, #050019 0%, #0a0024 45%, #07001c 75%, #050019 100%);
+  z-index: -1;
+}
+
+.stars-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.tiny-stars {
+  background-image: radial-gradient(1px 1px at 10px 10px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 50px 50px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 100px 100px, #fff 100%, transparent),
+                    radial-gradient(1.5px 1.5px at 150px 150px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 200px 200px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 300px 180px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 350px 250px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 180px 280px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 250px 350px, #fff 100%, transparent);
+  background-size: 400px 400px;
+  animation: twinkling 10s linear infinite;
+}
+
+.small-stars {
+  background-image: radial-gradient(1.5px 1.5px at 25px 25px, #fff 100%, transparent),
+                    radial-gradient(1.5px 1.5px at 75px 75px, #fff 100%, transparent),
+                    radial-gradient(2px 2px at 125px 125px, #fff 100%, transparent),
+                    radial-gradient(1px 1px at 175px 175px, #fff 100%, transparent),
+                    radial-gradient(2px 2px at 220px 220px, #fff 100%, transparent),
+                    radial-gradient(1.5px 1.5px at 290px 290px, #fff 100%, transparent),
+                    radial-gradient(1.5px 1.5px at 320px 360px, #fff 100%, transparent);
+  background-size: 500px 500px;
+  animation: twinkling 15s linear infinite;
+  opacity: 0.7;
+  animation-delay: 1s;
+}
+
+.medium-stars {
+  background-image: radial-gradient(2px 2px at 30px 30px, #fff 100%, transparent),
+                    radial-gradient(2.5px 2.5px at 90px 90px, #fff 100%, transparent),
+                    radial-gradient(1.5px 1.5px at 160px 160px, #fff 100%, transparent),
+                    radial-gradient(2.5px 2.5px at 210px 210px, #fff 100%, transparent),
+                    radial-gradient(2px 2px at 270px 270px, #fff 100%, transparent),
+                    radial-gradient(2px 2px at 310px 330px, #fff 100%, transparent),
+                    radial-gradient(2px 2px at 380px 210px, #fff 100%, transparent);
+  background-size: 600px 600px;
+  animation: twinkling 12s linear infinite;
+  opacity: 0.5;
+  animation-delay: 2s;
+}
+
+.bright-stars {
+  background-image: radial-gradient(3px 3px at 40px 40px, rgba(255, 255, 255, 0.9) 100%, transparent),
+                    radial-gradient(2.5px 2.5px at 110px 110px, rgba(255, 255, 255, 0.9) 100%, transparent),
+                    radial-gradient(3px 3px at 180px 180px, rgba(255, 255, 255, 0.9) 100%, transparent),
+                    radial-gradient(2.5px 2.5px at 240px 240px, rgba(255, 255, 255, 0.9) 100%, transparent),
+                    radial-gradient(3px 3px at 350px 150px, rgba(255, 255, 255, 0.9) 100%, transparent),
+                    radial-gradient(3px 3px at 280px 320px, rgba(255, 255, 255, 0.9) 100%, transparent);
+  background-size: 600px 600px;
+  animation: brightStars 20s linear infinite;
+  opacity: 0;
+}
+
+.nebula-effect {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at 20% 30%, rgba(138, 43, 226, 0.2) 0%, transparent 70%),
+              radial-gradient(ellipse at 80% 60%, rgba(123, 31, 162, 0.2) 0%, transparent 70%),
+              radial-gradient(ellipse at 60% 20%, rgba(75, 0, 130, 0.1) 0%, transparent 70%),
+              radial-gradient(ellipse at 40% 70%, rgba(156, 39, 176, 0.15) 0%, transparent 70%),
+              radial-gradient(ellipse at 10% 90%, rgba(103, 58, 183, 0.1) 0%, transparent 70%);
+  animation: nebulaPulse 15s ease-in-out infinite alternate;
+  opacity: 0.6;
+}
+
+.constellation {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7);
+}
+
+.constellation-1 { top: 20%; left: 15%; animation: starPulse 4s infinite; }
+.constellation-2 { top: 15%; left: 20%; animation: starPulse 5s infinite 0.5s; }
+.constellation-3 { top: 25%; left: 18%; animation: starPulse 4.5s infinite 1s; }
+.constellation-4 { top: 22%; left: 25%; animation: starPulse 6s infinite 1.5s; }
+.constellation-5 { top: 30%; left: 85%; animation: starPulse 5.5s infinite; }
+.constellation-6 { top: 35%; left: 80%; animation: starPulse 5s infinite 1s; }
+.constellation-7 { top: 25%; left: 75%; animation: starPulse 6.5s infinite 0.5s; }
+
+/* Animation keyframes */
+@keyframes twinkling {
+  0% { opacity: 0.1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.1; }
+}
+
+@keyframes brightStars {
+  0% { opacity: 0; }
+  50% { opacity: 1; box-shadow: 0 0 20px 10px rgba(255, 255, 255, 0.2); }
+  100% { opacity: 0; }
+}
+
+@keyframes nebulaPulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+  100% { opacity: 0.4; }
+}
+
+@keyframes starPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.8); }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+/* Utility class for custom star positioning */
+.custom-constellation {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7);
+}

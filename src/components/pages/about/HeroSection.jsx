@@ -1,6 +1,5 @@
 import React from 'react';
 import { m } from 'framer-motion';
-// Remove unused SiPolymerproject import
 import { FaNetworkWired, FaRocket, FaGithub, FaUsers } from 'react-icons/fa';
 
 const HeroSection = () => {
@@ -16,12 +15,11 @@ const HeroSection = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-20 px-4">
-      {/* Enhanced background with animated effects */}
+      {/* Enhanced background with animated effects - removing local star background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 to-black/60"></div>
-        <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-transparent"></div>
         
-        {/* Animated accent elements */}
+        {/* Keep the existing blur effects */}
         <m.div 
           className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-purple-500/10 blur-3xl"
           animate={{ 
@@ -50,28 +48,31 @@ const HeroSection = () => {
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
-        {/* Enhanced title animation word by word */}
-        <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8">
-          <m.span 
-            className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
-            custom={0}
-            initial="hidden"
-            animate="visible"
-            variants={wordVariants}
-          >
-            Revolutionizing
-          </m.span>
-          <br />
-          <m.span 
-            className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
-            custom={1}
-            initial="hidden"
-            animate="visible"
-            variants={wordVariants}
-          >
-            Digital Finance
-          </m.span>
-        </h1>
+        {/* Title directly without local space background */}
+        <div className="relative">
+          {/* Enhanced title animation word by word */}
+          <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 relative z-10">
+            <m.span 
+              className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
+              custom={0}
+              initial="hidden"
+              animate="visible"
+              variants={wordVariants}
+            >
+              Bridging Worlds
+            </m.span>
+            <br />
+            <m.span 
+              className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
+              custom={1}
+              initial="hidden"
+              animate="visible"
+              variants={wordVariants}
+            >
+              Through Tokenization
+            </m.span>
+          </h1>
+        </div>
 
         <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4">
           <m.p 
@@ -80,7 +81,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
           >
-            Nuvo is more than a DeFi platform - it's a paradigm shift in how we interact with digital assets. We're building the foundation for a new era of financial innovation.
+            Nuvos Cloud is a revolutionary platform where the physical and digital worlds converge. Our core infrastructure enables users to tokenize real-world assets, unlocking new forms of value and utility.
           </m.p>
           
           <m.p 
@@ -89,7 +90,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.7 }}
           >
-            Through advanced blockchain technology and innovative smart contract architecture, we're creating a secure, transparent, and efficient ecosystem that empowers users to take control of their financial future.
+            By connecting blockchain technology with tangible objects, we're creating an ecosystem where users can develop personalized digital experiences, tokenize physical possessions, and access a marketplace for a new generation of asset-backed NFTs.
           </m.p>
         </div>
 
@@ -101,10 +102,10 @@ const HeroSection = () => {
           transition={{ delay: 0.9 }}
         >
           {[
-            { label: "Smart Contracts", value: "Maker", icon: <FaRocket className="text-2xl" /> },
+            { label: "Asset Tokenization", value: "NFT+", icon: <FaRocket className="text-2xl" /> },
             { label: "Powered by", value: "Polygon", icon: <FaNetworkWired className="text-2xl" /> },
-            { label: "Open Source", value: "Web Apps", icon: <FaGithub className="text-2xl" /> },
-            { label: "Community", value: "DAO", icon: <FaUsers className="text-2xl" /> }
+            { label: "Open Standard", value: "Protocol", icon: <FaGithub className="text-2xl" /> },
+            { label: "Governance", value: "DAO", icon: <FaUsers className="text-2xl" /> }
           ].map((stat, index) => (
             <m.div 
               key={index} 

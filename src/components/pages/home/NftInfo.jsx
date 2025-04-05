@@ -1,19 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { m, useReducedMotion } from 'framer-motion';
-import { FaTasks, FaGift } from 'react-icons/fa';
-import CircleDeveloper from './CircleDeveloper';
+import { FaGem, FaUnlock } from 'react-icons/fa';
 import { fadeIn } from '../../../utils/animationVariants';
 
 const RewardDeveloper = () => {
-  const [activePhase, setActivePhase] = useState(1);
   const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActivePhase((prev) => (prev % 4) + 1);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   return (
     <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
@@ -28,13 +19,13 @@ const RewardDeveloper = () => {
             className="space-y-3 sm:space-y-4"
           >
             <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
-              <span className="block mb-2">Empower Your</span>
-              <span className="gradient-text block mb-2">Development Journey</span>
-              <span className="block">With Rewarding Tasks</span>
+              <span className="block mb-2">Elevate Your Profile</span>
+              <span className="gradient-text block mb-2">With Utility-Driven NFTs</span>
+              <span className="block">Beyond The Blockchain </span>
             </h1>
             
             <p className="text-sm sm:text-lg text-gray-300 max-w-xl mt-4 sm:mt-6">
-              Join our developer community and earn rewards as you complete tasks and contribute to our project.
+              Curate your digital identity by collecting exclusive NFTs that unlock real-world privileges, enhanced platform features, and unique opportunities in our ecosystem and beyond. Each NFT represents both artistic value and functional utility. 🌐🔑
             </p>
           </m.div>
 
@@ -46,8 +37,8 @@ const RewardDeveloper = () => {
             className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6 sm:mt-8"
           >
             {[
-              { value: "Tasks", label: "Complete Tasks", icon: <FaTasks /> },
-              { value: "Rewards", label: "Earn Rewards", icon: <FaGift /> }
+              { value: "Digital Assets 💎", label: "Collectible Artworks", icon: <FaGem /> },
+              { value: "Utility Access 🔓", label: "Cross-Platform Benefits", icon: <FaUnlock /> }
             ].map((stat, index) => (
               <m.div
                 key={index}
@@ -64,15 +55,27 @@ const RewardDeveloper = () => {
           </m.div>
         </div>
 
-        {/* Right Column - Interactive Progress Circle */}
+        {/* Right Column - NFT Art Image */}
         <m.div
           initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="relative mt-4 sm:mt-8 lg:mt-0 pb-8 sm:pb-0"
+          className="relative mt-4 sm:mt-8 lg:mt-0 pb-8 sm:pb-0 flex justify-center items-center"
         >
-          <CircleDeveloper activePhase={activePhase} />
+          <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-purple-500/20 border border-purple-500/30">
+            <m.img 
+              src="/NftArt.webp" 
+              alt="Premium NFT Collection" 
+              className="w-full h-auto max-w-md object-cover"
+              whileHover={{ scale: 1.03 }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 text-xs text-white">
+              🏆 Premium Collection
+            </div>
+          </div>
         </m.div>
       </div>
     </section>

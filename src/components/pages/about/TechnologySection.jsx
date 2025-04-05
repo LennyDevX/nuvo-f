@@ -8,36 +8,30 @@ const TechnologySection = () => {
     {
       name: "Polygon Network",
       icon: <FaNetworkWired className="text-4xl md:text-5xl mb-4" />,
-      description: "Our platform is built on Polygon, providing fast, secure, and low-cost transactions."
+      description: "Built on Polygon to ensure fast, secure, and low-cost tokenization of assets with minimal environmental impact."
     },
     {
-      name: "Solidity",
+      name: "Smart Contract Architecture",
       icon: <SiSolidity className="text-4xl md:text-5xl mb-4" />,
-      description: "Advanced smart contract architecture ensures secure and transparent operations."
+      description: "Advanced token standards that maintain connection between physical assets and their digital representations."
     },
     {
-      name: "Modern Frontend",
+      name: "Intuitive Interface",
       icon: <SiReact className="text-4xl md:text-5xl mb-4" />,
-      description: "Built with React for a responsive and intuitive user experience."
+      description: "User-friendly platform enabling anyone to tokenize assets without technical knowledge of blockchain systems."
     },
     {
-      name: "Robust Backend",
+      name: "Scalable Backend",
       icon: <SiNodedotjs className="text-4xl md:text-5xl mb-4" />,
-      description: "Powerful backend solutions to handle complex DeFi operations."
+      description: "Robust infrastructure supporting millions of tokenized assets with reliable verification mechanisms."
     }
   ];
 
   return (
     <section className="py-24 md:py-32 relative">
-      {/* Enhanced background with multiple layers */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-950/10 via-black to-purple-950/5"></div>
-      <m.div 
-        className="absolute inset-0 bg-[url('/circuit-pattern.svg')] opacity-5"
-        animate={{ 
-          backgroundPosition: ["0% 0%", "100% 100%"]
-        }}
-        transition={{ duration: 50, repeat: Infinity, repeatType: "reverse" }}
-      ></m.div>
+      {/* Enhanced background - Remove circuit pattern */}
+      <div className="absolute inset-0 bg-transparent"></div>
+      {/* Remove the circuit pattern that causes grid effect */}
       
       <div className="container mx-auto px-4 relative z-10">
         <m.div 
@@ -49,11 +43,11 @@ const TechnologySection = () => {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
-              Our Technology Stack
+              Our Tokenization Technology
             </span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Built on cutting-edge blockchain technology to deliver a secure, scalable, and efficient DeFi platform.
+            Innovative solutions that create secure, verifiable connections between physical objects and their digital counterparts on the blockchain.
           </p>
         </m.div>
 

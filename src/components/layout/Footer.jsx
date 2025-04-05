@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 const Footer = () => {
   return (
-    <footer className="bg-black/90 border-t border-purple-500/60 ">
+    <footer className="relative bg-black border-t border-purple-500/60 z-50">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
@@ -59,17 +59,14 @@ const Footer = () => {
                   Roadmap
                 </NavLink>
               </li>
-              <li>
-                <a 
-                  href="https://github.com/LennyDevX/nuvo-f" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
-                >
-                  Documentation
-                </a>
-              </li>
-              
+              <a 
+                href="https://github.com/LennyDevX/nuvo-f" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-purple-400 transition-colors"
+              >
+                Documentation
+              </a>
               <li>
                 <NavLink 
                   to="/game"
