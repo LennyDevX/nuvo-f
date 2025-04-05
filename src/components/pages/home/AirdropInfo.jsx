@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { m, useReducedMotion } from 'framer-motion';
 import { FaCoins, FaPuzzlePiece, FaRocket, FaArrowRight, FaList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
@@ -14,35 +14,8 @@ const AirdropInfo = () => {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
-  const handleBoxClick = () => {
-    if (!isOpening) {
-      setIsOpening(true);
-      
-      const sequence = async () => {
-        // Initial shake animation
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Glow effect before opening
-        const giftBox = document.querySelector('.gift-box');
-        if (giftBox) {
-          giftBox.classList.add('pulse-glow');
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        setShowReward(true);
-        setIsOpening(false);
-      };
-      
-      sequence();
-    }
-  };
-
-  const openWhitelistModal = () => {
-    setShowModal(true);
-  };
-
-  const rewards = [
+  // Memoize the rewards array to prevent recreating on each render
+  const rewards = useMemo(() => [
     {
       icon: <FaCoins />,
       text: "500 NUVO Tokens",
@@ -64,7 +37,46 @@ const AirdropInfo = () => {
       description: "Whitelist members will enjoy up to 5% bonus on staking rewards upon token launch. Plan ahead for maximum yield potential.",
       highlight: "Benefits available at launch in 2026"
     }
-  ];
+  ], []);
+
+  // Memoize the box click handler
+  const handleBoxClick = useCallback(() => {
+    if (!isOpening) {
+      setIsOpening(true);
+      
+      const sequence = async () => {
+        // Initial shake animation
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Glow effect before opening
+        const giftBox = document.querySelector('.gift-box');
+        if (giftBox) {
+          giftBox.classList.add('pulse-glow');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setShowReward(true);
+        setIsOpening(false);
+      };
+      
+      sequence();
+    }
+  }, [isOpening]);
+
+  // Memoize modal handlers
+  const openWhitelistModal = useCallback(() => {
+    setShowModal(true);
+  }, []);
+
+  const closeWhitelistModal = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
+  // Memoize expandedReward handler
+  const setExpandedRewardHandler = useCallback((index) => {
+    setExpandedReward(expandedReward === index ? null : index);
+  }, [expandedReward]);
 
   return (
     <section className="relative w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-6 sm:pb-16 lg:py-24">
@@ -82,7 +94,7 @@ const AirdropInfo = () => {
             handleBoxClick={handleBoxClick}
             rewards={rewards}
             expandedReward={expandedReward}
-            setExpandedReward={setExpandedReward}
+            setExpandedReward={setExpandedRewardHandler}
           />
         </m.div>
 
@@ -157,7 +169,7 @@ const AirdropInfo = () => {
         </m.div>
       </div>
 
-      {showModal && <WhitelistModal onClose={() => setShowModal(false)} />}
+      {showModal && <WhitelistModal onClose={closeWhitelistModal} />}
     </section>
   );
 };

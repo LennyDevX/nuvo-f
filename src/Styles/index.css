@@ -28,10 +28,37 @@
   }
 }
 
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  :root {
+    --blur-default: 2px; /* Reduce blur amount on mobile */
+    --shadow-purple: 0 0 1rem -0.5rem #8b5cf6; /* Smaller shadows */
+  }
+  
+  /* Disable hover effects on mobile */
+  .card-purple-gradient:hover {
+    border-color: rgba(139, 92, 246, 0.2);
+    background-color: rgba(139, 92, 246, 0.05);
+    transform: none;
+  }
+  
+  .btn-primary:hover, .btn-secondary:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Optimize backdrop filters */
+  .card-base, .card-purple-gradient {
+    backdrop-filter: var(--blur-default);
+  }
+}
+
 /* Layout Components */
 .app-container {
   min-height: 100vh;
   position: relative;
+  will-change: transform; /* Help browser optimize */
+  contain: content; /* Improve rendering performance */
 }
 
 /* Card Components */
@@ -85,6 +112,13 @@
   .btn-secondary:hover {
     background-color: rgba(139, 92, 246, 0.1);
     border-color: rgba(139, 92, 246, 0.5);
+  }
+
+  /* Enable hardware acceleration for animations */
+  .btn-primary, .btn-secondary, .card-purple-gradient {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
 

@@ -142,3 +142,33 @@
   border-radius: 50%;
   box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.7);
 }
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .mobile-optimized {
+    /* Reduce the number of stars for better performance */
+    --star-count: 100; /* Much fewer stars on mobile */
+  }
+  
+  /* Simplify or disable expensive animations on mobile */
+  .mobile-optimized .stars {
+    animation-duration: 60s; /* Slower animation */
+  }
+  
+  .mobile-optimized .nebula-effect {
+    opacity: 0.3; /* Reduce opacity for better performance */
+    animation: none; /* Disable animation */
+  }
+  
+  /* Reduce blur effects on mobile for better performance */
+  .blur-3xl {
+    --tw-blur: blur(24px); /* Less blur on mobile */
+  }
+}
+
+/* Optimize animation performance with will-change */
+.stars, .constellation, .custom-constellation {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}

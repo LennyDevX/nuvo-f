@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-const StakingCalculator = () => {
+const StakingCalculator = ({ mobileOptimized = false }) => {
   const [stakingAmount, setStakingAmount] = useState('5');
 
   const calculateReturns = (amount) => {
@@ -12,6 +12,42 @@ const StakingCalculator = () => {
   };
 
   const { daily, monthly, yearly } = calculateReturns(parseFloat(stakingAmount) || 0);
+
+  const formatCurrency = (value) => value.toFixed(2);
+
+  if (mobileOptimized) {
+    return (
+      <div className="bg-black/30 border border-purple-500/30 rounded-xl p-4 shadow-lg">
+        <h2 className="text-xl font-semibold text-white mb-3">Staking Calculator</h2>
+        
+        <div className="mb-4">
+          <label className="block text-gray-300 text-sm mb-1">
+            Stake Amount (POL)
+          </label>
+          <input
+            type="number"
+            value={stakingAmount}
+            onChange={(e) => setStakingAmount(e.target.value)}
+            className="w-full bg-black/40 border border-purple-500/30 rounded p-2 text-white"
+          />
+        </div>
+        
+        <div className="p-3 bg-purple-900/20 rounded-lg">
+          <h3 className="text-lg font-medium text-white">Estimated Rewards</h3>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            <div>
+              <div className="text-xs text-gray-400">Monthly</div>
+              <div className="text-sm text-white">{formatCurrency(monthly)} POL</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400">Yearly</div>
+              <div className="text-sm text-white">{formatCurrency(yearly)} POL</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
