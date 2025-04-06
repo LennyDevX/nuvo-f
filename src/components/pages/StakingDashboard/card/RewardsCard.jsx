@@ -1,8 +1,8 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { FaGift, FaInfoCircle, FaCoins } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../../../ui/Tooltip';
-import { formatBalance } from '../../../../utils/formatters'; // Changed from "Formatters" to "formatters"
+import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,11 +10,18 @@ import { ethers } from 'ethers';
 
 const RewardsCard = ({ onClaim, showToast }) => {
   const [loading, setLoading] = useState(false);
-  const { withdrawRewards, state, getSignerAddress } = useStaking();
+  const { withdrawRewards, state } = useStaking();
   const { isPending } = state;
-  const userInfo = state.userInfo || { pendingRewards: '0', roiProgress: 0 };
   const [transactionInfo, setTransactionInfo] = useState(null);
+  const pollIntervalRef = useRef(null);
 
+  // Memoized user info
+  const userInfo = useMemo(() => 
+    state.userInfo || { pendingRewards: '0', roiProgress: 0 },
+    [state.userInfo]
+  );
+
+  // Memoized staking info calculation
   const stakingInfo = useMemo(() => {
     const days = state.userInfo?.stakingDays || 0;
     
@@ -41,15 +48,17 @@ const RewardsCard = ({ onClaim, showToast }) => {
     return { days, bonus, nextBonus, daysLeft };
   }, [state.userInfo?.stakingDays]);
 
-  // Add effect to log rewards updates
+  // Development logging for rewards updates
   useEffect(() => {
-    console.log("Current rewards info:", {
-      pendingRewards: userInfo.pendingRewards,
-      roiProgress: userInfo.roiProgress
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Current rewards info:", {
+        pendingRewards: userInfo.pendingRewards,
+        roiProgress: userInfo.roiProgress
+      });
+    }
   }, [userInfo]);
 
-  // Add polling for rewards with signer address
+  // Optimized rewards polling with cleanup
   useEffect(() => {
     let mounted = true;
     
@@ -64,7 +73,9 @@ const RewardsCard = ({ onClaim, showToast }) => {
         // Solo actualizar si el componente sigue montado
         if (mounted) {
           const result = await state.contract.calculateRewards(address);
-          console.log("Polled rewards for address:", address, ethers.formatEther(result));
+          if (process.env.NODE_ENV === 'development') {
+            console.log("Polled rewards for address:", address, ethers.formatEther(result));
+          }
         }
       } catch (error) {
         console.error("Error polling rewards:", error);
@@ -72,15 +83,18 @@ const RewardsCard = ({ onClaim, showToast }) => {
     };
 
     pollRewards();
-    const interval = setInterval(pollRewards, 30000);
+    pollIntervalRef.current = setInterval(pollRewards, 30000);
     
     return () => {
       mounted = false;
-      clearInterval(interval);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
     };
   }, [state.contract]);
 
-  // Calcular ROI progress basado en los deposits
+  // Memoized ROI progress calculation
   const calculateProgress = useMemo(() => {
     if (!state.userDeposits || state.userDeposits.length === 0) return 0;
     
@@ -98,21 +112,24 @@ const RewardsCard = ({ onClaim, showToast }) => {
     return totalProgress / state.userDeposits.length;
   }, [state.userDeposits]);
 
-  // Actualizar el userInfo con el ROI calculado
+  // Log calculated ROI in development
   useEffect(() => {
-    if (calculateProgress > 0) {
+    if (process.env.NODE_ENV === 'development' && calculateProgress > 0) {
       console.log("Calculated ROI Progress:", calculateProgress);
     }
   }, [calculateProgress]);
 
-  const handleClaim = async () => {
+  // Optimized claim handler
+  const handleClaim = useCallback(async () => {
     if (loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0') return;
+    
     setLoading(true);
     setTransactionInfo({
       message: 'Processing Claim',
       type: 'loading',
       details: 'Claiming your rewards...'
     });
+    
     try {
       const tx = await withdrawRewards();
       setTransactionInfo({
@@ -121,6 +138,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
         details: `Successfully claimed ${formatBalance(userInfo.pendingRewards)} POL in rewards.`,
         hash: tx.hash
       });
+      
       if (typeof onClaim === 'function') onClaim();
       if (typeof showToast === 'function') {
         showToast('Rewards claimed successfully!', 'success');
@@ -132,6 +150,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
         type: 'error',
         details: error.reason || 'There was an error claiming your rewards. Please try again.'
       });
+      
       if (typeof showToast === 'function') {
         if (error.code === 'ACTION_REJECTED') {
           showToast('Transaction cancelled by user', 'warning');
@@ -141,18 +160,12 @@ const RewardsCard = ({ onClaim, showToast }) => {
       }
     } finally {
       setLoading(false);
+      setTimeout(() => setTransactionInfo(null), 5000);
     }
-    setTimeout(() => setTransactionInfo(null), 5000);
-  };
+  }, [loading, userInfo.pendingRewards, withdrawRewards, onClaim, showToast]);
 
-  const getProgressInfo = (days) => {
-    if (days >= 365) return { level: 'Max Level', bonus: 5 };
-    if (days >= 180) return { nextMilestone: 365, current: 180, bonus: 3, next: 5 };
-    if (days >= 90) return { nextMilestone: 180, current: 90, bonus: 1, next: 3 };
-    return { nextMilestone: 90, current: 0, bonus: 0, next: 1 };
-  };
-
-  const buttonVariants = {
+  // Memoized button variants for animations
+  const buttonVariants = useMemo(() => ({
     idle: { scale: 1 },
     hover: { 
       scale: 1.02,
@@ -165,9 +178,10 @@ const RewardsCard = ({ onClaim, showToast }) => {
       scale: 1,
       boxShadow: 'none'
     }
-  };
+  }), []);
 
-  const shimmerAnimation = {
+  // Memoized shimmer animation
+  const shimmerAnimation = useMemo(() => ({
     hidden: { 
       backgroundPosition: '200% 0',
       opacity: 0.8
@@ -181,13 +195,19 @@ const RewardsCard = ({ onClaim, showToast }) => {
         ease: 'linear'
       }
     }
-  };
+  }), []);
+
+  // Memoized button disabled state
+  const isButtonDisabled = useMemo(() => 
+    loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' || isPending,
+    [loading, userInfo.pendingRewards, isPending]
+  );
 
   return (
     <>
       <BaseCard title="Available Rewards" icon={<FaGift className="text-purple-300" />}>
         <div className="flex flex-col space-y-4">
-          {/* Stats Grid */}
+          {/* Stats Grid - Optimized for mobile with fewer layout shifts */}
           <div className="grid grid-cols-2 gap-3">
             {/* Rewards Section */}
             <div className="bg-purple-900/10 backdrop-blur-sm p-4 rounded-xl border border-purple-600/20 shadow-lg">
@@ -251,14 +271,14 @@ const RewardsCard = ({ onClaim, showToast }) => {
             </div>
           </div>
 
-          {/* Claim Button - Redesigned */}
+          {/* Claim Button - Redesigned with optimizations */}
           <motion.button
             onClick={handleClaim}
-            disabled={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' || isPending}
+            disabled={isButtonDisabled}
             variants={buttonVariants}
             initial="idle"
-            whileHover={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' ? "disabled" : "hover"}
-            whileTap={loading || !userInfo.pendingRewards || userInfo.pendingRewards === '0' ? "disabled" : "tap"}
+            whileHover={isButtonDisabled ? "disabled" : "hover"}
+            whileTap={isButtonDisabled ? "disabled" : "tap"}
             className={`
               relative w-full overflow-hidden
               bg-gradient-to-r from-indigo-600/80 to-violet-500/80
@@ -280,7 +300,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
               <>
                 <FaCoins className="text-yellow-300" />
                 <span>Claim Rewards</span>
-                {userInfo.pendingRewards && userInfo.pendingRewards !== '0' && (
+                {!isButtonDisabled && (
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                     variants={shimmerAnimation}
@@ -288,7 +308,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
                     animate="visible"
                   />
                 )}
-                {userInfo.pendingRewards && userInfo.pendingRewards !== '0' && (
+                {!isButtonDisabled && (
                   <motion.span 
                     className="absolute right-4"
                     animate={{ x: [-5, 5], opacity: [0.7, 1] }}
@@ -310,4 +330,4 @@ const RewardsCard = ({ onClaim, showToast }) => {
   );
 };
 
-export default RewardsCard;
+export default React.memo(RewardsCard);

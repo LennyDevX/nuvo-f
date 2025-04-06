@@ -1,12 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import { FaInfoCircle, FaStar, FaCalendarAlt, FaPercent, FaCheck } from 'react-icons/fa';
+import React, { useMemo, useState, useCallback } from 'react';
+import { FaInfoCircle, FaStar, FaCalendarAlt } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import Tooltip from '../../../ui/Tooltip';
 
 function ROICard({ firstDepositTime }) {
   const [showDetails, setShowDetails] = useState(false);
 
-  // Calcular el progreso del ROI
+  // Optimized toggle function
+  const toggleDetails = useCallback(() => {
+    setShowDetails(prev => !prev);
+  }, []);
+
+  // Memoized progress calculation
   const calculateProgress = useMemo(() => {
     if (!firstDepositTime) return 0;
     
@@ -19,6 +24,7 @@ function ROICard({ firstDepositTime }) {
     return progress;
   }, [firstDepositTime]);
 
+  // Memoized staking info calculation
   const stakingInfo = useMemo(() => {
     if (!firstDepositTime) return {
       days: 0,
@@ -61,6 +67,34 @@ function ROICard({ firstDepositTime }) {
     return { days, bonus, nextMilestone, daysLeft, nextBonus, baseROI, totalROI };
   }, [firstDepositTime]);
 
+  // Memoized tier visualization components
+  const tierCompletion = useMemo(() => {
+    if (!stakingInfo.daysLeft || stakingInfo.daysLeft <= 0) return null;
+    
+    const progressPercentage = Math.floor((stakingInfo.days / stakingInfo.nextMilestone) * 100);
+    
+    return (
+      <div className="relative pt-1">
+        <div className="flex mb-2 items-center justify-between">
+          <div className="text-sm text-violet-100/70 font-medium px-3 py-1 bg-violet-900/30 rounded-full">
+            {progressPercentage}% Complete
+          </div>
+          <div className="text-sm text-violet-100/70 font-medium">
+            {stakingInfo.daysLeft} days remaining
+          </div>
+        </div>
+        <div className="w-full bg-indigo-900/40 rounded-full h-3 p-0.5">
+          <div
+            className="bg-gradient-to-r from-violet-400 to-fuchsia-400 h-2 rounded-full transition-all duration-1000 shadow-inner shadow-fuchsia-500/50"
+            style={{
+              width: `${progressPercentage}%`
+            }}
+          />
+        </div>
+      </div>
+    );
+  }, [stakingInfo.days, stakingInfo.nextMilestone, stakingInfo.daysLeft]);
+
   return (
     <BaseCard title="Staking Benefits" icon={<FaStar className="text-purple-400" />}>
       <div className="space-y-5 h-full flex flex-col">
@@ -86,7 +120,7 @@ function ROICard({ firstDepositTime }) {
           </div>
         </div>
 
-        {/* Progress to Next Tier */}
+        {/* Progress to Next Tier - Conditionally rendered */}
         {stakingInfo.daysLeft > 0 && (
           <div className="bg-gradient-to-br from-indigo-900/30 to-violet-900/20 p-5 rounded-2xl border border-indigo-500/20 shadow-lg backdrop-blur-md hover:shadow-indigo-700/10 transition-all duration-300">
             <div className="flex justify-between items-center mb-4">
@@ -103,32 +137,12 @@ function ROICard({ firstDepositTime }) {
               </div>
             </div>
             
-            <div className="relative pt-1">
-              <div className="flex mb-2 items-center justify-between">
-                <div className="text-sm text-violet-100/70 font-medium px-3 py-1 bg-violet-900/30 rounded-full">
-                  {Math.floor((stakingInfo.days / stakingInfo.nextMilestone) * 100)}% Complete
-                </div>
-                <div className="text-sm text-violet-100/70 font-medium">
-                  {stakingInfo.daysLeft} days remaining
-                </div>
-              </div>
-              <div className="w-full bg-indigo-900/40 rounded-full h-3 p-0.5">
-                <div
-                  className="bg-gradient-to-r from-violet-400 to-fuchsia-400 h-2 rounded-full transition-all duration-1000 shadow-inner shadow-fuchsia-500/50"
-                  style={{
-                    width: `${(stakingInfo.days / stakingInfo.nextMilestone) * 100}%`
-                  }}
-                />
-              </div>
-            </div>
+            {tierCompletion}
           </div>
         )}
-
-        {/* Bonus Tiers Grid */}
-        
       </div>
     </BaseCard>
   );
 }
 
-export default ROICard;
+export default React.memo(ROICard);

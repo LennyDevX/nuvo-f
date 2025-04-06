@@ -61,7 +61,7 @@ const Header = ({ openUpdatesModal }) => {
     if (!isPaused) {
       const interval = setInterval(() => {
         handleNextFeature();
-      }, 3000);
+      }, 5000);
       
       return () => clearInterval(interval);
     }
@@ -79,12 +79,18 @@ const Header = ({ openUpdatesModal }) => {
     [prefersReducedMotion, isMobile]
   );
 
+  // Define consistent animation settings for all components
+  const mainAnimationSettings = useMemo(() => ({
+    duration: 0.6,
+    staggerDelay: 0.08,
+  }), []);
+
   // Memoize feature card hover effect
   const featureCardVariants = useMemo(
     () => ({
       hover: {
         backgroundColor: "rgba(139, 92, 246, 0.1)",
-        transition: { duration: 0.3 }
+        transition: { duration: 0.5 }
       }
     }),
     []
@@ -159,17 +165,22 @@ const Header = ({ openUpdatesModal }) => {
     []
   );
 
-  // Memoize carousel card variants
+  // Memoize carousel card variants with synchronized timing
   const carouselItemVariants = useMemo(
     () => ({
-      hidden: { opacity: 0, scale: 0.9 },
+      hidden: { opacity: 0, scale: 0.95 },
       visible: {
         opacity: 1,
         scale: 1,
-        transition: { duration: 0.5 }
+        transition: { 
+          duration: mainAnimationSettings.duration,
+          type: "spring",
+          stiffness: 100,
+          damping: 15
+        }
       }
     }),
-    []
+    [mainAnimationSettings]
   );
 
   // Define animation variants for staggered children
@@ -179,11 +190,13 @@ const Header = ({ openUpdatesModal }) => {
       visible: {
         opacity: 1,
         transition: {
-          staggerChildren: 0.1
+          duration: mainAnimationSettings.duration,
+          staggerChildren: mainAnimationSettings.staggerDelay,
+          when: "beforeChildren"
         }
       }
     }),
-    []
+    [mainAnimationSettings]
   );
 
   const itemVariants = useMemo(
@@ -192,22 +205,43 @@ const Header = ({ openUpdatesModal }) => {
       visible: {
         opacity: 1,
         y: 0,
-        transition: { duration: 0.5 }
+        transition: { 
+          duration: mainAnimationSettings.duration 
+        }
       }
     }),
-    []
+    [mainAnimationSettings]
   );
+
+  // Memoize page load animation controls
+  const pageControls = useAnimation();
+  
+  // Run all initial animations simultaneously
+  useEffect(() => {
+    const runAnimations = async () => {
+      await pageControls.start("visible");
+    };
+    
+    runAnimations();
+  }, [pageControls]);
 
   return (
     <LazyMotion features={domAnimation}>
       <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         {/* Background Elements */}
 
-        {/* Stats Banner */}
+        {/* Stats Banner - synchronized with main animations */}
         <m.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          variants={{
+            hidden: { opacity: 0, y: -20 },
+            visible: { 
+              opacity: 1, 
+              y: 0,
+              transition: { duration: mainAnimationSettings.duration }
+            }
+          }}
+          initial="hidden"
+          animate={pageControls}
           className="mb-14 bg-black/30 backdrop-blur-sm border border-purple-500/20 rounded-xl p-4 shadow-lg"
         >
           <div className="grid grid-cols-3 gap-4">
@@ -223,16 +257,26 @@ const Header = ({ openUpdatesModal }) => {
         </m.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+          {/* Text section - synchronized */}
           <m.div
-            initial={{
-              opacity: prefersReducedMotion ? 1 : 0,
-              x: prefersReducedMotion ? 0 : -20
+            variants={{
+              hidden: { 
+                opacity: prefersReducedMotion ? 1 : 0, 
+                x: prefersReducedMotion ? 0 : -20 
+              },
+              visible: { 
+                opacity: 1, 
+                x: 0,
+                transition: { 
+                  duration: mainAnimationSettings.duration,
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 15
+                } 
+              }
             }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{
-              duration: prefersReducedMotion ? 0 : 1,
-              delay: prefersReducedMotion ? 0 : 0.5
-            }}
+            initial="hidden"
+            animate={pageControls}
             className="space-y-8"
           >
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
@@ -287,11 +331,11 @@ const Header = ({ openUpdatesModal }) => {
             </div>
           </m.div>
 
-          {/* Features Carousel */}
+          {/* Features Carousel - synchronized */}
           <m.div
             variants={containerVariants}
             initial="hidden"
-            animate="visible"
+            animate={pageControls}
             className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/20 overflow-hidden shadow-xl shadow-purple-500/10 relative group"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -313,7 +357,7 @@ const Header = ({ openUpdatesModal }) => {
                     className="min-w-full p-6 cursor-pointer relative overflow-hidden group/card bg-black/30"
                     whileHover={{
                       backgroundColor: "rgba(139, 92, 246, 0.15)",
-                      transition: { duration: 0.3 }
+                      transition: { duration: 0.5 }
                     }}
                   >
                     <div className="absolute -right-4 -bottom-4 w-16 h-16 rounded-full bg-gradient-to-r from-purple-600/10 to-blue-600/10 blur-xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500"></div>
@@ -321,7 +365,7 @@ const Header = ({ openUpdatesModal }) => {
                       <div className="text-3xl mr-5 mt-1">
                         <m.div
                           whileHover={{ rotate: 5, scale: 1.1 }}
-                          transition={{ type: "spring", stiffness: 400 }}
+                          transition={{ type: "spring", stiffness: 500 }}
                         >
                           {item.icon}
                         </m.div>
@@ -374,11 +418,21 @@ const Header = ({ openUpdatesModal }) => {
           </m.div>
         </div>
 
-        <m.div
+        {/* Scroll indicator - synchronized */}
+        <m.div 
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { 
+              opacity: 1,
+              transition: { 
+                duration: mainAnimationSettings.duration,
+                delay: mainAnimationSettings.duration * 0.5
+              } 
+            }
+          }}
+          initial="hidden"
+          animate={pageControls}
           className="flex justify-center mt-20"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: scrolled ? 0 : 1 }}
-          transition={{ duration: 0.3 }}
         >
           <m.a
             href="#get-started"

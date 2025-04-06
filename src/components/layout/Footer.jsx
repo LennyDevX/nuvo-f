@@ -79,6 +79,16 @@ const Footer = () => {
               </li>
               <li>
                 <NavLink 
+                  to="/tokenize"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Tokenize Tool
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
                   to="/about"
                   prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"

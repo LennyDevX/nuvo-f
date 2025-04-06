@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import NavLink from '../navigation/NavLink'; // Import NavLink instead of Link
+import NavLink from '../navigation/NavLink';
 import WalletConnect from '../web3/WalletConnect';
-import AirdropDownloader from '../firebase/AirdropDownloader';
-import BetaBadge from '../ui/BetaBadge'; // Import BetaBadge component
+import BetaBadge from '../ui/BetaBadge';
 import { 
   FaHome, 
   FaCoins, 
   FaChartPie, 
   FaExchangeAlt, 
   FaExternalLinkAlt,
-  FaCode, 
   FaGamepad,
   FaRobot,
-  FaImage // Add NFT icon
+  FaImage,
+  FaCamera
 } from 'react-icons/fa';
 
 // Importa la variable de entorno
@@ -24,65 +23,86 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Manejador de navegación mejorado
-  const handleNavigation = (path) => {
+  // Memoized navigation handler
+  const handleNavigation = useCallback((path) => {
     setIsOpen(false);
     navigate(path);
-  };
+  }, [navigate]);
 
-  // Cerrar menú al cambiar de ruta
+  // Memoized menu toggle handler
+  const toggleMenu = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
+
+  // Close menu on route change - add dependency array
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
 
-  const navLinkClasses = `
-    relative px-4 py-2 text-sm font-medium
-    text-white rounded-lg
-    transition-all duration-300
-    bg-opacity-0 hover:bg-opacity-10
-    border border-transparent
-    hover:border-purple-500/50
-    hover:shadow-[0_0_2rem_-0.5rem_#8b5cf6]
-    hover:text-purple-400
-    backdrop-blur-sm
-    no-underline hover:no-underline
-    flex items-center gap-2
-  `;
+  // Memoize style classes to prevent recreating strings on every render
+  const styles = useMemo(() => ({
+    navLinkClasses: `
+      relative px-4 py-2 text-sm font-medium
+      text-white rounded-lg
+      transition-all duration-300
+      bg-opacity-0 hover:bg-opacity-10
+      border border-transparent
+      hover:border-purple-500/50
+      hover:shadow-[0_0_2rem_-0.5rem_#8b5cf6]
+      hover:text-purple-400
+      backdrop-blur-sm
+      no-underline hover:no-underline
+      flex items-center gap-2
+      box-border
+      before:absolute before:inset-0 before:rounded-lg
+    `,
+    navIconClasses: "w-4 h-4 text-purple-400/80",
+    mobileNavIconClasses: "w-5 h-5 text-purple-400/80",
+    mobileMenuClasses: isOpen => `
+      fixed inset-x-0 top-[4.25rem] z-50
+      transform transition-all duration-300 ease-in-out
+      ${isOpen 
+        ? 'translate-y-0 opacity-100 pointer-events-auto' 
+        : '-translate-y-full opacity-0 pointer-events-none'}
+      bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-lg
+      border-b border-purple-500/20 shadow-lg md:hidden
+    `,
+    mobileNavButtonClasses: (isActive) => `
+      w-full flex items-center gap-3 px-4 py-3 rounded-lg
+      text-sm font-medium text-white/90
+      transition-all duration-300
+      hover:bg-purple-500/10 active:bg-purple-500/20
+      ${isActive ? 'bg-purple-500/20' : ''}
+    `,
+    menuToggleClasses: "p-2.5 rounded-lg bg-purple-900/20 hover:bg-purple-800/30 active:bg-purple-700/40 border border-purple-500/30 transition-all duration-300"
+  }), []);
 
-  const navIconClasses = "w-4 h-4 text-purple-400/80";
+  // Memoize formatted contract address
+  const formattedContractAddress = useMemo(() => {
+    return `${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`;
+  }, []);
 
-  const mobileNavLinkClasses = `
-    flex items-center gap-3 px-4 py-3.5 rounded-lg
-    text-base font-medium text-white/90
-    transition-all duration-300
-    hover:bg-purple-500/10 active:bg-purple-500/20
-    hover:border-purple-500/50
-    hover:shadow-[0_0_1rem_-0.5rem_#8b5cf6]
-    border border-transparent
-    hover:text-purple-400
-    no-underline hover:no-underline
-    backdrop-blur-sm
-  `;
-
-  const mobileNavIconClasses = "w-5 h-5 text-purple-400/80";
-
-  // Navigation items array for both mobile and desktop
-  const navigationItems = [
+  // Memoize navigation items to prevent recreation on every render
+  const navigationItems = useMemo(() => [
     { path: '/', label: 'Home', icon: FaHome },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
-    { path: '/game', label: 'Game', icon: FaGamepad },
-    { path: '/nfts', label: 'NFTs', icon: FaImage }, // Add NFT navigation item
+    { path: '/nfts', label: 'NFTs', icon: FaImage },
     { path: '/ai', label: 'AI Hub', icon: FaRobot },
-  ];
+  ], []);
+
+  // Memoized logo click handler
+  const handleLogoClick = useCallback(() => {
+    handleNavigation('/');
+  }, [handleNavigation]);
 
   return (
     <nav className="fixed py-3 top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="flex justify-between items-center h-14">
-          {/* Logo */}
-          <div onClick={() => handleNavigation('/')} className="cursor-pointer">
+          {/* Logo - with memoized click handler */}
+          <div onClick={handleLogoClick} className="cursor-pointer">
             <img 
               className="h-10 w-auto md:h-12"
               src="/NuvoLogo.avif" 
@@ -93,17 +113,18 @@ const Navbar = () => {
             />
           </div>
 
-          {/* Desktop Menu - Updated with NavLink and prefetching */}
+          {/* Desktop Menu - Using memoized values */}
           <div className="hidden md:flex items-center justify-center flex-grow space-x-4">
             {navigationItems.map(({ path, label, icon: Icon }) => (
               <NavLink 
                 key={path} 
                 to={path} 
-                prefetchStrategy="intent" // Prefetch on hover
-                className={navLinkClasses}
+                prefetchStrategy="intent"
+                className={styles.navLinkClasses}
                 activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
+                style={{ minWidth: `${label.length * 10 + 40}px` }}
               >
-                <Icon className={navIconClasses} />
+                <Icon className={styles.navIconClasses} />
                 {label}
               </NavLink>
             ))}
@@ -117,22 +138,19 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Wallet Connect - Modificado */}
+          {/* Wallet Connect */}
           <div className="relative ml-4">
             <WalletConnect className="navbar-wallet" />
           </div>
 
-          {/* Mobile Controls */}
+          {/* Mobile Controls - with memoized toggle handler */}
           <div className="md:hidden flex items-center gap-2">
-            {/* Menu Button */}
             <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2.5 rounded-lg bg-purple-900/20 
-                hover:bg-purple-800/30 active:bg-purple-700/40
-                border border-purple-500/30 
-                transition-all duration-300"
+              onClick={toggleMenu}
+              className={styles.menuToggleClasses}
               aria-expanded={isOpen}
               aria-label="Toggle menu"
+              aria-controls="mobile-menu"
             >
               <div className="w-5 h-4 flex flex-col justify-between">
                 <span className={`block h-0.5 w-5 bg-purple-300 transform transition-transform duration-300 
@@ -147,39 +165,29 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Optimizado */}
+      {/* Mobile Menu - Using memoized styles and event handlers */}
       <div 
-        className={`
-          fixed inset-x-0 top-[4.25rem] z-50
-          transform transition-all duration-300 ease-in-out
-          ${isOpen 
-            ? 'translate-y-0 opacity-100 pointer-events-auto' 
-            : '-translate-y-full opacity-0 pointer-events-none'}
-          bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-lg
-          border-b border-purple-500/20 shadow-lg md:hidden
-        `}
+        id="mobile-menu"
+        className={styles.mobileMenuClasses(isOpen)}
+        aria-hidden={!isOpen}
       >
         <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-4.25rem)] overflow-y-auto">
-          
-
-          {/* Navigation Links */}
+          {/* Navigation Links - with memoized handlers and styles */}
           <div className="space-y-1.5">
-            {navigationItems.map(({ path, label, icon: Icon }) => (
-              <button
-                key={path}
-                onClick={() => handleNavigation(path)}
-                className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                  text-sm font-medium text-white/90
-                  transition-all duration-300
-                  hover:bg-purple-500/10 active:bg-purple-500/20
-                  ${location.pathname === path ? 'bg-purple-500/20' : ''}
-                `}
-              >
-                <Icon className={mobileNavIconClasses} />
-                {label}
-              </button>
-            ))}
+            {navigationItems.map(({ path, label, icon: Icon }) => {
+              const isActive = location.pathname === path;
+              return (
+                <button
+                  key={path}
+                  onClick={() => handleNavigation(path)}
+                  className={styles.mobileNavButtonClasses(isActive)}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <Icon className={styles.mobileNavIconClasses} />
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Contract Info y Version Badge */}
@@ -194,7 +202,7 @@ const Navbar = () => {
               >
                 <FaExternalLinkAlt className="w-3.5 h-3.5" />
                 <span className="text-xs font-mono">
-                  {`${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`}
+                  {formattedContractAddress}
                 </span>
               </a>
             </div>

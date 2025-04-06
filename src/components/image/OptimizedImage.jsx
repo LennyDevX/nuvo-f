@@ -12,17 +12,23 @@ const OptimizedImage = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
 
   useEffect(() => {
     // Reset states when src changes
     setIsLoaded(false);
     setError(false);
+    setCurrentSrc(src); // Reset to original source when src changes
   }, [src]);
 
-  // Determine if modern format is available
-  const imgSrc = src.endsWith('.jpg') || src.endsWith('.png') 
-    ? src.substring(0, src.lastIndexOf('.')) + '.webp'
-    : src;
+  // No intentamos convertir a WebP automáticamente para evitar problemas
+  // Esta era una fuente común de errores
+
+  const handleError = (e) => {
+    console.error("Error loading image:", src);
+    setError(true);
+    // No intentamos fallback automático ya que puede causar bucles
+  };
 
   return (
     <div 
@@ -38,21 +44,20 @@ const OptimizedImage = ({
              style={{ backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }}></div>
       )}
       
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-purple-500/10 text-white text-xs">
+          ⚠️ Error
+        </div>
+      )}
+      
       <img
-        src={imgSrc}
+        src={currentSrc}
         alt={alt}
         loading={loadingStrategy}
         onLoad={() => setIsLoaded(true)}
-        onError={(e) => {
-          // Fallback to original format if WebP fails
-          if (imgSrc !== src) {
-            e.currentTarget.src = src;
-          } else {
-            setError(true);
-          }
-        }}
-        className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        onError={handleError}
+        className={`transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'} ${error ? 'hidden' : ''}`}
+        style={{ width: '100%', height: '100%', objectFit: 'contain', ...props.style }}
         {...props}
       />
     </div>
