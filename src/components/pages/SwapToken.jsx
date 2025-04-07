@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState, useCallback, useMemo } from "re
 import { motion } from "framer-motion";
 import DodoSwapWidget from "../web3/SwapDodo";
 import { WalletContext } from "../../context/WalletContext";
+import SpaceBackground from "../effects/SpaceBackground";
 
 const SwapToken = () => {
   const { account, network, balance } = useContext(WalletContext);
@@ -131,6 +132,7 @@ const SwapToken = () => {
 
   return (
     <div className="bg-nuvo-gradient min-h-screen pt-20 sm:pt-24 md:py-16 flex flex-col items-center justify-start sm:justify-center">
+      <SpaceBackground customClass="opacity-90" />
       <div className="w-full max-w-2xl mx-auto px-3 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-6 sm:mb-8"

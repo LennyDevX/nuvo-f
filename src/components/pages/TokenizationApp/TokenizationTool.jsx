@@ -28,8 +28,9 @@ const StepRenderer = () => {
 
 const TokenizationToolContent = () => {
   return (
-    <div className="relative min-h-screen pt-20 pb-16">
-      <SpaceBackground customClass="opacity-80" />
+    <div className="relative bg-nuvo-gradient min-h-screen pt-20 pb-16">
+      {/* Simple background without stars */}
+      <SpaceBackground customClass="opacity-90" />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
         <motion.div

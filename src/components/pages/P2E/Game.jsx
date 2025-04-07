@@ -2,6 +2,7 @@ import { useContext, useState, useEffect } from 'react';
 import { WalletContext } from '../../../context/WalletContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaGamepad, FaTools, FaClock, FaBell } from 'react-icons/fa';
+import SpaceBackground from '../../effects/SpaceBackground';
 
 const Game = () => {
   const { walletConnected } = useContext(WalletContext);
@@ -48,8 +49,9 @@ const Game = () => {
   }
 
   return (
-    <div className="bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
-      <div className="container mx-auto px-4 py-6 max-w-6xl">
+    <div className="relative bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
+      <SpaceBackground customClass="opacity-90" />
+      <div className="container mx-auto px-4 py-6 max-w-6xl relative z-10">
         {/* Header section with animated title */}
         <motion.div 
           className="text-center mb-16"
@@ -167,10 +169,6 @@ const Game = () => {
         {/* Features Preview */}
         
       </div>
-
-      {/* Alert notification */}
-      
-        
     </div>
   );
 };

@@ -8,9 +8,7 @@ import AirdropSection from './AirdropSection';
 import CTASection from './CTASection';
 import Footer from '../../layout/Footer';
 import AnimationProvider from '../../animation/AnimationProvider';
-// Import the SpaceBackground component instead of CSS
 import SpaceBackground from '../../effects/SpaceBackground';
-// Keep about.css for other styles that aren't related to space background
 import '../../../Styles/about.css';
 
 const About = () => {
@@ -18,7 +16,6 @@ const About = () => {
   const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
   
   useEffect(() => {
-    // Smooth scroll behavior for the entire page
     document.documentElement.style.scrollBehavior = 'smooth';
     return () => {
       document.documentElement.style.scrollBehavior = 'auto';
@@ -28,8 +25,7 @@ const About = () => {
   return (
     <AnimationProvider>
       <div className="bg-nuvo-gradient min-h-screen relative">
-        {/* Use the SpaceBackground component */}
-        <SpaceBackground />
+        <SpaceBackground customClass="opacity-90" />
         
         <div className="relative">
           <m.div style={{ y }} className="relative z-10">

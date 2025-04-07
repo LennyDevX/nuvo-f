@@ -5,19 +5,21 @@ import SpaceBackground from '../../effects/SpaceBackground';
 import LoadingFallback from '../../ui/LoadingFallback';
 import lazyWithPreload from '../../../utils/lazyWithPreload';
 
+// Load the Header first and NOT lazily
+import Header from './Header';
+
 // Lazy load components below the fold with preload capability
 const Features = lazyWithPreload(() => import('./Features'));
-const SwapInfo = lazyWithPreload(() => import('./SwapInfo'));
 const AirdropInfo = lazyWithPreload(() => import('./AirdropInfo'));
 const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
-const Header = lazyWithPreload(() => import('./Header'));
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [headerLoaded, setHeaderLoaded] = useState(false);
   
   useEffect(() => {
     // Detect mobile devices
@@ -28,14 +30,14 @@ const Home = () => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     
-    // Mark as loaded after initial render
+    // Set initial loading states
     const timer = setTimeout(() => {
+      setHeaderLoaded(true);
       setIsLoaded(true);
-    }, 300);
+    }, 100); // Small delay to ensure header renders first
     
     // Preload some components after initial render
     setTimeout(() => {
-      Header.preload();
       Features.preload();
     }, 1000);
     
@@ -62,36 +64,36 @@ const Home = () => {
   return (
     <AnimationProvider reducedMotion={isMobile}>
       <div className="relative bg-nuvo-gradient min-h-screen">
-        {/* Conditionally render the space background with different opacity */}
-        <SpaceBackground customClass={isMobile ? "opacity-70" : "opacity-90"} />
+        {/* Simple background without animation */}
+        <SpaceBackground customClass="opacity-90" />
         
-        {/* Content with z-index */}
-        <div className="relative z-10">
-          <Suspense fallback={<div className="h-20"></div>}>
-            <Header openUpdatesModal={openModal} />
-          </Suspense>
-          
-          <HeroSection />
-          
-          <Suspense fallback={<LoadingFallback height="200px" />}>
-            {/* On mobile, only load components when initial render is complete */}
-            {shouldLoadComponents && (
-              <>
-                <TokenomicsSystem />
-                <SwapInfo />
-                {/* More aggressive lazy loading on mobile */}
-                {shouldLoadIntersectionObserverComponents && (
-                  <>
-                    <RewardDeveloper />
-                    <AirdropInfo />
-                    <Features />
-                  </>
-                )}
-                <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
-              </>
-            )}
-          </Suspense>
-        </div>
+        {/* Always render Header immediately */}
+        <Header openUpdatesModal={openModal} />
+        
+        {/* Only render content when header has loaded */}
+        {headerLoaded && (
+          <div className="relative z-10">
+            <HeroSection />
+            
+            <Suspense fallback={<LoadingFallback height="200px" />}>
+              {/* On mobile, only load components when initial render is complete */}
+              {shouldLoadComponents && (
+                <>
+                  <TokenomicsSystem />
+                  {/* More aggressive lazy loading on mobile */}
+                  {shouldLoadIntersectionObserverComponents && (
+                    <>
+                      <RewardDeveloper />
+                      <AirdropInfo />
+                      <Features />
+                    </>
+                  )}
+                  <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
+                </>
+              )}
+            </Suspense>
+          </div>
+        )}
       </div>
     </AnimationProvider>
   );

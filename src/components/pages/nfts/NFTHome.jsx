@@ -1,31 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { m, useScroll, useTransform } from 'framer-motion';
 import NFTHeroSection from './NFTHeroSection';
 import NFTExplainerSection from './NFTExplainerSection';
 import NFTCallToAction from './NFTCallToAction';
 import AnimationProvider from '../../animation/AnimationProvider';
-// Import the SpaceBackground component instead of CSS
 import SpaceBackground from '../../effects/SpaceBackground';
 
-const NFTsPage = () => {
-  const { scrollYProgress } = useScroll();
-  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
-  
-  useEffect(() => {
-    // Smooth scroll behavior for the entire page
-    document.documentElement.style.scrollBehavior = 'smooth';
-    return () => {
-      document.documentElement.style.scrollBehavior = 'auto';
-    };
-  }, []);
+const NFTHome = () => {
+  const { scrollY } = useScroll();
+  const y = useTransform(scrollY, [0, 1000], [0, 200]);
 
   return (
     <AnimationProvider>
-      <div className="bg-gradient-to-b from-black via-purple-950/20 to-black min-h-screen">
+      <div className="bg-nuvo-gradient min-h-screen relative">
+        {/* Aplicar el fondo con la misma configuración que Home */}
+        <SpaceBackground customClass="opacity-90" />
+        
         <div className="relative">
-          {/* Use the SpaceBackground component */}
-          <SpaceBackground />
-          
           <m.div style={{ y }} className="relative z-10 pt-20">
             <NFTHeroSection />
             <NFTExplainerSection />
@@ -37,4 +28,4 @@ const NFTsPage = () => {
   );
 };
 
-export default NFTsPage;
+export default NFTHome;

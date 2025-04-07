@@ -39,6 +39,21 @@ const Navbar = () => {
     setIsOpen(false);
   }, [location.pathname]);
 
+  // Add effect to ensure navbar is visible immediately
+  useEffect(() => {
+    // Force immediate rendering of the navbar by adding an active class
+    const navbar = document.querySelector('nav');
+    if (navbar) {
+      navbar.classList.add('navbar-active');
+    }
+    
+    return () => {
+      if (navbar) {
+        navbar.classList.remove('navbar-active');
+      }
+    };
+  }, []);
+
   // Memoize style classes to prevent recreating strings on every render
   const styles = useMemo(() => ({
     navLinkClasses: `
@@ -98,7 +113,7 @@ const Navbar = () => {
   }, [handleNavigation]);
 
   return (
-    <nav className="fixed py-3 top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10">
+    <nav className="fixed py-3 top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="flex justify-between items-center h-14">
           {/* Logo - with memoized click handler */}

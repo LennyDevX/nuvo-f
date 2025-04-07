@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes } from 'react-icons/fa';
 import AirdropCards from './card/AirdropCards'; // Updated import 
 import AirdropForm from '../../pages/AirdropDashboard/AirdropForm/AirdropForm'; // Updated import
+import SpaceBackground from '../../effects/SpaceBackground'; // Import SpaceBackground
 
 const AirdropDashboard = () => {
     const { account } = useContext(WalletContext);
@@ -57,7 +58,8 @@ const AirdropDashboard = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-gray-900 pt-24 pb-16 px-4 md:px-8">
+        <div className="min-h-screen bg-nuvo-gradient pt-24 pb-16 px-4 md:px-8">
+            <SpaceBackground customClass="opacity-90" />
             <Sidebar />
             
             <div className="max-w-[1440px] mx-auto">
@@ -68,7 +70,8 @@ const AirdropDashboard = () => {
                     transition={{ duration: 0.6 }}
                 >
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">
+                        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                            style={{ textShadow: "0 0 15px rgba(236, 72, 153, 0.5)" }}>
                             Airdrops
                         </h1>
                         <span className="px-3 py-1 text-xs font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full border border-purple-500/50 shadow-[0_0_1rem_-0.5rem_#8b5cf6]">
@@ -76,10 +79,10 @@ const AirdropDashboard = () => {
                         </span>
                     </div>
                     
-                    <p className="text-lg text-purple-200/60 max-w-2xl mx-auto mb-2">
+                    <p className="text-lg text-white/90 max-w-2xl mx-auto mb-2 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                         Join our community airdrop event and be part of the next generation of decentralized finance.
                     </p>
-                    <p className="text-sm text-purple-200/40">
+                    <p className="text-sm text-purple-100/80 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                         Manage your airdrop submissions and check your eligibility status
                     </p>
                 </motion.div>

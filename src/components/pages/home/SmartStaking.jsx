@@ -29,7 +29,7 @@ const HeroSection = () => {
   const shouldAnimate = isMounted && enableAnimations && !prefersReducedMotion && !reducedMotion && !isMobile;
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-22 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
+    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-20 pb-8 sm:pb-16 lg:pt-28 lg:pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start lg:items-center">
         {/* Left Column - Calculator */}
         <div className="relative mt-8 lg:mt-0 order-2 lg:order-1">

@@ -76,9 +76,39 @@ const HeroSection = ({ onOpenTokenModal }) => {
     }
   };
 
+  // Versión simplificada de la animación del botón - fade in suave
+  const buttonVariants = {
+    hidden: { 
+      opacity: 0,
+      y: 5
+    },
+    visible: { 
+      opacity: 1,
+      y: 0,
+      transition: { 
+        delay: 2.4, // Se mantiene el delay para que aparezca después de los textos
+        duration: 0.7, // Duración más larga para un fade in más suave
+        ease: "easeInOut" // Curva de easing suave
+      }
+    },
+    hover: { 
+      scale: 1.03, // Escala sutil al hacer hover
+      boxShadow: "0px 0px 8px rgba(139, 92, 246, 0.4)",
+      transition: { 
+        duration: 0.4 // Transición más lenta para el hover
+      }
+    },
+    tap: { 
+      scale: 0.98, // Efecto sutil al hacer click
+      transition: { 
+        duration: 0.2
+      }
+    }
+  };
+
   return (
     <m.div
-      className="card-purple-gradient card-purple-wrapper mt-16 md:mt-24"
+      className="m-4 relative flex flex-col items-center justify-center text-center bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl shadow-lg overflow-hidden p-6"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
@@ -134,6 +164,21 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.
               </p>
             </m.div>
+            
+            {/* Botón con animación de fade in simplificada */}
+            <m.button 
+              variants={buttonVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              whileTap="tap"
+              className="text-white px-5 py-3 rounded-full font-semibold transition-all duration-300 
+                bg-gradient-to-r from-purple-600 to-blue-500 shadow-md hover:shadow-lg
+                relative"
+              onClick={onOpenTokenModal}
+            >
+              Learn More
+            </m.button>
           </m.div>
 
           {/* Token Image with Rotation Animation */}
@@ -159,6 +204,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 }}
               />
             </m.div>
+            
           </m.div>
         </div>
 
@@ -169,39 +215,27 @@ const HeroSection = ({ onOpenTokenModal }) => {
         >
           {[
             {
-              icon: <FaLock className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaLock className="text-purple-400 text-4xl mb-4" />,
               title: "Fixed Supply",
               description: "21M tokens maximum supply, no additional minting capability"
             },
             {
-              icon: <FaRocket className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaRocket className="text-purple-400 text-4xl mb-4" />,
               title: "Active Utility",
               description: "Currently powering transactions and services across the Nuvos Cloud ecosystem"
             },
             {
-              icon: <FaUsers className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaUsers className="text-purple-400 text-4xl mb-4" />,
               title: "Community Governed",
               description: "Token holders participate in governance decisions and ecosystem development"
             }
           ].map((item, index) => (
-            <div key={index} className="card-purple-gradient card-purple-wrapper">
+            <div key={index} className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center">
               {item.icon}
               <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
               <p className="text-gray-400">{item.description}</p>
             </div>
           ))}
-        </m.div>
-
-        <m.div 
-          variants={itemVariants}
-          className="mt-8 flex flex-wrap gap-4"
-        >
-          <button 
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20"
-            onClick={onOpenTokenModal}
-          >
-            Learn More
-          </button>
         </m.div>
       </div>
     </m.div>

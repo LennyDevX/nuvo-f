@@ -25,6 +25,24 @@
     --transition-fast: 200ms;
     --transition-normal: 300ms;
     --transition-slow: 500ms;
+
+    /* Layout */
+    --header-height: 4rem; /* 64px - adjust based on your header height */
+  }
+  
+  /* Body loading state to prevent content jumps */
+  body.loading {
+    overflow: hidden;
+  }
+  
+  body.loading #root > div > *:not(nav):not(.loading-overlay) {
+    opacity: 0;
+  }
+  
+  /* Ensure header gets proper space from the beginning */
+  #root > div > main, 
+  #root > div > div:not(nav) {
+    padding-top: var(--header-height);
   }
 }
 
@@ -134,6 +152,8 @@
 .bg-nuvo-gradient {
   min-height: 100vh;
   background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
+  position: relative;
+  overflow: hidden;
 }
 
 .bg-grid-pattern {

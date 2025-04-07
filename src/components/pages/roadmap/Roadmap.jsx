@@ -156,7 +156,7 @@ const Roadmap = () => {
 
   return (
     <div className="min-h-screen relative">
-      <SpaceBackground customClass="opacity-80" />
+      <SpaceBackground customClass="opacity-90" />
       <div className="relative z-10">
         <div className="relative">
           <HeroSection />

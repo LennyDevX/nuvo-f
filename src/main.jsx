@@ -55,6 +55,9 @@ if (import.meta.env.DEV) {
   addResourceHints();
 }
 
+// Add CSS class to body during initial load to prevent content jumps
+document.body.classList.add('loading');
+
 // Initialize app with performance tracking
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -64,6 +67,14 @@ root.render(
     </ToastProvider>
   </React.StrictMode>
 );
+
+// Remove loading class when DOM is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Small delay to ensure CSS transitions can work smoothly
+  setTimeout(() => {
+    document.body.classList.remove('loading');
+  }, 100);
+});
 
 // Report initial load metrics
 window.addEventListener('load', () => {

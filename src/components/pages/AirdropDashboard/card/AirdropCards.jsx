@@ -200,7 +200,7 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
             ].map((CardComponent, index) => (
                 <motion.div
                     key={index}
-                    className="bg-pink-400/5 rounded-xl p-6 border border-purple-500 shadow-md"
+                    className="bg-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-purple-500/60 shadow-lg shadow-purple-900/20"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}

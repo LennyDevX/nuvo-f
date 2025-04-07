@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
 import { tokenDistributionData, chartOptions } from '../../../utils/ChartConfig';
@@ -6,86 +6,135 @@ import '../../../utils/ChartSetup';
 
 const TokenDistribution = () => {
   const chartRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // Check for mobile device
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    
+    // Throttled resize handler
+    let timeoutId = null;
+    const handleResize = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(checkMobile, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     return () => {
+      window.removeEventListener('resize', handleResize);
+      if (timeoutId) clearTimeout(timeoutId);
       if (chartRef.current && chartRef.current.chartInstance) {
         chartRef.current.chartInstance.destroy();
       }
     };
   }, []);
 
-  const options = {
-    ...chartOptions,
-    plugins: {
-      ...chartOptions.plugins,
-      id: 'tokenDistribution',
-      legend: {
-        position: 'bottom',
-        labels: {
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif"
-          },
-          color: 'rgb(209, 213, 219)',
-          padding: 15,
-          usePointStyle: true,
-          pointStyle: 'circle'
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: 'bold'
+  // Memoize chart options based on device type
+  const options = useMemo(() => {
+    const baseOptions = {
+      ...chartOptions,
+      plugins: {
+        ...chartOptions.plugins,
+        id: 'tokenDistribution',
+        legend: {
+          position: 'bottom',
+          labels: {
+            font: {
+              size: isMobile ? 10 : 12,
+              family: "'Inter', sans-serif"
+            },
+            color: 'rgb(209, 213, 219)',
+            padding: isMobile ? 10 : 15,
+            usePointStyle: true,
+            pointStyle: 'circle',
+            boxWidth: isMobile ? 6 : 10
+          }
         },
-        bodyFont: {
-          size: 13
-        },
-        borderColor: 'rgba(139, 92, 246, 0.3)',
-        borderWidth: 1,
-        callbacks: {
-          label: (context) => {
-            const value = context.parsed;
-            const label = context.label;
-            return ` ${label}: ${value}%`;
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          padding: 12,
+          titleFont: {
+            size: isMobile ? 12 : 14,
+            weight: 'bold'
           },
-          afterLabel: (context) => {
-            const descriptions = {
-              'Staking Rewards': 'Long-term holder incentives',
-              'Treasury': 'Protocol development & security',
-              'Community': 'Ecosystem growth initiatives',
-              'Development': 'Technical improvements & marketing'
-            };
-            return `  ${descriptions[context.label] || ''}`;
+          bodyFont: {
+            size: isMobile ? 11 : 13
+          },
+          borderColor: 'rgba(139, 92, 246, 0.3)',
+          borderWidth: 1,
+          callbacks: {
+            label: (context) => {
+              const value = context.parsed;
+              const label = context.label;
+              return ` ${label}: ${value}%`;
+            },
+            afterLabel: (context) => {
+              const descriptions = {
+                'Staking Rewards': 'Long-term holder incentives',
+                'Treasury': 'Protocol development & security',
+                'Community': 'Ecosystem growth initiatives',
+                'Development': 'Technical improvements & marketing'
+              };
+              return `  ${descriptions[context.label] || ''}`;
+            }
           }
         }
-      }
-    },
-    animation: {
-      animateRotate: true,
-      animateScale: true,
-      duration: 1200
-    },
-    hover: {
-      mode: 'nearest',
-      intersect: true
-    },
-    elements: {
-      arc: {
-        borderWidth: 2,
-        borderColor: '#000',
-        hoverBorderColor: '#fff',
-        hoverBorderWidth: 2,
-        hoverOffset: 5
-      }
-    }
-  };
+      },
+      animation: {
+        animateRotate: !isMobile,
+        animateScale: !isMobile,
+        duration: isMobile ? 600 : 1200
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      elements: {
+        arc: {
+          borderWidth: 2,
+          borderColor: '#000',
+          hoverBorderColor: '#fff',
+          hoverBorderWidth: 2,
+          hoverOffset: isMobile ? 3 : 5
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: true
+    };
+    
+    return baseOptions;
+  }, [isMobile]);
+
+  // Memoize key points content
+  const keyPointsContent = useMemo(() => (
+    <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-purple-500">•</span>
+        <span>40% allocated to staking rewards</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-purple-500">•</span>
+        <span>25% treasury allocation</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-purple-500">•</span>
+        <span>20% community incentives</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-purple-500">•</span>
+        <span>15% development & marketing</span>
+      </li>
+    </ul>
+  ), []);
 
   return (
     <motion.div
-      className="card-purple-gradient card-purple-wrapper"
+      className="bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl shadow-lg overflow-hidden p-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -104,27 +153,10 @@ const TokenDistribution = () => {
         <h3 className="text-xl font-semibold text-purple-400 mb-2 tracking-wide">
           Key Points
         </h3>
-        <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
-          <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-            <span className="text-purple-500">•</span>
-            <span>40% allocated to staking rewards</span>
-          </li>
-          <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-            <span className="text-purple-500">•</span>
-            <span>25% treasury allocation</span>
-          </li>
-          <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-            <span className="text-purple-500">•</span>
-            <span>20% community incentives</span>
-          </li>
-          <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-            <span className="text-purple-500">•</span>
-            <span>15% development & marketing</span>
-          </li>
-        </ul>
+        {keyPointsContent}
       </div>
     </motion.div>
   );
 };
 
-export default TokenDistribution;
+export default React.memo(TokenDistribution);

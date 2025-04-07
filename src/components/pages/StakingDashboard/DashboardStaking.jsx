@@ -167,7 +167,7 @@ const DashboardStaking = () => {
     if (!isConnected) {
       return (
         <motion.div
-          className="text-center py-20 bg-gradient-to-br from-indigo-900/20 to-violet-900/10 rounded-xl border border-indigo-700/20 shadow-md"
+          className="text-center py-20 "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
@@ -218,8 +218,8 @@ const DashboardStaking = () => {
   ]);
 
   return (
-    <div className="relative min-h-screen pt-24 pb-16 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-85" />
+    <div className="relative bg-nuvo-gradient min-h-screen pt-24 pb-16 flex flex-col items-center">
+      <SpaceBackground customClass="opacity-90" />
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation}>
           {/* Redesigned Hero Section */}

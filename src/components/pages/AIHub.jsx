@@ -148,8 +148,8 @@ const AIHub = () => {
   ];
 
   return (
-    <div className="relative min-h-screen pt-28 pb-16 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-80" />
+    <div className="relative bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
+      <SpaceBackground customClass="opacity-90" />
       <div className="w-full max-w-7xl mx-auto px-6 relative z-10">
         <div className="text-center mb-16">
           {/* Title with letter-by-letter animation */}
