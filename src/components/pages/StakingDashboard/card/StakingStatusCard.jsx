@@ -87,7 +87,7 @@ const StakingStatusCard = ({ account, depositAmount }) => {
     <BaseCard title="Your Staking Profile" icon={<FaWallet className="text-violet-400" />}>
       <div className="flex flex-col h-full space-y-4">
         {/* Main Staking Stats */}
-        <div className="bg-gradient-to-br from-violet-900/30 to-fuchsia-900/20 p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
+        <div className="nuvos-card p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <span className="text-slate-400 text-xs font-medium">Total Staked</span>
@@ -107,7 +107,7 @@ const StakingStatusCard = ({ account, depositAmount }) => {
         {/* Deposits Overview */}
 
         {/* Activity Summary */}
-        <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+        <div className="nuvos-card p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
           <h3 className="text-slate-300 font-medium mb-3 text-xs uppercase tracking-wider">Activity Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center p-2 hover:bg-indigo-900/20 rounded-lg transition-colors duration-200">

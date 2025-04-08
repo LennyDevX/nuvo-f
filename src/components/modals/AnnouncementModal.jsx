@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion'; // Changed motion to m
 
 const AnnouncementModal = ({ isOpen, closeModal }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <m.div // Changed from motion.div to m.div
           className="fixed inset-0 backdrop-blur-md bg-black/70 flex items-center justify-center z-50 p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -14,7 +14,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
           transition={{ duration: 0.3 }}
           onClick={closeModal}
         >
-          <motion.div
+          <m.div // Changed from motion.div to m.div
             className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-gray-900/95 rounded-xl 
                      p-6 sm:p-8 max-w-md w-full border border-purple-500/30 
                      shadow-[0_0_4rem_-0.5rem_rgba(139,92,246,0.7)] relative
@@ -81,7 +81,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
               </p>
             </div>
 
-            <motion.button
+            <m.button // Changed from motion.button to m.button
               onClick={closeModal}
               className="w-full mt-6 py-2.5 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 
                        text-white font-medium text-sm hover:from-purple-600 hover:to-blue-600 
@@ -91,9 +91,9 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
               whileTap={{ scale: 0.96 }}
             >
               Open App
-            </motion.button>
-          </motion.div>
-        </motion.div>
+            </m.button>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

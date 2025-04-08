@@ -39,7 +39,7 @@ const TreasuryCard = () => {
       <BaseCard title="Treasury" icon={<FaPiggyBank className="text-fuchsia-400" />}>
         <div className="flex flex-col h-full space-y-4">
           {/* Main Balance */}
-          <div className="bg-gradient-to-br from-violet-900/30 to-fuchsia-900/20 p-4 rounded-xl border border-fuchsia-700/20 shadow-sm hover:shadow-md hover:shadow-fuchsia-900/5 transition-all duration-300">
+          <div className="nuvos-card p-4 rounded-xl border border-fuchsia-700/20 shadow-sm hover:shadow-md hover:shadow-fuchsia-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 text-xs font-medium">Total Balance</span>
               <Tooltip content="Total funds secured in treasury contract for protocol operations">
@@ -56,7 +56,7 @@ const TreasuryCard = () => {
           
           {/* Metrics Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
+            <div className="nuvos-card p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
               <div className="flex items-center gap-2">
                 <FaChartLine className="w-4 h-4 text-violet-400" />
                 <span className="text-slate-400 text-xs font-medium">24h Revenue</span>
@@ -66,7 +66,7 @@ const TreasuryCard = () => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
+            <div className="nuvos-card p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
               <div className="flex items-center gap-2">
                 <FaExchangeAlt className="w-4 h-4 text-violet-400" />
                 <span className="text-slate-400 text-xs font-medium">24h Growth</span>
@@ -78,7 +78,7 @@ const TreasuryCard = () => {
           </div>
 
           {/* Treasury Health */}
-          <div className="bg-gradient-to-br from-indigo-900/25 to-violet-900/15 p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
+          <div className="nuvos-card p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <FaShieldAlt className={`w-4 h-4 text-purple-400 ${treasuryMetrics?.healthScore >= 80 ? 'animate-pulse' : ''}`} />

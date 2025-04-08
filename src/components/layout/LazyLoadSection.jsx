@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion'; // Changed from motion to m
 import useInView from '../../hooks/useInView';
 
 /**
@@ -30,9 +30,9 @@ const LazyLoadSection = ({
   return (
     <div ref={ref} className={className}>
       {hasRendered ? (
-        <motion.div {...animationProps}>
+        <m.div {...animationProps}> {/* Changed from motion.div to m.div */}
           {children}
-        </motion.div>
+        </m.div>
       ) : (
         placeholder || (
           <div className="flex justify-center items-center py-20">

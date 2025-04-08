@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion'; // Changed motion to m
 
 const AirdropTypeOption = ({ type, formData, handleChange, getAirdropTypeStatus }) => {
   const [status, setStatus] = useState({ isRegistered: false });
@@ -15,7 +15,7 @@ const AirdropTypeOption = ({ type, formData, handleChange, getAirdropTypeStatus 
   const isSelected = formData.airdropType === type.id;
 
   return (
-    <motion.div
+    <m.div // Changed from motion.div to m.div
       whileHover={{ scale: 1.02 }}
       className={`p-4 rounded-lg cursor-pointer border ${
         isSelected ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 hover:border-gray-600'
@@ -35,7 +35,7 @@ const AirdropTypeOption = ({ type, formData, handleChange, getAirdropTypeStatus 
           {status.isRegistered && <span className="text-xs text-green-500">Already Registered</span>}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

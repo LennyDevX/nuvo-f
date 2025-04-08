@@ -108,7 +108,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
 
   return (
     <m.div
-      className="m-4 relative flex flex-col items-center justify-center text-center bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl shadow-lg overflow-hidden p-6"
+      className="m-4 relative flex flex-col items-center justify-center text-center nuvos-card"
       initial="hidden"
       animate="visible"
       variants={containerVariants}

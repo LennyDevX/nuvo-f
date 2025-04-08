@@ -5,7 +5,7 @@ import Tooltip from '../../../ui/Tooltip';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { ethers } from 'ethers';
 
 const RewardsCard = ({ onClaim, showToast }) => {
@@ -207,10 +207,10 @@ const RewardsCard = ({ onClaim, showToast }) => {
     <>
       <BaseCard title="Available Rewards" icon={<FaGift className="text-purple-300" />}>
         <div className="flex flex-col space-y-4">
-          {/* Stats Grid - Optimized for mobile with fewer layout shifts */}
+          {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
             {/* Rewards Section */}
-            <div className="bg-purple-900/10 backdrop-blur-sm p-4 rounded-xl border border-purple-600/20 shadow-lg">
+            <div className="nuvos-card p-4 rounded-xl border border-purple-600/20 shadow-lg">
               <span className="text-purple-100/70 text-sm">Accumulated Rewards</span>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-purple-300">
@@ -223,7 +223,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
             </div>
 
             {/* ROI Progress Circle */}
-            <div className="bg-purple-900/10 backdrop-blur-sm p-4 rounded-xl border border-purple-600/20 shadow-lg">
+            <div className="nuvos-card p-4 rounded-xl border border-purple-600/20 shadow-lg">
               <span className="text-purple-100/70 text-sm mb-2 block flex items-center gap-2">
                 Time Bonus Progress
                 <Tooltip content={`
@@ -271,8 +271,8 @@ const RewardsCard = ({ onClaim, showToast }) => {
             </div>
           </div>
 
-          {/* Claim Button - Redesigned with optimizations */}
-          <motion.button
+          {/* Claim Button - mantener el gradiente para que destaque como acción principal */}
+          <m.button
             onClick={handleClaim}
             disabled={isButtonDisabled}
             variants={buttonVariants}
@@ -301,7 +301,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
                 <FaCoins className="text-yellow-300" />
                 <span>Claim Rewards</span>
                 {!isButtonDisabled && (
-                  <motion.div
+                  <m.div
                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
                     variants={shimmerAnimation}
                     initial="hidden"
@@ -309,17 +309,17 @@ const RewardsCard = ({ onClaim, showToast }) => {
                   />
                 )}
                 {!isButtonDisabled && (
-                  <motion.span 
+                  <m.span 
                     className="absolute right-4"
                     animate={{ x: [-5, 5], opacity: [0.7, 1] }}
                     transition={{ repeat: Infinity, duration: 0.8, repeatType: "reverse" }}
                   >
                     →
-                  </motion.span>
+                  </m.span>
                 )}
               </>
             )}
-          </motion.button>
+          </m.button>
         </div>
       </BaseCard>
 

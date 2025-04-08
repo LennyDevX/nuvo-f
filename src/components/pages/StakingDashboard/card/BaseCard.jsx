@@ -19,14 +19,14 @@ const BaseCard = ({
 }) => {
   const [expanded, setExpanded] = useState(startExpanded);
 
-  // Memoized variant styles
+  // Memoized variant styles - estos ahora sólo afectan a los bordes y sombras
   const variantStyles = useMemo(() => ({
-    default: 'bg-slate-800/30 border-slate-700/20 hover:shadow-violet-900/10',
-    primary: 'bg-indigo-900/20 border-indigo-700/30 hover:shadow-indigo-900/15',
-    success: 'bg-emerald-900/20 border-emerald-700/20 hover:shadow-emerald-800/15',
-    warning: 'bg-amber-900/20 border-amber-700/20 hover:shadow-amber-800/15',
-    danger: 'bg-rose-900/20 border-rose-700/30 hover:shadow-rose-900/15',
-    neutral: 'bg-slate-900/40 border-slate-800/30 hover:shadow-slate-900/15'
+    default: 'border-slate-700/20 hover:shadow-violet-900/10',
+    primary: 'border-indigo-700/30 hover:shadow-indigo-900/15',
+    success: 'border-emerald-700/20 hover:shadow-emerald-800/15',
+    warning: 'border-amber-700/20 hover:shadow-amber-800/15',
+    danger: 'border-rose-700/30 hover:shadow-rose-900/15',
+    neutral: 'border-slate-800/30 hover:shadow-slate-900/15'
   }), []);
   
   const currentVariantStyle = variantStyles[variant] || variantStyles.default;
@@ -105,10 +105,10 @@ const BaseCard = ({
 
   return (
     <m.div
-      className={`rounded-xl p-5 sm:p-6 
-                  backdrop-blur-sm w-full shadow-sm
-                  hover:shadow-md transition-all duration-300 
-                  border ${currentVariantStyle} ${className}`}
+      className={`nuvos-card rounded-xl p-5 sm:p-6 
+                 backdrop-blur-sm w-full shadow-sm
+                 hover:shadow-md transition-all duration-300 
+                 border ${currentVariantStyle} ${className}`}
       variants={cardVariants}
       whileHover="hover"
       data-testid={cardTestId}

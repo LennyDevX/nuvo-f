@@ -1,18 +1,18 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion'; // Changed motion to m
 
 const GameModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <motion.div
+      <m.div // Changed from motion.div to m.div
         className="fixed inset-0 backdrop-blur-md bg-black/70 flex items-center justify-center z-50 p-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
       >
-        <motion.div
+        <m.div // Changed from motion.div to m.div
           className="bg-gradient-to-br from-gray-900/95 via-purple-900/20 to-gray-900/95 rounded-xl p-6 sm:p-8 max-w-md w-full border border-purple-500/20 shadow-[0_0_3rem_-0.5rem_#8b5cf6] relative"
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
@@ -74,7 +74,7 @@ const GameModal = ({ isOpen, onClose }) => {
             </p>
           </div>
 
-          <motion.button
+          <m.button // Changed from motion.button to m.button
             onClick={onClose}
             className="w-full mt-6 py-2.5 px-6 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 
                      text-white font-medium text-sm hover:from-purple-600 hover:to-blue-600 
@@ -84,9 +84,9 @@ const GameModal = ({ isOpen, onClose }) => {
             whileTap={{ scale: 0.98 }}
           >
             ¡Empezar a Jugar!
-          </motion.button>
-        </motion.div>
-      </motion.div>
+          </m.button>
+        </m.div>
+      </m.div>
     </AnimatePresence>
   );
 };

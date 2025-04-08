@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
+import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
 import useContractData from "../../../hooks/useContractData";
 import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
@@ -128,14 +128,13 @@ const DashboardStaking = () => {
 
   // Memoized animation variants
   const letterVariants = useMemo(() => ({
-    hidden: { opacity: 0, x: 3 },
+    hidden: { opacity: 0 },
     visible: (i) => ({
       opacity: 1,
-      x: 0,
       transition: {
-        delay: i * 0.10,
-        duration: 0.2,
-        ease: "easeIn"
+        delay: i * 0.05, // Reducido de 0.10 a 0.05 para acelerar la animación
+        duration: 0.15, // Reducido de 0.2 a 0.15
+        ease: "easeOut"
       }
     })
   }), []);
@@ -146,8 +145,10 @@ const DashboardStaking = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.1
+        staggerChildren: 0.05, // Reducido de 0.10 a 0.05
+        delayChildren: 0.05, // Reducido de 0.1 a 0.05
+        ease: "easeOut",
+        duration: 0.6 // Agregado para hacer la transición más rápida
       }
     }
   }), []);
@@ -166,7 +167,7 @@ const DashboardStaking = () => {
   const renderDashboardContent = useCallback(() => {
     if (!isConnected) {
       return (
-        <motion.div
+        <m.div
           className="text-center py-20 "
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -180,7 +181,7 @@ const DashboardStaking = () => {
           <p className="text-lg text-slate-300 mb-4">
             Connect your wallet to view the dashboard information
           </p>
-        </motion.div>
+        </m.div>
       );
     }
 
@@ -189,7 +190,7 @@ const DashboardStaking = () => {
     }
 
     return (
-      <motion.div
+      <m.div
         key="content"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -210,7 +211,7 @@ const DashboardStaking = () => {
         <div className="text-center mt-6 space-y-2">
           <NetworkBadge />
         </div>
-      </motion.div>
+      </m.div>
     );
   }, [
     isConnected, isInitialLoad, account, network, 
@@ -219,21 +220,21 @@ const DashboardStaking = () => {
 
   return (
     <div className="relative bg-nuvo-gradient min-h-screen pt-24 pb-16 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-90" />
+      <SpaceBackground customClass="opacity-80" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
-        <LazyMotion features={domAnimation}>
-          {/* Redesigned Hero Section */}
+        <LazyMotion features={domAnimation} strict>
+          {/* Redesigned Hero Section - optimizado */}
           <m.div
-            className="text-center mb-16"
+            className="text-center mb-12" // Reducido de mb-16 a mb-12
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.6 }} // Reducido de 1 a 0.6
           >
             <m.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="mb-6 overflow-hidden"
+              className="mb-4 overflow-hidden" // Reducido de mb-6 a mb-4
             >
               {Array.from("Smart Staking").map((char, index) => (
                 <m.span
@@ -241,10 +242,11 @@ const DashboardStaking = () => {
                   custom={index}
                   variants={letterVariants}
                   className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                           drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                           transition-all duration-600 text-5xl sm:text-6xl md:text-7xl font-bold"
+                           drop-shadow-[1px_2px_1px_rgba(139,92,246,0.6)] 
+                           transition-all duration-300 text-5xl sm:text-6xl md:text-7xl font-bold"
                   style={{
-                    textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
+                    willChange: "transform, opacity", // Añadido para optimizar rendimiento
+                    transform: "translateZ(0)" // Forzar aceleración por hardware
                   }}
                 >
                   {char === ' ' ? '\u00A0' : char}
@@ -252,22 +254,20 @@ const DashboardStaking = () => {
               ))}
             </m.div>
             
-            <m.p 
-              initial={{ opacity: 0, y: 0, x: 5 }}
-              animate={{ opacity: 1, y: 0, x: 0 }}
-              transition={{ delay: 1.7, duration: 1 }}
-              className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2"
-            >
-              Stake your tokens and earn rewards in our decentralized staking platform
-            </m.p>
-            <m.p
+            {/* Simplificado a una sola animación para el texto descriptivo */}
+            <m.div
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.0, duration: 0.8 }}
-              className="text-sm md:text-base text-slate-400/60"
+              transition={{ delay: 0.8, duration: 0.5 }}
+              style={{ willChange: "opacity, transform" }}
             >
-              Manage your staking positions and track your rewards in real-time
-            </m.p>
+              <p className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2">
+                Stake your tokens and earn rewards in our decentralized staking platform
+              </p>
+              <p className="text-sm md:text-base text-slate-400/60">
+                Manage your staking positions and track your rewards in real-time
+              </p>
+            </m.div>
           </m.div>
 
           <div className="container mx-auto space-y-8">

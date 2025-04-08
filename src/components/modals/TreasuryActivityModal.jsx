@@ -4,7 +4,7 @@ import {
   FaSearch, FaExclamationTriangle, FaCalendarAlt, FaSync,
   FaExchangeAlt
 } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { formatBalance } from '../../utils/formatters';
 import { useStaking } from '../../context/StakingContext';
 import { ethers } from 'ethers';
@@ -323,7 +323,7 @@ const TreasuryActivityModal = ({ isOpen, onClose }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -331,7 +331,7 @@ const TreasuryActivityModal = ({ isOpen, onClose }) => {
             onClick={onClose}
           />
           
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -559,7 +559,7 @@ const TreasuryActivityModal = ({ isOpen, onClose }) => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

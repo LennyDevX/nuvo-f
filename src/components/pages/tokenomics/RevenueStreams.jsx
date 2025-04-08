@@ -109,7 +109,7 @@ const RevenueStreams = () => {
 
   return (
     <m.div
-      className="bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl shadow-lg overflow-hidden p-6"
+      className="nuvos-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}

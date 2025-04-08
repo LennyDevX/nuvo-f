@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion'; // Changed from motion to m
 
 // Unified loading spinner component with customizable size and message
 const LoadingSpinner = ({ size = 'default', message = 'Loading...' }) => {
@@ -10,7 +10,7 @@ const LoadingSpinner = ({ size = 'default', message = 'Loading...' }) => {
   };
 
   return (
-    <motion.div
+    <m.div // Changed from motion.div to m.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -21,7 +21,7 @@ const LoadingSpinner = ({ size = 'default', message = 'Loading...' }) => {
         <div className={`${sizes[size]} border-purple-500/20 border-t-purple-500 rounded-full animate-spin`} />
         <span className="text-sm text-purple-300">{message}</span>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

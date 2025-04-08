@@ -102,6 +102,36 @@
     background-color: rgba(139, 92, 246, 0.1);
   }
 
+  /* Nuvos Card Component - Optimizado */
+  .nuvos-card {
+    background-image: linear-gradient(to bottom, rgba(126, 34, 206, 0.1), rgba(0, 0, 0, 0.3));
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.15); /* Sombra más ligera */
+    overflow: hidden;
+    padding: 1.5rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; /* Transiciones específicas */
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    will-change: transform, box-shadow; /* Indica al navegador que optimice estas propiedades */
+    transform: translateZ(0); /* Fuerza aceleración por hardware */
+  }
+
+  .nuvos-card:hover {
+    border-color: rgba(139, 92, 246, 0.2);
+    box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px); /* Movimiento sutil */
+  }
+
+  @media (max-width: 767px) {
+    .nuvos-card {
+      box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.1); /* Sombra aún más ligera en móvil */
+    }
+    
+    .nuvos-card:hover {
+      transform: none; /* Sin animación en hover para móvil */
+      box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.1);
+    }
+  }
+
   /* Button Components */
   .btn-primary {
     padding: 0.75rem 1.5rem;

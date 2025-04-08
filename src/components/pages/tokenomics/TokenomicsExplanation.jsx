@@ -24,7 +24,7 @@ const TokenomicsExplanation = () => {
 
   // Memoize the card component
   const Card = useMemo(() => ({ title, description }) => (
-    <div className="card-purple-gradient card-purple-wrapper p-4">
+    <div className="nuvos-card p-4">
       <h3 className="text-lg font-semibold text-purple-400 mb-2">
         {title}
       </h3>
@@ -45,7 +45,7 @@ const TokenomicsExplanation = () => {
 
   return (
     <motion.div
-      className="bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl shadow-lg overflow-hidden p-6"
+      className="nuvos-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}

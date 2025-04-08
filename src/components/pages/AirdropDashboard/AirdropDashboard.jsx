@@ -2,7 +2,7 @@
 import React, { useContext, useState } from 'react';
 import { WalletContext } from '../../../context/WalletContext';
 import { useAirdropData } from '../../../hooks/useAirdropData';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion'; // Changed motion to m
 import { FaTimes } from 'react-icons/fa';
 import AirdropCards from './card/AirdropCards'; // Updated import 
 import AirdropForm from '../../pages/AirdropDashboard/AirdropForm/AirdropForm'; // Updated import
@@ -34,7 +34,7 @@ const AirdropDashboard = () => {
     const Sidebar = () => (
         <AnimatePresence>
             {isSidebarOpen && (
-                <motion.div
+                <m.div // Changed from motion.div to m.div
                     initial={{ x: '100%' }}
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}
@@ -52,7 +52,7 @@ const AirdropDashboard = () => {
                             <AirdropForm onClose={() => setIsSidebarOpen(false)} />
                         </div>
                     </div>
-                </motion.div>
+                </m.div>
             )}
         </AnimatePresence>
     );
@@ -63,7 +63,7 @@ const AirdropDashboard = () => {
             <Sidebar />
             
             <div className="max-w-[1440px] mx-auto">
-                <motion.div
+                <m.div // Changed from motion.div to m.div
                     className="text-center mb-12"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -85,7 +85,7 @@ const AirdropDashboard = () => {
                     <p className="text-sm text-purple-100/80 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                         Manage your airdrop submissions and check your eligibility status
                     </p>
-                </motion.div>
+                </m.div>
 
                 <div className="container mx-auto">
                     <AirdropCards 

@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from '../router/config';
 import ErrorBoundary from './ui/ErrorBoundary';
 import LoadingSpinner from './LoadOverlay/LoadingSpinner';
-import '../Styles/spaceBackground.css'; // Ensure this is imported for global styles
+import '../Styles/index.css'; // Fixed: Import CSS file directly without named export
 
 /**
  * Main App component using React Router's data router with native prefetching
@@ -12,7 +12,7 @@ import '../Styles/spaceBackground.css'; // Ensure this is imported for global st
 const App = () => {
   return (
     <ErrorBoundary>
-      <div className="flex flex-col min-h-screen">
+      <div style={{ position: 'relative', minHeight: '100vh' }}>
         <RouterProvider 
           router={router}
           fallbackElement={<LoadingSpinner size="large" message="Loading application..." />}

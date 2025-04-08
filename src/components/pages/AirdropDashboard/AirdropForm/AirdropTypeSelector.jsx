@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion'; // Changed motion to m
 import { FaCoins, FaImages, FaBox, FaPalette } from 'react-icons/fa';
 import AirdropTypeOption from './AirdropTypeOption';
 
@@ -19,13 +19,13 @@ const AirdropTypeSelector = ({ formData, handleChange, getAirdropTypeStatus, err
         ))}
       </div>
       {error && error.includes('airdrop type') && (
-        <motion.p 
+        <m.p // Changed from motion.p to m.p
           className="text-red-400 text-sm mt-2"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
           {error}
-        </motion.p>
+        </m.p>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 // src/components/layout/AirdropDashboard/DashboardCards.jsx
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion'; // Añadir esta importación
+import { m } from 'framer-motion'; // Changed motion to m
 import { 
     FaUser, 
     FaRocket,
@@ -198,7 +198,7 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
                     account={account} 
                 />
             ].map((CardComponent, index) => (
-                <motion.div
+                <m.div // Changed from motion.div to m.div
                     key={index}
                     className="bg-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-purple-500/60 shadow-lg shadow-purple-900/20"
                     initial={{ opacity: 0, y: 20 }}
@@ -208,7 +208,7 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
                     whileTap={{ scale: 0.98 }}
                 >
                     {CardComponent}
-                </motion.div>
+                </m.div>
             ))}
         </div>
     );
