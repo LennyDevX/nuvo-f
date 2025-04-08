@@ -43,11 +43,10 @@ const NFTHeroSection = () => {
   ];
 
   return (
-    <section className="relative py-32 px-4 overflow-hidden">
-      {/* Remove local background elements to use global space background */}
+    <section className="relative p-4 overflow-hidden">
       
       <m.div 
-        className="max-w-7xl mx-auto text-center z-20 space-y-12"
+        className="max-w-7xl mx-auto text-center z-20 space-y-8"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
@@ -60,7 +59,7 @@ const NFTHeroSection = () => {
             transition={{ duration: 5, repeat: Infinity, repeatType: "reverse" }}
           ></m.div>
           
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold mb-6 md:mb-8 text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-fuchsia-500 to-indigo-400">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 md:mb-6 text-transparent bg-clip-text bg-nuvo-gradient-text">
             <m.span 
               className="inline-block"
               custom={0}
@@ -83,7 +82,7 @@ const NFTHeroSection = () => {
           </h1>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4">
+        <div className="max-w-4xl mx-auto space-y-4 md:space-y-6 px-4">
           <m.p 
             className="text-xl sm:text-2xl md:text-3xl text-gray-200 leading-relaxed font-light"
             initial={{ opacity: 0, y: 20 }}
@@ -103,9 +102,8 @@ const NFTHeroSection = () => {
           </m.p>
         </div>
 
-        {/* Grid de características with fluid animations */}
         <m.div 
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8" 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.9 }}

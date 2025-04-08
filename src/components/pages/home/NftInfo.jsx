@@ -20,7 +20,7 @@ const RewardDeveloper = () => {
           >
             <h1 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
               <span className="block mb-2">Elevate Your Profile</span>
-              <span className="gradient-text block mb-2">With Utility-Driven NFTs</span>
+              <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">With Utility-Driven NFTs</span>
               <span className="block">Beyond The Blockchain </span>
             </h1>
             

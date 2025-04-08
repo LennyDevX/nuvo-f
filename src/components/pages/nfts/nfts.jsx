@@ -19,7 +19,7 @@ const NFTsPage = () => {
 
   return (
     <AnimationProvider>
-      <div className="bg-gradient-to-b from-black via-purple-950/20 to-black min-h-screen">
+      <div className="bg-gradient-to-b from-black via-purple-950/20 to-black min-h-screen pb-40">
         <div className="relative">
           {/* Animated background elements */}
           <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
@@ -31,7 +31,7 @@ const NFTsPage = () => {
             ></m.div>
           </div>
           
-          <m.div style={{ y }} className="relative z-10 pt-20">
+          <m.div style={{ y }} className="relative z-10 pt-16 overflow-visible">
             <NFTHeroSection />
             <NFTExplainerSection />
             <NFTCallToAction />

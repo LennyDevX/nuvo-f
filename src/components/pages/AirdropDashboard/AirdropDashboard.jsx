@@ -70,7 +70,7 @@ const AirdropDashboard = () => {
                     transition={{ duration: 0.6 }}
                 >
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-pink-500 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
+                        <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]"
                             style={{ textShadow: "0 0 15px rgba(236, 72, 153, 0.5)" }}>
                             Airdrops
                         </h1>

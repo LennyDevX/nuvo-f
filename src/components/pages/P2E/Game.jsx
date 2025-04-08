@@ -78,7 +78,7 @@ const Game = () => {
                 key={index}
                 custom={index}
                 variants={letterVariants}
-                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500 
+                className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
                          drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
                          transition-all duration-600 text-5xl font-bold"
                 style={{

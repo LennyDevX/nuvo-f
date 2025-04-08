@@ -113,7 +113,7 @@ const AirdropInfo = () => {
           >
             <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] tracking-tight">
               <span className="block mb-2">Prepare For</span>
-              <span className="gradient-text block mb-2">Future Rewards</span>
+              <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Future Rewards</span>
               <span className="block">Join Our Whitelist</span>
             </h2>
             

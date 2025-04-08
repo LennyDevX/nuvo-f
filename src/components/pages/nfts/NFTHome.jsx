@@ -12,7 +12,7 @@ const NFTHome = () => {
 
   return (
     <AnimationProvider>
-      <div className="bg-nuvo-gradient min-h-screen relative">
+      <div className="bg-nuvo-gradient min-h-screen relative pb-24"> {/* Added pb-24 for extra padding */}
         {/* Aplicar el fondo con la misma configuración que Home */}
         <SpaceBackground customClass="opacity-90" />
         

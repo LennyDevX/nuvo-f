@@ -90,7 +90,7 @@ const TokenomicsSystem = () => {
           >
             <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
               <span className="block mb-2">Revolutionary</span>
-              <span className="gradient-text block mb-2">Tokenomics Ecosystem</span>
+              <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Tokenomics Ecosystem</span>
               <span className="block">Built For The Future</span>
             </h2>
             

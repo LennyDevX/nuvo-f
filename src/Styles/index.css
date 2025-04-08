@@ -170,20 +170,37 @@
   }
 }
 
-/* Text Effects */
-.text-gradient, .gradient-text {
-  background-image: linear-gradient(to right, #c084fc, #db2777);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 /* Background Effects */
 .bg-nuvo-gradient {
   min-height: 100vh;
-  background-image: linear-gradient(to bottom, #111827, #581c87, #111827);
+  background-image: linear-gradient(to bottom, 
+    #0f172a, /* Darker start for depth */
+    #4c1d95, /* More saturated middle purple */
+    #2e1065, /* Additional color stop for dimension */
+    #0f172a  /* Darker end for depth */
+  );
   position: relative;
   overflow: hidden;
+  /* Add subtle texture overlay for more depth */
+  box-shadow: inset 0 0 100px rgba(76, 29, 149, 0.3);
+}
+
+/* New text gradient version for titles */
+.bg-nuvo-gradient-text {
+  background-image: linear-gradient(135deg, 
+    #c084fc, /* Bright purple */
+    #8b5cf6, /* Medium purple */
+    #ec4899, /* Pink accent */
+    #6366f1  /* Indigo for depth */
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50% }
+  50% { background-position: 100% 50% }
+  100% { background-position: 0% 50% }
 }
 
 .bg-grid-pattern {

@@ -152,12 +152,9 @@ const SwapToken = () => {
                 key={index}
                 custom={index}
                 variants={letterVariants}
-                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                         drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                         transition-all duration-600 text-2xl sm:text-4xl md:text-5xl font-bold"
-                style={{
-                  textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
-                }}
+                className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                         drop-shadow-[0_0_0px_rgba(139,92,246,0.6)] 
+                         text-2xl sm:text-4xl md:text-5xl font-bold"
               >
                 {char === ' ' ? '\u00A0' : char}
               </motion.span>
@@ -168,7 +165,7 @@ const SwapToken = () => {
             initial={{ opacity: 0, y: 0, x: 5 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
             transition={{ delay: 1.7, duration: 1 }}
-            className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4"
+            className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4 font-medium"
           >
             Intercambia tus tokens de manera rápida y segura
           </motion.p>

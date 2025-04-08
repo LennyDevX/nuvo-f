@@ -164,12 +164,7 @@ const AIHub = () => {
                 key={index}
                 custom={index}
                 variants={letterVariants}
-                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 
-                         drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                         transition-all duration-600 text-5xl md:text-6xl font-bold"
-                style={{
-                  textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
-                }}
+                className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text text-5xl md:text 6xl font-bold"
               >
                 {char === ' ' ? '\u00A0' : char}
               </motion.span>

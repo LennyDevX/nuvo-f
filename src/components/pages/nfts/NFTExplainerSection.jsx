@@ -52,18 +52,22 @@ const NFTExplainerSection = () => {
   ];
 
   return (
-    <div className="py-16 relative overflow-hidden">
+    <div className="py-10 mb-16 relative overflow-visible">
       {/* Remove local background elements to use global space background */}
       
       <m.div 
         className="container mx-auto px-4 relative z-10"
         initial="hidden"
         whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
+        viewport={{ 
+          once: true, 
+          amount: 0.2
+        }}
         variants={containerVariants}
       >
-        <m.div variants={itemVariants} className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-indigo-400">
+        <m.div variants={itemVariants} className="text-center mb-10">
+          {/* Reduced from mb-16 to mb-10 */}
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-nuvo-gradient-text">
             How Asset Tokenization Works
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-gray-300">
@@ -75,8 +79,9 @@ const NFTExplainerSection = () => {
         {/* Process Steps with fluid animations */}
         <m.div 
           variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
+          {/* Reduced from gap-6 to gap-4 */}
           {steps.map((step, index) => (
             <m.div 
               key={index} 

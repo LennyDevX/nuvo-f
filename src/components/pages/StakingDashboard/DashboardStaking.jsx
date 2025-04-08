@@ -219,13 +219,13 @@ const DashboardStaking = () => {
   ]);
 
   return (
-    <div className="relative bg-nuvo-gradient min-h-screen pt-24 pb-16 flex flex-col items-center">
+    <div className="relative bg-nuvo-gradient min-h-screen pt-18 pb-12 flex flex-col items-center">
       <SpaceBackground customClass="opacity-80" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation} strict>
           {/* Redesigned Hero Section - optimizado */}
           <m.div
-            className="text-center mb-12" // Reducido de mb-16 a mb-12
+            className="text-center mb-10" // Reducido de mb-16 a mb-12
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }} // Reducido de 1 a 0.6
@@ -241,9 +241,8 @@ const DashboardStaking = () => {
                   key={index}
                   custom={index}
                   variants={letterVariants}
-                  className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                           drop-shadow-[1px_2px_1px_rgba(139,92,246,0.6)] 
-                           transition-all duration-300 text-5xl sm:text-6xl md:text-7xl font-bold"
+                  className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                            text-5xl sm:text-6xl md:text-7xl font-bold"
                   style={{
                     willChange: "transform, opacity", // Añadido para optimizar rendimiento
                     transform: "translateZ(0)" // Forzar aceleración por hardware

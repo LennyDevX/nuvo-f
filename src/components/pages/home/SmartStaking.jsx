@@ -59,7 +59,7 @@ const HeroSection = () => {
           >
             <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] sm:leading-tight tracking-tight">
               <span className="block mb-2">Elevate Your</span>
-              <span className="gradient-text block mb-2">Investment Strategy</span>
+              <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Investment Strategy</span>
               <span className="block">Through Smart Staking</span>
             </h1>
             
