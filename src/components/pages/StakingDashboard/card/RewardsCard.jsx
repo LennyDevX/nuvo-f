@@ -210,7 +210,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-3">
             {/* Rewards Section */}
-            <div className="nuvos-card p-4 rounded-xl border border-purple-600/20 shadow-lg">
+            <div className=" p-4 rounded-xl border border-purple-600/20 shadow-lg">
               <span className="text-purple-100/70 text-sm">Accumulated Rewards</span>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-purple-300">
@@ -223,7 +223,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
             </div>
 
             {/* ROI Progress Circle */}
-            <div className="nuvos-card p-4 rounded-xl border border-purple-600/20 shadow-lg">
+            <div className=" p-4 rounded-xl border border-purple-600/20 shadow-lg">
               <span className="text-purple-100/70 text-sm mb-2 block flex items-center gap-2">
                 Time Bonus Progress
                 <Tooltip content={`

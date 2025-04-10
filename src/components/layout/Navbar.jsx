@@ -120,7 +120,7 @@ const Navbar = () => {
           <div onClick={handleLogoClick} className="cursor-pointer">
             <img 
               className="h-10 w-auto md:h-12"
-              src="/NuvoLogo.avif" 
+              src="/LogoNuvos.webp" 
               alt="Nuvo Logo"
               style={{
                 filter: 'drop-shadow(0 0 0.5rem rgba(139, 92, 246, 0.3))'

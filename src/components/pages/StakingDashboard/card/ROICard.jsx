@@ -99,22 +99,22 @@ function ROICard({ firstDepositTime }) {
     <BaseCard title="Staking Benefits" icon={<FaStar className="text-purple-400" />}>
       <div className="space-y-5 h-full flex flex-col">
         {/* Current Staking Status */}
-        <div className="nuvos-card p-5 rounded-2xl border border-violet-600/20 shadow-lg backdrop-blur-md hover:shadow-violet-700/10 transition-all duration-300">
+        <div className=" p-5 rounded-2xl border border-violet-600/20 shadow-lg backdrop-blur-md hover:shadow-violet-700/10 transition-all duration-300">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-violet-100/70 text-sm font-medium tracking-wide">Time Staking</span>
-            <div className="text-2xl font-bold text-fuchsia-300 transform hover:scale-105 transition-transform duration-300">
+            <span className="text-sm font-medium tracking-wide">Time Staking</span>
+            <div className="text-2xl font-bold transform hover:scale-105 transition-transform duration-300">
               {stakingInfo.days} days
             </div>
           </div>
           
           <div className="flex justify-between items-center">
-            <span className="text-violet-100/70 flex items-center gap-2 text-sm font-medium tracking-wide">
+            <span className=" flex items-center gap-2 text-sm font-medium tracking-wide">
               Daily Returns
               <Tooltip content={`Base ROI: 0.24% daily\nTime Bonus: +${stakingInfo.bonus}%\nTotal Daily ROI: ${(stakingInfo.totalROI * 24).toFixed(2)}%\nDays Staked: ${stakingInfo.days}`}>
-                <FaInfoCircle className="text-fuchsia-400/80 hover:text-fuchsia-300" />
+                <FaInfoCircle className=" hover:text-fuchsia-300" />
               </Tooltip>
             </span>
-            <div className="text-2xl font-bold text-fuchsia-300 transform hover:scale-105 transition-transform duration-300">
+            <div className="text-2xl font-bold transform hover:scale-105 transition-transform duration-300">
               +{(stakingInfo.totalROI * 24).toFixed(2)}%
             </div>
           </div>
@@ -122,16 +122,16 @@ function ROICard({ firstDepositTime }) {
 
         {/* Progress to Next Tier - Conditionally rendered */}
         {stakingInfo.daysLeft > 0 && (
-          <div className="nuvos-card p-5 rounded-2xl border border-indigo-500/20 shadow-lg backdrop-blur-md hover:shadow-indigo-700/10 transition-all duration-300">
+          <div className=" p-5 rounded-2xl border border-indigo-700/20 shadow-lg backdrop-blur-md hover:shadow-indigo-700/10 transition-all duration-300">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-violet-100/80 flex items-center gap-2 font-medium">
+              <span className=" flex items-center gap-2 font-medium">
                 <FaCalendarAlt className="text-purple-400/70" /> Next Milestone
               </span>
               <div className="text-right">
-                <span className="text-lg font-bold text-fuchsia-300">
+                <span className="text-lg font-bold">
                   +{stakingInfo.nextBonus}% Bonus
                 </span>
-                <div className="text-sm text-purple-400/80 mt-1 font-medium">
+                <div className="text-sm mt-1 font-medium">
                   {((stakingInfo.baseROI + (stakingInfo.baseROI * (stakingInfo.nextBonus / 100))) * 24).toFixed(4)}% ROI
                 </div>
               </div>

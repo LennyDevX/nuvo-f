@@ -199,7 +199,7 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
       <BaseCard title="Staking Actions" icon={<FaExchangeAlt className="text-purple-300" />}>
         <div className="flex flex-col h-full space-y-4">
           {/* Input Container */}
-          <div className="nuvos-card p-4 rounded-xl border border-purple-600/20 shadow-lg">
+          <div className=" p-4 rounded-xl border border-purple-600/20 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-purple-100/70 text-sm">Deposit Amount</span>
               <Tooltip content={`Min: ${MIN_DEPOSIT} POL, Max: ${MAX_DEPOSIT} POL`}>

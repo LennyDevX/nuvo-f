@@ -47,7 +47,7 @@ const PoolMetricsCard = () => {
         {/* TVL and Users Row */}
         <div className="grid grid-cols-3 gap-3">
           {/* TVL - 2/3 width */}
-          <div className="col-span-2 nuvos-card p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className="col-span-2 p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <span className="text-slate-400 text-xs font-medium">Total Value Locked</span>
               <Tooltip content="Total amount of POL tokens currently staked in the staking pool">
@@ -63,7 +63,7 @@ const PoolMetricsCard = () => {
           </div>
 
           {/* Users - 1/3 width */}
-          <div className="nuvos-card p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <FaUsers className="w-4 h-4 text-indigo-400" />
               <span className="text-slate-400 text-xs font-medium">Users</span>
@@ -76,7 +76,7 @@ const PoolMetricsCard = () => {
 
         {/* Rewards and Withdrawals Row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="nuvos-card p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <FaCoins className="w-4 h-4 text-indigo-400" />
               <span className="text-slate-400 text-xs font-medium">Rewards</span>
@@ -89,7 +89,7 @@ const PoolMetricsCard = () => {
             </div>
           </div>
 
-          <div className="nuvos-card p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <FaHistory className="w-4 h-4 text-indigo-400" />
@@ -104,7 +104,7 @@ const PoolMetricsCard = () => {
         </div>
 
         {/* Community Goal Section */}
-        <div className="nuvos-card p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
+        <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FaGift className={`w-4 h-4 text-fuchsia-400 ${goalMetrics.isCompleted ? 'animate-bounce' : ''}`} />
