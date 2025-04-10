@@ -76,7 +76,7 @@ const PoolMetricsCard = () => {
 
         {/* Rewards and Withdrawals Row */}
         <div className="grid grid-cols-2 gap-3">
-          <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <FaCoins className="w-4 h-4 text-indigo-400" />
               <span className="text-slate-400 text-xs font-medium">Rewards</span>
@@ -89,7 +89,7 @@ const PoolMetricsCard = () => {
             </div>
           </div>
 
-          <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+          <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <FaHistory className="w-4 h-4 text-indigo-400" />

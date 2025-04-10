@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/package.json",
   "name": "nuvo-f",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,8 +12,6 @@
   },
   "dependencies": {
     "@dodoex/widgets": "^3.0.1",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
     "@types/lodash": "^4.17.15",
     "chart.js": "^4.4.1",
     "cors": "^2.8.5",
@@ -23,14 +21,12 @@
     "framer-motion": "^12.4.1",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
-    "react-chartjs-2": "^5.3.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.1",
     "react-responsive": "^10.0.0",
     "react-router-dom": "^6.22.3",
-    "react-slick": "^0.30.3",
-    "recharts": "^2.15.1"
-  },
+    "react-slick": "^0.30.3"  },
+
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@types/react": "^18.2.57",

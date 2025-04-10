@@ -107,7 +107,7 @@ const StakingStatusCard = ({ account, depositAmount }) => {
         {/* Deposits Overview */}
 
         {/* Activity Summary */}
-        <div className=" p-4 rounded-xl border border-indigo-700/20 shadow-sm hover:shadow-md hover:shadow-indigo-900/5 transition-all duration-300">
+        <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-violet-900/5 transition-all duration-300">
           <h3 className=" font-medium mb-3 text-xs uppercase tracking-wider">Activity Summary</h3>
           <div className="space-y-2">
             <div className="flex justify-between items-center p-2 hover:bg-indigo-900/20 rounded-lg transition-colors duration-200">

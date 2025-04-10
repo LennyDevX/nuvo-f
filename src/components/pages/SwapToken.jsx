@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useSpring, useTrail, animated, config } from "@react-spring/web";
 import DodoSwapWidget from "../web3/SwapDodo";
 import { WalletContext } from "../../context/WalletContext";
 import SpaceBackground from "../effects/SpaceBackground";
@@ -11,32 +11,6 @@ const SwapToken = () => {
   const [error, setError] = useState(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState(null);
-
-  // Letter-by-letter animation variants
-  const letterVariants = {
-    hidden: { opacity: 0, x: 3 },
-    visible: (i) => ({
-      opacity: 1,
-      x: 0,
-      transition: {
-        delay: i * 0.15,
-        duration: 0.4,
-        ease: "easeIn"
-      }
-    })
-  };
-
-  // Container animation for title
-  const titleContainerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.4
-      }
-    }
-  };
 
   const isWalletConnected = useMemo(() => 
     Boolean(account && network && balance !== null),
@@ -60,6 +34,54 @@ const SwapToken = () => {
     setTransactionStatus(status);
   }, []);
 
+  // React Spring animations
+  const titleAnimation = useSpring({
+    from: { opacity: 0, y: -20 },
+    to: { opacity: 1, y: 0 },
+    config: { tension: 300, friction: 20 }
+  });
+
+  // Animation for title letters
+  const titleLetters = "Nuvos Swap";
+  const trail = useTrail(titleLetters.length, {
+    from: { opacity: 0, x: 3 },
+    to: { opacity: 1, x: 0 },
+    config: { mass: 1, tension: 280, friction: 60 },
+    delay: 400,
+  });
+
+  const subtitleAnimation = useSpring({
+    from: { opacity: 0, x: 5 },
+    to: { opacity: 1, x: 0 },
+    delay: 1700,
+    config: { duration: 1000 }
+  });
+
+  const contentAnimation = useSpring({
+    from: { opacity: 0 },
+    to: { opacity: 1 },
+    delay: isConnected ? 200 : 0,
+    config: { duration: 600 }
+  });
+
+  const pulseAnimation = useSpring({
+    from: { opacity: 0.7 },
+    to: { opacity: 1 },
+    config: { duration: 800, loop: true },
+    pause: !isLoading
+  });
+
+  const statusAnimation = useSpring({
+    from: { opacity: 0, y: 50 },
+    to: { opacity: transactionStatus ? 1 : 0, y: transactionStatus ? 0 : 50 },
+    config: config.gentle
+  });
+
+  const errorAnimation = useSpring({
+    opacity: error ? 1 : 0,
+    config: { duration: 300 }
+  });
+
   const NetworkBadge = useMemo(() => () => (
     <div className="flex items-center justify-center gap-2 text-sm text-gray-400 mb-4">
       <div className={`w-2 h-2 rounded-full ${network ? 'bg-green-500' : 'bg-red-500'}`}></div>
@@ -69,16 +91,14 @@ const SwapToken = () => {
 
   const TransactionStatus = useMemo(() => () => (
     transactionStatus && (
-      <motion.div 
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
+      <animated.div 
+        style={statusAnimation}
         className="fixed bottom-4 right-4 bg-purple-600/90 p-4 rounded-lg"
       >
         <p className="text-white">Transaction {transactionStatus}</p>
-      </motion.div>
+      </animated.div>
     )
-  ), [transactionStatus]);
+  ), [transactionStatus, statusAnimation]);
 
   const widgetProps = useMemo(() => ({
     onError: handleError,
@@ -89,87 +109,74 @@ const SwapToken = () => {
   const renderContent = useMemo(() => {
     if (isLoading) {
       return (
-        <motion.div 
-          className="animate-pulse space-y-4 w-full max-w-[380px] mx-auto px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        <animated.div 
+          style={pulseAnimation}
+          className="space-y-4 w-full max-w-[380px] mx-auto px-4"
         >
           <div className="h-12 bg-purple-600/20 rounded"></div>
           <div className="h-12 bg-purple-600/20 rounded"></div>
           <div className="h-12 bg-purple-600/20 rounded"></div>
-        </motion.div>
+        </animated.div>
       );
     }
 
     if (!isConnected) {
       return (
-        <motion.div
+        <animated.div
+          style={contentAnimation}
           className="text-center mt-8 px-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
         >
           <p className="text-white text-xl">
             Por favor, conecta tu wallet usando el botón en la barra de navegación.
           </p>
-        </motion.div>
+        </animated.div>
       );
     }
 
     return (
       <div className="flex justify-center items-center w-full">
-        <motion.div
+        <animated.div
+          style={contentAnimation}
           className="w-full flex justify-center items-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
         >
           <DodoSwapWidget {...widgetProps} />
-        </motion.div>
+        </animated.div>
       </div>
     );
-  }, [isLoading, isConnected, widgetProps]);
+  }, [isLoading, isConnected, widgetProps, contentAnimation, pulseAnimation]);
 
   return (
     <div className="bg-nuvo-gradient min-h-screen pt-20 sm:pt-24 md:py-16 flex flex-col items-center justify-start sm:justify-center">
       <SpaceBackground customClass="opacity-90" />
       <div className="w-full max-w-2xl mx-auto px-3 sm:px-6 lg:px-8">
-        <motion.div
+        <animated.div
+          style={titleAnimation}
           className="text-center mb-6 sm:mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
         >
           {/* Animated title */}
-          <motion.div
-            variants={titleContainerVariants}
-            initial="hidden"
-            animate="visible"
-            className="mb-4 overflow-hidden"
-          >
-            {Array.from("Nuvos Swap").map((char, index) => (
-              <motion.span
-                key={index}
-                custom={index}
-                variants={letterVariants}
-                className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
-                         drop-shadow-[0_0_0px_rgba(139,92,246,0.6)] 
-                         text-2xl sm:text-4xl md:text-5xl font-bold"
-              >
-                {char === ' ' ? '\u00A0' : char}
-              </motion.span>
-            ))}
-          </motion.div>
+          <div className="mb-4 overflow-hidden">
+            <div className="inline-flex">
+              {trail.map((props, index) => (
+                <animated.span
+                  key={index}
+                  style={props}
+                  className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                          drop-shadow-[0_0_0px_rgba(139,92,246,0.6)] 
+                          text-2xl sm:text-4xl md:text-5xl font-bold"
+                >
+                  {titleLetters[index] === ' ' ? '\u00A0' : titleLetters[index]}
+                </animated.span>
+              ))}
+            </div>
+          </div>
           
-          <motion.p 
-            initial={{ opacity: 0, y: 0, x: 5 }}
-            animate={{ opacity: 1, y: 0, x: 0 }}
-            transition={{ delay: 1.7, duration: 1 }}
+          <animated.p 
+            style={subtitleAnimation}
             className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4 font-medium"
           >
             Intercambia tus tokens de manera rápida y segura
-          </motion.p>
-        </motion.div>
+          </animated.p>
+        </animated.div>
 
         {/* Adjust NetworkBadge margins */}
         <div className="mb-4 sm:mb-6">
@@ -177,13 +184,12 @@ const SwapToken = () => {
         </div>
 
         {error && (
-          <motion.div 
+          <animated.div 
+            style={errorAnimation}
             className="bg-red-500/10 text-red-500 p-3 sm:p-4 rounded-lg mb-4 mx-2 sm:mx-0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
           >
             {error}
-          </motion.div>
+          </animated.div>
         )}
 
         <div className="w-full flex justify-center items-center px-2 sm:px-0">

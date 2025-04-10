@@ -108,6 +108,7 @@ const TreasuryCard = () => {
           {/* Treasury Allocation Grid */}
           
           
+          
           {/* Modificamos o eliminamos el botón que abría el modal */}
           
         </div>

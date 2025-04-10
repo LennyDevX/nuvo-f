@@ -199,7 +199,7 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
       <BaseCard title="Staking Actions" icon={<FaExchangeAlt className="text-purple-300" />}>
         <div className="flex flex-col h-full space-y-4">
           {/* Input Container */}
-          <div className=" p-4 rounded-xl border border-purple-600/20 shadow-lg">
+          <div className=" p-4 rounded-xl border border-violet-700/20 shadow-lg">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-purple-100/70 text-sm">Deposit Amount</span>
               <Tooltip content={`Min: ${MIN_DEPOSIT} POL, Max: ${MAX_DEPOSIT} POL`}>
@@ -227,7 +227,7 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
               className={`
                 bg-gradient-to-r from-emerald-600/80 to-teal-500/80 
                 backdrop-blur-sm p-4 rounded-xl 
-                border border-emerald-400/30
+                border border-violet-700/20
                 text-white font-medium 
                 shadow-lg shadow-emerald-900/30
                 disabled:opacity-50 disabled:cursor-not-allowed
@@ -268,7 +268,7 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
               className={`
                 bg-gradient-to-r from-rose-600/80 to-pink-500/80
                 backdrop-blur-sm p-4 rounded-xl 
-                border border-rose-400/30
+                border border-violet-700/20
                 text-white font-medium 
                 shadow-lg shadow-rose-900/30
                 disabled:opacity-50 disabled:cursor-not-allowed

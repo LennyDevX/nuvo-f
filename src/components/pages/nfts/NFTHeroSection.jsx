@@ -39,6 +39,12 @@ const NFTHeroSection = () => {
       icon: <FaUserLock />, 
       title: "Governance Rights", 
       description: "Shape the future of asset tokenization with weighted voting power in protocol decisions."
+    },
+    
+    { 
+      icon: <FaUserLock />, 
+      title: "Community Engagement", 
+      description: "Join a vibrant community of innovators and asset owners, sharing insights and opportunities."
     }
   ];
 
