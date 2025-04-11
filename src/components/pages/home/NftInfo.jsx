@@ -1,10 +1,11 @@
 import React from 'react';
-import { m, useReducedMotion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaGem, FaUnlock } from 'react-icons/fa';
 import { fadeIn } from '../../../utils/animationVariants';
+import { useAnimationContext } from '../../animation/AnimationProvider';
 
 const RewardDeveloper = () => {
-  const prefersReducedMotion = useReducedMotion();
+  const { reducedMotion: prefersReducedMotion } = useAnimationContext();
 
   return (
     <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-8 sm:pb-16 lg:py-24">

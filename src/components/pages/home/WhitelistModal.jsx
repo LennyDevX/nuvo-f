@@ -94,6 +94,7 @@ const WhitelistModal = ({ onClose }) => {
   return (
     <AnimatePresence>
       <m.div
+        key="home-whitelist-modal"
         initial={prefersReducedMotion ? {} : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

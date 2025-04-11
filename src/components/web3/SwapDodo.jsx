@@ -1,10 +1,10 @@
 // SwapDodo.jsx
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import { SwapWidget } from '@dodoex/widgets';
 import PropTypes from 'prop-types';
 
-// Memoized configuration objects
+// Constants defined outside the component to avoid re-creation
 const STYLE = {
   borderRadius: '0.75rem',
   height: '100%',
@@ -26,13 +26,39 @@ const DEFAULT_FROM_TOKEN = {
   logoURI: 'https://polygonscan.com/token/images/polygon.png',
 };
 
+// Inner component with memoization to prevent re-renders
+const SwapWidgetRenderer = memo(({ config, onError, onLoading, onTransactionStatusChange }) => {
+  return (
+    <SwapWidget
+      {...config}
+      onError={onError}
+      onLoading={onLoading}
+      onTransactionStatusChange={onTransactionStatusChange}
+    />
+  );
+});
+
+SwapWidgetRenderer.propTypes = {
+  config: PropTypes.object.isRequired,
+  onError: PropTypes.func,
+  onLoading: PropTypes.func,
+  onTransactionStatusChange: PropTypes.func,
+};
+
+// Main component
 const DodoSwapWidget = ({
   onError = () => {},
   onLoading = () => {},
   onTransactionStatus = () => {}
 }) => {
   const dodoexAPI = import.meta.env.VITE_SWAP_DODOEX;
+  
+  // Create stable callback references
+  const handleError = useCallback((err) => onError(err), [onError]);
+  const handleLoading = useCallback((loading) => onLoading(loading), [onLoading]);
+  const handleTransactionStatus = useCallback((status) => onTransactionStatus(status), [onTransactionStatus]);
 
+  // Memoize the widget configuration to prevent constant re-creating
   const widgetConfig = useMemo(() => ({
     colorMode: "dark",
     width: 'auto', // Changed to auto for better responsiveness
@@ -47,11 +73,11 @@ const DodoSwapWidget = ({
 
   return (
     <div className="swap-widget-container h-full w-full max-w-[380px] min-h-[480px] mx-auto mt-2 sm:mt-0">
-      <SwapWidget
-        {...widgetConfig}
-        onError={onError}
-        onLoading={onLoading}
-        onTransactionStatusChange={onTransactionStatus}
+      <SwapWidgetRenderer
+        config={widgetConfig}
+        onError={handleError}
+        onLoading={handleLoading}
+        onTransactionStatusChange={handleTransactionStatus}
       />
     </div>
   );
@@ -63,4 +89,5 @@ DodoSwapWidget.propTypes = {
   onTransactionStatus: PropTypes.func,
 };
 
-export default React.memo(DodoSwapWidget);
+// Apply memo to the entire component to prevent unnecessary re-renders
+export default memo(DodoSwapWidget);

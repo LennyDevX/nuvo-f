@@ -310,7 +310,7 @@ const StakingActionsCard = ({ onDeposit, onWithdraw, showToast }) => {
       />
 
       <AnimatePresence>
-        {transactionInfo && <TransactionToast {...transactionInfo} />}
+        {transactionInfo && <TransactionToast key={`transaction-toast-${transactionInfo.id || Date.now()}`} {...transactionInfo} />}
       </AnimatePresence>
     </>
   );

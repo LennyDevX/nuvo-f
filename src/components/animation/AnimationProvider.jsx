@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { LazyMotion, domAnimation, AnimatePresence, MotionConfig } from 'framer-motion';
+import useReducedMotion from '../../hooks/useReducedMotion';
 
 // Create context for animation settings
 export const AnimationContext = createContext({
@@ -11,9 +12,10 @@ export const useAnimationContext = () => useContext(AnimationContext);
 
 const AnimationProvider = ({ 
   children, 
-  reducedMotion = false,
   features = domAnimation
 }) => {
+  // Use our custom hook instead of accepting reducedMotion as a prop
+  const prefersReducedMotion = useReducedMotion();
   const [enableAnimations, setEnableAnimations] = useState(true);
   
   // Check for device performance
@@ -41,14 +43,14 @@ const AnimationProvider = ({
   
   // Create animation context value
   const contextValue = {
-    reducedMotion: reducedMotion,
-    enableAnimations: enableAnimations
+    reducedMotion: prefersReducedMotion,
+    enableAnimations: enableAnimations && !prefersReducedMotion
   };
   
   return (
     <AnimationContext.Provider value={contextValue}>
       <LazyMotion features={features}>
-        <MotionConfig reducedMotion={reducedMotion ? "always" : "auto"}>
+        <MotionConfig reducedMotion={prefersReducedMotion ? "always" : "user"}>
           <AnimatePresence mode="wait">
             {children}
           </AnimatePresence>

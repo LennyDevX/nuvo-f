@@ -159,7 +159,7 @@ const AIHub = () => {
             animate="visible"
             className="mb-6 overflow-hidden"
           >
-            {Array.from("NUVOS AI Ecosystem").map((char, index) => (
+            {Array.from("NUVOS AI").map((char, index) => (
               <motion.span
                 key={index}
                 custom={index}

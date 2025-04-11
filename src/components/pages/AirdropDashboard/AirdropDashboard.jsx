@@ -35,6 +35,7 @@ const AirdropDashboard = () => {
         <AnimatePresence>
             {isSidebarOpen && (
                 <m.div // Changed from motion.div to m.div
+                    key="sidebar-panel"
                     initial={{ x: '100%' }}
                     animate={{ x: 0 }}
                     exit={{ x: '100%' }}

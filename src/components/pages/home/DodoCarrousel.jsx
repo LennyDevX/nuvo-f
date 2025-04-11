@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import DododexLogo from '/DododexLogo.png';
+import { useAnimationContext } from '../../animation/AnimationProvider';
 
 const DodoCarrousel = () => {
   const [[page, direction], setPage] = useState([0, 0]);
-  const prefersReducedMotion = useReducedMotion();
+  const { reducedMotion: prefersReducedMotion } = useAnimationContext();
 
   // Memoize features data to prevent recreation on each render
   const features = useMemo(() => [

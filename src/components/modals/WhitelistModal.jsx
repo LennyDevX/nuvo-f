@@ -71,6 +71,7 @@ const WhitelistModal = ({ onClose }) => {
   return (
     <AnimatePresence>
       <motion.div
+        key="whitelist-modal"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

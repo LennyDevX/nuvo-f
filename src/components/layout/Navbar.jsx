@@ -184,7 +184,7 @@ const Navbar = () => {
       <div 
         id="mobile-menu"
         className={styles.mobileMenuClasses(isOpen)}
-        aria-hidden={!isOpen}
+        inert={isOpen ? undefined : ""}
       >
         <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-4.25rem)] overflow-y-auto">
           {/* Navigation Links - with memoized handlers and styles */}
@@ -197,6 +197,7 @@ const Navbar = () => {
                   onClick={() => handleNavigation(path)}
                   className={styles.mobileNavButtonClasses(isActive)}
                   aria-current={isActive ? 'page' : undefined}
+                  tabIndex={isOpen ? 0 : -1}
                 >
                   <Icon className={styles.mobileNavIconClasses} />
                   {label}
@@ -214,6 +215,7 @@ const Navbar = () => {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                tabIndex={isOpen ? 0 : -1}
               >
                 <FaExternalLinkAlt className="w-3.5 h-3.5" />
                 <span className="text-xs font-mono">

@@ -198,8 +198,8 @@ const DashboardCards = ({ account, airdropData, formatAddress, onOpenSidebar }) 
                     account={account} 
                 />
             ].map((CardComponent, index) => (
-                <m.div // Changed from motion.div to m.div
-                    key={index}
+                <m.div
+                    key={`airdrop-card-${index}`}
                     className="bg-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-purple-500/60 shadow-lg shadow-purple-900/20"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

@@ -99,7 +99,7 @@ function ROICard({ firstDepositTime }) {
     <BaseCard title="Staking Benefits" icon={<FaStar className="text-purple-400" />}>
       <div className="space-y-5 h-full flex flex-col">
         {/* Current Staking Status */}
-        <div className=" p-5 rounded-2xl border border-violet-600/20 shadow-lg backdrop-blur-md hover:shadow-violet-700/10 transition-all duration-300">
+        <div className=" p-5 rounded-2xl border border-violet-700/20 shadow-lg backdrop-blur-md hover:shadow-violet-700/10 transition-all duration-300">
           <div className="flex justify-between items-center mb-3">
             <span className="text-sm font-medium tracking-wide">Time Staking</span>
             <div className="text-2xl font-bold transform hover:scale-105 transition-transform duration-300">
@@ -122,7 +122,7 @@ function ROICard({ firstDepositTime }) {
 
         {/* Progress to Next Tier - Conditionally rendered */}
         {stakingInfo.daysLeft > 0 && (
-          <div className=" p-5 rounded-2xl border border-indigo-700/20 shadow-lg backdrop-blur-md hover:shadow-indigo-700/10 transition-all duration-300">
+          <div className=" p-5 rounded-2xl border border-violet-700/20 shadow-lg  transition-all duration-300">
             <div className="flex justify-between items-center mb-4">
               <span className=" flex items-center gap-2 font-medium">
                 <FaCalendarAlt className="text-purple-400/70" /> Next Milestone

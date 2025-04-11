@@ -1,11 +1,12 @@
 import React from 'react';
-import { m, useReducedMotion } from 'framer-motion';
-import NavLink from '../../navigation/NavLink'; // Import NavLink
+import { m } from 'framer-motion';
+import NavLink from '../../navigation/NavLink';
 import DodoCarrousel from './DodoCarrousel';
 import { fadeIn } from '../../../utils/animationVariants';
+import { useAnimationContext } from '../../animation/AnimationProvider';
 
 const SwapInfo = () => {
-  const prefersReducedMotion = useReducedMotion();
+  const { reducedMotion: prefersReducedMotion } = useAnimationContext();
   
   return (
     <section className="relative overflow-hidden py-8 sm:py-16">
