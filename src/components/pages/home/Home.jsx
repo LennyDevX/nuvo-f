@@ -65,7 +65,7 @@ const Home = () => {
     <AnimationProvider reducedMotion={isMobile}>
       <div className="relative bg-nuvo-gradient min-h-screen">
         {/* Simple background without animation */}
-        <SpaceBackground customClass="opacity-90" />
+        <SpaceBackground customClass="" />
         
         {/* Always render Header immediately */}
         <Header openUpdatesModal={openModal} />

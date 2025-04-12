@@ -32,7 +32,7 @@ const TokenomicsDashboard = () => {
 
   // Memoize SpaceBackground component to prevent re-renders
   const backgroundComponent = useMemo(() => (
-    <SpaceBackground customClass="opacity-80" />
+    <SpaceBackground customClass="" />
   ), []);
 
   return (

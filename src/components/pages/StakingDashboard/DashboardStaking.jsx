@@ -220,7 +220,7 @@ const DashboardStaking = () => {
 
   return (
     <div className="relative bg-nuvo-gradient min-h-screen pt-18 pb-12 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-80" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
+      <SpaceBackground customClass="" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation} strict>
           {/* Redesigned Hero Section - optimizado */}

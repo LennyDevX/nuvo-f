@@ -132,7 +132,7 @@ const SwapToken = () => {
 
   return (
     <div className="bg-nuvo-gradient min-h-screen pt-20 sm:pt-24 md:py-16 flex flex-col items-center justify-start sm:justify-center">
-      <SpaceBackground customClass="opacity-85" /> {/* Reduced opacity for better contrast with text */}
+      <SpaceBackground customClass="" /> {/* Reduced opacity for better contrast with text */}
       <div className="w-full max-w-2xl mx-auto px-3 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-6 sm:mb-8"

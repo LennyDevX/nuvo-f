@@ -80,7 +80,11 @@ export const routes = [
   {
     path: "/airdrops",
     element: withSuspense(<MainLayout><AirdropDashboard /></MainLayout>),
-    loader: async () => null
+    loader: async () => {
+      // Prefetch para mejorar el rendimiento
+      import('../components/pages/AirdropDashboard/AirdropDashboard');
+      return null;
+    }
   },
   {
     path: "/roadmap",

@@ -24,7 +24,7 @@ const TokenomicsExplanation = () => {
 
   // Memoize the card component
   const Card = useMemo(() => ({ title, description }) => (
-    <div className="nuvos-card p-4">
+    <div className=" p-4">
       <h3 className="text-lg font-semibold text-purple-400 mb-2">
         {title}
       </h3>

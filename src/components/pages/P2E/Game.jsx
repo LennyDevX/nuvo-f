@@ -50,7 +50,7 @@ const Game = () => {
 
   return (
     <div className="relative bg-nuvo-gradient min-h-screen pt-28 pb-16 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-90" />
+      <SpaceBackground customClass="" />
       <div className="container mx-auto px-4 py-6 max-w-6xl relative z-10">
         {/* Header section with animated title */}
         <motion.div 

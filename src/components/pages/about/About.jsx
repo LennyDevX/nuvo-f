@@ -25,7 +25,7 @@ const About = () => {
   return (
     <AnimationProvider>
       <div className="bg-nuvo-gradient min-h-screen relative">
-        <SpaceBackground customClass="opacity-90" />
+        <SpaceBackground customClass="" />
         
         <div className="relative">
           <m.div style={{ y }} className="relative z-10">

@@ -1,35 +1,92 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ethers } from 'ethers';
 import AirdropABI from '../Abi/Airdrop.json';
 
 export const useAirdropRegistration = (provider, account) => {
-    const [isRegistering, setIsRegistering] = useState(false);
     const [registrationError, setRegistrationError] = useState(null);
-    const [airdropInfo, setAirdropInfo] = useState(null);
+    const [registrationStatus, setRegistrationStatus] = useState('idle');
+    const [isRegistering, setIsRegistering] = useState(false);
+    const [registrationComplete, setRegistrationComplete] = useState(false);
+    const [airdropInfo, setAirdropInfo] = useState({
+        isEligible: false,
+        hasClaimed: false,
+        hasMinBalance: false,
+        isActive: false,
+        isFunded: false,
+        totalClaims: 0,
+        userBalance: '0'
+    });
+    const [contract, setContract] = useState(null);
 
-    const contract = useMemo(() => {
-        if (!provider) return null;
+    // Inicializar el contrato cuando el provider y la cuenta estén disponibles
+    useEffect(() => {
+        if (provider && account) {
+            try {
+                const airdropAddress = import.meta.env.VITE_AIRDROP_ADDRESS;
+                if (!airdropAddress) {
+                    console.error('Airdrop contract address not found in environment variables');
+                    return;
+                }
+                const contractInstance = new ethers.Contract(
+                    airdropAddress,
+                    AirdropABI.abi,
+                    provider
+                );
+                setContract(contractInstance);
+            } catch (error) {
+                console.error('Error initializing contract:', error);
+                setRegistrationError('Failed to initialize airdrop contract');
+            }
+        }
+    }, [provider, account]);
+
+    // Obtener información del airdrop
+    const getAirdropInfo = useCallback(async () => {
+        if (!contract || !account) return;
+
         try {
-            return new ethers.Contract(
-                import.meta.env.VITE_AIRDROP_ADDRESS,
-                AirdropABI.abi,
-                provider
-            );
+            setRegistrationStatus('checking');
+            const [isEligible, hasClaimed, hasMinBalance, userBalance] = await contract.checkUserEligibility(account);
+            const airdropStats = await contract.getAirdropStats();
+            
+            setAirdropInfo({
+                isEligible,
+                hasClaimed,
+                hasMinBalance,
+                userBalance: ethers.utils.formatEther(userBalance),
+                isActive: airdropStats.isAirdropActive,
+                isFunded: airdropStats.hasBalance,
+                totalClaims: Number(airdropStats.claimedCount),
+                maxParticipants: Number(airdropStats.maxParticipants),
+                tokenBalance: ethers.utils.formatEther(airdropStats.tokenBalance)
+            });
+
+            setRegistrationStatus('ready');
+            if (hasClaimed) {
+                setRegistrationComplete(true);
+            }
         } catch (error) {
-            console.error('Error creating contract instance:', error);
-            return null;
+            console.error('Error getting airdrop info:', error);
+            setRegistrationStatus('error');
+            setRegistrationError('Failed to get airdrop information');
         }
-    }, [provider]);
+    }, [contract, account]);
 
-    const registerForAirdrop = useCallback(async () => {
-        if (!contract || !account) {
-            throw new Error('Please connect your wallet first');
-        }
-
-        setIsRegistering(true);
+    // Registrarse para el airdrop
+    const registerForAirdrop = useCallback(async (userData = {}) => {
         setRegistrationError(null);
+        setIsRegistering(true);
+        setRegistrationStatus('registering');
 
         try {
+            if (!provider || !account) {
+                throw new Error('Wallet not connected');
+            }
+
+            if (!contract) {
+                throw new Error('Contract not initialized');
+            }
+
             const signer = await provider.getSigner();
             if (!signer) throw new Error('Signer not available');
 
@@ -43,12 +100,12 @@ export const useAirdropRegistration = (provider, account) => {
                 isEligible,
                 hasClaimed,
                 hasMinBalance,
-                userBalance: ethers.formatEther(userBalance)
+                userBalance: ethers.utils.formatEther(userBalance)
             });
 
             // Verificar balance mínimo
             if (!hasMinBalance) {
-                throw new Error(`Insufficient balance. You need at least 1 MATIC. Current balance: ${ethers.formatEther(userBalance)} MATIC`);
+                throw new Error(`Insufficient balance. You need at least 1 MATIC. Current balance: ${ethers.utils.formatEther(userBalance)} MATIC`);
             }
 
             // Si ya está registrado y ha reclamado
@@ -56,62 +113,76 @@ export const useAirdropRegistration = (provider, account) => {
                 throw new Error('You have already claimed this airdrop');
             }
 
-            // Si ya está registrado pero no ha reclamado
-            if (isEligible && !hasClaimed) {
-                throw new Error('You are already registered! Please proceed to claim your airdrop.');
-            }
-
-            // Registrar usando la nueva función registerForAirdrop
-            console.log('Registering user...');
+            // Proceder con el registro
+            setRegistrationStatus('submitting transaction');
             const tx = await contractWithSigner.registerForAirdrop();
-            console.log('Registration tx sent:', tx.hash);
-
+            console.log('Registration transaction sent:', tx.hash);
+            
+            setRegistrationStatus('confirming transaction');
             const receipt = await tx.wait();
             console.log('Registration confirmed:', receipt);
-
-            return receipt;
-
-        } catch (error) {
-            console.error('Registration attempt error:', error);
             
-            // Mejorar mensajes de error
-            let errorMessage = error.message;
-            if (error.message.includes('Already registered')) {
-                errorMessage = 'You are already registered for this airdrop';
-            } else if (error.message.includes('Maximum participants reached')) {
-                errorMessage = 'Maximum participants reached for this airdrop';
-            } else if (error.message.includes('Airdrop ended')) {
-                errorMessage = 'This airdrop has ended';
-            } else if (error.message.includes('Airdrop not configured')) {
-                errorMessage = 'This airdrop is not configured yet';
-            } else if (error.message.includes('user rejected')) {
-                errorMessage = 'Transaction was rejected';
+            if (receipt.status === 1) {
+                setRegistrationComplete(true);
+                setRegistrationStatus('success');
+                await getAirdropInfo(); // Actualizar el estado
+                
+                // Retornar datos útiles para el frontend
+                return {
+                    success: true,
+                    transactionHash: receipt.transactionHash,
+                    userData: userData,
+                    timestamp: Date.now()
+                };
+            } else {
+                throw new Error('Transaction failed');
             }
-
-            setRegistrationError(errorMessage);
-            throw new Error(errorMessage);
+        } catch (error) {
+            console.error('Registration error:', error);
+            setRegistrationError(error.message || 'Failed to register for airdrop');
+            setRegistrationStatus('error');
+            throw error;
         } finally {
             setIsRegistering(false);
         }
-    }, [contract, account, provider]);
+    }, [contract, account, provider, getAirdropInfo]);
+    
+    // Función para reclamar tokens (para uso futuro)
+    const claimTokens = useCallback(async () => {
+        setRegistrationError(null);
+        setIsRegistering(true);
 
-    const getAirdropInfo = useCallback(async () => {
-        if (!contract) return null;
         try {
-            const info = await contract.getAirdropStats();
-            setAirdropInfo(info);
-            return info;
+            const signer = await provider.getSigner();
+            if (!signer) throw new Error('Signer not available');
+
+            const contractWithSigner = contract.connect(signer);
+            
+            const tx = await contractWithSigner.claimTokens();
+            console.log('Claim transaction sent:', tx.hash);
+            
+            const receipt = await tx.wait();
+            console.log('Claim confirmed:', receipt);
+            
+            await getAirdropInfo(); // Actualizar información después de reclamar
+            return receipt.transactionHash;
         } catch (error) {
-            console.error('Error fetching airdrop info:', error);
-            return null;
+            console.error('Claim error:', error);
+            setRegistrationError(error.message || 'Failed to claim tokens');
+            throw error;
+        } finally {
+            setIsRegistering(false);
         }
-    }, [contract]);
+    }, [contract, provider, getAirdropInfo]);
 
     return {
         registerForAirdrop,
         getAirdropInfo,
-        isRegistering,
+        claimTokens,
         registrationError,
+        registrationStatus,
+        isRegistering,
+        registrationComplete,
         airdropInfo
     };
 };
