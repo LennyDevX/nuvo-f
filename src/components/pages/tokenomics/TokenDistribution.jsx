@@ -1,13 +1,56 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
-import { tokenDistributionData, chartOptions } from '../../../utils/ChartConfig';
+import { chartOptions } from '../../../utils/ChartConfig';
 import '../../../utils/ChartSetup';
 
 const TokenDistribution = () => {
   const chartRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Nueva distribución de tokens con colores actualizados
+  const updatedTokenDistribution = useMemo(() => {
+    return {
+      labels: [
+        'Staking Rewards', 
+        'Treasury', 
+        'Community Incentives', 
+        'Marketing', 
+        'Development', 
+        'Founder & Team'
+      ],
+      datasets: [
+        {
+          data: [20, 15, 20, 15, 20, 10], // Porcentajes actuales
+          backgroundColor: [
+            'rgba(111, 76, 255, 0.8)',    // Púrpura vibrante
+            'rgba(66, 184, 255, 0.8)',    // Azul celeste
+            'rgba(255, 84, 174, 0.8)',    // Rosa intenso
+            'rgba(255, 177, 27, 0.8)',    // Ámbar
+            'rgba(0, 201, 167, 0.8)',     // Verde turquesa
+            'rgba(232, 65, 121, 0.8)'     // Rosa frambuesa
+          ],
+          borderColor: [
+            'rgba(111, 76, 255, 1)',
+            'rgba(66, 184, 255, 1)',
+            'rgba(255, 84, 174, 1)',
+            'rgba(255, 177, 27, 1)',
+            'rgba(0, 201, 167, 1)',
+            'rgba(232, 65, 121, 1)'
+          ],
+          hoverBackgroundColor: [
+            'rgba(111, 76, 255, 0.9)',
+            'rgba(66, 184, 255, 0.9)',
+            'rgba(255, 84, 174, 0.9)',
+            'rgba(255, 177, 27, 0.9)',
+            'rgba(0, 201, 167, 0.9)',
+            'rgba(232, 65, 121, 0.9)'
+          ]
+        }
+      ]
+    };
+  }, []);
+  
   // Check for mobile device
   useEffect(() => {
     const checkMobile = () => {
@@ -77,8 +120,10 @@ const TokenDistribution = () => {
               const descriptions = {
                 'Staking Rewards': 'Long-term holder incentives',
                 'Treasury': 'Protocol development & security',
-                'Community': 'Ecosystem growth initiatives',
-                'Development': 'Technical improvements & marketing'
+                'Community Incentives': 'Ecosystem growth initiatives',
+                'Marketing': 'Marketing & partnerships',
+                'Development': 'Technical improvements & innovation',
+                'Founder & Team': 'Core team allocation'
               };
               return `  ${descriptions[context.label] || ''}`;
             }
@@ -110,24 +155,32 @@ const TokenDistribution = () => {
     return baseOptions;
   }, [isMobile]);
 
-  // Memoize key points content
+  // Memoize key points content con colores específicos para cada elemento
   const keyPointsContent = useMemo(() => (
     <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
       <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-500">•</span>
-        <span>40% allocated to staking rewards</span>
+        <span className="text-purple-600">•</span>
+        <span>20% allocated to staking rewards</span>
       </li>
       <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-500">•</span>
-        <span>25% treasury allocation</span>
+        <span className="text-blue-400">•</span>
+        <span>15% treasury allocation</span>
       </li>
       <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-500">•</span>
+        <span className="text-pink-400">•</span>
         <span>20% community incentives</span>
       </li>
       <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-500">•</span>
-        <span>15% development & marketing</span>
+        <span className="text-amber-400">•</span>
+        <span>15% marketing</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-green-400">•</span>
+        <span>20% development</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-pink-500">•</span>
+        <span>10% founder & team</span>
       </li>
     </ul>
   ), []);
@@ -142,10 +195,11 @@ const TokenDistribution = () => {
       <h2 className="text-xl font-bold text-white mb-4 tracking-wide">
         Token Distribution
       </h2>
-      <div className="aspect-square max-w-[320px] mx-auto hover:scale-105 transition-transform duration-300">
+      {/* Manteniendo el mismo tamaño para ambos gráficos */}
+      <div className="aspect-square max-w-[360px] md:max-w-[400px] mx-auto hover:scale-105 transition-transform duration-300">
         <Pie 
           ref={chartRef}
-          data={tokenDistributionData} 
+          data={updatedTokenDistribution} 
           options={options}
         />
       </div>

@@ -66,8 +66,8 @@ const NFTExplainerSection = () => {
         variants={containerVariants}
       >
         <m.div variants={itemVariants} className="text-center mb-10">
-          {/* Reduced from mb-16 to mb-10 */}
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-transparent bg-clip-text bg-nuvo-gradient-text">
+          {/* Enhanced title size for desktop */}
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-nuvo-gradient-text">
             How Asset Tokenization Works
           </h2>
           <p className="max-w-3xl mx-auto text-lg text-gray-300">
@@ -76,12 +76,12 @@ const NFTExplainerSection = () => {
           </p>
         </m.div>
 
-        {/* Process Steps with fluid animations */}
+        {/* Process Steps - Improved mobile layout with 2 columns */}
         <m.div 
           variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3"
         >
-          {/* Reduced from gap-6 to gap-4 */}
+          {/* Reduced from gap-4 to gap-3 for tighter mobile layout */}
           {steps.map((step, index) => (
             <m.div 
               key={index} 
@@ -94,13 +94,14 @@ const NFTExplainerSection = () => {
               }}
             >
               <m.div 
-                className={`bg-gradient-to-br ${step.color} p-8 h-full rounded-xl`}
+                className={`nuvos-card p-4 sm:p-6 h-full rounded-xl backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 border border-violet-700/20`}
                 initial={{ backgroundPosition: "0% 0%" }}
                 animate={{ backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"] }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               >
+                {/* Reduced size for mobile */}
                 <m.div 
-                  className="bg-white/10 w-16 h-16 rounded-full flex items-center justify-center mb-6 text-white text-2xl"
+                  className="bg-white/10 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mb-4 sm:mb-6 text-white text-xl sm:text-2xl"
                   animate={{ 
                     boxShadow: ["0 0 0 0 rgba(255,255,255,0.3)", "0 0 0 10px rgba(255,255,255,0)", "0 0 0 0 rgba(255,255,255,0.3)"]
                   }}
@@ -108,11 +109,12 @@ const NFTExplainerSection = () => {
                 >
                   {step.icon}
                 </m.div>
-                <h3 className="text-xl font-bold mb-4 text-white">{step.title}</h3>
-                <p className="text-white/80">{step.description}</p>
-                <div className="mt-4 flex items-center">
+                {/* Adjusted text sizes for mobile */}
+                <h3 className="text-base sm:text-xl font-bold mb-2 sm:mb-4 text-white">{step.title}</h3>
+                <p className="text-xs sm:text-sm text-white/80">{step.description}</p>
+                <div className="mt-3 sm:mt-4 flex items-center">
                   <m.span 
-                    className="bg-white/20 rounded-full w-8 h-8 flex items-center justify-center text-white font-bold"
+                    className="bg-white/20 rounded-full w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center text-white font-bold text-xs sm:text-base"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 4, repeat: Infinity, delay: index * 0.7 }}
                   >

@@ -1,13 +1,53 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion as m } from 'framer-motion';
 import { Pie } from 'react-chartjs-2';
-import { revenueStreamsData } from '../../../utils/ChartConfig';
 import { chartOptions } from '../../../utils/ChartConfig';
 import '../../../utils/ChartSetup';
 
 const RevenueStreams = () => {
   const chartRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Nuevos datos de revenue streams con todos los elementos (incluidos los 2 nuevos)
+  const updatedRevenueStreamsData = useMemo(() => ({
+    labels: [
+      'Diversified Revenue', 
+      'Yield Generation', 
+      'Risk Management', 
+      'Strategic Partnerships',
+      'Long Term Investment',
+      'Strategic BTC Reserve'
+    ],
+    datasets: [
+      {
+        data: [20, 22, 15, 18, 12, 13], // Nueva distribución con %
+        backgroundColor: [
+          'rgba(66, 184, 255, 0.8)',    // Azul celeste
+          'rgba(0, 201, 167, 0.8)',     // Verde turquesa  
+          'rgba(255, 177, 27, 0.8)',    // Ámbar
+          'rgba(111, 76, 255, 0.8)',    // Púrpura vibrante
+          'rgba(232, 65, 121, 0.8)',    // Rosa frambuesa
+          'rgba(255, 84, 174, 0.8)'     // Rosa intenso
+        ],
+        borderColor: [
+          'rgba(66, 184, 255, 1)',
+          'rgba(0, 201, 167, 1)',
+          'rgba(255, 177, 27, 1)',
+          'rgba(111, 76, 255, 1)',
+          'rgba(232, 65, 121, 1)',
+          'rgba(255, 84, 174, 1)'
+        ],
+        hoverBackgroundColor: [
+          'rgba(66, 184, 255, 0.9)',
+          'rgba(0, 201, 167, 0.9)',
+          'rgba(255, 177, 27, 0.9)',
+          'rgba(111, 76, 255, 0.9)',
+          'rgba(232, 65, 121, 0.9)',
+          'rgba(255, 84, 174, 0.9)'
+        ]
+      }
+    ]
+  }), []);
 
   // Check for mobile device
   useEffect(() => {
@@ -72,6 +112,17 @@ const RevenueStreams = () => {
               const label = context.label || '';
               const value = context.formattedValue;
               return `${label}: ${value}%`;
+            },
+            afterLabel: (context) => {
+              const descriptions = {
+                'Diversified Revenue': 'Multiple income streams',
+                'Yield Generation': 'Sustainable protocol earnings',
+                'Risk Management': 'Security-first approach',
+                'Strategic Partnerships': 'High-value collaborations',
+                'Long Term Investment': 'Value-accruing assets',
+                'Strategic BTC Reserve': 'Bitcoin treasury holdings'
+              };
+              return `  ${descriptions[context.label] || ''}`;
             }
           }
         }
@@ -100,10 +151,30 @@ const RevenueStreams = () => {
   // Memoize strategy list for consistent rendering
   const strategyList = useMemo(() => (
     <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
-      <li>• Diversified revenue sources</li>
-      <li>• Sustainable yield generation</li>
-      <li>• Risk-managed operations</li>
-      <li>• Strategic partnerships</li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-blue-400">•</span>
+        <span>Diversified revenue sources</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-green-400">•</span>
+        <span>Sustainable yield generation</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-amber-400">•</span>
+        <span>Risk-managed operations</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-purple-400">•</span>
+        <span>Strategic partnerships</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-pink-500">•</span>
+        <span>Long term investment</span>
+      </li>
+      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+        <span className="text-pink-400">•</span>
+        <span>Strategic BTC Reserve</span>
+      </li>
     </ul>
   ), []);
 
@@ -117,10 +188,11 @@ const RevenueStreams = () => {
       <h2 className="text-xl font-bold text-white mb-4">
         Revenue Streams
       </h2>
-      <div className="aspect-square max-w-[320px] mx-auto hover:scale-105 transition-transform duration-300">
+      {/* Aumentado el tamaño máximo del gráfico para mayor visibilidad */}
+      <div className="aspect-square max-w-[360px] md:max-w-[400px] mx-auto hover:scale-105 transition-transform duration-300">
         <Pie 
           ref={chartRef}
-          data={revenueStreamsData} 
+          data={updatedRevenueStreamsData} 
           options={options}
         />
       </div>

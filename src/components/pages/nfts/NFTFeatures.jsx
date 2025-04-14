@@ -3,74 +3,64 @@ import { m } from 'framer-motion';
 import { FaGem, FaFingerprint, FaShieldAlt, FaCoins, FaUserLock, FaUsers } from 'react-icons/fa';
 
 const NFTFeatures = () => {
-  // Features para los NFTs with enhanced descriptions
+  // Features para los NFTs with enhanced descriptions and unique colors
   const nftFeatures = [
     { 
       icon: <FaGem />, 
       title: "Premium Access", 
-      description: "Exclusive access to premium features and advanced tokenization capabilities for your physical assets."
+      description: "Exclusive access to premium features and advanced tokenization capabilities for your physical assets.",
+      iconColor: "text-emerald-400"
     },
     { 
       icon: <FaFingerprint />, 
       title: "Unique & Verifiable", 
-      description: "Each NFT is cryptographically unique and verifiable, creating a secure bridge between physical and digital."
+      description: "Each NFT is cryptographically unique and verifiable, creating a secure bridge between physical and digital.",
+      iconColor: "text-blue-400"
     },
     { 
       icon: <FaShieldAlt />, 
       title: "Utility-Focused", 
-      description: "Real-world utility that transforms your physical assets into digital opportunities with tangible benefits."
+      description: "Real-world utility that transforms your physical assets into digital opportunities with tangible benefits.",
+      iconColor: "text-purple-400"
     },
     { 
       icon: <FaCoins />, 
       title: "Staking Benefits", 
-      description: "Enhanced staking rewards and priority in yield distribution across the Nuvos Cloud ecosystem."
+      description: "Enhanced staking rewards and priority in yield distribution across the Nuvos Cloud ecosystem.",
+      iconColor: "text-amber-400"
     },
     { 
       icon: <FaUserLock />, 
       title: "Governance Rights", 
-      description: "Shape the future of asset tokenization with weighted voting power in protocol decisions."
+      description: "Shape the future of asset tokenization with weighted voting power in protocol decisions.",
+      iconColor: "text-indigo-400"
     },
     { 
-      icon: <FaUsers />, // Fixed: using correct FaUsers icon instead of duplicate FaUserLock
+      icon: <FaUsers />,
       title: "Community Engagement", 
-      description: "Join a vibrant community of innovators and asset owners, sharing insights and opportunities."
+      description: "Join a vibrant community of innovators and asset owners, sharing insights and opportunities.",
+      iconColor: "text-fuchsia-400"
     }
   ];
 
   return (
     <m.div 
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8" 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.9 }}
+      className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-6" 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
     >
       {nftFeatures.map((feature, index) => (
-        <m.div 
+        <div 
           key={index} 
-          className="bg-gradient-to-br from-violet-900/50 to-indigo-900/50 backdrop-blur-md p-6 rounded-xl border border-violet-500/30 shadow-xl hover:shadow-violet-500/10"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 + 0.9 }}
-          whileHover={{ 
-            scale: 1.05, 
-            boxShadow: "0 0 20px 0 rgba(168, 85, 247, 0.3)",
-            borderColor: "rgba(168, 85, 247, 0.5)"
-          }}
+          className="nuvos-card p-4 sm:p-5 rounded-xl backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 border border-slate-700/20"
         >
-          <m.div 
-            className="text-fuchsia-400 text-3xl mb-4"
-            whileHover={{ scale: 1.1, color: "#d946ef" }}
-            animate={{ 
-              y: [0, -5, 0],
-              opacity: [0.8, 1, 0.8]
-            }}
-            transition={{ duration: 3, repeat: Infinity, delay: index * 0.2 }}
-          >
+          <div className={`${feature.iconColor} text-2xl sm:text-3xl mb-3 sm:mb-4`}>
             {feature.icon}
-          </m.div>
-          <h3 className="text-xl font-bold text-white mb-2">{feature.title}</h3>
-          <p className="text-gray-300 text-sm">{feature.description}</p>
-        </m.div>
+          </div>
+          <h3 className="text-base sm:text-lg font-bold text-white mb-2">{feature.title}</h3>
+          <p className="text-gray-300 text-xs sm:text-sm">{feature.description}</p>
+        </div>
       ))}
     </m.div>
   );

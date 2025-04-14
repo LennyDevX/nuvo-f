@@ -7,7 +7,7 @@ import DashboardCards from "./card/DashboardCards";
 import NetworkBadge from "../../web3/NetworkBadge";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { FaCoins } from 'react-icons/fa';
+import { FaCoins, FaExternalLinkAlt } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
@@ -210,6 +210,16 @@ const DashboardStaking = () => {
         />
         <div className="text-center mt-6 space-y-2">
           <NetworkBadge />
+          <div className="mt-3 text-xs text-slate-400 flex items-center justify-center">
+            <a 
+              href="https://polygonscan.com/address/0x54ebebc65bcbcc7693cb83918fcd0115d71046e2" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-indigo-400 transition-colors duration-300 bg-slate-800/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-indigo-900/20 hover:border-indigo-500/30"
+            >
+              Smart Staking Contract V1.0<FaExternalLinkAlt className="ml-1 h-3 w-3" />
+            </a>
+          </div>
         </div>
       </m.div>
     );

@@ -39,7 +39,7 @@ const AirdropDashboard = createLazyComponent(() => import('../components/pages/A
 const Roadmap = createLazyComponent(() => import('../components/pages/roadmap/Roadmap.jsx'));
 const P2E = createLazyComponent(() => import('../components/pages/P2E/Game'));
 const NotFound = createLazyComponent(() => import('../components/pages/NotFound'));
-const AIHub = createLazyComponent(() => import('../components/pages/AIHub'));
+const AIHub = createLazyComponent(() => import('../components/pages/AIHub/AIHub.jsx'));
 const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTHome.jsx'));
 const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/TokenizationTool.jsx'));
 
