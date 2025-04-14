@@ -30,12 +30,7 @@ const TokenomicsSystem = () => {
   );
 
   // Memoize token data to prevent recreation on each render
-  const tokenData = useMemo(() => [
-    { name: 'Community Rewards', value: 20, color: '#8B5CF6' },
-    { name: 'Staking Growth', value: 40, color: '#6D28D9' },
-    { name: 'Team & Development', value: 15, color: '#4C1D95' },
-    { name: 'Liquidity', value: 25, color: '#5B21B6' },
-  ], []);
+ 
 
   // Memoize navigation handler
   const handleExploreTokenomics = useCallback(() => {
@@ -99,22 +94,7 @@ const TokenomicsSystem = () => {
               Experience the perfect balance of staking rewards, liquidity incentives, and ecosystem development. ✨💰
             </p>
             
-            <div className="space-y-4 mt-8">
-              {tokenData.map((item) => (
-                <div 
-                  key={item.name}
-                  className="flex items-center space-x-3"
-                >
-                  <div 
-                    className="w-4 h-4 rounded-full" 
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-white">
-                    {item.name} - {item.value}%
-                  </span>
-                </div>
-              ))}
-            </div>
+            
             <button
               onClick={handleExploreTokenomics}
               className="px-6 py-4 mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"

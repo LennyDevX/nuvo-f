@@ -153,8 +153,8 @@ const NFTHeroSection = () => {
           >
             <m.div className="relative" initial={{ y: 0 }} animate={floatingAnimation}>
               <m.img
-                src="/NuvosBot.webp"
-                alt="Nuvos Bot"
+                src="/NFT-X1.webp"
+                alt="Nuvos NFTs"
                 className="max-w-full h-auto rounded-2xl md:max-w-md"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

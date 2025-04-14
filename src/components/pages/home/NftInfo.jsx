@@ -10,8 +10,31 @@ const RewardDeveloper = () => {
   return (
     <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 items-start lg:items-center">
-        {/* Left Column - Content */}
-        <div className="space-y-4 sm:space-y-8 pt-2 sm:pt-6">
+        {/* Left Column - NFT Art Image (Moved from right side) */}
+        <m.div
+          initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+          className="relative mt-4 sm:mt-8 lg:mt-0 pb-8 sm:pb-0 flex justify-center items-center order-2 lg:order-1"
+        >
+          <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-purple-500/20 border border-purple-500/30">
+            <m.img 
+              src="/NFT-Y1.webp" 
+              alt="NFts" 
+              className="w-full h-auto max-w-md object-cover"
+              whileHover={{ scale: 1.03 }}
+              transition={{ duration: 0.3 }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+            <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 text-xs text-white">
+              🏆 Premium Collection
+            </div>
+          </div>
+        </m.div>
+
+        {/* Right Column - Content (Moved from left side) */}
+        <div className="space-y-4 sm:space-y-8 pt-2 sm:pt-6 order-1 lg:order-2">
           <m.div
             initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -55,29 +78,6 @@ const RewardDeveloper = () => {
             ))}
           </m.div>
         </div>
-
-        {/* Right Column - NFT Art Image */}
-        <m.div
-          initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8 }}
-          className="relative mt-4 sm:mt-8 lg:mt-0 pb-8 sm:pb-0 flex justify-center items-center"
-        >
-          <div className="relative overflow-hidden rounded-2xl shadow-xl shadow-purple-500/20 border border-purple-500/30">
-            <m.img 
-              src="/NftArt.webp" 
-              alt="Premium NFT Collection" 
-              className="w-full h-auto max-w-md object-cover"
-              whileHover={{ scale: 1.03 }}
-              transition={{ duration: 0.3 }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-            <div className="absolute bottom-3 left-3 px-3 py-1.5 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 text-xs text-white">
-              🏆 Premium Collection
-            </div>
-          </div>
-        </m.div>
       </div>
     </section>
   );
