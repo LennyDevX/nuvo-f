@@ -29,9 +29,9 @@ const AirdropInfo = () => {
   const rewards = useMemo(() => [
     {
       icon: <FaCoins />,
-      text: "500 NUVO Tokens",
+      text: "500 NUVOS Tokens",
       color: "text-amber-400",
-      description: "Reserve your NUVO tokens for the official launch in Q1 2027. Pre-sale will begin in Q1 2026. Early whitelist members receive an additional 20% bonus allocation.",
+      description: "Reserve your NUVOS tokens for the official launch in Q1 2027. Pre-sale will begin in Q1 2026. Early whitelist members receive an additional 20% bonus allocation.",
       highlight: "Available after official launch in 2027"
     },
     {
@@ -99,7 +99,7 @@ const AirdropInfo = () => {
             
             <p className="text-sm sm:text-base lg:text-lg text-gray-300 max-w-xl mt-3 sm:mt-4">
               Get ready for our token launch with pre-sale in Q1 2026 and official DEX launch in Q1 2027. 
-              Join our whitelist now to secure your position for exclusive NUVO tokens, 
+              Join our whitelist now to secure your position for exclusive NUVOS tokens, 
               rare NFTs, and special staking privileges when we launch.
             </p>
             
@@ -117,7 +117,7 @@ const AirdropInfo = () => {
             className="grid grid-cols-2 gap-2 sm:gap-3"
           >
             {[
-              { title: "NUVO Tokens", desc: "Future allocation" },
+              { title: "NUVOS Tokens", desc: "Future allocation" },
               { title: "Rare NFTs", desc: "Pre-launch access" },
               { title: "Priority Status", desc: "Guaranteed spots" },
               { title: "Early Benefits", desc: "Launch advantages" }

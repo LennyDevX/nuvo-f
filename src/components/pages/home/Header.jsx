@@ -260,7 +260,7 @@ const Header = ({ openUpdatesModal }) => {
 
             <div className="pt-6 flex flex-wrap gap-5">
               <m.a
-                href="/staking"
+                href="#get-started"
                 whileHover={{
                   scale: 1.05,
                   boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)"
@@ -386,34 +386,7 @@ const Header = ({ openUpdatesModal }) => {
           </m.div>
         </div>
 
-        {/* Scroll indicator - synchronized */}
-        <m.div 
-          variants={{
-            hidden: { opacity: 0 },
-            visible: { 
-              opacity: 1,
-              transition: { 
-                duration: mainAnimationSettings.duration,
-                delay: mainAnimationSettings.duration * 0.5
-              } 
-            }
-          }}
-          initial="hidden"
-          animate={pageControls}
-          className="flex justify-center mt-20"
-        >
-          <m.a
-            href="#get-started"
-            className="text-purple-400 flex flex-col items-center opacity-70 hover:opacity-100 transition-opacity"
-            variants={scrollDownVariants}
-            initial="initial"
-            animate="animate"
-            aria-label="Scroll down to learn more"
-          >
-            <span className="text-sm mb-2">Discover More</span>
-            <FaChevronDown />
-          </m.a>
-        </m.div>
+        
       </section>
     </LazyMotion>
   );

@@ -134,16 +134,10 @@ const SpaceBackground = ({ customClass = "", starDensity = "medium" }) => {
   
   return (
     <div className={`fixed inset-0 z-0 ${customClass}`}>
-      {/* Main gradient - mobile optimized version */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-purple-600/35 to-black"></div>
+      {/* Fondo principal homogéneo y morado */}
+      <div className="absolute inset-0 bg-nuvo-gradient"></div>
       
-      {/* Overlay with slightly increased light */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/35 to-black/80"></div>
-      
-      {/* Enhanced accent at the top */}
-      <div className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-purple-600/30 to-transparent"></div>
-      
-      {/* Vignette effect for depth - less intensive on mobile */}
+      {/* Vignette effect for depth - menos intensivo en mobile */}
       <div className="absolute inset-0 bg-radial-gradient pointer-events-none"></div>
       
       {/* Star canvas */}

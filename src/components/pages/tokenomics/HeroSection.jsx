@@ -113,8 +113,6 @@ const HeroSection = ({ onOpenTokenModal }) => {
       animate="visible"
       variants={containerVariants}
     >
-      {/* Background Effect */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
       {/* Content */}
       <div className="relative z-10">

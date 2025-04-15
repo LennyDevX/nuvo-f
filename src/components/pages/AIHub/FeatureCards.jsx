@@ -33,19 +33,19 @@ const FeatureCards = () => {
   const aiTools = [
     {
       title: "Reward Optimizer",
-      description: "AI-powered tool to help you optimize your staking strategy and maximize your NUVO rewards.",
+      description: "AI-powered tool to help you optimize your staking strategy and maximize your NUVOS rewards.",
       icon: FaChartLine,
       link: "#reward-optimizer"
     },
     {
       title: "Trading Assistant",
-      description: "Smart analysis and recommendations for NUVO token trading based on market conditions.",
+      description: "Smart analysis and recommendations for NUVOS token trading based on market conditions.",
       icon: FaTools,
       link: "#trading-assistant"
     },
     {
       title: "Community Insights",
-      description: "AI-driven analysis of community sentiment and trending topics in the NUVO ecosystem.",
+      description: "AI-driven analysis of community sentiment and trending topics in the NUVOS ecosystem.",
       icon: FaRobot,
       link: "#community-insights"
     }

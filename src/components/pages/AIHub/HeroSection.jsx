@@ -10,8 +10,8 @@ const HeroSection = () => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.15,
-        duration: 0.2,
+        delay: i * 0.1,
+        duration: 0.1,
         ease: "easeIn"
       }
     })
@@ -23,8 +23,8 @@ const HeroSection = () => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.2
+        staggerChildren: 0.05,
+        delayChildren: 0.1
       }
     }
   };
@@ -55,7 +55,7 @@ const HeroSection = () => {
         <motion.p 
           initial={{ opacity: 0, y: 0, x: 5 }}
           animate={{ opacity: 1, y: 0, x: 0 }}
-          transition={{ delay: 2.0, duration: 1 }}
+          transition={{ delay: 1, duration: 1 }}
           className="text-gray-300 text-lg leading-relaxed"
         >
           Experience the power of artificial intelligence within the Nuvos ecosystem. Our AI-driven solutions 

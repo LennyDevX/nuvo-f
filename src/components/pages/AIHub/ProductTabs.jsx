@@ -20,7 +20,7 @@ const ProductTabs = () => {
   const tabs = useMemo(() => [
     { id: 'nuv-os', label: 'Nuv-OS', icon: FaServer },
     { id: 'nuv-ai', label: 'Nuv-AI', icon: FaBrain },
-    { id: 'nuv-x1', label: 'Nuv-X1', icon: FaGem }
+    { id: 'nuv-x1', label: 'Nuv-NFTs', icon: FaGem }
   ], []);
 
   const nuvOsFeatures = useMemo(() => [
@@ -273,7 +273,7 @@ const ProductTabs = () => {
                 transition={{ duration: 0.3 }}
                 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text"
               >
-                Nuv-X1: Elite NFT Collection
+                Nuv-NFTs: Elite NFT Collection
               </motion.h2>
               <motion.p 
                 initial={{ opacity: 0 }}
@@ -281,9 +281,7 @@ const ProductTabs = () => {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="text-gray-300 text-lg mb-6 leading-relaxed"
               >
-                Nuv-X1 is our premium NFT collection, created 100% using AI-generated digital art. Holders gain exclusive 
-                advantages within Nuvos Cloud, increasing earning potential and unlocking special rewards like airdrops, 
-                additional NFTs, merchandise, and much more.
+                Nuv-NFTs es nuestra colección premium de NFTs, creada 100% con arte digital generado por IA. Los poseedores obtienen ventajas exclusivas dentro de Nuvos Cloud, aumentando su potencial de ganancias y desbloqueando recompensas especiales como airdrops, NFTs adicionales, merchandising y mucho más.
               </motion.p>
               <motion.div 
                 className="grid grid-cols-1 gap-4"
