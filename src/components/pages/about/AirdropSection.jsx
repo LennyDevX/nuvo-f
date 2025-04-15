@@ -1,7 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaGift, FaRocket } from 'react-icons/fa';
-import { airdropInfo } from './airdropConfig.js';
+import { airdropInfo } from './AirdropConfig.js';  // Fixed capitalization to match filename
 
 const AirdropSection = () => {
   const cardVariants = {
@@ -9,27 +9,8 @@ const AirdropSection = () => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
 
-  const updatedCategories = [
-    {
-      title: "Early Tokenizers",
-      amount: "250 NUVO Tokens",
-      requirements: "For users who join our beta program and tokenize their first physical asset through our platform."
-    },
-    {
-      title: "Digital Bridge Builders",
-      amount: "500 NUVO Tokens",
-      requirements: "For developers and creators who build experiences that utilize tokenized physical assets in innovative ways."
-    }
-  ];
-
-  const updatedEligibility = [
-    "Connect your wallet to Nuvos Cloud",
-    "Complete profile verification",
-    "Participate in the tokenization beta",
-    "Provide feedback on the tokenization process",
-    "Share your tokenized asset on social media",
-    "Join our community discussions"
-  ];
+  // Use the imported data instead of duplicating it
+  const { categories, eligibility } = airdropInfo;
 
   return (
     <section className="relative py-32 px-4">
@@ -82,7 +63,7 @@ const AirdropSection = () => {
             visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
           }}
         >
-          {updatedCategories.map((category, index) => (
+          {categories.map((category, index) => (
             <m.div
               key={index}
               variants={cardVariants}
@@ -120,7 +101,7 @@ const AirdropSection = () => {
         >
           <h3 className="text-2xl font-bold text-white mb-6">Tokenization Program Requirements</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {updatedEligibility.map((requirement, index) => (
+            {eligibility.map((requirement, index) => (
               <m.div 
                 key={index} 
                 className="flex items-center gap-4 text-gray-300"

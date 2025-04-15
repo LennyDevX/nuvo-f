@@ -9,7 +9,6 @@ import CTASection from './CTASection';
 import Footer from '../../layout/Footer';
 import AnimationProvider from '../../animation/AnimationProvider';
 import SpaceBackground from '../../effects/SpaceBackground';
-import '../../../Styles/about.css';
 
 const About = () => {
   const { scrollYProgress } = useScroll();

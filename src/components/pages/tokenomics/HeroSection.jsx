@@ -33,8 +33,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.15,
-        duration: 0.4,
+        delay: i * 0.1,
+        duration: 0.3,
         ease: "easeIn"
       }
     })
@@ -46,8 +46,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.4
+        staggerChildren: 0.05,
+        delayChildren: 0.2
       }
     }
   };
@@ -86,8 +86,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
       opacity: 1,
       y: 0,
       transition: { 
-        delay: 2.4, // Se mantiene el delay para que aparezca después de los textos
-        duration: 0.7, // Duración más larga para un fade in más suave
+        delay: 1.4, // Se mantiene el delay para que aparezca después de los textos
+        duration: 1.2, // Duración más larga para un fade in más suave
         ease: "easeInOut" // Curva de easing suave
       }
     },
@@ -142,7 +142,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.p 
               initial={{ opacity: 0, y: 0, x: 5 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
-              transition={{ delay: 1.7, duration: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
               className="text-xl md:text-2xl mt-4"
             >
               Powering Our Digital Ecosystem Today
@@ -151,7 +151,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.div 
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.0, duration: 0.8 }}
+              transition={{ delay: 1, duration: 1 }}
               className="max-w-3xl"
             >
               <p className="text-gray-300 text-lg mb-6">
@@ -181,7 +181,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             className="md:w-2/5 flex justify-center items-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
+            transition={{ duration: 1, delay: 0.8 }}
           >
             <m.div
               className="relative"

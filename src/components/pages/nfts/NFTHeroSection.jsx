@@ -1,20 +1,48 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { m } from 'framer-motion';
 import NFTFeatures from './NFTFeatures';
 
 const NFTHeroSection = () => {
-  // Animación de palabras individuales
-  const wordVariants = {
+  // Letra por letra animation - memoized for performance
+  const letterVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: (i) => ({
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, delay: i * 0.1 }
+      transition: { 
+        duration: 0.3, 
+        delay: i * 0.03,
+        ease: "easeOut"
+      }
     })
-  };
+  }), []);
+
+  // Utility function to split text into letters with proper indexing
+  const AnimatedLetters = useCallback(({ text, className, startIndex = 0 }) => {
+    return (
+      <span className={className}>
+        {text.split('').map((letter, i) => (
+          <m.span
+            key={`${text}-${i}`}
+            custom={startIndex + i}
+            variants={letterVariants}
+            initial="hidden"
+            animate="visible"
+            className="inline-block"
+            style={{ 
+              marginRight: letter === ' ' ? '0.25em' : '-0.02em',
+              display: 'inline-block'
+            }}
+          >
+            {letter === ' ' ? '\u00A0' : letter}
+          </m.span>
+        ))}
+      </span>
+    );
+  }, [letterVariants]);
 
   // Floating animation for the bot image
-  const floatingAnimation = {
+  const floatingAnimation = useMemo(() => ({
     y: [0, -15, 0],
     rotate: [0, 2, 0, -2, 0],
     transition: {
@@ -22,10 +50,10 @@ const NFTHeroSection = () => {
       repeat: Infinity,
       ease: "easeInOut"
     }
-  };
+  }), []);
 
-  // Shadow pulse animation - separándolo de opacity/scale para evitar conflictos
-  const shadowPulse = {
+  // Shadow pulse animation - memoized for performance
+  const shadowPulse = useMemo(() => ({
     filter: [
       "drop-shadow(0 10px 15px rgba(139, 92, 246, 0.3))",
       "drop-shadow(0 20px 25px rgba(139, 92, 246, 0.5))",
@@ -37,7 +65,7 @@ const NFTHeroSection = () => {
       ease: "easeInOut",
       times: [0, 0.5, 1]
     }
-  };
+  }), []);
 
   return (
     <section className="relative p-4 overflow-hidden">
@@ -60,7 +88,7 @@ const NFTHeroSection = () => {
             >
               <m.div className="relative" initial={{ y: 0 }} animate={floatingAnimation}>
                 <m.img
-                  src="/NuvosBot.webp"
+                  src="/NFT-X1.webp"
                   alt="Nuvos Bot"
                   className="max-w-full h-auto rounded-xl max-h-[180px]"
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -100,25 +128,9 @@ const NFTHeroSection = () => {
                 ></m.div>
                 
                 <h1 className="text-3xl font-bold mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">
-                  <m.span 
-                    className="inline-block"
-                    custom={0}
-                    initial="hidden"
-                    animate="visible"
-                    variants={wordVariants}
-                  >
-                    NUVOS NFT
-                  </m.span>
+                  <AnimatedLetters text="NUVOS NFT" className="inline-block" startIndex={0} />
                   <br />
-                  <m.span 
-                    className="inline-block"
-                    custom={1}
-                    initial="hidden"
-                    animate="visible"
-                    variants={wordVariants}
-                  >
-                    Collection
-                  </m.span>
+                  <AnimatedLetters text="Collection" className="inline-block" startIndex={9} />
                 </h1>
               </div>
 
@@ -193,25 +205,9 @@ const NFTHeroSection = () => {
               ></m.div>
               
               <h1 className="text-5xl md:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-nuvo-gradient-text">
-                <m.span 
-                  className="inline-block"
-                  custom={0}
-                  initial="hidden"
-                  animate="visible"
-                  variants={wordVariants}
-                >
-                  NUVOS NFT
-                </m.span>
+                <AnimatedLetters text="NUVOS NFT" className="inline-block" startIndex={0} />
                 <br />
-                <m.span 
-                  className="inline-block"
-                  custom={1}
-                  initial="hidden"
-                  animate="visible"
-                  variants={wordVariants}
-                >
-                  Collection
-                </m.span>
+                <AnimatedLetters text="Collection" className="inline-block" startIndex={9} />
               </h1>
             </div>
 
