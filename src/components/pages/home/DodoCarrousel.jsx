@@ -1,61 +1,72 @@
-import React, { useState } from 'react';
-import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
+import React, { useState, useCallback, useMemo } from 'react';
+import { m, AnimatePresence } from 'framer-motion';
 import DododexLogo from '/DododexLogo.png';
-
-const features = [
-  {
-    title: "PMM Technology",
-    subtitle: "Proactive Market Maker",
-    description: "DODO implements revolutionary technology that optimizes market efficiency. The PMM uses advanced algorithms to reduce slippage, enhance liquidity, and offer the best possible prices for each operation. This innovation allows traders to obtain better exchange rates than traditional AMMs while maintaining high stability in the liquidity pool.",
-    icon: <img src={DododexLogo} alt="PMM" className="w-full h-full object-contain" />,
-    link: "https://dodoex.io/",
-    linkText: "Launch App"
-  },
-  {
-    title: "DODO Token",
-    subtitle: "Governance & Utility",
-    description: "The DODO token is at the heart of the ecosystem, giving holders decision-making power through proposal voting. DODO holders can participate in governance, receive trading fee benefits, and access exclusive features. Additionally, the token serves as an incentive for liquidity providers and contributes to protocol decentralization.",
-    icon: <img src={DododexLogo} alt="DODO Token" className="w-full h-full object-contain" />,
-    link: "https://dodoex.io/",
-    linkText: "Launch App"
-  },
-  {
-    title: "Cross-Chain",
-    subtitle: "Multichain DEX",
-    description: "DODO operates seamlessly across multiple blockchains, including Ethereum, BSC, Polygon, and other major networks. This cross-chain capability allows users to access liquidity across different chains, reduce transaction costs, and maximize trading opportunities. Interoperability is key to a more connected and efficient DeFi ecosystem.",
-    icon: <img src={DododexLogo} alt="Cross-Chain" className="w-full h-full object-contain" />,
-    link: "https://dodoex.io/",
-    linkText: "Launch App"
-  }
-];
-
-const variants = {
-  enter: (direction) => ({
-    x: direction > 0 ? 1000 : -1000,
-    opacity: 0
-  }),
-  center: {
-    zIndex: 1,
-    x: 0,
-    opacity: 1
-  },
-  exit: (direction) => ({
-    zIndex: 0,
-    x: direction < 0 ? 1000 : -1000,
-    opacity: 0
-  })
-};
+import { useAnimationContext } from '../../animation/AnimationProvider';
 
 const DodoCarrousel = () => {
   const [[page, direction], setPage] = useState([0, 0]);
-  const prefersReducedMotion = useReducedMotion();
+  const { reducedMotion: prefersReducedMotion } = useAnimationContext();
 
-  const paginate = (newDirection) => {
+  // Memoize features data to prevent recreation on each render
+  const features = useMemo(() => [
+    {
+      title: "PMM Technology",
+      subtitle: "Proactive Market Maker",
+      description: "DODO implements revolutionary technology that optimizes market efficiency. The PMM uses advanced algorithms to reduce slippage, enhance liquidity, and offer the best possible prices for each operation. This innovation allows traders to obtain better exchange rates than traditional AMMs while maintaining high stability in the liquidity pool.",
+      icon: <img src={DododexLogo} alt="PMM" className="w-full h-full object-contain" />,
+      link: "https://dodoex.io/",
+      linkText: "Launch App"
+    },
+    {
+      title: "DODO Token",
+      subtitle: "Governance & Utility",
+      description: "The DODO token is at the heart of the ecosystem, giving holders decision-making power through proposal voting. DODO holders can participate in governance, receive trading fee benefits, and access exclusive features. Additionally, the token serves as an incentive for liquidity providers and contributes to protocol decentralization.",
+      icon: <img src={DododexLogo} alt="DODO Token" className="w-full h-full object-contain" />,
+      link: "https://dodoex.io/",
+      linkText: "Launch App"
+    },
+    {
+      title: "Cross-Chain",
+      subtitle: "Multichain DEX",
+      description: "DODO operates seamlessly across multiple blockchains, including Ethereum, BSC, Polygon, and other major networks. This cross-chain capability allows users to access liquidity across different chains, reduce transaction costs, and maximize trading opportunities. Interoperability is key to a more connected and efficient DeFi ecosystem.",
+      icon: <img src={DododexLogo} alt="Cross-Chain" className="w-full h-full object-contain" />,
+      link: "https://dodoex.io/",
+      linkText: "Launch App"
+    }
+  ], []);
+
+  // Memoize animation variants based on reduced motion preference
+  const variants = useMemo(() => {
+    if (prefersReducedMotion) return {};
+    
+    return {
+      enter: (direction) => ({
+        x: direction > 0 ? 1000 : -1000,
+        opacity: 0
+      }),
+      center: {
+        zIndex: 1,
+        x: 0,
+        opacity: 1
+      },
+      exit: (direction) => ({
+        zIndex: 0,
+        x: direction < 0 ? 1000 : -1000,
+        opacity: 0
+      })
+    };
+  }, [prefersReducedMotion]);
+
+  // Memoize pagination handler
+  const paginate = useCallback((newDirection) => {
     const newPage = (page + newDirection + features.length) % features.length;
     setPage([newPage, newDirection]);
-  };
+  }, [page, features.length]);
 
-  const safeVariants = prefersReducedMotion ? {} : variants;
+  // Memoize direct page selection handler
+  const selectPage = useCallback((idx) => {
+    setPage([idx, idx > page ? 1 : -1]);
+  }, [page]);
 
   return (
     <div className="relative h-[400px] sm:h-[500px] w-full max-w-xl mx-auto">
@@ -76,7 +87,7 @@ const DodoCarrousel = () => {
                 <m.div
                     key={page}
                     custom={direction}
-                    variants={safeVariants}
+                    variants={variants}
                     initial={prefersReducedMotion ? {} : "enter"}
                     animate={prefersReducedMotion ? {} : "center"}
                     exit={prefersReducedMotion ? {} : "exit"}
@@ -162,7 +173,7 @@ const DodoCarrousel = () => {
             {features.map((_, idx) => (
                 <button
                     key={idx}
-                    onClick={() => setPage([idx, idx > page ? 1 : -1])}
+                    onClick={() => selectPage(idx)}
                     className={`transition-all duration-300 ${
                         idx === page 
                             ? 'w-8 h-2 bg-yellow-400' 
@@ -176,4 +187,5 @@ const DodoCarrousel = () => {
   );
 };
 
-export default DodoCarrousel;
+// Apply React.memo to prevent unnecessary re-renders
+export default React.memo(DodoCarrousel);

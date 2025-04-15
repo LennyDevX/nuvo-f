@@ -53,7 +53,7 @@ const HeroSection = () => {
           {/* Enhanced title animation word by word */}
           <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold mb-6 md:mb-8 relative z-10">
             <m.span 
-              className="inline-block bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text"
+              className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text"
               custom={0}
               initial="hidden"
               animate="visible"

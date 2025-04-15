@@ -1,264 +1,88 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { WalletContext } from '../../../../context/WalletContext';
 import TimeCounter from './TimeCounter';
-import FormHeader from './FormHeader';
 import { motion } from 'framer-motion';
-import AirdropTypeSelector from './AirdropTypeSelector';
-import RegistrationForm from './RegistrationForm'; // Ensure this is the default export
-import { FaCoins, FaImages, FaBox, FaPalette, FaTimes } from 'react-icons/fa'; // Add FaTimes
+import { FaCoins, FaImages, FaBox, FaPalette, FaTimes } from 'react-icons/fa';
 import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
-import { airdropsCollection } from '../../../firebase/config'; // Update Firebase config import path
-import SubmissionSuccess from './SubmissionSuccess'; // Add this line
+import { airdropsCollection } from '../../../firebase/config';
+import SubmissionSuccess from './SubmissionSuccess';
 import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
 
 const airdropTypes = [  
-    { id: 'tokens', name: 'Tokens', description: 'Receive tokens directly to your wallet', icon: <FaCoins /> },
+    { id: 'tokens', name: 'Tokens', description: 'Receive NUVO tokens', icon: <FaCoins /> },
     { id: 'nfts', name: 'NFTs', description: 'Get exclusive NFTs', icon: <FaImages />, comingSoon: true },
-    { id: 'items', name: 'Items', description: 'Receive special items', icon: <FaBox />, comingSoon: true },
-    { id: 'art', name: 'Art', description: 'Get unique digital art', icon: <FaPalette />, comingSoon: true }
+    { id: 'items', name: 'Items', description: 'Unlock special items', icon: <FaBox />, comingSoon: true },
+    { id: 'art', name: 'Art', description: 'Claim unique digital art', icon: <FaPalette />, comingSoon: true }
 ];
 
 const AirdropForm = ({ onClose }) => {
     const { account, walletConnected, provider } = useContext(WalletContext);
-    const { registerForAirdrop, getAirdropInfo, airdropInfo } = useAirdropRegistration(provider, account);
+    const { registerForAirdrop, getAirdropInfo } = useAirdropRegistration(provider, account);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         wallet: account || '',
-        airdropType: ''
+        airdropType: 'tokens' // Default to tokens type
     });
-
-    const [timeLeft, setTimeLeft] = useState({
-        days: 0,
-        hours: 0,
-        minutes: 0,
-        seconds: 0
-    });
-
     const [submitCount, setSubmitCount] = useState(0);
     const [lastSubmitTime, setLastSubmitTime] = useState(null);
     const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
     const [registrationCompleted, setRegistrationCompleted] = useState(false);
-
-    const handleChange = (nameOrEvent, value) => {
-        // If it's an event (from normal inputs)
-        if (nameOrEvent?.target) {
-            const { name, value } = nameOrEvent.target;
-            setFormData(prev => ({
-                ...prev,
-                [name]: value
-            }));
-        } 
-        // If they are direct values (from the type selector)
-        else if (typeof nameOrEvent === 'string') {
-            setFormData(prev => ({
-                ...prev,
-                [nameOrEvent]: value
-            }));
-        }
-    };
-
-    const getAirdropTypeStatus = async (typeId) => {
-        try {
-            const participations = await checkPreviousParticipation(typeId);
-            if (participations && participations.length > 0) {
-                const participation = participations[0];
-                return {
-                    isRegistered: true,
-                    timestamp: new Date(participation.submittedAt.seconds * 1000).toLocaleDateString(),
-                    submissionId: participation.id
-                };
-            }
-            return { isRegistered: false };
-        } catch (error) {
-            console.error('Error checking airdrop type status:', error);
-            return { isRegistered: false };
-        }
-    };
-
-    useEffect(() => {
-        // Calculate target date 14 days from now
-        const now = new Date();
-        const targetDate = new Date(now.getTime() + (14 * 24 * 60 * 60 * 1000));
-        
-        const timer = setInterval(() => {
-            const currentTime = new Date();
-            const difference = targetDate - currentTime;
-            
-            const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((difference / 1000 / 60) % 60);
-            const seconds = Math.floor((difference / 1000) % 60);
-            
-            setTimeLeft({ days, hours, minutes, seconds });
-            
-            if (difference < 0) {
-                clearInterval(timer);
-                setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-            }
-        }, 1000);
-        
-        return () => clearInterval(timer);
-    }, []);
-
-    useEffect(() => {
-        if (account) {
-            setFormData(prev => ({
-                ...prev,
-                wallet: account
-            }));
-        }
-    }, [account]);
-
-    useEffect(() => {
-        if (walletConnected && account) {
-            setFormData(prev => ({
-                ...prev,
-                wallet: account
-            }));
-        }
-    }, [walletConnected, account]);
-
-    useEffect(() => {
-        if (provider && account) {
-            getAirdropInfo();
-        }
-    }, [provider, account, getAirdropInfo]);
-
-    useEffect(() => {
-        const checkRegistrationStatus = async () => {
-            if (!account || !formData.airdropType) return;
-            
-            try {
-                const participations = await checkPreviousParticipation(formData.airdropType);
-                setIsAlreadyRegistered(participations.length > 0);
-            } catch (error) {
-                console.error('Error checking registration status:', error);
-            }
-        };
-
-        checkRegistrationStatus();
-    }, [account, formData.airdropType]);
-
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    
+    const [step, setStep] = useState(1); // Step 1: Choose airdrop type, Step 2: Fill form
+
+    // Handlers and helpers
+    const handleChange = (nameOrEvent, value) => {
+        if (nameOrEvent?.target) {
+            const { name, value } = nameOrEvent.target;
+            setFormData(prev => ({ ...prev, [name]: value }));
+        } else if (typeof nameOrEvent === 'string') {
+            setFormData(prev => ({ ...prev, [nameOrEvent]: value }));
+            
+            // Auto advance to step 2 when selecting airdrop type
+            if (nameOrEvent === 'airdropType' && value) {
+                setStep(2);
+            }
+        }
+    };
+
+    // Check if user has already registered
+    useEffect(() => {
+        if (account) {
+            checkRegistrationStatus();
+            setFormData(prev => ({ ...prev, wallet: account }));
+        }
+    }, [account]);
+
+    const checkRegistrationStatus = async () => {
+        if (!account) return;
+        
+        try {
+            const participations = await checkPreviousParticipation('tokens');
+            setIsAlreadyRegistered(participations.length > 0);
+            if (participations.length > 0) {
+                setStep(3); // Move to success state if already registered
+            }
+        } catch (error) {
+            console.error('Error checking registration:', error);
+        }
+    };
+
     const checkPreviousParticipation = async (airdropType) => {
         try {
             const q = query(airdropsCollection, where('wallet', '==', account), where('airdropType', '==', airdropType));
             const querySnapshot = await getDocs(q);
             return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         } catch (error) {
-            console.error('Error checking previous participation:', error);
+            console.error('Error checking participation:', error);
             return [];
         }
     };
 
-    const checkEmailUsage = async (email, airdropType) => {
-        try {
-            const q = query(
-                airdropsCollection,
-                where('email', '==', email),
-                where('airdropType', '==', airdropType)
-            );
-            const querySnapshot = await getDocs(q);
-            return !querySnapshot.empty;
-        } catch (error) {
-            console.error('Error checking email usage:', error);
-            return false;
-        }
-    };
-
-    const checkRateLimit = () => {
-        const now = Date.now();
-        const timeWindow = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
-        const maxAttempts = 3; // máximo 3 intentos por día
-
-        if (lastSubmitTime && (now - lastSubmitTime) < timeWindow) {
-            if (submitCount >= maxAttempts) {
-                return false;
-            }
-        } else {
-            // Reset contador si ha pasado el tiempo
-            setSubmitCount(0);
-            setLastSubmitTime(now);
-        }
-        return true;
-    };
-
-    const validateForm = async () => {
-        if (!formData.name.trim()) {
-            setError('Please enter your name');
-            return false;
-        }
-        if (!formData.email.trim()) {
-            setError('Please enter your email address');
-            return false;
-        }
-        if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-            setError('Please enter a valid email address');
-            return false;
-        }
-        if (!account) {
-            setError('Please connect your wallet first');
-            return false;
-        }
-        if (!formData.airdropType) {
-            setError('Please select an airdrop type');
-            return false;
-        }
-
-        // Check if selected airdrop type is not a "coming soon" type
-        const selectedType = airdropTypes.find(type => type.id === formData.airdropType);
-        if (selectedType?.comingSoon) {
-            setError('Please select an available airdrop type');
-            return false;
-        }
-
-        const { isRegistered } = await getAirdropTypeStatus(formData.airdropType);
-        if (isRegistered) {
-            setError('You have already registered for this airdrop type. Please select a different one.');
-            return false;
-        }
-
-        const emailUsed = await checkEmailUsage(formData.email, formData.airdropType);
-        if (emailUsed) {
-            setError('This email has already been used for this type of airdrop');
-            return false;
-        }
-
-        // Validar longitud del nombre
-        if (formData.name.length < 2 || formData.name.length > 50) {
-            setError('Name must be between 2 and 50 characters');
-            return false;
-        }
-
-        // Validar formato de email más estrictamente
-        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailRegex.test(formData.email)) {
-            setError('Please enter a valid email address');
-            return false;
-        }
-
-        // Validar dirección de wallet
-        if (!account.match(/^0x[a-fA-F0-9]{40}$/)) {
-            setError('Invalid wallet address');
-            return false;
-        }
-
-        // Verificar rate limiting
-        if (!checkRateLimit()) {
-            setError('Maximum submission limit reached. Please try again in 24 hours.');
-            return false;
-        }
-
-        return true;
-    };
-
     const submitToBackend = useCallback(async (data) => {
         try {
-            // Filter out undefined values and create clean submission data
             const cleanData = {
                 name: data.name || '',
                 email: data.email || '',
@@ -270,7 +94,6 @@ const AirdropForm = ({ onClose }) => {
                 status: 'pending'
             };
 
-            // Validate required fields
             if (!cleanData.name || !cleanData.email || !cleanData.wallet) {
                 throw new Error('Missing required fields');
             }
@@ -278,104 +101,228 @@ const AirdropForm = ({ onClose }) => {
             const docRef = await addDoc(airdropsCollection, cleanData);
             return docRef.id;
         } catch (error) {
-            console.error('Error submitting to backend:', error);
+            console.error('Error submitting:', error);
             throw error;
         }
     }, []);
 
-    const processRegistration = async (data) => {
-        try {
-            if (!data) {
-                throw new Error('No registration data provided');
-            }
+    const handleSubmit = async (e) => {
+        if (e) e.preventDefault();
+        if (isLoading) return;
+        
+        setIsLoading(true);
+        setError(null);
 
-            // Check if already registered in Firebase
-            const existingRegistrations = await checkPreviousParticipation('tokens');
-            if (existingRegistrations.length > 0) {
-                setError('You have already registered for this airdrop');
+        try {
+            // Validate form
+            if (!formData.name.trim() || !formData.email.trim()) {
+                setError('Please fill out all required fields');
+                setIsLoading(false);
                 return;
             }
 
-            // Ensure we have all required data
+            if (!account) {
+                setError('Please connect your wallet first');
+                setIsLoading(false);
+                return;
+            }
+
+            // Submit to backend
             const submissionData = {
-                name: data.name,
-                email: data.email,
-                wallet: data.wallet,
-                airdropType: data.airdropType || formData.airdropType || 'tokens',
-                registrationHash: data.registrationHash || '',
-                isRegistered: Boolean(data.isRegistered),
-                submittedAt: Timestamp.now()
+                ...formData,
+                wallet: account,
+                isRegistered: true,
+                submittedAt: new Date().toISOString()
             };
 
-            const docId = await submitToBackend(submissionData);
-            console.log('Firebase submission successful, docId:', docId);
-            
-            setIsSubmitted(true);
-            setError(null);
-            
-            return docId;
-        } catch (error) {
-            console.error('Registration processing error:', error);
-            setError('Failed to process registration. Please try again.');
-            throw error;
-        }
-    };
-
-    const handleSubmit = async (data) => {
-        try {
-            await processRegistration(data);
+            await submitToBackend(submissionData);
             setRegistrationCompleted(true);
-            // Removemos el cierre automático
-            // El usuario cerrará manualmente
+            setStep(3);
         } catch (error) {
-            console.error('Error in handleSubmit:', error);
+            console.error('Submission error:', error);
             setError('Registration failed. Please try again.');
+        } finally {
+            setIsLoading(false);
         }
     };
-
-    const isFormValid = formData.name.trim() !== '' &&
-                        formData.email.trim() !== '' &&
-                        formData.airdropType !== '' &&
-                        walletConnected;
 
     return (
-        <div className="min-h-screen">
-            <TimeCounter timeLeft={timeLeft} />
-            <div className="max-w-4xl mx-auto px-4">
-                <FormHeader />
-                <motion.div 
-                    className="bg-black/40 backdrop-blur-sm rounded-xl p-6 shadow-xl border border-purple-500/30"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+        <div className="w-full mx-auto">
+            {/* Header with title and close button */}
+            <div className="flex justify-between items-center mb-6">
+                <h2 className=""></h2>
+                <button 
+                    onClick={onClose}
+                    className="text-gray-400 hover:text-white p-1"
                 >
-                    {registrationCompleted ? (
-                        <SubmissionSuccess onClose={onClose} />
-                    ) : (
-                        <>
-                            <AirdropTypeSelector 
-                                formData={formData}
-                                handleChange={handleChange}
-                                getAirdropTypeStatus={getAirdropTypeStatus}
-                                error={error}
-                                airdropTypes={airdropTypes}
-                            />
-                            <RegistrationForm 
-                                formData={formData}
-                                handleChange={handleChange}
-                                handleSubmit={handleSubmit}
-                                account={account}
-                                error={error}
-                                isLoading={isLoading}
-                                setFormData={setFormData}
-                                walletConnected={walletConnected}
-                                onClose={onClose} // Make sure this prop is passed
-                                isAlreadyRegistered={isAlreadyRegistered} // Add this prop
-                            />
-                        </>
-                    )}
-                </motion.div>
+                    <FaTimes />
+                </button>
             </div>
+
+            <motion.div 
+                className="bg-black/20 backdrop-blur-sm rounded-xl overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <div className="p-5">
+                    {/* Progress indicator */}
+                    <div className="flex mb-6 justify-center">
+                        {[1, 2, 3].map((i) => (
+                            <div 
+                                key={i}
+                                className={`w-3 h-3 mx-1 rounded-full ${
+                                    i === step ? 'bg-purple-500' : 
+                                    i < step ? 'bg-green-500' : 'bg-gray-600'
+                                }`}
+                            />
+                        ))}
+                    </div>
+
+                    {step === 1 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        >
+                            <h3 className="text-lg font-medium text-white mb-4">Select Airdrop Type</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {airdropTypes.map((type) => (
+                                    <div 
+                                        key={type.id}
+                                        className={`p-4 rounded-lg border cursor-pointer ${
+                                            formData.airdropType === type.id 
+                                                ? 'border-purple-500 bg-purple-900/20' 
+                                                : 'border-gray-700 hover:border-gray-500'
+                                        } ${type.comingSoon ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        onClick={() => !type.comingSoon && handleChange('airdropType', type.id)}
+                                    >
+                                        <div className="flex items-center">
+                                            <div className="mr-3 text-lg text-purple-400">{type.icon}</div>
+                                            <div>
+                                                <h4 className="text-white">{type.name}</h4>
+                                                <p className="text-xs text-gray-400">{type.description}</p>
+                                                {type.comingSoon && <span className="text-xs text-yellow-500">Coming Soon</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="mt-5 flex justify-between">
+                                <button
+                                    onClick={onClose}
+                                    className="px-4 py-2 text-gray-400 hover:text-white"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => setStep(2)}
+                                    className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={!formData.airdropType || airdropTypes.find(t => t.id === formData.airdropType)?.comingSoon}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {step === 2 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        >
+                            <h3 className="text-lg font-medium text-white mb-4">Personal Information</h3>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">
+                                        Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        id="name"
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        maxLength={50}
+                                        required
+                                        className="w-full px-3 py-2 bg-black/30 border border-gray-700 rounded-lg text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                                        placeholder="Enter your name"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        id="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        required
+                                        className="w-full px-3 py-2 bg-black/30 border border-gray-700 rounded-lg text-white focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                                        placeholder="Enter your email"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="wallet" className="block text-sm font-medium text-gray-300 mb-1">
+                                        Wallet Address
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="wallet"
+                                        id="wallet"
+                                        value={account || ''}
+                                        disabled
+                                        className="w-full px-3 py-2 bg-black/50 border border-gray-800 rounded-lg text-gray-400"
+                                    />
+                                    {!account && (
+                                        <p className="text-yellow-500 text-xs mt-1">
+                                            Please connect your wallet to continue
+                                        </p>
+                                    )}
+                                </div>
+
+                                {error && (
+                                    <div className="p-3 rounded bg-red-900/30 border border-red-500/30 text-red-400 text-sm">
+                                        {error}
+                                    </div>
+                                )}
+
+                                <div className="flex justify-between pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep(1)}
+                                        className="px-4 py-2 text-gray-400 hover:text-white"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isLoading || !account}
+                                        className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? 'Submitting...' : 'Register'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    )}
+
+                    {step === 3 && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4 }}
+                        >
+                            <SubmissionSuccess onClose={onClose} />
+                        </motion.div>
+                    )}
+                </div>
+            </motion.div>
         </div>
     );
 };

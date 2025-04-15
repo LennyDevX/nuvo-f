@@ -71,6 +71,7 @@ const WhitelistModal = ({ onClose }) => {
   return (
     <AnimatePresence>
       <motion.div
+        key="whitelist-modal"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -85,7 +86,7 @@ const WhitelistModal = ({ onClose }) => {
           onClick={e => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-white">Join NUVO Whitelist</h2>
+            <h2 className="text-xl font-bold text-white">Join NUVOS Whitelist</h2>
             <button 
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors"
@@ -99,7 +100,7 @@ const WhitelistModal = ({ onClose }) => {
           {!isSubmitted ? (
             <>
               <p className="text-gray-300 text-sm mb-5">
-                Join our whitelist to secure your position for the NUVO token pre-sale in Q4 2025 and 
+                Join our whitelist to secure your position for the NUVOS token pre-sale in Q4 2025 and 
                 get exclusive benefits when we officially launch in Q1 2026.
               </p>
 
@@ -187,7 +188,7 @@ const WhitelistModal = ({ onClose }) => {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">You're on the List!</h3>
               <p className="text-gray-300 text-sm mb-5">
-                Thank you for joining the NUVO whitelist. We'll keep you updated on our progress 
+                Thank you for joining the NUVOS whitelist. We'll keep you updated on our progress 
                 towards the Q4 2025 pre-sale and Q1 2026 launch.
               </p>
               <button

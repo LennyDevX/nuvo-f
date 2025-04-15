@@ -1,0 +1,53 @@
+.bg-nuvo-gradient {
+  min-height: 100vh;
+  /* Degradado morado oscuro homogéneo */
+  background: linear-gradient(145deg, #1a1333 0%, #141314 60%, #201c26 100%);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 140px 60px #12023b;
+}
+@media (max-width: 767px) {
+  .bg-nuvo-gradient {
+    /* Mantén el mismo degradado en móvil para homogeneidad */
+    background: linear-gradient(145deg, #1a1333 0%, #141314 60%, #201c26 100%);
+}
+  .bg-nuvo-gradient-text {
+    animation-duration: 12s;
+  }
+}
+.bg-nuvo-gradient-text {
+  background-image: linear-gradient(135deg, 
+    #c084fc,
+    #8b5cf6,
+    #ec4899,
+    #6366f1
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.glass-effect {
+  background-color: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(var(--blur-default));
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+.bg-radial-gradient {
+  /* Más sutil y profundo */
+  background: radial-gradient(
+    ellipse at 60% 40%,
+    rgba(76, 29, 149, 0.25) 0%,
+    rgba(26, 19, 51, 0.7) 80%,
+    rgba(15, 23, 42, 0.95) 100%
+  );
+}
+/* iOS specifics */
+@supports (-webkit-touch-callout: none) {
+  .modal-content {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

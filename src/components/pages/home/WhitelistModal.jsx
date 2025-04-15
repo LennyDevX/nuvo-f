@@ -94,6 +94,7 @@ const WhitelistModal = ({ onClose }) => {
   return (
     <AnimatePresence>
       <m.div
+        key="home-whitelist-modal"
         initial={prefersReducedMotion ? {} : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -122,8 +123,8 @@ const WhitelistModal = ({ onClose }) => {
           {!isSubmitted ? (
             <>
               <p className="text-gray-300 text-sm mb-5">
-                Join our whitelist to secure your position for the NUVO token pre-sale in Q4 2025 and
-                get exclusive benefits when we officially launch in Q1 2026.
+                Join our whitelist to secure your position for the NUVO token pre-sale in Q1 2026 and
+                get exclusive benefits when we officially launch in Q1 2027.
               </p>
 
               {!walletConnected ? (

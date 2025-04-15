@@ -42,7 +42,7 @@ const TechnologySection = () => {
           viewport={{ once: true }}
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
+            <span className="bg-nuvo-gradient-text text-transparent bg-clip-text">
               Our Tokenization Technology
             </span>
           </h2>

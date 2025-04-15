@@ -33,8 +33,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.15,
-        duration: 0.4,
+        delay: i * 0.1,
+        duration: 0.3,
         ease: "easeIn"
       }
     })
@@ -46,8 +46,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.4
+        staggerChildren: 0.05,
+        delayChildren: 0.2
       }
     }
   };
@@ -76,15 +76,43 @@ const HeroSection = ({ onOpenTokenModal }) => {
     }
   };
 
+  // Versión simplificada de la animación del botón - fade in suave
+  const buttonVariants = {
+    hidden: { 
+      opacity: 0,
+      y: 5
+    },
+    visible: { 
+      opacity: 1,
+      y: 0,
+      transition: { 
+        delay: 1.4, // Se mantiene el delay para que aparezca después de los textos
+        duration: 1.2, // Duración más larga para un fade in más suave
+        ease: "easeInOut" // Curva de easing suave
+      }
+    },
+    hover: { 
+      scale: 1.03, // Escala sutil al hacer hover
+      boxShadow: "0px 0px 8px rgba(139, 92, 246, 0.4)",
+      transition: { 
+        duration: 0.4 // Transición más lenta para el hover
+      }
+    },
+    tap: { 
+      scale: 0.98, // Efecto sutil al hacer click
+      transition: { 
+        duration: 0.2
+      }
+    }
+  };
+
   return (
     <m.div
-      className="card-purple-gradient card-purple-wrapper mt-16 md:mt-24"
+      className="m-4 relative flex flex-col items-center justify-center text-center nuvos-card"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      {/* Background Effect */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
       {/* Content */}
       <div className="relative z-10">
@@ -102,12 +130,9 @@ const HeroSection = ({ onOpenTokenModal }) => {
                   key={index}
                   custom={index}
                   variants={letterVariants}
-                  className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                           drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                           transition-all duration-600 text-4xl md:text-5xl lg:text-6xl font-bold"
-                  style={{
-                    textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
-                  }}
+                  className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                            text-4xl md:text-5xl lg:text-6xl font-bold"
+                  
                 >
                   {char === ' ' ? '\u00A0' : char}
                 </m.span>
@@ -117,7 +142,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.p 
               initial={{ opacity: 0, y: 0, x: 5 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
-              transition={{ delay: 1.7, duration: 1 }}
+              transition={{ delay: 0.8, duration: 1 }}
               className="text-xl md:text-2xl mt-4"
             >
               Powering Our Digital Ecosystem Today
@@ -126,7 +151,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.div 
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.0, duration: 0.8 }}
+              transition={{ delay: 1, duration: 1 }}
               className="max-w-3xl"
             >
               <p className="text-gray-300 text-lg mb-6">
@@ -134,6 +159,21 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.
               </p>
             </m.div>
+            
+            {/* Botón con animación de fade in simplificada */}
+            <m.button 
+              variants={buttonVariants}
+              initial="hidden"
+              animate="visible"
+              whileHover="hover"
+              whileTap="tap"
+              className="text-white px-5 py-3 rounded-full font-semibold transition-all duration-300 
+                bg-gradient-to-r from-purple-600 to-blue-500 shadow-md hover:shadow-lg
+                relative"
+              onClick={onOpenTokenModal}
+            >
+              Learn More
+            </m.button>
           </m.div>
 
           {/* Token Image with Rotation Animation */}
@@ -141,7 +181,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
             className="md:w-2/5 flex justify-center items-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.5 }}
+            transition={{ duration: 1, delay: 0.8 }}
           >
             <m.div
               className="relative"
@@ -159,6 +199,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 }}
               />
             </m.div>
+            
           </m.div>
         </div>
 
@@ -169,39 +210,27 @@ const HeroSection = ({ onOpenTokenModal }) => {
         >
           {[
             {
-              icon: <FaLock className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaLock className="text-purple-400 text-4xl mb-4" />,
               title: "Fixed Supply",
               description: "21M tokens maximum supply, no additional minting capability"
             },
             {
-              icon: <FaRocket className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaRocket className="text-purple-400 text-4xl mb-4" />,
               title: "Active Utility",
               description: "Currently powering transactions and services across the Nuvos Cloud ecosystem"
             },
             {
-              icon: <FaUsers className="text-purple-400 text-2xl mb-4" />,
+              icon: <FaUsers className="text-purple-400 text-4xl mb-4" />,
               title: "Community Governed",
               description: "Token holders participate in governance decisions and ecosystem development"
             }
           ].map((item, index) => (
-            <div key={index} className="card-purple-gradient card-purple-wrapper">
+            <div key={index} className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center">
               {item.icon}
               <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
               <p className="text-gray-400">{item.description}</p>
             </div>
           ))}
-        </m.div>
-
-        <m.div 
-          variants={itemVariants}
-          className="mt-8 flex flex-wrap gap-4"
-        >
-          <button 
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-purple-500/20"
-            onClick={onOpenTokenModal}
-          >
-            Learn More
-          </button>
         </m.div>
       </div>
     </m.div>

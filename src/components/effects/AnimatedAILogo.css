@@ -1,0 +1,244 @@
+/* Estilos para el contenedor del logo animado - Ajustado para ser más responsive */
+.ai-logo-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1;
+  max-width: 280px;
+  margin: 0 auto;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle, rgba(30,64,175,0.2) 0%, rgba(20,40,120,0.15) 40%, rgba(10,20,80,0.1) 70%, rgba(5,10,40,0) 100%);
+  box-shadow: 
+    0 0 40px rgba(59, 130, 246, 0.2),
+    inset 0 0 30px rgba(59, 130, 246, 0.1);
+  transform: translateZ(0);
+  will-change: transform;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+/* Estado hover para el contenedor */
+.ai-logo-container:hover {
+  box-shadow: 
+    0 0 50px rgba(59, 130, 246, 0.3),
+    inset 0 0 40px rgba(59, 130, 246, 0.2);
+}
+
+/* Efecto activo al hacer clic */
+.ai-logo-container:active {
+  transform: scale(0.98);
+  box-shadow: 
+    0 0 70px rgba(59, 130, 246, 0.4),
+    inset 0 0 50px rgba(59, 130, 246, 0.3);
+}
+
+/* Canvas para la animación */
+.ai-logo-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto; /* Para capturar eventos */
+  z-index: 1;
+  transition: filter 0.3s ease;
+}
+
+/* Overlay para efectos de brillo */
+.ai-logo-glow-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 50%;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 10%, rgba(0, 20, 80, 0) 70%);
+  opacity: 0.8;
+  mix-blend-mode: screen;
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+/* Efecto de anillo en el borde */
+.ai-logo-ring {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 50%;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  z-index: 3;
+  pointer-events: none;
+  box-shadow: 
+    inset 0 0 15px rgba(59, 130, 246, 0.3),
+    0 0 15px rgba(59, 130, 246, 0.3);
+  animation: ring-rotation 15s linear infinite;
+}
+
+/* Segundo anillo con rotación inversa */
+.ai-logo-inner-ring {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+  border-radius: 50%;
+  border: 1px dashed rgba(59, 130, 246, 0.2);
+  z-index: 2;
+  pointer-events: none;
+  animation: ring-rotation-reverse 30s linear infinite;
+}
+
+/* Efecto de energía activa */
+.ai-logo-energy {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, rgba(0, 20, 80, 0) 70%);
+  filter: blur(5px);
+  z-index: 1;
+  pointer-events: none;
+  animation: energy-pulse 4s ease-in-out infinite;
+}
+
+/* Animación para glow pulsante */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2);
+    opacity: 0.6;
+  }
+  50% {
+    box-shadow: inset 0 0 40px rgba(59, 130, 246, 0.4);
+    opacity: 0.9;
+  }
+  100% {
+    box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.2);
+    opacity: 0.6;
+  }
+}
+
+/* Animación para rotación del anillo */
+@keyframes ring-rotation {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Animación para rotación inversa del anillo interno */
+@keyframes ring-rotation-reverse {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+/* Animación para el pulso de energía */
+@keyframes energy-pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.4;
+  }
+}
+
+/* Efecto de ondas concéntricas al hacer click */
+.ai-logo-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.4);
+  transform: scale(0);
+  animation: ripple-effect 0.8s ease-out;
+  pointer-events: none;
+  z-index: 4;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Clase para aplicar durante la interacción del usuario */
+.ai-logo-interactive-mode {
+  animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Efectos de brillo al interactuar */
+.ai-logo-active .ai-logo-glow-overlay {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 10%, rgba(0, 20, 80, 0) 70%);
+  animation: pulse-glow-active 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-active {
+  0% {
+    box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.3);
+    opacity: 0.7;
+  }
+  50% {
+    box-shadow: inset 0 0 60px rgba(59, 130, 246, 0.5);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: inset 0 0 30px rgba(59, 130, 246, 0.3);
+    opacity: 0.7;
+  }
+}
+
+/* Media queries mejoradas para optimización en diferentes pantallas */
+@media (max-width: 767px) {
+  .ai-logo-container {
+    max-width: 240px;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ai-logo-container {
+    max-width: 260px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ai-logo-container {
+    max-width: 320px;
+  }
+}
+
+/* Optimización para dispositivos de alto rendimiento */
+@media (min-width: 1280px) {
+  .ai-logo-container {
+    max-width: 340px;
+  }
+}
+
+/* Estilo para la etiqueta de rendimiento */
+.ai-logo-fps {
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 8px;
+  z-index: 10;
+  pointer-events: none;
+  font-family: monospace;
+}

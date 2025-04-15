@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../context/WalletContext';
 import WalletUtils from "../web3/WalletUtils";
@@ -14,7 +14,7 @@ const WalletConnect = ({ className }) => {
     setWalletConnected,
     balance, 
     network,
-    handleDisconnect  // Añadir esta línea
+    handleDisconnect
   } = useContext(WalletContext); 
   const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
@@ -28,25 +28,16 @@ const WalletConnect = ({ className }) => {
   const dropdownRef = useRef(null);
   const [walletInfo, setWalletInfo] = useState(() => detectWallet());
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowWalletOptions(false);
-      }
-    };
+  // Optimize with useMemo to avoid recalculating RPC URLs on every render
+  const rpcUrls = useMemo(() => [
+    `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
+    'https://polygon-rpc.com',
+    'https://rpc-mainnet.matic.network',
+    'https://rpc-mainnet.maticvigil.com'
+  ], []);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const getBalanceWithRetry = async (provider, account) => {
-    const rpcUrls = [
-      `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
-      'https://polygon-rpc.com',
-      'https://rpc-mainnet.matic.network',
-      'https://rpc-mainnet.maticvigil.com'
-    ];
-
+  // Memoize getBalanceWithRetry to prevent recreation on each render
+  const getBalanceWithRetry = useCallback(async (provider, account) => {
     for (const rpcUrl of rpcUrls) {
       try {
         const customProvider = new ethers.JsonRpcProvider(rpcUrl);
@@ -66,9 +57,17 @@ const WalletConnect = ({ className }) => {
       console.error('Failed to fetch balance with all providers', error);
       return '0';
     }
-  };
+  }, [rpcUrls]);
 
-  const handleConnect = async (provider, account, networkName) => {
+  // Memoize getNetworkName for stability
+  const getNetworkName = useCallback(async (provider) => {
+    const network = await provider.getNetwork();
+    const networkId = network.chainId;
+    return WalletUtils.getNetworkName(networkId.toString());
+  }, []);
+
+  // Optimize handleConnect with useCallback
+  const handleConnect = useCallback(async (provider, account, networkName) => {
     try {
       setIsLoading(true);
       
@@ -141,15 +140,10 @@ const WalletConnect = ({ className }) => {
       setError(error.message || 'Failed to connect. Please make sure you are on Polygon network.');
       setIsLoading(false);
     }
-  };
+  }, [getBalanceWithRetry, setAccount, setBalance, setError, setIsLoading, setNetwork, setWalletConnected]);
 
-  const getNetworkName = async (provider) => {
-    const network = await provider.getNetwork();
-    const networkId = network.chainId;
-    return WalletUtils.getNetworkName(networkId.toString());
-  };
-
-  const handleWalletSelection = async (walletType) => {
+  // Optimize handleWalletSelection with useCallback
+  const handleWalletSelection = useCallback(async (walletType) => {
     setError(null);
     setIsLoading(true);
     
@@ -181,9 +175,10 @@ const WalletConnect = ({ className }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [walletInfo, setError, setIsLoading]);
 
-  const connectToWallet = async (walletType = 'metamask') => {
+  // Optimize connectToWallet with useCallback
+  const connectToWallet = useCallback(async (walletType = 'metamask') => {
     try {
       setIsLoading(true);
       setError(null);
@@ -235,9 +230,10 @@ const WalletConnect = ({ className }) => {
       setError(error.message);
       setIsLoading(false);
     }
-  };
+  }, [handleConnect, getNetworkName, isMobileDevice, setAccounts, setConnected, setError, setIsLoading, setNetwork]);
 
-  const onDisconnect = () => {
+  // Optimize onDisconnect with useCallback
+  const onDisconnect = useCallback(() => {
     handleDisconnect();
     setConnected(false);
     setAccounts([]);
@@ -246,9 +242,10 @@ const WalletConnect = ({ className }) => {
       window.ethereum.removeAllListeners('accountsChanged');
       window.ethereum.removeAllListeners('chainChanged');
     }
-  };
+  }, [handleDisconnect, setAccounts, setConnected, setSelectedWallet]);
 
-  const connectWallet = async () => {
+  // Optimize connectWallet with useCallback
+  const connectWallet = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -279,9 +276,10 @@ const WalletConnect = ({ className }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [handleConnect, setError, setIsLoading, setWalletInfo]);
 
-  const renderWalletButton = () => {
+  // Memoize renderWalletButton to prevent unnecessary calculations
+  const renderWalletButton = useCallback(() => {
     if (connected) {
       return (
         <div className="relative" ref={dropdownRef}>
@@ -373,7 +371,22 @@ const WalletConnect = ({ className }) => {
         )}
       </button>
     );
-  };
+  }, [
+    connected, connectWallet, isLoading, accounts, walletInfo, 
+    showWalletOptions, setShowWalletOptions, balance, network, onDisconnect
+  ]);
+
+  // Use useEffect with proper cleanup for event listeners
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowWalletOptions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="relative">

@@ -67,7 +67,13 @@ const ProgressiveSuspense = ({ children, delay, timeout, fallback }) => {
 
   return (
     <Suspense fallback={<LoadingFallback />}>
-      {children}
+      {React.Children.map(children, (child, index) => 
+        React.isValidElement(child) ? 
+          React.cloneElement(child, { 
+            key: child.key || `progressive-suspense-item-${index}`
+          }) : 
+          child
+      )}
     </Suspense>
   );
 };

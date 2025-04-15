@@ -30,7 +30,9 @@ export const cspConfig = {
       "'self'",
       "'unsafe-inline'",
       "'unsafe-eval'",
-      'https://*.firebaseapp.com'
+      'https://*.firebaseapp.com',
+      'https://apis.google.com'  // Add this line
+
     ],
     'style-src': ["'self'", "'unsafe-inline'"],
     'frame-src': [

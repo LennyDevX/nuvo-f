@@ -79,6 +79,16 @@ const Footer = () => {
               </li>
               <li>
                 <NavLink 
+                  to="/tokenize"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Tokenize Tool
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
                   to="/about"
                   prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"
@@ -109,7 +119,7 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-purple-400 transition-colors"
                 whileHover={{ scale: 1.1 }}
-              >
+              > 
                 <FaXTwitter className="text-2xl" />
               </motion.a>
               <motion.a
@@ -131,7 +141,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v2.0 - USE AT YOUR OWN RISK
+            BETA v3.0 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

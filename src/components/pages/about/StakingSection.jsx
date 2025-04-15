@@ -47,7 +47,7 @@ const StakingSection = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
+              <span className="bg-nuvo-gradient-text text-transparent bg-clip-text">
                 Securing the Bridge
               </span>
             </m.h2>

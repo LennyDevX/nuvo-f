@@ -1,5 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion'; // Changed motion to m
 import { WalletContext } from '../../context/WalletContext';
 import { FaTimes, FaGithub, FaChevronDown, FaDiscord } from 'react-icons/fa';
 import { db } from '../firebase/config';
@@ -132,7 +132,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-hidden">
-        <motion.div
+        <m.div // Changed from motion.div to m.div
           key={isSubmissionComplete ? 'success' : 'form'}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -387,7 +387,7 @@ const ApplicationModal = ({ isOpen, onClose, roleTitle }) => {
               </div>
             )}
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </AnimatePresence>
   );

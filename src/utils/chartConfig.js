@@ -1,30 +1,56 @@
+// Detect if running on mobile for responsive chart configs
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+// Base chart options with mobile optimizations
 export const chartOptions = {
+  maintainAspectRatio: true,
   responsive: true,
-  maintainAspectRatio: false,
+  cutout: isMobile ? '60%' : '70%',
+  layout: {
+    padding: isMobile ? 10 : 20
+  },
   plugins: {
     legend: {
+      display: true,
       position: 'bottom',
       labels: {
-        color: '#fff',
-        padding: 10,
+        boxWidth: isMobile ? 8 : 12,
+        padding: isMobile ? 10 : 15,
         font: {
-          size: typeof window !== 'undefined' ? (window.innerWidth < 640 ? 10 : 14) : 14,
-        },
-      },
+          size: isMobile ? 10 : 12
+        }
+      }
     },
+    tooltip: {
+      enabled: true,
+      displayColors: false,
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleFont: {
+        size: isMobile ? 12 : 14
+      },
+      bodyFont: {
+        size: isMobile ? 11 : 13
+      },
+      padding: isMobile ? 8 : 12
+    }
   },
+  animation: {
+    duration: isMobile ? 800 : 1500
+  }
 };
 
+// Token distribution data
 export const tokenDistributionData = {
-  labels: ["Staking Rewards", "Treasury", "Community", "Development", "Marketing"],
+  labels: ["Staking Rewards", "Treasury", "Community", "Development"],
   datasets: [{
-    data: [40, 25, 20, 10, 5],
-    backgroundColor: ["#8B5CF6", "#EC4899", "#06B6D4", "#10B981", "#F59E0B"],
+    data: [40, 25, 20, 15],
+    backgroundColor: ["#8B5CF6", "#6D28D9", "#4C1D95", "#7C3AED"],
     borderColor: "rgba(0, 0, 0, 0.2)",
-    borderWidth: 3,
-  }],
+    borderWidth: isMobile ? 2 : 3,
+  }]
 };
 
+// Revenue streams data
 export const revenueStreamsData = {
   labels: [
     "Third-Party Staking",
@@ -37,10 +63,11 @@ export const revenueStreamsData = {
     data: [30, 25, 20, 15, 10],
     backgroundColor: ["#7C3AED", "#DB2777", "#0891B2", "#059669", "#D97706"],
     borderColor: "rgba(0, 0, 0, 0.2)",
-    borderWidth: 3,
+    borderWidth: isMobile ? 2 : 3,
   }],
 };
 
+// Memoized metrics data for reuse
 export const keyMetricsData = [
   {
     title: "Total Supply",

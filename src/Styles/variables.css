@@ -1,0 +1,15 @@
+:root {
+
+  --transition-fast: 200ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+  --header-height: 4rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    --header-height: 3.5rem;
+  }
+}

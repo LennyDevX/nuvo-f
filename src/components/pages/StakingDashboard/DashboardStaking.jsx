@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext, useRef } from "react";
-import { motion, AnimatePresence, LazyMotion, domAnimation, m } from "framer-motion";
+import React, { useEffect, useState, useContext, useRef, useCallback, useMemo } from "react";
+import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
 import useContractData from "../../../hooks/useContractData";
 import useTreasuryBalance from "../../../hooks/useTreasuryBalance";
@@ -7,14 +7,14 @@ import DashboardCards from "./card/DashboardCards";
 import NetworkBadge from "../../web3/NetworkBadge";
 import ErrorMessage from "../../LoadOverlay/ErrorMessage";
 import { ethers } from "ethers";
-import { formatBalance } from "../../../utils/formatters"; 
-import { FaCoins } from 'react-icons/fa';
+import { FaCoins, FaExternalLinkAlt } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
 
 const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
+const REWARDS_UPDATE_INTERVAL = 30000; // 30 seconds
 
 const DashboardStaking = () => {
   const { account, network, balance } = useContext(WalletContext);
@@ -23,8 +23,8 @@ const DashboardStaking = () => {
 
   // Add reference for last rewards fetch
   const lastRewardsFetch = useRef(0);
-  const REWARDS_UPDATE_INTERVAL = 30000; // 30 seconds
-
+  const intervalRef = useRef(null);
+  
   // Custom hooks
   const {
     depositAmount,
@@ -41,54 +41,67 @@ const DashboardStaking = () => {
 
   const { balance: treasuryBalance } = useTreasuryBalance(TREASURY_ADDRESS);
 
-  // Ensure values are not undefined before passing
-  const safeDepositAmount = depositAmount || '0';
-  const safeTotalWithdrawn = totalWithdrawn || '0';
+  // Ensure values are not undefined before passing - memoized
+  const safeData = useMemo(() => ({
+    depositAmount: depositAmount || '0',
+    availableRewards: availableRewards || '0',
+    totalWithdrawn: totalWithdrawn || '0',
+    firstDepositTime: firstDepositTime || 0,
+    totalPoolBalance: totalPoolBalance || '0',
+    treasuryBalance: treasuryBalance || '0'
+  }), [depositAmount, availableRewards, totalWithdrawn, firstDepositTime, totalPoolBalance, treasuryBalance]);
 
-  // Effect for connection
+  // Memoized connection check
   useEffect(() => {
-    setIsConnected(account && network && balance !== null);
+    setIsConnected(Boolean(account && network && balance !== null));
   }, [account, network, balance]);
 
-  // Modified effect to include rewards fetching
+  // Optimized data fetching with cleanup
   useEffect(() => {
-    if (isConnected) {
-      const fetchDataAndRewards = async () => {
-        try {
-          await fetchContractData(true);
-          
-          // Ensure rewards are being included in the fetch
-          const now = Date.now();
-          if (now - lastRewardsFetch.current >= REWARDS_UPDATE_INTERVAL) {
-            lastRewardsFetch.current = now;
-            // Force rewards update
-            await fetchContractData(false, true);
-          }
-        } catch (err) {
-          console.error("Error fetching data:", err);
+    if (!isConnected) return;
+
+    const fetchDataAndRewards = async () => {
+      try {
+        await fetchContractData(true);
+        
+        const now = Date.now();
+        if (now - lastRewardsFetch.current >= REWARDS_UPDATE_INTERVAL) {
+          lastRewardsFetch.current = now;
+          // Force rewards update
+          await fetchContractData(false, true);
         }
-      };
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
 
-      fetchDataAndRewards();
-
-      const interval = setInterval(fetchDataAndRewards, UPDATE_INTERVAL);
-      return () => clearInterval(interval);
-    }
+    // Initial fetch
+    fetchDataAndRewards();
+    
+    // Setup interval with cleanup
+    intervalRef.current = setInterval(fetchDataAndRewards, UPDATE_INTERVAL);
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [isConnected, fetchContractData]);
 
-  // Effect to calculate ROI - simplified
+  // Memoized ROI calculation
   useEffect(() => {
-    if (safeDepositAmount) {
-      const roi = calculateROIProgress(safeDepositAmount, safeTotalWithdrawn);
+    if (safeData.depositAmount !== '0') {
+      const roi = calculateROIProgress(safeData.depositAmount, safeData.totalWithdrawn);
       setRoiProgress(roi);
     }
-  }, [safeDepositAmount, safeTotalWithdrawn]);
+  }, [safeData.depositAmount, safeData.totalWithdrawn]);
 
-  // Verify and validate treasury address
+  // Memoized treasury address validation
   useEffect(() => {
     if (!TREASURY_ADDRESS) {
       console.error('Treasury address is not configured in environment variables');
-    } else {
+    } else if (process.env.NODE_ENV === 'development') {
       try {
         const isValid = ethers.isAddress(TREASURY_ADDRESS);
         console.log('Treasury address validation:', {
@@ -101,72 +114,148 @@ const DashboardStaking = () => {
     }
   }, []);
 
-  // Development-only logging
+  // Only log in development, memoized
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.debug("Dashboard State:", {
-        depositAmount: safeDepositAmount,
-        totalWithdrawn: safeTotalWithdrawn,
-        treasuryBalance,
+        depositAmount: safeData.depositAmount,
+        totalWithdrawn: safeData.totalWithdrawn,
+        treasuryBalance: safeData.treasuryBalance,
         roiProgress
       });
     }
-  }, [safeDepositAmount, safeTotalWithdrawn, treasuryBalance, roiProgress]);
+  }, [safeData.depositAmount, safeData.totalWithdrawn, safeData.treasuryBalance, roiProgress]);
 
-  // Letter-by-letter animation variants
-  const letterVariants = {
-    hidden: { opacity: 0, x: 3 },
+  // Memoized animation variants
+  const letterVariants = useMemo(() => ({
+    hidden: { opacity: 0 },
     visible: (i) => ({
       opacity: 1,
-      x: 0,
       transition: {
-        delay: i * 0.10,
-        duration: 0.2,
-        ease: "easeIn"
+        delay: i * 0.05, // Reducido de 0.10 a 0.05 para acelerar la animación
+        duration: 0.15, // Reducido de 0.2 a 0.15
+        ease: "easeOut"
       }
     })
-  };
+  }), []);
 
-  // Container animation for title
-  const containerVariants = {
+  // Memoized container animation
+  const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.10,
-        delayChildren: 0.1
+        staggerChildren: 0.05, // Reducido de 0.10 a 0.05
+        delayChildren: 0.05, // Reducido de 0.1 a 0.05
+        ease: "easeOut",
+        duration: 0.6 // Agregado para hacer la transición más rápida
       }
     }
-  };
+  }), []);
+
+  // Optimized handler for deposit success
+  const handleDepositSuccessCallback = useCallback(() => {
+    handleDepositSuccess();
+  }, [handleDepositSuccess]);
+
+  // Optimized handler for data fetching
+  const handleFetchData = useCallback((...args) => {
+    return fetchContractData(...args);
+  }, [fetchContractData]);
+
+  // Render optimized for mobile with conditional content loading
+  const renderDashboardContent = useCallback(() => {
+    if (!isConnected) {
+      return (
+        <m.div
+          className="text-center py-20 "
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <div className="mb-8">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
+              <FaCoins className="h-10 w-10" />
+            </div>
+          </div>
+          <p className="text-lg text-slate-300 mb-4">
+            Connect your wallet to view the dashboard information
+          </p>
+        </m.div>
+      );
+    }
+
+    if (isInitialLoad) {
+      return <LoadingSpinner size="default" message="Loading dashboard..." />;
+    }
+
+    return (
+      <m.div
+        key="content"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <DashboardCards
+          account={account}
+          network={network}
+          depositAmount={safeData.depositAmount}
+          availableRewards={safeData.availableRewards}
+          totalPoolBalance={safeData.totalPoolBalance}
+          treasuryBalance={safeData.treasuryBalance}
+          roiProgress={roiProgress}
+          totalWithdrawn={safeData.totalWithdrawn}
+          firstDepositTime={safeData.firstDepositTime}
+          onDepositSuccess={handleDepositSuccessCallback}
+          onFetchData={handleFetchData}
+        />
+        <div className="text-center mt-6 space-y-2">
+          <NetworkBadge />
+          <div className="mt-3 text-xs text-slate-400 flex items-center justify-center">
+            <a 
+              href="https://polygonscan.com/address/0x54ebebc65bcbcc7693cb83918fcd0115d71046e2" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-indigo-400 transition-colors duration-300 bg-slate-800/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-indigo-900/20 hover:border-indigo-500/30"
+            >
+              Smart Staking Contract V1.0<FaExternalLinkAlt className="ml-1 h-3 w-3" />
+            </a>
+          </div>
+        </div>
+      </m.div>
+    );
+  }, [
+    isConnected, isInitialLoad, account, network, 
+    safeData, roiProgress, handleDepositSuccessCallback, handleFetchData
+  ]);
 
   return (
-    <div className="relative min-h-screen pt-24 pb-16 flex flex-col items-center">
-      <SpaceBackground customClass="opacity-85" />
+    <div className="relative bg-nuvo-gradient min-h-screen pt-18 pb-12 flex flex-col items-center">
+      <SpaceBackground customClass="" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
-        <LazyMotion features={domAnimation}>
-          {/* Redesigned Hero Section */}
+        <LazyMotion features={domAnimation} strict>
+          {/* Redesigned Hero Section - optimizado */}
           <m.div
-            className="text-center mb-16"
+            className="text-center mb-10" // Reducido de mb-16 a mb-12
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 1 }}
+            transition={{ duration: 0.6 }} // Reducido de 1 a 0.6
           >
             <m.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="mb-6 overflow-hidden"
+              className="mb-4 overflow-hidden" // Reducido de mb-6 a mb-4
             >
               {Array.from("Smart Staking").map((char, index) => (
                 <m.span
                   key={index}
                   custom={index}
                   variants={letterVariants}
-                  className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                           drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                           transition-all duration-600 text-5xl sm:text-6xl md:text-7xl font-bold"
+                  className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                            text-5xl sm:text-6xl md:text-7xl font-bold"
                   style={{
-                    textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
+                    willChange: "transform, opacity", // Añadido para optimizar rendimiento
+                    transform: "translateZ(0)" // Forzar aceleración por hardware
                   }}
                 >
                   {char === ' ' ? '\u00A0' : char}
@@ -174,73 +263,26 @@ const DashboardStaking = () => {
               ))}
             </m.div>
             
-            <m.p 
-              initial={{ opacity: 0, y: 0, x: 5 }}
-              animate={{ opacity: 1, y: 0, x: 0 }}
-              transition={{ delay: 1.7, duration: 1 }}
-              className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2"
-            >
-              Stake your tokens and earn rewards in our decentralized staking platform
-            </m.p>
-            <m.p
+            {/* Simplificado a una sola animación para el texto descriptivo */}
+            <m.div
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 2.0, duration: 0.8 }}
-              className="text-sm md:text-base text-slate-400/60"
+              transition={{ delay: 0.8, duration: 0.5 }}
+              style={{ willChange: "opacity, transform" }}
             >
-              Manage your staking positions and track your rewards in real-time
-            </m.p>
+              <p className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2">
+                Stake your tokens and earn rewards in our decentralized staking platform
+              </p>
+              <p className="text-sm md:text-base text-slate-400/60">
+                Manage your staking positions and track your rewards in real-time
+              </p>
+            </m.div>
           </m.div>
 
           <div className="container mx-auto space-y-8">
-            {isConnected ? (
-              <>
-                <AnimatePresence mode="wait">
-                  {isInitialLoad ? (
-                    <LoadingSpinner size="default" message="Loading dashboard..." /> 
-                  ) : (
-                    <motion.div
-                      key="content"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <DashboardCards
-                        account={account}
-                        network={network}
-                        depositAmount={depositAmount}
-                        availableRewards={availableRewards}
-                        totalPoolBalance={totalPoolBalance}
-                        treasuryBalance={treasuryBalance}
-                        roiProgress={roiProgress}
-                        totalWithdrawn={totalWithdrawn}
-                        firstDepositTime={firstDepositTime}
-                        onDepositSuccess={handleDepositSuccess}
-                        onFetchData={fetchContractData}
-                      />
-                      <div className="text-center mt-6 space-y-2">
-                        <NetworkBadge />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            ) : (
-              <motion.div
-                className="text-center py-20 bg-gradient-to-br from-indigo-900/20 to-violet-900/10 rounded-xl border border-indigo-700/20 shadow-md"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="mb-8">
-                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
-                    <FaCoins className="h-10 w-10" />
-                  </div>
-                </div>
-                <p className="text-lg text-slate-300 mb-4">
-                  Connect your wallet to view the dashboard information
-                </p>
-              </motion.div>
-            )}
+            <AnimatePresence mode="wait">
+              {renderDashboardContent()}
+            </AnimatePresence>
           </div>
         </LazyMotion>
       </div>
@@ -253,4 +295,4 @@ const DashboardStaking = () => {
 // Add display name for better debugging
 DashboardStaking.displayName = 'DashboardStaking';
 
-export default DashboardStaking;
+export default React.memo(DashboardStaking);

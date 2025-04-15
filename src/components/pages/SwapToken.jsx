@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState, useCallback, useMemo } from "re
 import { motion } from "framer-motion";
 import DodoSwapWidget from "../web3/SwapDodo";
 import { WalletContext } from "../../context/WalletContext";
+import SpaceBackground from "../effects/SpaceBackground";
 
 const SwapToken = () => {
   const { account, network, balance } = useContext(WalletContext);
@@ -25,9 +26,9 @@ const SwapToken = () => {
     })
   };
 
-  // Container animation for title
+  // Container animation for title - remove opacity transitions that might cause fading
   const titleContainerVariants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0.99 },
     visible: {
       opacity: 1,
       transition: {
@@ -46,12 +47,12 @@ const SwapToken = () => {
     setIsConnected(isWalletConnected);
   }, [isWalletConnected]);
 
-  const handleError = useCallback((err) => {
-    console.error('Swap error:', err);
-    setError(err?.message || 'An error occurred');
+  const handleSwapError = useCallback((error) => {
+    console.error("Swap error:", error);
+    setError(error?.message || 'An error occurred');
   }, []);
 
-  const handleLoading = useCallback((loading) => {
+  const handleSwapLoading = useCallback((loading) => {
     setIsLoading(loading);
   }, []);
 
@@ -80,10 +81,10 @@ const SwapToken = () => {
   ), [transactionStatus]);
 
   const widgetProps = useMemo(() => ({
-    onError: handleError,
-    onLoading: handleLoading,
+    onError: handleSwapError,
+    onLoading: handleSwapLoading,
     onTransactionStatus: handleTransactionStatus
-  }), [handleError, handleLoading, handleTransactionStatus]);
+  }), [handleSwapError, handleSwapLoading, handleTransactionStatus]);
 
   const renderContent = useMemo(() => {
     if (isLoading) {
@@ -131,6 +132,7 @@ const SwapToken = () => {
 
   return (
     <div className="bg-nuvo-gradient min-h-screen pt-20 sm:pt-24 md:py-16 flex flex-col items-center justify-start sm:justify-center">
+      <SpaceBackground customClass="" /> {/* Reduced opacity for better contrast with text */}
       <div className="w-full max-w-2xl mx-auto px-3 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-6 sm:mb-8"
@@ -138,23 +140,23 @@ const SwapToken = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          {/* Animated title */}
+          {/* Animated title with enhanced visibility */}
           <motion.div
             variants={titleContainerVariants}
             initial="hidden"
             animate="visible"
-            className="mb-4 overflow-hidden"
+            className="mb-4 overflow-hidden relative z-10"
           >
             {Array.from("Nuvos Swap").map((char, index) => (
               <motion.span
                 key={index}
                 custom={index}
                 variants={letterVariants}
-                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-purple-500 
-                         drop-shadow-[2px_3px_1px_rgba(139,92,246,0.8)] 
-                         transition-all duration-600 text-2xl sm:text-4xl md:text-5xl font-bold"
+                className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
+                         
+                         text-2xl sm:text-4xl md:text-5xl font-bold"
                 style={{
-                  textShadow: "0 0 0 rgba(139, 92, 246, 0.5), 0 0 5px rgba(139, 92, 246, 0.3)"
+                  WebkitTextFillColor: 'transparent', // Ensure text transparency works consistently
                 }}
               >
                 {char === ' ' ? '\u00A0' : char}
@@ -162,24 +164,28 @@ const SwapToken = () => {
             ))}
           </motion.div>
           
+          {/* Subtitle with improved contrast */}
           <motion.p 
             initial={{ opacity: 0, y: 0, x: 5 }}
             animate={{ opacity: 1, y: 0, x: 0 }}
             transition={{ delay: 1.7, duration: 1 }}
-            className="text-white text-sm sm:text-base md:text-lg px-2 sm:px-4"
+            className="text-gray-100 text-sm sm:text-base md:text-lg px-2 sm:px-4 font-semibold relative z-10"
+            style={{ 
+              textShadow: '0 0px 0px rgba(0,0,0,0.5)' // Text shadow for better readability
+            }}
           >
             Intercambia tus tokens de manera rápida y segura
           </motion.p>
         </motion.div>
 
-        {/* Adjust NetworkBadge margins */}
-        <div className="mb-4 sm:mb-6">
+        {/* Adjust NetworkBadge margins and improve visibility */}
+        <div className="mb-4 sm:mb-6 relative z-10">
           <NetworkBadge />
         </div>
 
         {error && (
           <motion.div 
-            className="bg-red-500/10 text-red-500 p-3 sm:p-4 rounded-lg mb-4 mx-2 sm:mx-0"
+            className="bg-red-500/20 text-red-300 p-3 sm:p-4 rounded-lg mb-4 mx-2 sm:mx-0 font-medium border border-red-500/30 relative z-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
@@ -187,8 +193,10 @@ const SwapToken = () => {
           </motion.div>
         )}
 
-        <div className="w-full flex justify-center items-center px-2 sm:px-0">
-          {renderContent}
+        <div className="w-full flex justify-center items-center px-2 sm:px-0 relative z-10">
+          <div className="w-full  rounded-xl p-2 sm:p-4">
+            {renderContent}
+          </div>
         </div>
 
         {/* Adjust TransactionStatus position for mobile */}
