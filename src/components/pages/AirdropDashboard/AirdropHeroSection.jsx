@@ -18,12 +18,9 @@ const AirdropHeroSection = ({ setActiveTab }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8 }}
     >
-      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-900/70 border border-purple-400/70 mb-6 shadow-lg shadow-purple-900/30">
-        <FaRocket className="text-purple-300" />
-        <span className="text-white text-sm font-medium drop-shadow-sm">NUVOS Airdrop Program</span>
-      </div>
       
-      <div className="rounded-xl p-6 mb-6">
+      
+      <div className="">
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 drop-shadow-[0_2px_4px_rgba(168,85,247,0.6)]">
           Join the Future of Finance
         </h1>

@@ -1,18 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaGift } from 'react-icons/fa';
 import AirdropForm from './AirdropForm/AirdropForm';
 import TimeCounter from './AirdropForm/TimeCounter';
 
 const AirdropRegistrationSection = () => {
+  const sectionRef = useRef(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  useEffect(() => {
+    if (isFormOpen && sectionRef.current) {
+      sectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isFormOpen]);
+
   const fadeInUp = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
   };
 
   return (
-    <section id="registration-form" className="scroll-mt-8">
+    <section 
+      ref={sectionRef} 
+      id="registration-form" 
+      className="scroll-mt-8"
+    >
       <motion.div 
         className="nuvos-card rounded-2xl border border-purple-500/20 overflow-hidden shadow-lg"
         initial="hidden"
@@ -46,7 +58,8 @@ const AirdropRegistrationSection = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-center mb-8"
+                    className="text-center m-8 lg:mt-4"
+                    transition={{ duration: 0.3 }}
                   >
                     <h2 className="text-3xl font-bold text-white mb-4">Register for Airdrop</h2>
                     <p className="text-gray-300 max-w-2xl mx-auto">

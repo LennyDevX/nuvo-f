@@ -2,7 +2,7 @@ import React from 'react';
 import { m } from 'framer-motion';
 import { FaRocket } from 'react-icons/fa';
 
-const NFTCallToAction = () => {
+const NFTCallToAction = ({ onOpenModal }) => {
   return (
     <div className="py-16 pb-32 mb-20 relative overflow-visible">
       {/* Remove local background elements to use global space background */}
@@ -50,38 +50,12 @@ const NFTCallToAction = () => {
             </div>
             
             <div className="md:w-2/5 w-full">
-              <m.div 
-                className="bg-black/40 backdrop-blur-sm p-6 rounded-xl border border-fuchsia-500/20"
-                whileHover={{ 
-                  scale: 1.02, 
-                  boxShadow: "0 0 20px 0 rgba(217, 70, 239, 0.2)",
-                  borderColor: "rgba(217, 70, 239, 0.4)"
-                }}
+              <button
+                onClick={onOpenModal}
+                className="w-full px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 rounded-lg text-white font-medium transition-all transform hover:scale-105"
               >
-                <form className="space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
-                    <input 
-                      type="email" 
-                      id="email" 
-                      className="w-full px-4 py-3 bg-black/40 border border-fuchsia-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500 text-white" 
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <m.button 
-                    type="submit"
-                    className="w-full px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 rounded-lg text-white font-medium transition-all transform"
-                    whileHover={{ scale: 1.02, backgroundPosition: "right center" }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ backgroundPosition: { duration: 0.8 } }}
-                  >
-                    Join Tokenization Waitlist
-                  </m.button>
-                  <p className="text-xs text-gray-400 text-center mt-2">
-                    Be the first to bridge your physical assets to the digital world
-                  </p>
-                </form>
-              </m.div>
+                Join Tokenization Waitlist
+              </button>
             </div>
           </div>
         </m.div>

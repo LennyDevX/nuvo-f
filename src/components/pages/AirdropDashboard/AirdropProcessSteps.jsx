@@ -51,7 +51,7 @@ const AirdropProcessSteps = () => {
           <motion.div
             key={index}
             variants={fadeInUp}
-            className="nuvos-card p-6 rounded-xl border border-purple-500/40 hover:border-purple-500/70 transition-all duration-300 shadow-lg"
+            className="nuvos-card p-6  hover:border-purple-500/70 transition-all duration-300 shadow-lg"
           >
             <div className="h-12 w-12 rounded-full bg-purple-900/70 flex items-center justify-center mb-4 shadow-md">
               {step.icon}

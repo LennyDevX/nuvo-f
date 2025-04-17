@@ -38,12 +38,12 @@ const AirdropDashboard = () => {
 
         {/* Tarjetas de Airdrop */}
         
-
+        {/* Pestañas de Información */}
+        <AirdropInfoTabs />
         {/* Pasos del Proceso */}
         <AirdropProcessSteps />
 
-        {/* Pestañas de Información */}
-        <AirdropInfoTabs />
+        
 
         {/* Sección de Registro */}
         <AirdropRegistrationSection />

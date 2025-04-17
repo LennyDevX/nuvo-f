@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { ethers } from 'ethers';
+import { ethers, formatEther } from 'ethers';
 import AirdropABI from '../Abi/Airdrop.json';
 
 export const useAirdropRegistration = (provider, account) => {
@@ -53,12 +53,12 @@ export const useAirdropRegistration = (provider, account) => {
                 isEligible,
                 hasClaimed,
                 hasMinBalance,
-                userBalance: ethers.utils.formatEther(userBalance),
+                userBalance: formatEther(userBalance),
                 isActive: airdropStats.isAirdropActive,
                 isFunded: airdropStats.hasBalance,
                 totalClaims: Number(airdropStats.claimedCount),
                 maxParticipants: Number(airdropStats.maxParticipants),
-                tokenBalance: ethers.utils.formatEther(airdropStats.tokenBalance)
+                tokenBalance: formatEther(airdropStats.tokenBalance)
             });
 
             setRegistrationStatus('ready');
@@ -100,12 +100,12 @@ export const useAirdropRegistration = (provider, account) => {
                 isEligible,
                 hasClaimed,
                 hasMinBalance,
-                userBalance: ethers.utils.formatEther(userBalance)
+                userBalance: formatEther(userBalance)
             });
 
             // Verificar balance mínimo
             if (!hasMinBalance) {
-                throw new Error(`Insufficient balance. You need at least 1 MATIC. Current balance: ${ethers.utils.formatEther(userBalance)} MATIC`);
+                throw new Error(`Insufficient balance. You need at least 1 MATIC. Current balance: ${formatEther(userBalance)} MATIC`);
             }
 
             // Si ya está registrado y ha reclamado

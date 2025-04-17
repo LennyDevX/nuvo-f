@@ -98,7 +98,8 @@ const AirdropInfoTabs = () => {
 
   return (
     <section id="info-section" className="mb-24 scroll-mt-24">
-      <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-purple-500/20 overflow-hidden shadow-lg">
+      <div className="nuvos-card rounded-2xl border border-purple-500/20 overflow-hidden shadow-lg">
+        
         <div className="flex gap-2 p-4 border-b border-purple-500/20 overflow-x-auto">
           <Tab 
             id="about" 
@@ -127,10 +128,10 @@ const AirdropInfoTabs = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="text-3xl font-bold mb-6 text-white">NUVOS Airdrop Program</h2>
+              <h2 className="text-3xl font-bold mb-6 text-white text-center  ">NUVOS Airdrop Program</h2>
               
               <div className="space-y-6">
-                <div className="bg-purple-900/20 rounded-xl p-6 border border-purple-500/30">
+                <div className=" rounded-xl p-6 ">
                   <h3 className="text-xl font-medium text-white mb-4">About NUVO Tokens</h3>
                   <p className="text-gray-300 mb-4">
                     NUVO is the utility and governance token of the Nuvos ecosystem. It enables holders to participate in platform decisions, access premium features, and earn rewards through staking.
@@ -175,18 +176,18 @@ const AirdropInfoTabs = () => {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-900/30 to-black/60 rounded-xl p-6 border border-purple-500/20">
+                <div className="  p-6 ">
                   <h3 className="text-xl font-medium text-white mb-4">Airdrop Details</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    <div className="p-4 bg-black/20 rounded-lg">
+                    <div className="p-4 ">
                       <h4 className="text-purple-400 font-medium mb-1">Total Token Supply</h4>
                       <p className="text-2xl font-bold text-white">1000 POL</p>
                     </div>
-                    <div className="p-4 bg-black/20 rounded-lg">
+                    <div className="p-4 ">
                       <h4 className="text-purple-400 font-medium mb-1">Airdrop Allocation</h4>
                       <p className="text-2xl font-bold text-white">100 NUVOS</p>
                     </div>
-                    <div className="p-4 bg-black/20 rounded-lg">
+                    <div className="p-4 ">
                       <h4 className="text-purple-400 font-medium mb-1">Per Wallet</h4>
                       <p className="text-2xl font-bold text-white">10 NUVOS</p>
                     </div>
@@ -198,7 +199,7 @@ const AirdropInfoTabs = () => {
                   </div>
                 </div>
 
-                <div className="bg-black/30 rounded-xl p-6">
+                <div className=" p-6">
                   <h3 className="text-xl font-medium text-white mb-4">Eligibility Requirements</h3>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
@@ -225,22 +226,22 @@ const AirdropInfoTabs = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="text-3xl font-bold mb-6 text-white">Smart Staking Program</h2>
+              <h2 className="text-3xl font-bold mb-6 text-white text-center">Smart Staking Program</h2>
               
               <div className="space-y-6">
-                <div className="bg-gradient-to-br from-green-900/30 to-black/60 rounded-xl p-6 border border-green-500/20">
+                <div className="  p-6">
                   <h3 className="text-xl font-medium text-white mb-4">What is Smart Staking?</h3>
                   <p className="text-gray-300 mb-4">
                     Smart Staking is Nuvos' innovative staking program that allows NUVOS token holders to earn high yields on their holdings. By locking your tokens in the staking contract, you contribute to the security and decentralization of the network while earning rewards.
                   </p>
-                  <div className="mt-6 p-4 bg-green-900/20 rounded-lg border border-green-500/30">
+                  <div className="mt-6 p-4 bg-green-600/20 rounded-2xl ">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-white font-medium">Smart Staking APY</h4>
                       <span className="text-2xl font-bold text-green-400">Up to 125% APY</span>
                     </div>
                     <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
                       <motion.div 
-                        className="bg-gradient-to-r from-green-500 to-green-400 h-full" 
+                        className="bg-gradient-to-r from-green-800 to-green-200 h-full" 
                         initial={{ width: 0 }}
                         animate={{ width: "85%" }}
                         transition={{ duration: 1, delay: 0.5 }}
@@ -253,7 +254,7 @@ const AirdropInfoTabs = () => {
                   {stakingBenefits.map((benefit, index) => (
                     <div 
                       key={index}
-                      className="bg-black/40 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/50 transition-all duration-300"
+                      className="p-6 transition-all duration-300"
                     >
                       <div className="flex items-start gap-4">
                         <div className="p-3 bg-purple-900/30 rounded-full">
@@ -268,7 +269,7 @@ const AirdropInfoTabs = () => {
                   ))}
                 </div>
 
-                <div className="bg-gradient-to-b from-purple-900/30 to-black/60 rounded-xl p-6">
+                <div className="p-6">
                   <h3 className="text-xl font-medium text-white mb-4">How to Stake Your NUVOS Tokens</h3>
                   <ol className="space-y-4">
                     <li className="flex items-start gap-3">
@@ -312,7 +313,7 @@ const AirdropInfoTabs = () => {
                     <motion.button
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium text-white flex items-center justify-center gap-2"
+                      className="w-full py-3 px-4 bg-gradient-to-r from-purple-700 to-pink-900 rounded-lg font-medium text-white flex items-center justify-center gap-2"
                       onClick={() => window.location.href = '/staking'}
                     >
                       <FaChartLine /> Go to Staking Dashboard
