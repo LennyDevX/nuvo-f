@@ -3,7 +3,7 @@ import { m, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { FaCoins, FaPuzzlePiece, FaRocket, FaList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import AirdropBox from './AirdropBox';
-import WhitelistModal from './WhitelistModal';
+import WhitelistModal from '../../modals/WhitelistModal';
 import { buttonVariants } from '../../../utils/animationVariants'; // Removed unused fadeIn
 
 // Simpler animation variants for the box
