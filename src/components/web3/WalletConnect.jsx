@@ -5,6 +5,7 @@ import WalletUtils from "../web3/WalletUtils";
 import { detectWallet } from '../../utils/walletDetector';
 import MetaMaskLogo from '/metamask-logo.png';
 import TrustWalletLogo from '/trustwallet-logo.png';
+import { useNavigate } from 'react-router-dom';
 
 const WalletConnect = ({ className }) => {
   const { 
@@ -12,6 +13,7 @@ const WalletConnect = ({ className }) => {
     setNetwork, 
     setBalance, 
     setWalletConnected,
+    account,
     balance, 
     network,
     handleDisconnect
@@ -27,8 +29,8 @@ const WalletConnect = ({ className }) => {
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const dropdownRef = useRef(null);
   const [walletInfo, setWalletInfo] = useState(() => detectWallet());
+  const navigate = useNavigate();
 
-  // Optimize with useMemo to avoid recalculating RPC URLs on every render
   const rpcUrls = useMemo(() => [
     `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
     'https://polygon-rpc.com',
@@ -36,7 +38,6 @@ const WalletConnect = ({ className }) => {
     'https://rpc-mainnet.maticvigil.com'
   ], []);
 
-  // Memoize getBalanceWithRetry to prevent recreation on each render
   const getBalanceWithRetry = useCallback(async (provider, account) => {
     for (const rpcUrl of rpcUrls) {
       try {
@@ -49,7 +50,6 @@ const WalletConnect = ({ className }) => {
       }
     }
 
-    // If all RPCs fail, try one last time with the original provider
     try {
       const balance = await provider.getBalance(account);
       return ethers.formatEther(balance);
@@ -59,14 +59,12 @@ const WalletConnect = ({ className }) => {
     }
   }, [rpcUrls]);
 
-  // Memoize getNetworkName for stability
   const getNetworkName = useCallback(async (provider) => {
     const network = await provider.getNetwork();
     const networkId = network.chainId;
     return WalletUtils.getNetworkName(networkId.toString());
   }, []);
 
-  // Optimize handleConnect with useCallback
   const handleConnect = useCallback(async (provider, account, networkName) => {
     try {
       setIsLoading(true);
@@ -142,7 +140,6 @@ const WalletConnect = ({ className }) => {
     }
   }, [getBalanceWithRetry, setAccount, setBalance, setError, setIsLoading, setNetwork, setWalletConnected]);
 
-  // Optimize handleWalletSelection with useCallback
   const handleWalletSelection = useCallback(async (walletType) => {
     setError(null);
     setIsLoading(true);
@@ -177,7 +174,6 @@ const WalletConnect = ({ className }) => {
     }
   }, [walletInfo, setError, setIsLoading]);
 
-  // Optimize connectToWallet with useCallback
   const connectToWallet = useCallback(async (walletType = 'metamask') => {
     try {
       setIsLoading(true);
@@ -232,7 +228,6 @@ const WalletConnect = ({ className }) => {
     }
   }, [handleConnect, getNetworkName, isMobileDevice, setAccounts, setConnected, setError, setIsLoading, setNetwork]);
 
-  // Optimize onDisconnect with useCallback
   const onDisconnect = useCallback(() => {
     handleDisconnect();
     setConnected(false);
@@ -244,7 +239,6 @@ const WalletConnect = ({ className }) => {
     }
   }, [handleDisconnect, setAccounts, setConnected, setSelectedWallet]);
 
-  // Optimize connectWallet with useCallback
   const connectWallet = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -278,7 +272,16 @@ const WalletConnect = ({ className }) => {
     }
   }, [handleConnect, setError, setIsLoading, setWalletInfo]);
 
-  // Memoize renderWalletButton to prevent unnecessary calculations
+  useEffect(() => {
+    if (account) {
+      setConnected(true);
+      setAccounts([account]);
+    } else {
+      setConnected(false);
+      setAccounts([]);
+    }
+  }, [account]);
+
   const renderWalletButton = useCallback(() => {
     if (connected) {
       return (
@@ -301,7 +304,6 @@ const WalletConnect = ({ className }) => {
           {showWalletOptions && (
             <div className="absolute right-0 mt-2 w-64 rounded-lg shadow-lg bg-black/90 backdrop-blur-sm border border-purple-500/20 overflow-hidden z-50">
               <div className="p-3 space-y-3">
-                {/* Wallet Status */}
                 <div className="flex items-center gap-2 p-2 rounded-lg bg-purple-900/20">
                   <img 
                     src={walletInfo.type === 'metamask' ? MetaMaskLogo : TrustWalletLogo} 
@@ -317,7 +319,6 @@ const WalletConnect = ({ className }) => {
                   <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 </div>
                 
-                {/* Balance & Network Info */}
                 <div className="space-y-2 p-2 rounded-lg bg-purple-900/10">
                   <div className="flex justify-between text-sm">
                     <span className="text-purple-300/70">Balance:</span>
@@ -329,9 +330,21 @@ const WalletConnect = ({ className }) => {
                   </div>
                 </div>
 
+                <button
+                  onClick={() => {
+                    setShowWalletOptions(false);
+                    navigate('/profile');
+                  }}
+                  className="w-full p-2 text-left text-sm flex items-center gap-2 text-purple-300 hover:bg-purple-500/20 rounded-lg transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  View Profile
+                </button>
+
                 <div className="border-t border-purple-500/20"></div>
                 
-                {/* Disconnect Button */}
                 <button
                   onClick={onDisconnect}
                   className="w-full p-2 text-left text-sm text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
@@ -373,10 +386,9 @@ const WalletConnect = ({ className }) => {
     );
   }, [
     connected, connectWallet, isLoading, accounts, walletInfo, 
-    showWalletOptions, setShowWalletOptions, balance, network, onDisconnect
+    showWalletOptions, setShowWalletOptions, balance, network, onDisconnect, navigate
   ]);
 
-  // Use useEffect with proper cleanup for event listeners
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

@@ -42,6 +42,7 @@ const NotFound = createLazyComponent(() => import('../components/pages/NotFound'
 const AIHub = createLazyComponent(() => import('../components/pages/AIHub/AIHub.jsx'));
 const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTHome.jsx'));
 const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/TokenizationTool.jsx'));
+const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -112,6 +113,11 @@ export const routes = [
   {
     path: "/tokenize",
     element: withSuspense(<MainLayout><TokenizationTool /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/profile",
+    element: withSuspense(<MainLayout><ProfilePage /></MainLayout>),
     loader: async () => null
   }
 ];

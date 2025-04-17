@@ -112,6 +112,19 @@ export const StakingProvider = ({ children }) => {
   const cache = useRef(createCache());
   const refreshTimeoutRef = useRef(null);
 
+  // Define getSignerAddress as a useCallback within the provider scope
+  const getSignerAddress = useCallback(async () => {
+    if (!window.ethereum) return null;
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      return await signer.getAddress();
+    } catch (error) {
+      console.error("Error getting signer address:", error);
+      return null;
+    }
+  }, []);
+
   useEffect(() => {
     if (!isInitialized || !provider || !CONTRACT_ADDRESS) return;
 
@@ -351,105 +364,120 @@ export const StakingProvider = ({ children }) => {
   }, []);
 
   const getPoolEvents = async () => {
-    if (!state.contract || !provider) return { deposits: [], withdrawals: [] };
-    
-    return getCachedOrFetch(
-      'pool_events',
-      async () => {
+    // Ensure contract and provider are available
+    if (!state.contract || !provider) {
+      console.error("getPoolEvents: Contract or provider not available.");
+      return { deposits: [], withdrawals: [] };
+    }
+
+    // Get the current user's address using the correctly defined function
+    const signerAddress = await getSignerAddress(); // Now calls the function defined above
+    if (!signerAddress) {
+      console.error("getPoolEvents: Could not get signer address.");
+      return { deposits: [], withdrawals: [] };
+    }
+    console.log(`getPoolEvents: Fetching events for user: ${signerAddress}`);
+
+    // --- CRITICAL ABI CHECK ---
+    if (!ABI || !ABI.abi || !Array.isArray(ABI.abi) || ABI.abi.length === 0) {
+       console.error("Staking Contract ABI is empty or invalid in StakingContract.json. Cannot parse logs correctly.");
+       return { deposits: [], withdrawals: [] }; // Stop processing if ABI is missing
+    }
+    // --- END ABI CHECK ---
+
+    try {
+      // Define event topics using ethers.id
+      const depositTopic = ethers.id("DepositMade(address,uint256,uint256,uint256,uint256)");
+      const withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
+
+      // Filter by user address (indexed parameter)
+      const userTopic = ethers.zeroPadValue(signerAddress, 32);
+
+      // Query logs from block 0 (adjust if deployment block is known and preferred)
+      const fromBlock = 0; // Or contract deployment block
+      console.log(`getPoolEvents: Querying logs from block ${fromBlock} for user ${signerAddress}`);
+
+      const [depositLogs, withdrawalLogs] = await Promise.all([
+        provider.getLogs({
+          address: CONTRACT_ADDRESS,
+          topics: [depositTopic, userTopic],
+          fromBlock: fromBlock,
+          toBlock: 'latest'
+        }),
+        provider.getLogs({
+          address: CONTRACT_ADDRESS,
+          topics: [withdrawalTopic, userTopic],
+          fromBlock: fromBlock,
+          toBlock: 'latest'
+        })
+      ]);
+
+      console.log(`getPoolEvents: Found ${depositLogs.length} deposit logs and ${withdrawalLogs.length} withdrawal logs.`);
+
+      // Define interfaces for parsing using the validated ABI
+      const iface = new ethers.Interface(ABI.abi);
+
+      // Process deposit logs (they have a timestamp)
+      const processedDeposits = depositLogs.map(log => {
         try {
-          // Obtener el bloque actual y calcular el rango
-          const currentBlock = await provider.getBlockNumber();
-          const fromBlock = Math.max(0, currentBlock - 1000); // Definir fromBlock aquí
-  
-          // Verificar cache
-          const cacheKey = `pool_events_${fromBlock}`;
-          const cached = sessionStorage.getItem(cacheKey);
-          if (cached) {
-            return JSON.parse(cached);
-          }
-  
-          // Definir interfaces de eventos
-          const depositEventSignature = "event DepositMade(address indexed user, uint256 indexed depositId, uint256 amount, uint256 commission, uint256 timestamp)";
-          const withdrawEventSignature = "event WithdrawalMade(address indexed user, uint256 amount, uint256 commission)";
-  
-          const iface = new ethers.Interface([
-            depositEventSignature,
-            withdrawEventSignature
-          ]);
-  
-          // Obtener logs usando el fromBlock definido
-          const [depositLogs, withdrawalLogs] = await Promise.all([
-            provider.getLogs({
-              address: CONTRACT_ADDRESS,
-              topics: [ethers.id("DepositMade(address,uint256,uint256,uint256,uint256)")],
-              fromBlock, // Usar el fromBlock definido
-              toBlock: 'latest'
-            }),
-            provider.getLogs({
-              address: CONTRACT_ADDRESS,
-              topics: [ethers.id("WithdrawalMade(address,uint256,uint256)")],
-              fromBlock, // Usar el fromBlock definido
-              toBlock: 'latest'
-            })
-          ]);
-  
-          // Procesar logs con el formato correcto
-          const processedDeposits = depositLogs.map(log => {
-            try {
-              const parsed = iface.parseLog({
-                topics: log.topics,
-                data: log.data
-              });
-              
-              return {
-                args: {
-                  user: parsed.args.user,
-                  amount: parsed.args.amount.toString(),
-                  timestamp: Number(parsed.args.timestamp || 0),
-                  commission: parsed.args.commission.toString(),
-                  depositId: parsed.args.depositId.toString()
-                }
-              };
-            } catch (error) {
-              console.error('Error parsing deposit:', error);
-              return null;
+          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
+          if (!parsed || !parsed.args) return null;
+          return {
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            args: {
+              user: parsed.args.user,
+              amount: parsed.args.amount?.toString() || '0',
+              timestamp: Number(parsed.args.timestamp || 0), // Use emitted timestamp
+              commission: parsed.args.commission?.toString() || '0',
+              depositId: parsed.args.depositId?.toString() || '0'
             }
-          }).filter(Boolean);
-  
-          const processedWithdrawals = withdrawalLogs.map(log => {
-            try {
-              const parsed = iface.parseLog({
-                topics: log.topics,
-                data: log.data
-              });
-              
-              return {
-                args: {
-                  user: parsed.args.user,
-                  amount: parsed.args.amount.toString(),
-                  commission: parsed.args.commission.toString()
-                }
-              };
-            } catch (error) {
-              console.error('Error parsing withdrawal:', error);
-              return null;
-            }
-          }).filter(Boolean);
-  
-          // Guardar en cache
-          const result = {
-            deposits: processedDeposits,
-            withdrawals: processedWithdrawals
           };
-          sessionStorage.setItem(cacheKey, JSON.stringify(result));
-          return result;
         } catch (error) {
-          console.error('Error getting pool events:', error);
-          return { deposits: [], withdrawals: [] };
+          console.error('Error parsing deposit log:', log, error);
+          return null;
         }
-      },
-      CACHE_CONFIG.POOL_EVENTS.ttl
-    );
+      }).filter(Boolean);
+
+      // Process withdrawal logs (fetch block timestamp)
+      const processedWithdrawals = await Promise.all(withdrawalLogs.map(async (log) => {
+        try {
+          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
+          if (!parsed || !parsed.args) return null;
+
+          // Fetch the block to get the timestamp
+          const block = await provider.getBlock(log.blockNumber);
+          const blockTimestamp = block ? block.timestamp : Math.floor(Date.now() / 1000); // Fallback to now if block fetch fails
+
+          return {
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            blockTimestamp: blockTimestamp, // Add the block timestamp here
+            args: {
+              user: parsed.args.user,
+              amount: parsed.args.amount?.toString() || '0',
+              commission: parsed.args.commission?.toString() || '0'
+            }
+          };
+        } catch (error) {
+          console.error('Error parsing withdrawal log or fetching block:', log, error);
+          return null;
+        }
+      }));
+
+      const result = {
+        deposits: processedDeposits,
+        // Filter out nulls after Promise.all resolves
+        withdrawals: processedWithdrawals.filter(Boolean)
+      };
+
+      console.log("getPoolEvents: Processed events:", result);
+
+      return result;
+    } catch (error) {
+      console.error('Error in getPoolEvents:', error);
+      return { deposits: [], withdrawals: [] };
+    }
   };
 
   const getPoolMetrics = async () => {
@@ -742,18 +770,7 @@ export const StakingProvider = ({ children }) => {
     getPoolMetrics,
     getPoolEvents,
     getTreasuryMetrics,
-    // Add this function to help with signer address
-    getSignerAddress: async () => {
-      if (!window.ethereum) return null;
-      try {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        return await signer.getAddress();
-      } catch (error) {
-        console.error("Error getting signer address:", error);
-        return null;
-      }
-    }
+    getSignerAddress // Keep it in context value if needed elsewhere
   };
 
   return (
