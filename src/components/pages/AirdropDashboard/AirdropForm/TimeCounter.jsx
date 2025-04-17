@@ -11,9 +11,9 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
   const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    // Actualización de fechas para el próximo airdrop: 15-29 de abril 2025
-    const startDate = new Date('2025-04-15T00:00:00').getTime();
-    const endDate = new Date('2025-04-29T23:59:59').getTime();
+    // Actualización de fechas para el próximo airdrop: 17 de abril - 1 de mayo 2025
+    const startDate = new Date('2025-04-17T00:00:00').getTime();
+    const endDate = new Date('2025-05-01T23:59:59').getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -53,13 +53,12 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
 
   // Componente optimizado que no causa parpadeos
   const TimeBlock = ({ value, label }) => (
-    <div className="relative bg-black/30 rounded-lg p-3 border border-purple-500/10">
+    <div className="relative bg-black/40 rounded-lg p-3 border border-pink-500/10 shadow-md">
       <div className="text-center">
-        {/* El valor se mantiene estable, solo el contenido cambia */}
-        <div className="text-2xl sm:text-3xl font-bold text-white">
+        <div className="text-3xl sm:text-4xl font-bold text-white">
           {String(value).padStart(2, '0')}
         </div>
-        <div className="text-xs font-medium text-purple-200/60 uppercase tracking-wider">
+        <div className="text-xs font-semibold text-pink-300/70 uppercase tracking-wider">
           {label}
         </div>
       </div>
@@ -106,7 +105,7 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
             : "Distribution period"}
         </div>
         <div className="text-base sm:text-lg font-semibold text-white">
-          April 15, 2025 - April 29, 2025
+          April 17, 2025 – May 1, 2025
         </div>
       </motion.div>
     </div>
