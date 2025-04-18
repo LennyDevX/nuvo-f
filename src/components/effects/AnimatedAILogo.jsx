@@ -1,5 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AnimatedAILogo.css';
+import { 
+  addDebouncedResizeListener, 
+  addThrottledMouseListener,
+  addThrottledTouchListener,
+  combineEventListeners
+} from '../../utils/eventHandlers';
+import { 
+  isMobileDevice, 
+  isLowPerformanceDevice,
+  getRecommendedParticleCount 
+} from '../../utils/MobileUtils';
 
 const AnimatedAILogo = () => {
   const canvasRef = useRef(null);
@@ -8,7 +19,6 @@ const AnimatedAILogo = () => {
   const containerRef = useRef(null);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isActive, setIsActive] = useState(false);
-  const [showFps, setShowFps] = useState(false);
   const fpsRef = useRef({ value: 0, lastLoop: 0, lastFpsUpdate: 0, frameCount: 0 });
   const rippleTimeoutsRef = useRef([]);
   const interactionPointRef = useRef({ x: null, y: null });
@@ -32,11 +42,10 @@ const AnimatedAILogo = () => {
     const centerY = canvas.height / 2;
     
     const detectPerformance = () => {
-      const fps = fpsRef.current.value;
-      if (fps < 30) {
+      if (isLowPerformanceDevice()) {
         perfModeRef.current = 'low';
         return 80;
-      } else if (fps < 50) {
+      } else if (isMobileDevice()) {
         perfModeRef.current = 'medium';
         return 120;
       } else {
@@ -374,73 +383,29 @@ const AnimatedAILogo = () => {
         }
       }
       
-      if (showFps) {
-        ctx.font = '10px monospace';
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fillText(`FPS: ${fpsRef.current.value} (${perfModeRef.current})`, 10, canvas.height - 10);
-      }
-      
       animationRef.current = requestAnimationFrame(animate);
     };
     
-    const handleMouseMove = (e) => {
-      if (e.buttons > 0) {
-        handleInteraction(e.clientX, e.clientY);
-      }
-    };
-    
-    const handleMouseDown = (e) => {
-      handleInteraction(e.clientX, e.clientY);
-    };
-    
-    const handleTouchMove = (e) => {
-      if (e.touches.length > 0) {
-        e.preventDefault();
-        handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-    
-    const handleTouchStart = (e) => {
-      if (e.touches.length > 0) {
-        e.preventDefault();
-        handleInteraction(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    };
-    
-    const handleResize = () => {
-      containerRect = container.getBoundingClientRect();
-      canvas.width = containerRect.width;
-      canvas.height = containerRect.height;
-      const newRadius = Math.min(canvas.width, canvas.height) / 2;
-      createParticles();
-    };
-    
-    const handleDoubleClick = (e) => {
-      e.preventDefault();
-      setShowFps(prev => !prev);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('dblclick', handleDoubleClick);
+    const cleanupListeners = combineEventListeners([
+      () => addDebouncedResizeListener(() => {
+        containerRect = container.getBoundingClientRect();
+        canvas.width = containerRect.width;
+        canvas.height = containerRect.height;
+        createParticles();
+      }),
+      () => addThrottledMouseListener(canvas, handleInteraction),
+      () => addThrottledTouchListener(canvas, handleInteraction)
+    ]);
     
     createParticles();
     animationRef.current = requestAnimationFrame(animate);
     
     return () => {
-      window.removeEventListener('resize', handleResize);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('touchmove', handleTouchMove);
-      canvas.removeEventListener('touchstart', handleTouchStart);
-      canvas.removeEventListener('dblclick', handleDoubleClick);
+      cleanupListeners();
       cancelAnimationFrame(animationRef.current);
       rippleTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     };
-  }, [isActive, showFps]);
+  }, [isActive]);
 
   return (
     <div 
@@ -455,11 +420,6 @@ const AnimatedAILogo = () => {
       <div className="ai-logo-glow-overlay"></div>
       <div className="ai-logo-inner-ring"></div>
       <div className="ai-logo-ring"></div>
-      {showFps && (
-        <div className="ai-logo-fps">
-          FPS: {fpsRef.current.value} | {perfModeRef.current}
-        </div>
-      )}
     </div>
   );
 };
