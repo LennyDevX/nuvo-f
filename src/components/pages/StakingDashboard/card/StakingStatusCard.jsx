@@ -5,13 +5,25 @@ import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../../ui/Tooltip';
 
+// Fallback function for formatting dates if the context one is unavailable
+const localFormatDate = (timestamp) => {
+  if (!timestamp || timestamp === 0) return 'Never';
+  try {
+    return new Date(timestamp * 1000).toLocaleDateString();
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid Date';
+  }
+};
 
 const StakingStatusCard = ({ account, depositAmount }) => {
   const { state, STAKING_CONSTANTS, refreshUserInfo, formatWithdrawDate } = useStaking();
   const { stakingStats, userDeposits, userInfo } = state;
 
+  // Use either the context formatter or the local fallback
+  const formatDate = formatWithdrawDate || localFormatDate;
 
-    // Add this after getting useStaking values
+  // Add this after getting useStaking values
   useEffect(() => {
     console.log("StakingStatusCard props and state:", {
       account,
@@ -62,7 +74,7 @@ const StakingStatusCard = ({ account, depositAmount }) => {
     const values = {
       actualDepositsCount: userDeposits?.length || 0,
       actualRemainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - (userDeposits?.length || 0),
-      lastWithdrawDate: stakingStats.lastWithdraw ? formatWithdrawDate(stakingStats.lastWithdraw) : 'Never',
+      lastWithdrawDate: stakingStats.lastWithdraw ? formatDate(stakingStats.lastWithdraw) : 'Never',
       // Use depositAmount instead of userInfo.totalStaked if it's more accurate
       totalStaked: depositAmount || userInfo?.totalStaked || '0',
       efficiency: ((userDeposits?.length || 0) / STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER) * 100,
@@ -80,7 +92,8 @@ const StakingStatusCard = ({ account, depositAmount }) => {
     STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER,
     stakingStats,
     userInfo,
-    depositAmount // Add depositAmount to dependencies
+    depositAmount,
+    formatDate // Add formatDate to dependencies
   ]);
 
   return (

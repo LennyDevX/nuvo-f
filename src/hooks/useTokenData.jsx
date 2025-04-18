@@ -1,6 +1,8 @@
 import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { ethers } from 'ethers';
 import useProvider from './useProvider';
+import { globalRateLimiter } from '../utils/RateLimiter';
+import { globalCache } from '../utils/CacheManager';
 
 // Minimal ABI for the NUVO token contract functions we need
 const TOKEN_ABI = [
@@ -92,6 +94,25 @@ const useTokenData = (contractAddress, refreshInterval = 30000) => {
   }, [formatNumber]);
 
   const fetchTokenData = useCallback(async () => {
+    // Use rate limiter to prevent too many calls
+    const rateLimiterKey = `token_data_${contractAddress}`;
+    if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      console.log("Rate limited, skipping token data fetch");
+      // Intentar usar caché existente si está disponible
+      try {
+        const cacheKey = `tokenData_${contractAddress}`;
+        const cachedData = await globalCache.get(cacheKey, null);
+        if (cachedData) {
+          setTokenData(cachedData);
+          setError(null);
+          return;
+        }
+      } catch (err) {
+        console.warn("Cache retrieval failed");
+      }
+      return;
+    }
+
     // Skip if recently fetched (throttle requests)
     const now = Date.now();
     if (now - lastFetchedRef.current < refreshInterval / 2) return;
@@ -100,6 +121,21 @@ const useTokenData = (contractAddress, refreshInterval = 30000) => {
 
     if (!isMounted.current) return;
     setIsLoading(true);
+
+    // Try to get data from cache first
+    const cacheKey = `tokenData_${contractAddress}`;
+    try {
+      const cachedData = await globalCache.get(cacheKey, null, refreshInterval / 2);
+      if (cachedData) {
+        setTokenData(cachedData);
+        setError(null);
+        setIsLoading(false);
+        return;
+      }
+    } catch (err) {
+      // Just continue if cache fails
+      console.warn("Cache retrieval failed, fetching fresh data");
+    }
 
     try {
       if (!provider || !contractAddress || !isInitialized) {
@@ -158,6 +194,11 @@ const useTokenData = (contractAddress, refreshInterval = 30000) => {
           console.log("Using default data in development mode");
           setTokenData(DEFAULT_DATA);
         }
+      }
+
+      // Cache successful results
+      if (isMounted.current && tokenData) {
+        globalCache.set(cacheKey, tokenData, refreshInterval / 2);
       }
     } catch (err) {
       if (isMounted.current) {

@@ -7,13 +7,23 @@ import { useStaking } from '../../../../context/StakingContext';
 import TransactionToast from '../../../ui/TransactionToast';
 import { AnimatePresence, m } from 'framer-motion';
 import { ethers } from 'ethers';
+import { globalRateLimiter } from '../../../../utils/RateLimiter';
+import { globalCache } from '../../../../utils/CacheManager';
+
+// Constantes para la gestión eficiente de recompensas
+const REWARDS_CACHE_KEY = 'user_rewards';
+const REWARDS_CACHE_TTL = 30 * 1000; // 30 segundos
+const REWARDS_POLL_INTERVAL = 30 * 1000; // 30 segundos
+const MAX_REWARDS_CALLS_PER_MINUTE = 6; // Limitar a 6 llamadas por minuto
 
 const RewardsCard = ({ onClaim, showToast }) => {
   const [loading, setLoading] = useState(false);
-  const { withdrawRewards, state } = useStaking();
+  const { withdrawRewards, state, refreshUserInfo } = useStaking();
   const { isPending } = state;
   const [transactionInfo, setTransactionInfo] = useState(null);
   const pollIntervalRef = useRef(null);
+  const lastRewardsUpdateRef = useRef(0);
+  const [localRewardsEstimate, setLocalRewardsEstimate] = useState(null);
 
   // Memoized user info
   const userInfo = useMemo(() => 
@@ -21,103 +31,132 @@ const RewardsCard = ({ onClaim, showToast }) => {
     [state.userInfo]
   );
 
-  // Memoized staking info calculation
-  const stakingInfo = useMemo(() => {
-    const days = state.userInfo?.stakingDays || 0;
+  // Optimización: Función para obtener recompensas con caché y actualizaciones progresivas
+  const fetchUserRewards = useCallback(async (force = false) => {
+    const now = Date.now();
+    const rateLimiterKey = `rewards_update_${state.userInfo?.address || 'unknown'}`;
     
-    let bonus = 0;
-    let nextBonus = 1;
-    let daysLeft = 90;
-
-    if (days >= 365) {
-      bonus = 5;
-      nextBonus = 5;
-      daysLeft = 0;
-    } else if (days >= 180) {
-      bonus = 3;
-      nextBonus = 5;
-      daysLeft = 365 - days;
-    } else if (days >= 90) {
-      bonus = 1;
-      nextBonus = 3;
-      daysLeft = 180 - days;
-    } else {
-      daysLeft = 90 - days;
-    }
-
-    return { days, bonus, nextBonus, daysLeft };
-  }, [state.userInfo?.stakingDays]);
-
-  // Development logging for rewards updates
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Current rewards info:", {
-        pendingRewards: userInfo.pendingRewards,
-        roiProgress: userInfo.roiProgress
-      });
-    }
-  }, [userInfo]);
-
-  // Optimized rewards polling with cleanup
-  useEffect(() => {
-    let mounted = true;
-    
-    const pollRewards = async () => {
-      try {
-        if (!state.contract || !window.ethereum) return;
+    // Si no es forzado, verificar throttling
+    if (!force) {
+      // Verificar si podemos hacer la llamada
+      if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
+        console.log("Rate limited rewards update, using cached or estimated rewards");
         
+        // Usar caché si está disponible
+        const cachedRewards = await globalCache.get(
+          `${REWARDS_CACHE_KEY}_${state.userInfo?.address}`,
+          null
+        );
+        
+        if (cachedRewards) {
+          console.log("Using cached rewards data");
+          return cachedRewards;
+        }
+        
+        // Si no hay caché, usar estimación local (si está disponible)
+        if (localRewardsEstimate !== null) {
+          console.log("Using local rewards estimate");
+          return { pendingRewards: localRewardsEstimate };
+        }
+        
+        return;
+      }
+    }
+    
+    try {
+      // Actualizar timestamp para evitar sobrecargas
+      lastRewardsUpdateRef.current = now;
+      
+      // Si tenemos acceso al signer, obtener recompensas actuales
+      if (window.ethereum && state.contract) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
         const address = await signer.getAddress();
         
-        // Solo actualizar si el componente sigue montado
-        if (mounted) {
-          const result = await state.contract.calculateRewards(address);
-          if (process.env.NODE_ENV === 'development') {
-            console.log("Polled rewards for address:", address, ethers.formatEther(result));
-          }
+        if (address) {
+          // Obtener recompensas frescas y actualizar
+          await refreshUserInfo(address);
+          
+          // Guardar en caché para futuros usos
+          globalCache.set(
+            `${REWARDS_CACHE_KEY}_${address}`,
+            { 
+              pendingRewards: userInfo.pendingRewards,
+              timestamp: now 
+            },
+            REWARDS_CACHE_TTL
+          );
+          
+          return { pendingRewards: userInfo.pendingRewards };
         }
-      } catch (error) {
-        console.error("Error polling rewards:", error);
+      }
+    } catch (error) {
+      console.error("Error fetching rewards:", error);
+    }
+  }, [state.contract, state.userInfo, refreshUserInfo, userInfo.pendingRewards, localRewardsEstimate]);
+
+  // Optimización: Cálculo local aproximado de recompensas entre actualizaciones reales
+  const estimateCurrentRewards = useCallback(() => {
+    if (!userInfo.pendingRewards || parseFloat(userInfo.pendingRewards) === 0) {
+      return;
+    }
+    
+    // Estimar recompensas basado en tiempo transcurrido desde la última actualización
+    const now = Date.now();
+    const timeSinceLastUpdate = (now - lastRewardsUpdateRef.current) / 1000; // en segundos
+    
+    // Si tenemos datos de depósito, calcular acumulación aproximada
+    if (state.userDeposits && state.userDeposits.length > 0) {
+      const depositedAmount = state.userDeposits.reduce(
+        (sum, dep) => sum + parseFloat(dep.amount || 0), 
+        0
+      );
+      
+      // Cálculo aproximado: 0.01% por hora (0.01/100/3600 por segundo)
+      const hourlyRate = 0.0001; // 0.01%
+      const secondlyRate = hourlyRate / 3600;
+      const estimatedAccrual = depositedAmount * secondlyRate * timeSinceLastUpdate;
+      
+      // Actualizar estimación local
+      const newEstimate = (parseFloat(userInfo.pendingRewards) + estimatedAccrual).toString();
+      setLocalRewardsEstimate(newEstimate);
+      
+      return newEstimate;
+    }
+    
+    return userInfo.pendingRewards;
+  }, [userInfo.pendingRewards, state.userDeposits]);
+
+  // Configurar polling de recompensas con optimizaciones
+  useEffect(() => {
+    let mounted = true;
+    
+    // Función que combina actualizaciones reales y estimaciones
+    const updateRewards = async () => {
+      // Cada cierto tiempo hacer actualización real desde la blockchain
+      const now = Date.now();
+      const timeSinceLastUpdate = now - lastRewardsUpdateRef.current;
+      
+      if (timeSinceLastUpdate >= REWARDS_POLL_INTERVAL) {
+        // Actualización real desde blockchain
+        await fetchUserRewards(false);
+      } else {
+        // Actualización por estimación local entre polls
+        estimateCurrentRewards();
       }
     };
-
-    pollRewards();
-    pollIntervalRef.current = setInterval(pollRewards, 30000);
+    
+    // Actualización inicial
+    fetchUserRewards(true);
+    
+    // Configurar intervalo con frecuencia menor para estimaciones
+    const intervalId = setInterval(updateRewards, 5000); // Cada 5 segundos
     
     return () => {
       mounted = false;
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
+      clearInterval(intervalId);
     };
-  }, [state.contract]);
-
-  // Memoized ROI progress calculation
-  const calculateProgress = useMemo(() => {
-    if (!state.userDeposits || state.userDeposits.length === 0) return 0;
-    
-    const now = Math.floor(Date.now() / 1000);
-    let totalProgress = 0;
-    
-    state.userDeposits.forEach(deposit => {
-      const timeStaked = now - deposit.timestamp;
-      const daysStaked = timeStaked / (24 * 3600);
-      const dailyROI = 0.24; // 0.24% daily
-      const progress = Math.min(daysStaked * dailyROI, 125); // Max 125%
-      totalProgress += progress;
-    });
-
-    return totalProgress / state.userDeposits.length;
-  }, [state.userDeposits]);
-
-  // Log calculated ROI in development
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development' && calculateProgress > 0) {
-      console.log("Calculated ROI Progress:", calculateProgress);
-    }
-  }, [calculateProgress]);
+  }, [fetchUserRewards, estimateCurrentRewards]);
 
   // Optimized claim handler
   const handleClaim = useCallback(async () => {
@@ -214,7 +253,7 @@ const RewardsCard = ({ onClaim, showToast }) => {
               <span className="text-purple-100/70 text-sm">Accumulated Rewards</span>
               <div className="mt-2">
                 <div className="text-2xl font-bold text-purple-300">
-                  {formatBalance(userInfo.pendingRewards)} POL
+                  {formatBalance(localRewardsEstimate || userInfo.pendingRewards)} POL
                 </div>
                 <div className="text-sm text-purple-200/50 mt-1">
                   Available to claim
@@ -228,9 +267,9 @@ const RewardsCard = ({ onClaim, showToast }) => {
                 Time Bonus Progress
                 <Tooltip content={`
                   Base ROI: 0.24% daily
-                  Current Progress: ${calculateProgress.toFixed(2)}%
+                  Current Progress: ${userInfo.roiProgress.toFixed(2)}%
                   Max ROI: 125%
-                  Days Staked: ${stakingInfo.days}
+                  Days Staked: ${state.userInfo?.stakingDays || 0}
                 `}>
                   <FaInfoCircle className="text-purple-400/60 hover:text-purple-300" />
                 </Tooltip>
@@ -257,13 +296,13 @@ const RewardsCard = ({ onClaim, showToast }) => {
                       r="30"
                       cx="32"
                       cy="32"
-                      strokeDasharray={`${(calculateProgress / 125) * 188.4} 188.4`}
+                      strokeDasharray={`${(userInfo.roiProgress / 125) * 188.4} 188.4`}
                     />
                   </svg>
                   {/* Percentage Text */}
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                     <span className="text-lg font-bold text-purple-300">
-                      {calculateProgress.toFixed(1)}%
+                      {userInfo.roiProgress.toFixed(1)}%
                     </span>
                   </div>
                 </div>

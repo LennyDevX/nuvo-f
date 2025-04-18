@@ -1,17 +1,70 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDown, FaChevronUp, FaExchangeAlt, FaShieldAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../../ui/Tooltip';
+import { globalRateLimiter } from '../../../../utils/RateLimiter';
+import { globalCache } from '../../../../utils/CacheManager';
+
+// Constantes para la gestión de datos de tesorería
+const TREASURY_CACHE_KEY = 'treasury_metrics_card';
+const TREASURY_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
+const TREASURY_UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
 
 const TreasuryCard = () => {
   const { state, getTreasuryMetrics } = useStaking();
   const { treasuryMetrics } = state;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Optimización: Función para actualizar métricas de tesorería con caché
+  const updateTreasuryMetrics = useCallback(async (force = false) => {
+    // Verificar rate limiting excepto si es forzado
+    const rateLimiterKey = 'treasury_metrics_update';
+    if (!force && !globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      console.log("Rate limited treasury metrics update");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Intentar obtener de caché primero si no es forzado
+      const cachedMetrics = !force && await globalCache.get(TREASURY_CACHE_KEY, null);
+      
+      if (cachedMetrics) {
+        console.log("Using cached treasury metrics");
+      } else {
+        // Si no hay caché o es forzado, obtener datos frescos
+        console.log("Fetching fresh treasury metrics");
+        await getTreasuryMetrics();
+        
+        // Guardar en caché para futuros usos
+        globalCache.set(TREASURY_CACHE_KEY, true, TREASURY_CACHE_TTL);
+      }
+    } catch (error) {
+      console.error("Error updating treasury metrics:", error);
+      setError("Failed to update treasury data");
+    } finally {
+      setLoading(false);
+    }
+  }, [getTreasuryMetrics]);
+
+  // Optimización: Carga inicial y configuración de intervalo
   useEffect(() => {
-    getTreasuryMetrics();
-  }, []);
+    // Actualización inicial
+    updateTreasuryMetrics(true);
+    
+    // Configurar intervalo con frecuencia adecuada
+    const intervalId = setInterval(() => {
+      updateTreasuryMetrics(false);
+    }, TREASURY_UPDATE_INTERVAL);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [updateTreasuryMetrics]);
 
   // Función para determinar el color del indicador de salud
   const getHealthColor = (score) => {
@@ -36,7 +89,11 @@ const TreasuryCard = () => {
 
   return (
     <>
-      <BaseCard title="Treasury" icon={<FaPiggyBank className="text-fuchsia-400" />}>
+      <BaseCard 
+        title="Treasury" 
+        icon={<FaPiggyBank className="text-fuchsia-400" />}
+        loading={loading}
+        error={error}>
         <div className="flex flex-col h-full space-y-4">
           {/* Main Balance */}
           <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-fuchsia-900/5 transition-all duration-300">

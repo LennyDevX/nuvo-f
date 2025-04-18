@@ -4,6 +4,8 @@ import { FaHistory, FaExternalLinkAlt, FaExclamationCircle, FaCoins, FaMoneyBill
 import { useStaking } from '../../../../context/StakingContext';
 import { WalletContext } from '../../../../context/WalletContext';
 import { ethers } from 'ethers';
+import { globalRateLimiter } from '../../../../utils/RateLimiter';
+import { globalCache } from '../../../../utils/CacheManager';
 
 const formatDate = (timestamp) => {
   if (!timestamp) return 'Unknown';
@@ -126,12 +128,29 @@ const TransactionsSection = () => {
     if (!account) return [];
     setError(null);
     
+    // Use rate limiter to prevent excessive calls
+    const rateLimiterKey = `transaction_events_${account}`;
+    if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      console.log("Rate limited, fetching from cache if available");
+      const cachedEvents = globalCache.get(`events_${account}`, null);
+      if (cachedEvents) {
+        setRawEvents(cachedEvents);
+        return cachedEvents;
+      }
+      return [];
+    }
+    
     try {
       console.log("Fetching transaction events for account:", account);
       
       const events = await getPoolEvents();
       console.log("Raw events received in TransactionsSection:", events);
       setRawEvents(events);
+      
+      // Cache the results
+      if (events && (events.deposits?.length > 0 || events.withdrawals?.length > 0)) {
+        globalCache.set(`events_${account}`, events, 60000); // Cache for 1 minute
+      }
       
       if (!events || (!events.deposits && !events.withdrawals)) {
         console.warn("No events data returned from getPoolEvents");

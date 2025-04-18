@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion as m } from 'framer-motion';
-import { FaGift, FaCheckCircle, FaTimesCircle, FaQuestionCircle, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaGift, FaCheckCircle, FaCalendarAlt, FaUsers, FaExternalLinkAlt, FaQuestionCircle, FaInfoCircle, FaLock } from 'react-icons/fa';
 
 const AirdropsSection = ({ account }) => {
   const upcomingAirdrops = [
@@ -12,12 +12,11 @@ const AirdropsSection = ({ account }) => {
       status: "upcoming",
       date: "Q1 2026",
       amount: "500 NUVO",
-      requirements: [
-        { name: "Wallet Connected", met: true },
-        { name: "Profile Completed", met: true },
-        { name: "Community Participation", met: false },
-        { name: "Staking Activity", met: false }
-      ]
+      whitelistStatus: "Open",
+      whitelistDeadline: "December 31, 2025",
+      totalParticipants: 2500,
+      tokenUtility: "Governance, staking, and platform fees",
+      distributionDate: "January 15, 2026"
     },
     {
       id: 2,
@@ -27,11 +26,11 @@ const AirdropsSection = ({ account }) => {
       status: "upcoming", 
       date: "Q3 2026",
       amount: "1 NFT",
-      requirements: [
-        { name: "Wallet Connected", met: true },
-        { name: "Staking Minimum 100 POL", met: false },
-        { name: "30 Days History", met: true }
-      ]
+      whitelistStatus: "Coming Soon",
+      whitelistDeadline: "TBA",
+      totalParticipants: 0,
+      tokenUtility: "Governance voting power, exclusive access to platform features",
+      distributionDate: "August 2026"
     }
   ];
 
@@ -110,21 +109,62 @@ const AirdropsSection = ({ account }) => {
                 </div>
               </div>
               
+              {/* Replacing requirements with whitelist info and token details */}
               <div className="p-4 bg-black/20 border-t border-purple-500/10">
-                <h5 className="text-sm font-medium text-white mb-2">Requirements</h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {airdrop.requirements.map((req, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      {req.met ? (
-                        <FaCheckCircle className="text-green-400 flex-shrink-0" />
-                      ) : (
-                        <FaTimesCircle className="text-red-400 flex-shrink-0" />
-                      )}
-                      <span className={`text-sm ${req.met ? 'text-white' : 'text-gray-400'}`}>
-                        {req.name}
-                      </span>
+                <div className="flex flex-col space-y-4">
+                  {/* Whitelist Status */}
+                  <div>
+                    <h5 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+                      <FaUsers className="text-purple-400" /> Whitelist Status
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${airdrop.whitelistStatus === "Open" ? "bg-green-400" : "bg-yellow-400"}`}></div>
+                        <span className="text-sm text-white">
+                          Status: <span className="text-purple-300">{airdrop.whitelistStatus}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FaCalendarAlt className="text-purple-400/70 flex-shrink-0" />
+                        <span className="text-sm text-white">
+                          Deadline: <span className="text-purple-300">{airdrop.whitelistDeadline}</span>
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                    
+                    {airdrop.whitelistStatus === "Open" && (
+                      <a 
+                        href="/whitelist-registration" 
+                        className="mt-2 inline-flex items-center gap-1 text-xs bg-purple-600/30 hover:bg-purple-600/50 px-3 py-1.5 rounded-full text-purple-300 transition-colors"
+                      >
+                        <FaLock size={10} /> Join Whitelist
+                      </a>
+                    )}
+                  </div>
+                  
+                  {/* Token Details */}
+                  <div>
+                    <h5 className="text-sm font-medium text-white mb-2 flex items-center gap-2">
+                      <FaInfoCircle className="text-purple-400" /> Distribution Details
+                    </h5>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <FaCalendarAlt className="text-purple-400/70 flex-shrink-0" />
+                        <span className="text-sm text-white">
+                          Distribution: <span className="text-purple-300">{airdrop.distributionDate}</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <FaUsers className="text-purple-400/70 flex-shrink-0" />
+                        <span className="text-sm text-white">
+                          Whitelist Participants: <span className="text-purple-300">{airdrop.totalParticipants.toLocaleString()}</span>
+                        </span>
+                      </div>
+                      <div className="mt-1 text-xs text-purple-300/80 italic">
+                        <span className="font-medium text-purple-300">Utility:</span> {airdrop.tokenUtility}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

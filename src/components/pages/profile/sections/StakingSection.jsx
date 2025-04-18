@@ -251,14 +251,7 @@ const StakingSection = ({ account }) => {
         </div>
       )}
       
-      <div className="flex flex-wrap gap-4 justify-center">
-        <Link
-          to="/staking" 
-          className="flex-1 max-w-xs px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2"
-        >
-          Manage Staking <FaExternalLinkAlt size={12} />
-        </Link>
-      </div>
+      
       
       {Number(pendingRewards) > 0 && (
         <div className="mt-6 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
@@ -272,7 +265,16 @@ const StakingSection = ({ account }) => {
           <h4 className="text-yellow-400 font-medium mb-1">Start Staking</h4>
           <div className="text-sm text-gray-300">You haven't staked any tokens yet. Visit the Staking Dashboard to start earning rewards at up to 125% APY.</div>
         </div>
+        
       )}
+      <div className="flex flex-wrap gap-4 justify-center">
+        <Link
+          to="/staking" 
+          className="flex-1 max-w-xs mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all flex items-center justify-center gap-2"
+        >
+          Manage Staking <FaExternalLinkAlt size={12} />
+        </Link>
+      </div>
     </m.div>
   );
 };

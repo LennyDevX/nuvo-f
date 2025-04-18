@@ -1,20 +1,75 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
 import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaHistory, FaCalendarAlt, FaShieldAlt, FaLock, FaStar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../../ui/Tooltip';
+import { globalRateLimiter } from '../../../../utils/RateLimiter';
+import { globalCache } from '../../../../utils/CacheManager';
+
+// Constantes para caché y actualización
+const METRICS_CACHE_KEY = 'pool_metrics_card';
+const METRICS_CACHE_TTL = 2 * 60 * 1000; // 2 minutos
+const METRICS_UPDATE_INTERVAL = 60 * 1000; // 1 minuto
 
 const PoolMetricsCard = () => {
-  const { state } = useStaking();
+  const { state, getPoolMetrics } = useStaking();
+  const [loading, setLoading] = useState(false);
   
+  // Datos memoizados para evitar cálculos innecesarios
   const metrics = useMemo(() => ({
     totalStaked: state?.totalPoolBalance || '0',
     totalUsers: state?.uniqueUsersCount || 0,
     rewardsDistributed: state?.poolMetrics?.rewardsDistributed || '0',
     totalWithdrawn: state?.poolMetrics?.totalWithdrawn || '0',
   }), [state.totalPoolBalance, state.uniqueUsersCount, state.poolMetrics]);
+
+  // Optimización: Función de actualización con caché y rate limiting
+  const updatePoolMetrics = useCallback(async (force = false) => {
+    // Verificar rate limiting excepto si es forzado
+    if (!force && !globalRateLimiter.canMakeCall(METRICS_CACHE_KEY)) {
+      console.log("Rate limited pool metrics update");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Intentar obtener de caché primero
+      const cachedMetrics = !force && await globalCache.get(METRICS_CACHE_KEY, null);
+      
+      if (cachedMetrics) {
+        console.log("Using cached pool metrics");
+      } else {
+        // Si no hay caché o es forzado, obtener datos frescos
+        console.log("Fetching fresh pool metrics");
+        await getPoolMetrics();
+        
+        // Guardar en caché para futuros usos
+        globalCache.set(METRICS_CACHE_KEY, true, METRICS_CACHE_TTL);
+      }
+    } catch (error) {
+      console.error("Error updating pool metrics:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [getPoolMetrics]);
+
+  // Cargar datos en montaje y configurar intervalo de actualización
+  useEffect(() => {
+    // Actualización inicial
+    updatePoolMetrics(true);
+    
+    // Configurar intervalo con limpieza adecuada
+    const intervalId = setInterval(() => {
+      updatePoolMetrics(false);
+    }, METRICS_UPDATE_INTERVAL);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [updatePoolMetrics]);
 
   const goalMetrics = useMemo(() => {
     const goalAmount = '2000'; // 2000 POL tokens goal
@@ -42,7 +97,10 @@ const PoolMetricsCard = () => {
   }, [state.totalPoolBalance]);
 
   return (
-    <BaseCard title="Pool Statistics" icon={<FaChartBar className="text-indigo-400" />}>
+    <BaseCard 
+      title="Pool Statistics" 
+      icon={<FaChartBar className="text-indigo-400" />}
+      loading={loading}>
       <div className="flex flex-col h-full space-y-4">
         {/* TVL and Users Row */}
         <div className="grid grid-cols-3 gap-3">
