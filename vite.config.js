@@ -27,8 +27,8 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'recharts'],
   },
   server: {
-    port: 5173,
-    strictPort: true,
+    port: 3000, // Cambiado para coincidir con el puerto que estás usando
+    strictPort: false, // Cambiado a false para permitir fallback a otros puertos si el 3000 está ocupado
     headers: {
       'Content-Security-Policy': Object.entries(cspConfig.directives)
         .map(([key, values]) => `${key} ${values.join(' ')}`)
@@ -40,7 +40,7 @@ export default defineConfig({
       // Use manual to ensure WebSocket works properly
       protocol: 'ws',
       host: 'localhost',
-      port: 5173
+      port: 3000 // Actualizado para coincidir con el puerto del servidor
     },
     watch: {
       // Required for some Windows setups
@@ -70,5 +70,13 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/],
     },
+  },
+  // Añadir esta configuración para manejar correctamente los archivos HTML
+  assetsInclude: ['**/*.html'],
+  // No generar CSP en línea, ya que ya lo tenemos en el HTML
+  experimental: {
+    renderBuiltUrl(filename) {
+      return filename;
+    }
   }
 });

@@ -9,32 +9,8 @@
     <meta name="theme-color" content="#000000" />
     <title>Nuvos</title>
 
-    <!-- Optimized CSP -->
-    <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    connect-src 'self' 
-      https://*.dodoex.io 
-      https://*.alchemy.com 
-      wss://*.alchemy.com 
-      https://*.googleapis.com 
-      https://*.firebase.com 
-      https://*.firebaseio.com 
-      https://identitytoolkit.googleapis.com
-      https://polygon-rpc.com
-      https://rpc-mainnet.matic.network
-      https://matic-mainnet.chainstacklabs.com
-      https://rpc-mumbai.maticvigil.com
-      https://matic-mumbai.chainstacklabs.com;
-    img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com;
-      style-src 'self' 'unsafe-inline';
-      font-src 'self' data:;
-      frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com;
-      object-src 'none';
-      base-uri 'self';
-      form-action 'self';
-      upgrade-insecure-requests;
-    ">
+    <!-- Optimized CSP - ahora en una sola línea para evitar problemas de análisis con Vite -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.dodoex.io https://*.alchemy.com wss://*.alchemy.com https://*.googleapis.com https://*.firebase.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://polygon-rpc.com https://rpc-mainnet.matic.network https://matic-mainnet.chainstacklabs.com https://rpc-mumbai.maticvigil.com https://matic-mumbai.chainstacklabs.com; img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
 
     <!-- Performance optimizations -->
     <link rel="dns-prefetch" href="https://api.dodoex.io">

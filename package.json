@@ -5,7 +5,8 @@
   "version": "0.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000",
+    "vercel-dev": "vercel dev --listen 3001",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
@@ -17,6 +18,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "ethers": "^6.13.5",
+    "express": "^5.1.0",
     "firebase": "^11.3.0",
     "framer-motion": "^12.6.3",
     "lodash": "^4.17.21",
