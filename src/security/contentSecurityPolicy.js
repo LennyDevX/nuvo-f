@@ -15,8 +15,10 @@ export const cspConfig = {
       'https://rpc-mainnet.matic.network',
       'https://matic-mainnet.chainstacklabs.com',
       'https://rpc-mumbai.maticvigil.com',
-      'https://matic-mumbai.chainstacklabs.com'
-    ],
+      'https://matic-mumbai.chainstacklabs.com',
+      process.env.NODE_ENV === 'development' ? 'ws://localhost:*' : null,
+      process.env.NODE_ENV === 'development' ? 'wss://localhost:*' : null
+    ].filter(Boolean),
     'img-src': [
       "'self'",
       'data:',
@@ -31,8 +33,7 @@ export const cspConfig = {
       "'unsafe-inline'",
       "'unsafe-eval'",
       'https://*.firebaseapp.com',
-      'https://apis.google.com'  // Add this line
-
+      'https://apis.google.com'
     ],
     'style-src': ["'self'", "'unsafe-inline'"],
     'frame-src': [

@@ -15,7 +15,7 @@ const HeroSection = () => {
           className="text-center max-w-4xl mx-auto"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-            Nuvo Roadmap
+            Nuvos Roadmap
           </h1>
           
           <p className="text-xl text-gray-300 mb-8">

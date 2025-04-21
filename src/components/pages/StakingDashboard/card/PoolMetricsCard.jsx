@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import React, { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { FaChartBar, FaUsers, FaCoins, FaInfoCircle, FaGift, FaHistory, FaCalendarAlt, FaShieldAlt, FaLock, FaStar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { ethers } from 'ethers';
@@ -10,12 +10,15 @@ import { globalCache } from '../../../../utils/CacheManager';
 
 // Constantes para caché y actualización
 const METRICS_CACHE_KEY = 'pool_metrics_card';
-const METRICS_CACHE_TTL = 2 * 60 * 1000; // 2 minutos
-const METRICS_UPDATE_INTERVAL = 60 * 1000; // 1 minuto
+const METRICS_CACHE_TTL = 3 * 60 * 1000; // 3 minutos (increased to reduce refreshes)
+const METRICS_UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos (increased to reduce refreshes)
+const METRICS_MIN_REFRESH_INTERVAL = 30 * 1000; // 30 segundos minimum between refreshes
 
 const PoolMetricsCard = () => {
   const { state, getPoolMetrics } = useStaking();
   const [loading, setLoading] = useState(false);
+  const lastUpdateRef = useRef(0);
+  const isUpdatingRef = useRef(false);
   
   // Datos memoizados para evitar cálculos innecesarios
   const metrics = useMemo(() => ({
@@ -25,15 +28,34 @@ const PoolMetricsCard = () => {
     totalWithdrawn: state?.poolMetrics?.totalWithdrawn || '0',
   }), [state.totalPoolBalance, state.uniqueUsersCount, state.poolMetrics]);
 
-  // Optimización: Función de actualización con caché y rate limiting
+  // Optimización: Función de actualización con caché y rate limiting mejorada
   const updatePoolMetrics = useCallback(async (force = false) => {
-    // Verificar rate limiting excepto si es forzado
+    // Prevent concurrent updates
+    if (isUpdatingRef.current) {
+      return;
+    }
+    
+    const now = Date.now();
+    
+    // Enforce minimum refresh interval unless forced
+    if (!force && (now - lastUpdateRef.current < METRICS_MIN_REFRESH_INTERVAL)) {
+      return;
+    }
+    
+    // Check rate limiting
     if (!force && !globalRateLimiter.canMakeCall(METRICS_CACHE_KEY)) {
       console.log("Rate limited pool metrics update");
       return;
     }
     
-    setLoading(true);
+    // Prevent UI flickering by not showing loading state for quick refreshes
+    const loadingDelay = setTimeout(() => {
+      if (isUpdatingRef.current) {
+        setLoading(true);
+      }
+    }, 500);
+    
+    isUpdatingRef.current = true;
     
     try {
       // Intentar obtener de caché primero
@@ -42,9 +64,13 @@ const PoolMetricsCard = () => {
       if (cachedMetrics) {
         console.log("Using cached pool metrics");
       } else {
-        // Si no hay caché o es forzado, obtener datos frescos
-        console.log("Fetching fresh pool metrics");
+        // Avoid repetitive logging to reduce console noise
+        if (now - lastUpdateRef.current > METRICS_MIN_REFRESH_INTERVAL * 2) {
+          console.log("Fetching fresh pool metrics");
+        }
+        
         await getPoolMetrics();
+        lastUpdateRef.current = now;
         
         // Guardar en caché para futuros usos
         globalCache.set(METRICS_CACHE_KEY, true, METRICS_CACHE_TTL);
@@ -52,14 +78,18 @@ const PoolMetricsCard = () => {
     } catch (error) {
       console.error("Error updating pool metrics:", error);
     } finally {
+      clearTimeout(loadingDelay);
       setLoading(false);
+      isUpdatingRef.current = false;
     }
   }, [getPoolMetrics]);
 
   // Cargar datos en montaje y configurar intervalo de actualización
   useEffect(() => {
-    // Actualización inicial
-    updatePoolMetrics(true);
+    // Actualización inicial con delay para no competir con otros componentes
+    const initialTimeout = setTimeout(() => {
+      updatePoolMetrics(true);
+    }, 1000);
     
     // Configurar intervalo con limpieza adecuada
     const intervalId = setInterval(() => {
@@ -67,6 +97,7 @@ const PoolMetricsCard = () => {
     }, METRICS_UPDATE_INTERVAL);
     
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
   }, [updatePoolMetrics]);

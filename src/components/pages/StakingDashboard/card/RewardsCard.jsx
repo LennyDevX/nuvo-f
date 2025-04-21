@@ -12,9 +12,10 @@ import { globalCache } from '../../../../utils/CacheManager';
 
 // Constantes para la gestión eficiente de recompensas
 const REWARDS_CACHE_KEY = 'user_rewards';
-const REWARDS_CACHE_TTL = 30 * 1000; // 30 segundos
-const REWARDS_POLL_INTERVAL = 30 * 1000; // 30 segundos
-const MAX_REWARDS_CALLS_PER_MINUTE = 6; // Limitar a 6 llamadas por minuto
+const REWARDS_CACHE_TTL = 60 * 1000; // 60 segundos (increased from 30)
+const REWARDS_POLL_INTERVAL = 60 * 1000; // 60 segundos (increased from 30)
+const REWARDS_ESTIMATE_INTERVAL = 10 * 1000; // 10 segundos para estimaciones
+const MAX_REWARDS_CALLS_PER_MINUTE = 4; // Limitar a 4 llamadas por minuto (reduced from 6)
 
 const RewardsCard = ({ onClaim, showToast }) => {
   const [loading, setLoading] = useState(false);
@@ -22,8 +23,10 @@ const RewardsCard = ({ onClaim, showToast }) => {
   const { isPending } = state;
   const [transactionInfo, setTransactionInfo] = useState(null);
   const pollIntervalRef = useRef(null);
+  const estimateIntervalRef = useRef(null);
   const lastRewardsUpdateRef = useRef(0);
   const [localRewardsEstimate, setLocalRewardsEstimate] = useState(null);
+  const isUpdatingRef = useRef(false);
 
   // Memoized user info
   const userInfo = useMemo(() => 
@@ -31,93 +34,100 @@ const RewardsCard = ({ onClaim, showToast }) => {
     [state.userInfo]
   );
 
-  // Optimización: Función para obtener recompensas con caché y actualizaciones progresivas
+  // Improved rewards fetch function with better throttling
   const fetchUserRewards = useCallback(async (force = false) => {
-    const now = Date.now();
-    const rateLimiterKey = `rewards_update_${state.userInfo?.address || 'unknown'}`;
-    
-    // Si no es forzado, verificar throttling
-    if (!force) {
-      // Verificar si podemos hacer la llamada
-      if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
-        console.log("Rate limited rewards update, using cached or estimated rewards");
-        
-        // Usar caché si está disponible
-        const cachedRewards = await globalCache.get(
-          `${REWARDS_CACHE_KEY}_${state.userInfo?.address}`,
-          null
-        );
-        
-        if (cachedRewards) {
-          console.log("Using cached rewards data");
-          return cachedRewards;
-        }
-        
-        // Si no hay caché, usar estimación local (si está disponible)
-        if (localRewardsEstimate !== null) {
-          console.log("Using local rewards estimate");
-          return { pendingRewards: localRewardsEstimate };
-        }
-        
-        return;
-      }
+    // Prevent concurrent updates
+    if (isUpdatingRef.current) {
+      return;
     }
     
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastRewardsUpdateRef.current;
+    const rateLimiterKey = `rewards_update_${state.userInfo?.address || 'unknown'}`;
+    
+    // If not forced, check throttling
+    if (!force && timeSinceLastUpdate < REWARDS_POLL_INTERVAL / 2) {
+      return;
+    }
+    
+    // Verify rate limiting
+    if (!force && !globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      // Use cache or local estimate if available
+      const cachedRewards = await globalCache.get(
+        `${REWARDS_CACHE_KEY}_${state.userInfo?.address}`,
+        null
+      );
+      
+      if (cachedRewards) {
+        return cachedRewards;
+      }
+      
+      if (localRewardsEstimate !== null) {
+        return { pendingRewards: localRewardsEstimate };
+      }
+      
+      return;
+    }
+    
+    isUpdatingRef.current = true;
+    
     try {
-      // Actualizar timestamp para evitar sobrecargas
       lastRewardsUpdateRef.current = now;
       
-      // Si tenemos acceso al signer, obtener recompensas actuales
-      if (window.ethereum && state.contract) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
+      // Try to get actual blockchain data
+      if (window.ethereum && state.contract && state.userInfo?.address) {
+        const address = state.userInfo.address;
         
-        if (address) {
-          // Obtener recompensas frescas y actualizar
-          await refreshUserInfo(address);
-          
-          // Guardar en caché para futuros usos
-          globalCache.set(
-            `${REWARDS_CACHE_KEY}_${address}`,
-            { 
-              pendingRewards: userInfo.pendingRewards,
-              timestamp: now 
-            },
-            REWARDS_CACHE_TTL
-          );
-          
-          return { pendingRewards: userInfo.pendingRewards };
-        }
+        // Get fresh rewards data
+        await refreshUserInfo(address);
+        
+        // Cache for future use
+        globalCache.set(
+          `${REWARDS_CACHE_KEY}_${address}`,
+          { 
+            pendingRewards: userInfo.pendingRewards,
+            timestamp: now 
+          },
+          REWARDS_CACHE_TTL
+        );
+        
+        // Reset local estimate since we now have fresh data
+        setLocalRewardsEstimate(null);
+        
+        return { pendingRewards: userInfo.pendingRewards };
       }
     } catch (error) {
       console.error("Error fetching rewards:", error);
+    } finally {
+      isUpdatingRef.current = false;
     }
   }, [state.contract, state.userInfo, refreshUserInfo, userInfo.pendingRewards, localRewardsEstimate]);
 
-  // Optimización: Cálculo local aproximado de recompensas entre actualizaciones reales
+  // Optimized estimation function
   const estimateCurrentRewards = useCallback(() => {
     if (!userInfo.pendingRewards || parseFloat(userInfo.pendingRewards) === 0) {
       return;
     }
     
-    // Estimar recompensas basado en tiempo transcurrido desde la última actualización
-    const now = Date.now();
-    const timeSinceLastUpdate = (now - lastRewardsUpdateRef.current) / 1000; // en segundos
+    // Calculate local estimation only if we have real data to base it on
+    if (lastRewardsUpdateRef.current === 0) {
+      return userInfo.pendingRewards;
+    }
     
-    // Si tenemos datos de depósito, calcular acumulación aproximada
+    const now = Date.now();
+    const timeSinceLastUpdate = (now - lastRewardsUpdateRef.current) / 1000; // in seconds
+    
     if (state.userDeposits && state.userDeposits.length > 0) {
       const depositedAmount = state.userDeposits.reduce(
         (sum, dep) => sum + parseFloat(dep.amount || 0), 
         0
       );
       
-      // Cálculo aproximado: 0.01% por hora (0.01/100/3600 por segundo)
-      const hourlyRate = 0.0001; // 0.01%
+      // Approximate calculation: 0.01% per hour
+      const hourlyRate = 0.0001;
       const secondlyRate = hourlyRate / 3600;
       const estimatedAccrual = depositedAmount * secondlyRate * timeSinceLastUpdate;
       
-      // Actualizar estimación local
       const newEstimate = (parseFloat(userInfo.pendingRewards) + estimatedAccrual).toString();
       setLocalRewardsEstimate(newEstimate);
       
@@ -127,34 +137,31 @@ const RewardsCard = ({ onClaim, showToast }) => {
     return userInfo.pendingRewards;
   }, [userInfo.pendingRewards, state.userDeposits]);
 
-  // Configurar polling de recompensas con optimizaciones
+  // Improved setup for polling with separate intervals for real updates and estimates
   useEffect(() => {
-    let mounted = true;
+    // Initial update with slight delay to prevent UI competition
+    const initialTimeout = setTimeout(() => {
+      fetchUserRewards(true);
+    }, 1500);
     
-    // Función que combina actualizaciones reales y estimaciones
-    const updateRewards = async () => {
-      // Cada cierto tiempo hacer actualización real desde la blockchain
-      const now = Date.now();
-      const timeSinceLastUpdate = now - lastRewardsUpdateRef.current;
-      
-      if (timeSinceLastUpdate >= REWARDS_POLL_INTERVAL) {
-        // Actualización real desde blockchain
-        await fetchUserRewards(false);
-      } else {
-        // Actualización por estimación local entre polls
-        estimateCurrentRewards();
-      }
-    };
+    // Set up two intervals:
+    // 1. For real blockchain data
+    const rewardsInterval = setInterval(() => {
+      fetchUserRewards(false);
+    }, REWARDS_POLL_INTERVAL);
     
-    // Actualización inicial
-    fetchUserRewards(true);
+    // 2. For local estimations (more frequent but less resource-intensive)
+    const estimateInterval = setInterval(() => {
+      estimateCurrentRewards();
+    }, REWARDS_ESTIMATE_INTERVAL);
     
-    // Configurar intervalo con frecuencia menor para estimaciones
-    const intervalId = setInterval(updateRewards, 5000); // Cada 5 segundos
+    estimateIntervalRef.current = estimateInterval;
+    pollIntervalRef.current = rewardsInterval;
     
     return () => {
-      mounted = false;
-      clearInterval(intervalId);
+      clearTimeout(initialTimeout);
+      clearInterval(rewardsInterval);
+      clearInterval(estimateInterval);
     };
   }, [fetchUserRewards, estimateCurrentRewards]);
 

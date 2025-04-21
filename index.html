@@ -4,13 +4,40 @@
     <meta charset="UTF-8" />
     <!-- Remove unused font preload and replace with proper font loading strategy -->
     <link rel="icon" type="image/webp" href="/LogoNuvos.webp" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=5.0" />
     <meta name="description" content="Nuvos - Your Web3 Platform" />
     <meta name="theme-color" content="#000000" />
     <title>Nuvos</title>
 
-    <!-- Optimized CSP - ahora en una sola línea para evitar problemas de análisis con Vite -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' https://*.dodoex.io https://*.alchemy.com wss://*.alchemy.com https://*.googleapis.com https://*.firebase.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://polygon-rpc.com https://rpc-mainnet.matic.network https://matic-mainnet.chainstacklabs.com https://rpc-mumbai.maticvigil.com https://matic-mumbai.chainstacklabs.com; img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests;">
+    <!-- Static CSP Meta Tag for Development - Allows Vite HMR -->
+    <!-- NOTE: Replace or remove this tag for production builds -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      connect-src 'self'
+                  https://*.dodoex.io
+                  https://*.alchemy.com
+                  wss://*.alchemy.com
+                  https://*.googleapis.com
+                  https://*.firebase.com
+                  https://*.firebaseio.com
+                  https://identitytoolkit.googleapis.com
+                  https://polygon-rpc.com
+                  https://rpc-mainnet.matic.network
+                  https://matic-mainnet.chainstacklabs.com
+                  https://rpc-mumbai.maticvigil.com
+                  https://matic-mumbai.chainstacklabs.com
+                  ws://localhost:3000
+                  wss://localhost:3000;
+      img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com;
+      style-src 'self' 'unsafe-inline';
+      font-src 'self' data:;
+      frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      upgrade-insecure-requests;
+    ">
 
     <!-- Performance optimizations -->
     <link rel="dns-prefetch" href="https://api.dodoex.io">
