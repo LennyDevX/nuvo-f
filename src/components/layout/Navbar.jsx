@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import NavLink from '../navigation/NavLink';
 import WalletConnect from '../web3/WalletConnect';
 import BetaBadge from '../ui/BetaBadge';
-import { 
-  FaHome, 
+import {  
   FaCoins, 
   FaChartPie, 
   FaExchangeAlt, 
@@ -99,7 +98,7 @@ const Navbar = () => {
 
   // Memoize navigation items to prevent recreation on every render
   const navigationItems = useMemo(() => [
-    { path: '/', label: 'Home', icon: FaHome },
+    { path: '/my-nfts', label: 'APP', icon: FaGamepad },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },

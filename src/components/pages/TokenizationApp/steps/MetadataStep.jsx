@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { FaArrowLeft, FaArrowRight, FaInfoCircle } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 
 const MetadataStep = () => {
@@ -28,11 +29,11 @@ const MetadataStep = () => {
       animate={{ opacity: 1 }}
       className="space-y-6"
     >
-      <h2 className="text-2xl font-bold text-white">Asset Details</h2>
-      <p className="text-gray-300">Provide information about your physical asset</p>
+      <h2 className="text-2xl font-bold bg-nuvo-gradient-text bg-clip-text text-transparent  text-center">Asset Details</h2>
+      <p className="text-gray-300 text-center">Provide information about your digital asset</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="aspect-square bg-black/20 rounded-xl overflow-hidden">
+        <div className="aspect-square bg-black/30 rounded-xl overflow-hidden border border-purple-500/30 shadow-lg">
           {image && (
             <img 
               src={image} 
@@ -44,7 +45,7 @@ const MetadataStep = () => {
         
         <form onSubmit={handleSubmitMetadata} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-purple-300 mb-1">
               Asset Name
             </label>
             <input
@@ -53,13 +54,13 @@ const MetadataStep = () => {
               value={metadata.name}
               onChange={handleMetadataChange}
               required
-              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-              placeholder="Vintage Watch Collection"
+              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white transition-all"
+              placeholder="Unique Digital Collectible"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-purple-300 mb-1">
               Description
             </label>
             <textarea
@@ -68,20 +69,20 @@ const MetadataStep = () => {
               onChange={handleMetadataChange}
               required
               rows={4}
-              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-              placeholder="Limited edition vintage watch from 1970s in excellent condition"
+              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white transition-all"
+              placeholder="Describe your asset in detail - what makes it special?"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-purple-300 mb-1">
               Category
             </label>
             <select
               name="category"
               value={metadata.category}
               onChange={handleMetadataChange}
-              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white transition-all"
             >
               <option value="collectible">Collectible</option>
               <option value="artwork">Artwork</option>
@@ -92,7 +93,7 @@ const MetadataStep = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-purple-300 mb-1">
               Physical Location (optional)
             </label>
             <input
@@ -100,9 +101,16 @@ const MetadataStep = () => {
               name="physicalLocation"
               value={metadata.physicalLocation}
               onChange={handleMetadataChange}
-              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+              className="w-full px-4 py-3 bg-black/40 border border-purple-500/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white transition-all"
               placeholder="Private collection, New York"
             />
+          </div>
+          
+          <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-500/20 mt-2">
+            <p className="text-sm text-blue-300 flex items-start">
+              <FaInfoCircle className="mr-2 mt-0.5 flex-shrink-0" />
+              <span>Adding detailed information increases your asset's value and authenticity.</span>
+            </p>
           </div>
           
           <div className="pt-4 flex gap-4">
@@ -110,22 +118,22 @@ const MetadataStep = () => {
               type="button"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium"
+              className="px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center gap-2"
               onClick={() => {
-                setCurrentStep('capture');
+                setCurrentStep('upload');
                 setImage(null);
               }}
             >
-              Back
+              <FaArrowLeft /> Back
             </motion.button>
             
             <motion.button
               type="submit"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex-1"
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex-1 flex items-center justify-center gap-2 shadow-lg"
             >
-              Continue
+              Continue <FaArrowRight />
             </motion.button>
           </div>
         </form>

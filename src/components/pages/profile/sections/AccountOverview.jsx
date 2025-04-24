@@ -3,19 +3,26 @@ import { motion as m } from 'framer-motion';
 import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, FaImage, FaShoppingCart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
+import useUserNFTs from '../../../../hooks/useUserNFTs';
 
 const AccountOverview = ({ account, balance, network, nfts = [] }) => {
   const [copied, setCopied] = useState(false);
   const { state } = useStaking();
   const { userDeposits = [] } = state;
   
+  // Usar el hook directamente para obtener los NFTs reales del usuario
+  const { nfts: userNfts, loading: nftsLoading } = useUserNFTs(account);
+  
   // Create a censored version of the wallet address
   const censoredAddress = account ? 
     `${account.substring(0, 6)}...${account.substring(account.length - 6)}` : 
     'Not Connected';
   
-  // Filter to only include actual NFTs, not placeholder images
-  const actualNfts = nfts.filter(nft => nft?.tokenId && !nft.isPlaceholder);
+  // Filter out NFTs with errors
+  const actualNfts = userNfts?.filter(nft => !nft.error) || [];
+  
+  // Get the count of real NFTs
+  const nftCount = actualNfts.length;
   
   const copyAddressToClipboard = () => {
     navigator.clipboard.writeText(account);
@@ -69,7 +76,7 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
           </div>
         </div>
         
-        {/* Account Stats - Now with real data */}
+        {/* Account Stats - Now with real-time NFT data */}
         <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
           <h3 className="text-lg font-medium text-white mb-4">Account Stats</h3>
           
@@ -86,7 +93,13 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
             
             <div className="flex justify-between items-center">
               <span className="text-gray-300">NUVOS NFTs</span>
-              <span className="text-white">{actualNfts.length || 0}</span>
+              <span className="text-white">
+                {nftsLoading ? (
+                  <span className="text-xs text-gray-400">Cargando...</span>
+                ) : (
+                  <span className="text-purple-400 font-medium">{nftCount}</span>
+                )}
+              </span>
             </div>
           </div>
         </div>
@@ -128,35 +141,62 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
           )}
         </div>
         
-        {/* NFT Summary */}
+        {/* NFT Summary - Enhanced with loading state and accurate count */}
         <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
           <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
             <FaImage className="text-purple-400" />
             NFT Collection
           </h3>
           
-          {actualNfts.length > 0 ? (
+          {nftsLoading ? (
+            <p className="text-sm text-gray-300">Cargando tus NFTs...</p>
+          ) : actualNfts.length > 0 ? (
             <div className="space-y-2">
               <p className="text-sm text-gray-300">
-                You own <span className="text-purple-400 font-medium">{actualNfts.length}</span> NUVOS NFTs.
+                Tienes <span className="text-purple-400 font-medium">{nftCount}</span> NFTs en tu wallet
               </p>
+              <div className="flex flex-wrap gap-2 mt-3 mb-2">
+                {actualNfts.slice(0, 3).map((nft, idx) => (
+                  <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
+                    {nft.image ? (
+                      <img 
+                        src={nft.image} 
+                        alt={nft.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "/LogoNuvos.webp";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <FaImage className="text-purple-400 opacity-50" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {nftCount > 3 && (
+                  <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center">
+                    <span className="text-xs text-purple-300">+{nftCount - 3}</span>
+                  </div>
+                )}
+              </div>
               <Link 
                 to="/nfts"
                 className="inline-block text-sm text-purple-400 hover:text-purple-300 underline mt-2"
               >
-                View your NFT collection
+                Ver tu colección de NFTs
               </Link>
             </div>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-300">
-                Your NUVOS NFT collection is empty.
+                Tu colección de NFTs NUVOS está vacía.
               </p>
               <Link 
                 to="/nfts"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm mt-2"
               >
-                <FaShoppingCart /> Buy NFTs
+                <FaShoppingCart /> Comprar NFTs
               </Link>
             </div>
           )}
