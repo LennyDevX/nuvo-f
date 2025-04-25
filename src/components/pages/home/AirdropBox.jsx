@@ -2,7 +2,7 @@ import React from 'react';
 import { m, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { FaGift } from 'react-icons/fa';
 
-const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick, rewards, expandedReward, setExpandedReward }) => {
+const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick, rewards, expandedReward, setExpandedReward, isMobile }) => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
@@ -10,7 +10,7 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
       initial={prefersReducedMotion ? {} : { opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.6 }}
-      className="relative py-4 sm:py-0"
+      className="relative py-2 sm:py-4"
     >
       <div className="relative max-w-[300px] sm:max-w-md mx-auto">
         {/* Background Effects */}
@@ -27,9 +27,9 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
           />
         </div>
 
-        {/* Gift Box Container */}
+        {/* Gift Box Container - Responsive sizes with smaller desktop */}
         <m.div
-          className="relative w-48 h-48 sm:w-60 sm:h-60 mx-auto cursor-pointer"
+          className={`relative ${isMobile ? 'w-28 h-28' : 'w-40 h-40 sm:w-48 sm:h-48'} mx-auto cursor-pointer`}
           variants={boxAnimationVariants}
           animate={boxState}
           onClick={boxState === 'closed' ? handleBoxClick : undefined}
@@ -37,15 +37,15 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
         >
           <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-2xl shadow-lg relative overflow-hidden">
             {/* Box decorative elements */}
-            <div className="absolute top-0 left-1/2 w-6 sm:w-8 h-full bg-white/10 -translate-x-1/2 transform rotate-45 opacity-70" />
-            <div className="absolute top-1/2 left-0 w-full h-6 sm:h-8 bg-white/10 -translate-y-1/2 opacity-70" />
+            <div className="absolute top-0 left-1/2 w-4 sm:w-8 h-full bg-white/10 -translate-x-1/2 transform rotate-45 opacity-70" />
+            <div className="absolute top-1/2 left-0 w-full h-4 sm:h-8 bg-white/10 -translate-y-1/2 opacity-70" />
 
             <div className="absolute inset-0 flex items-center justify-center">
               <m.div
                 animate={boxState === 'closed' ? { scale: [1, 1.05, 1] } : { scale: 1 }}
                 transition={boxState === 'closed' ? { duration: 2.5, repeat: Infinity, ease: "easeInOut" } : {}}
               >
-                <FaGift className="text-white text-5xl sm:text-6xl filter drop-shadow-md" />
+                <FaGift className={`text-white ${isMobile ? 'text-3xl' : 'text-5xl sm:text-6xl'} filter drop-shadow-md`} />
               </m.div>
             </div>
 
@@ -67,7 +67,7 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", damping: 15, stiffness: 150, delay: 0.1 }}
-              className="absolute inset-0 flex flex-col items-center justify-center gap-2 sm:gap-3"
+              className="absolute inset-0 flex flex-col items-center justify-center gap-1 sm:gap-3"
             >
               {rewards.map((reward, index) => (
                 <m.div
@@ -79,15 +79,18 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
                   <m.div
                     className={`bg-black/50 backdrop-blur-md rounded-lg sm:rounded-xl border border-purple-500/40
                               transition-all duration-300 overflow-hidden shadow-md
-                              ${expandedReward === index ? 'w-[260px] sm:w-[280px]' : 'w-[220px] sm:w-[240px] hover:bg-black/70 cursor-pointer'}`}
+                              ${expandedReward === index 
+                                ? (isMobile ? 'w-[170px] xs:w-[200px]' : 'w-[260px] sm:w-[280px]') 
+                                : (isMobile ? 'w-[150px] xs:w-[180px]' : 'w-[220px] sm:w-[240px]')} 
+                              ${expandedReward !== index ? 'hover:bg-black/70 cursor-pointer' : ''}`}
                     layout
                     whileHover={expandedReward !== index ? { scale: 1.03, y: -2 } : {}}
                     onClick={() => setExpandedReward(index)}
                   >
                     {/* Reward Header */}
-                    <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5">
-                      <span className={`text-lg sm:text-xl ${reward.color}`}>{reward.icon}</span>
-                      <span className="text-xs sm:text-sm text-white font-medium flex-1 truncate">{reward.text}</span>
+                    <div className="flex items-center gap-1 sm:gap-3 px-2 xs:px-3 sm:px-4 py-1.5 sm:py-2.5">
+                      <span className={`text-base sm:text-xl ${reward.color}`}>{reward.icon}</span>
+                      <span className="text-[10px] xs:text-xs sm:text-sm text-white font-medium flex-1 truncate">{reward.text}</span>
                       {expandedReward === index && (
                         <m.button
                           className="ml-auto text-gray-400 hover:text-white flex-shrink-0"
@@ -99,7 +102,7 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
                             setExpandedReward(null);
                           }}
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-4 w-4">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-3 w-3 sm:h-4 sm:w-4">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </m.button>
@@ -114,13 +117,13 @@ const AirdropBox = ({ boxState, boxAnimationVariants, showReward, handleBoxClick
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.3 }}
-                          className="px-3 sm:px-4 pb-2 sm:pb-3"
+                          className="px-2 xs:px-3 sm:px-4 pb-1.5 sm:pb-3"
                         >
-                          <div className="h-px w-full bg-purple-500/20 mb-2 sm:mb-3" />
-                          <p className="text-gray-300 text-xs sm:text-sm mb-2">
-                            {reward.description}
+                          <div className="h-px w-full bg-purple-500/20 mb-1 sm:mb-3" />
+                          <p className="text-gray-300 text-[8px] xs:text-[10px] sm:text-xs mb-1 sm:mb-2">
+                            {isMobile ? reward.description.split('.')[0] + '.' : reward.description}
                           </p>
-                          <p className={`${reward.color} text-xs sm:text-sm font-medium`}>
+                          <p className={`${reward.color} text-[9px] xs:text-[11px] sm:text-xs font-medium`}>
                             {reward.highlight}
                           </p>
                         </m.div>

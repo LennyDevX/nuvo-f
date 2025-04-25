@@ -71,84 +71,88 @@ const NFTCard = ({ nft }) => {
     : '0';
 
   return (
-    <motion.div
-      whileHover={{ y: -3, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
-      className="bg-black/40 backdrop-blur-sm rounded-xl overflow-hidden border border-purple-500/20 hover:border-purple-500/40 transition-all h-full flex flex-col"
-    >
-      {/* Image */}
-      <div className="aspect-square bg-black/50 relative overflow-hidden">
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
-            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        )}
-        
-        {image ? (
-          <img 
-            src={image} 
-            alt={name} 
-            className="w-full h-full object-contain"
-            onLoad={() => setImageLoading(false)}
-            onError={(e) => {
-              setImageLoading(false);
-              e.target.onerror = null;
-              e.target.src = '/NFT-X1.webp'; // Fallback image
-            }}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <p className="text-gray-400 text-xs">No image</p>
-          </div>
-        )}
-      </div>
-      
-      {/* Information */}
-      <div className="p-2 sm:p-3 flex-grow">
-        {/* Badges moved from image to here */}
-        <div className="flex justify-between items-center mb-2">
-          <div className="bg-purple-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] sm:text-xs text-purple-200 font-medium">
-            {category || 'Collectible'}
-          </div>
+    <Link to={`/nft/${tokenId}`} className="block h-full cursor-pointer">
+      <motion.div
+        whileHover={{ y: -3, boxShadow: "0 8px 16px rgba(0,0,0,0.2)" }}
+        className="bg-black/40 backdrop-blur-sm rounded-xl overflow-hidden border border-purple-500/20 hover:border-purple-500/40 transition-all h-full flex flex-col"
+      >
+        {/* Image */}
+        <div className="aspect-square bg-black/50 relative overflow-hidden">
+          {imageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
+              <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
           
-          <div className={`backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${isForSale ? 'bg-green-900/70 text-green-200' : 'bg-gray-900/70 text-gray-200'}`}>
-            {isForSale ? 'For sale' : 'Not listed'}
-          </div>
-        </div>
-        
-        <h3 className="text-sm font-bold text-white line-clamp-1">{name}</h3>
-        <p className="text-gray-400 text-xs mt-1 line-clamp-2">{description || 'No description'}</p>
-        
-        <div className="flex justify-between items-center mt-2">
-          <div className="flex items-center">
-            <FaHeart className="text-red-400 mr-1 text-xs" />
-            <span className="text-gray-300 text-xs">{likes || '0'}</span>
-          </div>
-          
-          {isForSale && price && (
-            <div className="flex items-center text-green-300 text-xs">
-              <FaEthereum className="mr-1" />
-              <span>{formattedPrice} POL</span>
+          {image ? (
+            <img 
+              src={image} 
+              alt={name} 
+              className="w-full h-full object-contain"
+              onLoad={() => setImageLoading(false)}
+              onError={(e) => {
+                setImageLoading(false);
+                e.target.onerror = null;
+                e.target.src = '/NFT-X1.webp'; // Fallback image
+              }}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <p className="text-gray-400 text-xs">No image</p>
             </div>
           )}
         </div>
-      </div>
-      
-      {/* Footer */}
-      <div className="p-2 border-t border-purple-500/10 bg-purple-900/10 flex justify-between items-center">
-        <div className="text-xs text-purple-300">#{tokenId}</div>
-        <div className="flex space-x-1">
-          <Link to={`/nft/${tokenId}`} className="p-1 bg-purple-500/20 rounded-lg text-purple-300 hover:bg-purple-500/30 transition-colors">
-            <FaExternalLinkAlt size={12} />
-          </Link>
+        
+        {/* Information */}
+        <div className="p-2 sm:p-3 flex-grow">
+          {/* Badges moved from image to here */}
+          <div className="flex justify-between items-center mb-2">
+            <div className="bg-purple-900/70 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] sm:text-xs text-purple-200 font-medium">
+              {category || 'Collectible'}
+            </div>
+            
+            <div className={`backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${isForSale ? 'bg-green-900/70 text-green-200' : 'bg-gray-900/70 text-gray-200'}`}>
+              {isForSale ? 'For sale' : 'Not listed'}
+            </div>
+          </div>
           
-          {!isForSale && (
-            <button className="p-1 bg-green-500/20 rounded-lg text-green-300 hover:bg-green-500/30 transition-colors">
-              <FaTags size={12} />
-            </button>
-          )}
+          <h3 className="text-sm font-bold text-white line-clamp-1">{name}</h3>
+          <p className="text-gray-400 text-xs mt-1 line-clamp-2">{description || 'No description'}</p>
+          
+          <div className="flex justify-between items-center mt-2">
+            <div className="flex items-center">
+              <FaHeart className="text-red-400 mr-1 text-xs" />
+              <span className="text-gray-300 text-xs">{likes || '0'}</span>
+            </div>
+            
+            {isForSale && price && (
+              <div className="flex items-center text-green-300 text-xs">
+                <FaEthereum className="mr-1" />
+                <span>{formattedPrice} POL</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </motion.div>
+        
+        {/* Footer */}
+        <div className="p-2 border-t border-purple-500/10 bg-purple-900/10 flex justify-between items-center">
+          <div className="text-xs text-purple-300">#{tokenId}</div>
+          <div className="flex space-x-1">
+            {!isForSale && (
+              <button 
+                className="p-1 bg-green-500/20 rounded-lg text-green-300 hover:bg-green-500/30 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent navigation when clicking the button
+                  // Your sell NFT logic here
+                }}
+              >
+                <FaTags size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
   );
 };
 

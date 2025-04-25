@@ -74,43 +74,53 @@ const TokenomicsSystem = () => {
   }, [useSimpleAnimation]);
 
   return (
-    <section className="py-16 px-4 sm:px-6 lg:px-8">
+    <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+        {/* Title for mobile that appears above the grid */}
+        <div className="block md:hidden mb-6 text-center">
+          <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
+            <span className="block">Revolutionary</span>
+            <span className="gradient-text text-transparent bg-clip-text bg-nuvo-gradient-text">Tokenomics</span>
+          </h2>
+        </div>
+      
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:gap-12 items-center">
+          {/* Left Content - Optimized for mobile */}
           <motion.div
             initial={tokenAnimationProps.initial}
             animate={tokenAnimationProps.animate}
             transition={tokenAnimationProps.transition}
+            className="col-span-1"
           >
-            <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
-              <span className="block mb-2">Revolutionary</span>
-              <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Tokenomics Ecosystem</span>
-              <span className="block">Built For The Future</span>
-            </h2>
+            {/* Title only visible on larger screens */}
+            <div className="hidden md:block">
+              <h2 className="text-2xl xs:text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-6">
+                <span className="block mb-2">Revolutionary</span>
+                <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Tokenomics Ecosystem</span>
+                <span className="block">Built For The Future</span>
+              </h2>
+            </div>
             
-            <p className="text-sm sm:text-lg text-gray-300 max-w-xl mt-6">
-              Our innovative token distribution creates long-term value with a focus on community governance and sustainable growth. 
-              Experience the perfect balance of staking rewards, liquidity incentives, and ecosystem development. ✨💰
+            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-300 max-w-xl mt-2 md:mt-6">
+              Our innovative token distribution creates long-term value with community governance and sustainable growth. 💰
             </p>
-            
             
             <button
               onClick={handleExploreTokenomics}
-              className="px-6 py-4 mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
+              className="px-3 py-2 md:px-6 md:py-4 text-xs md:text-base mt-4 md:mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
             >
-              Explore Full Tokenomics
+              Explore Tokenomics
             </button>
           </motion.div>
 
-          {/* Right Content - Updated with subtle, mobile-friendly animation */}
+          {/* Right Content - Image optimized for mobile and desktop */}
           <motion.div
             initial={tokenAnimationProps.initial}
             animate={tokenAnimationProps.animate}
             transition={tokenAnimationProps.transition}
-            className="flex justify-center items-center relative"
+            className="flex justify-center items-center relative col-span-1"
           >
-            <div className="relative w-[300px] h-[300px] sm:w-[400px] sm:h-[400px]">
+            <div className="relative w-[120px] h-[120px] xs:w-[150px] xs:h-[150px] sm:w-[200px] sm:h-[200px] md:w-[250px] md:h-[250px] lg:w-[280px] lg:h-[280px]">
               {!useSimpleAnimation && (
                 <motion.div 
                   className="absolute inset-0 bg-purple-500/20 rounded-full blur-3xl"
@@ -149,7 +159,8 @@ const TokenomicsSystem = () => {
                 />
               </motion.div>
               
-              {!useSimpleAnimation && (
+              {/* Only show particles on larger screens */}
+              {!useSimpleAnimation && window.innerWidth > 768 && (
                 <>
                   <motion.div 
                     className="absolute w-4 h-4 rounded-full bg-purple-500/40 blur-sm"

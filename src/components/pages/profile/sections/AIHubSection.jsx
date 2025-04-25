@@ -134,24 +134,6 @@ const AIHubSection = ({ account }) => {
         <h2 className="text-2xl font-bold text-white">AI Staking Analyzer</h2>
       </div>
 
-      <div className="p-6 md:p-8 bg-gradient-to-br from-purple-900/30 to-black/60 backdrop-blur-sm rounded-xl border border-purple-500/30 mb-8 text-center">
-        <p className="text-purple-300 max-w-lg mx-auto mb-6">
-          Get personalized insights and recommendations to optimize your staking strategy based on your activity.
-        </p>
-        <button
-          onClick={runPortfolioAnalysis}
-          disabled={analysisLoading}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all transform hover:-translate-y-0.5 disabled:opacity-70 disabled:transform-none disabled:cursor-wait"
-        >
-          {analysisLoading ? (
-            <span className="flex items-center justify-center gap-2">
-              <FaSpinner className="animate-spin" />
-              Analyzing...
-            </span>
-          ) : 'Analyze My Staking'}
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Analysis Results */}
         <div className="bg-black/30 p-5 rounded-xl border border-purple-500/30">
@@ -239,6 +221,45 @@ const AIHubSection = ({ account }) => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Enhanced Analysis Button Section */}
+      <div className="my-8 px-4 py-6 md:py-8 rounded-xl bg-gradient-to-b from-purple-900/10 to-black/10 border border-purple-500/10 text-center relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
+        <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-purple-500/10 blur-xl"></div>
+        <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-purple-500/10 blur-xl"></div>
+        
+        <p className="text-gray-300 mb-5 max-w-lg mx-auto">
+          Our AI will analyze your staking portfolio and provide personalized insights to optimize your returns
+        </p>
+        
+        <m.button
+          onClick={runPortfolioAnalysis}
+          disabled={analysisLoading}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="px-8 py-4 md:min-w-[240px] bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium transition-all shadow-lg shadow-purple-900/20 hover:shadow-purple-600/30 disabled:opacity-70 disabled:cursor-wait"
+        >
+          {analysisLoading ? (
+            <span className="flex items-center justify-center gap-3">
+              <FaSpinner className="animate-spin text-lg" />
+              <span>Processing...</span>
+            </span>
+          ) : (
+            <span className="flex items-center justify-center gap-2">
+              <FaBrain className="text-lg" />
+              <span>Analyze My Portfolio</span>
+            </span>
+          )}
+        </m.button>
+        
+        <p className="text-xs text-purple-400/70 mt-4">
+          {analysisLoading ? 
+            "Running advanced analysis algorithms..." : 
+            "Advanced neural networks will process your staking history"
+          }
+        </p>
       </div>
 
       {/* Premium Features section */}

@@ -8,9 +8,8 @@ import {
   FaChartPie, 
   FaExchangeAlt, 
   FaExternalLinkAlt,
-  FaGamepad,
-  FaRobot,
   FaImage,
+  FaRobot,
   FaCamera
 } from 'react-icons/fa';
 
@@ -98,11 +97,10 @@ const Navbar = () => {
 
   // Memoize navigation items to prevent recreation on every render
   const navigationItems = useMemo(() => [
-    { path: '/my-nfts', label: 'APP', icon: FaGamepad },
+    { path: '/my-nfts', label: 'Mint NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
-    { path: '/nfts', label: 'NFTs', icon: FaImage },
     { path: '/ai', label: 'AI Hub', icon: FaRobot },
   ], []);
 

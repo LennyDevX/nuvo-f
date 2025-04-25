@@ -14,6 +14,7 @@ const AirdropInfo = lazyWithPreload(() => import('./WhitelistToken'));
 const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
+const TokenizationSection = lazyWithPreload(() => import('./TokenizationSection'));
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,8 +84,10 @@ const Home = () => {
                   {/* More aggressive lazy loading on mobile */}
                   {shouldLoadIntersectionObserverComponents && (
                     <>
+                      
                       <RewardDeveloper />
                       <AirdropInfo />
+                      <TokenizationSection />
                       <Features />
                     </>
                   )}

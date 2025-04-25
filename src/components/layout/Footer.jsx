@@ -42,6 +42,26 @@ const Footer = () => {
                   Airdrops
                 </NavLink>
               </li>
+              <li>
+                <NavLink 
+                  to="/about"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  About
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  to="/nfts"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  NFTs
+                </NavLink>
+              </li>
             </ul>
           </div>
 
@@ -87,16 +107,7 @@ const Footer = () => {
                   Tokenize Tool
                 </NavLink>
               </li>
-              <li>
-                <NavLink 
-                  to="/about"
-                  prefetchStrategy="intent" 
-                  className="text-gray-400 hover:text-purple-400 transition-colors"
-                  onClick={() => window.scrollTo(0, 0)}
-                >
-                  About
-                </NavLink>
-              </li>
+              
             </ul>
           </div>
 

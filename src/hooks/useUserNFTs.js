@@ -175,7 +175,7 @@ export default function useUserNFTs(address) {
               price: tokenData[3] ? tokenData[3] : ethers.parseEther("0"),
               isForSale: tokenData[4],
               likes: likes.toString(),
-              category: tokenData[6] || "general"
+              category: tokenData[6] || "collectibles"
             };
           } catch (err) {
             console.error(`Error processing token ${tokenId}:`, err);

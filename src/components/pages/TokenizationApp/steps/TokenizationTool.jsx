@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import SpaceBackground from '../../effects/SpaceBackground';
-import { TokenizationProvider } from '../../../context/TokenizationContext';
-import UploadImageStep from './steps/UploadImageStep';
-import MetadataStep from './steps/MetadataStep';
-import PreviewStep from './steps/PreviewStep';
-import SuccessStep from './steps/SuccessStep';
-import { useTokenization } from '../../../context/TokenizationContext';
+import SpaceBackground from '../../../effects/SpaceBackground';
+import { TokenizationProvider } from '../../../../context/TokenizationContext';
+import UploadImageStep from './UploadImageStep';
+import MetadataStep from './MetadataStep';
+import PreviewStep from './PreviewStep';
+import SuccessStep from './SuccessStep';
+import { useTokenization } from '../../../../context/TokenizationContext';
 
 // Step renderer component
 const StepRenderer = () => {

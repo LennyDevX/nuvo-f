@@ -6,7 +6,7 @@ import {
   FaEthereum, 
   FaChartLine, 
   FaGem,
-  FaHistory
+  FaLayerGroup // Nuevo ícono para categorías
 } from 'react-icons/fa';
 
 // Use memo to prevent unnecessary re-renders
@@ -15,7 +15,7 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
     totalNFTs, 
     listedNFTs, 
     totalValue, 
-    recentActivity = 0,
+    uniqueCategories = 1, // Nuevo campo
     topNFTValue = '0.00'
   } = stats;
 
@@ -93,6 +93,7 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
       {/* Secondary Stats - Expandable section for desktop */}
       {!isMobile && (
         <div className="grid grid-cols-2 gap-3 col-span-3">
+          {/* Unique Categories Card */}
           <motion.div 
             whileHover="hover"
             whileTap="tap"
@@ -101,16 +102,18 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-sm">Recent Activity</p>
-                <h3 className="text-2xl font-bold text-indigo-400">{recentActivity}</h3>
-                <p className="text-xs text-indigo-300 mt-1">Actions in last 7 days</p>
+                <p className="text-gray-400 text-sm">Unique Categories</p>
+                <h3 className="text-2xl font-bold text-yellow-400">{uniqueCategories}</h3>
+                <p className="text-xs text-yellow-300 mt-1">
+                  {uniqueCategories === 1 ? 'Single category' : `${uniqueCategories} categories`}
+                </p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <FaHistory size={18} />
+              <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                <FaLayerGroup size={18} />
               </div>
             </div>
           </motion.div>
-          
+          {/* Listed NFTs Card (sin cambios) */}
           <motion.div 
             whileHover="hover"
             whileTap="tap"
