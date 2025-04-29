@@ -5,6 +5,7 @@ import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfil
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // Add a relative base path for production builds
   resolve: {
     alias: {
       '@': '/src',
@@ -51,6 +52,13 @@ export default defineConfig({
           'chart-vendor': ['react-chartjs-2', 'chart.js'],
           'framer': ['framer-motion'],
           'ethers': ['ethers']
+        },
+        assetFileNames: (assetInfo) => {
+          // Prevent HTML files from being processed as standard assets
+          if (assetInfo.name.endsWith('.html')) {
+            return 'assets/[name]-[hash][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
         }
       }
     },
@@ -59,10 +67,13 @@ export default defineConfig({
       include: [/node_modules/],
     },
   },
-  assetsInclude: ['**/*.html'],
   experimental: {
-    renderBuiltUrl(filename) {
-      return filename;
+    renderBuiltUrl(filename, { hostType }) {
+      // Handle URLs differently based on host type
+      if (hostType === 'js') {
+        return { relative: true };
+      }
+      return { relative: true };
     }
   }
 });
