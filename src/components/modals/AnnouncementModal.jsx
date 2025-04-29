@@ -36,7 +36,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
               {/* Made title section more compact */}
               <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-4">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                  Nuvos Update Beta v3.0
+                  Nuvos Update Beta v3.1
                 </h2>
                 <span className="text-xs px-2 py-0.5 sm:py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex-shrink-0">
                   Major Release
@@ -59,19 +59,19 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">⚡</span>
-                        <span><span className="font-bold">Performance Enhancements:</span> Improved platform speed and responsiveness</span>
+                        <span><span className="font-bold">Performance Enhancements:</span> Improved platform speed and responsiveness across all sections.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">✨</span>
-                        <span><span className="font-bold">Optimized Animations:</span> Smoother transitions and faster loading</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔍</span>
+                        <span><span className="font-bold">New Sections:</span> Added Profile Dashboard and NFT Gallery with comprehensive functionalities.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🎨</span>
-                        <span><span className="font-bold">UI/UX Overhaul:</span> Enhanced accessibility and styling</span>
+                        <span><span className="font-bold">UI/UX Overhaul:</span> Enhanced mobile design, smoother animations, and refined styling throughout.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🧩</span>
-                        <span><span className="font-bold">New Components:</span> Interactive elements with refined effects</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛠️</span>
+                        <span><span className="font-bold">System Stability:</span> Resolved critical issues in Staking module and improved platform reliability.</span>
                       </li>
                     </ul>
                   </div>
@@ -80,8 +80,15 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                 {/* Right column */}
                 <div className="space-y-2 sm:space-y-4 text-gray-100">
                   <h3 className="text-xs sm:text-sm font-medium text-purple-400 mb-1 sm:mb-2 flex items-center">
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 11.955 0 0112 2.944a11.955 11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    {/* Replace the problematic SVG with a simpler version */}
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path 
+                        d="M9 12l2 2 4-4M9 12h6m-3-3v6" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round"
+                      />
                     </svg>
                     Additional Features
                   </h3>
@@ -90,20 +97,20 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                   <div className="bg-purple-500/10 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-500/20">
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔒</span>
-                        <span><span className="font-bold">Security Fortification:</span> Enhanced protection for user data</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📱</span>
+                        <span><span className="font-bold">Mobile Optimization:</span> Complete redesign of responsive layouts for superior mobile experience.</span>
+                      </li>
+                      <li className="flex items-start gap-1">
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔷</span>
+                        <span><span className="font-bold">Smart Contract Integration:</span> New NFT minting functionality with enhanced security protocols.</span>
+                      </li>
+                      <li className="flex items-start gap-1">
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🧭</span>
+                        <span><span className="font-bold">Navigation Enhancement:</span> Streamlined navbar with intuitive categorization and visual indicators.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📊</span>
-                        <span><span className="font-bold">Tokenomics Update:</span> Redesigned chart with new distribution</span>
-                      </li>
-                      <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📈</span>
-                        <span><span className="font-bold">Resource Efficiency:</span> Optimized asset loading strategies</span>
-                      </li>
-                      <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📱</span>
-                        <span><span className="font-bold">Mobile Optimization:</span> Improved mobile experience</span>
+                        <span><span className="font-bold">Project Information:</span> Expanded documentation and educational content about platform features.</span>
                       </li>
                     </ul>
                   </div>
@@ -113,7 +120,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
               {/* Reduced top margin and changed spacing for mobile */}
               <div className="mt-4 sm:mt-6 flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
                 <p className="text-xs text-gray-400 italic md:max-w-[60%]">
-                  This major update brings significant improvements to performance, security, and user experience.
+                  This major update significantly enhances platform performance, security, and user experience across all devices.
                 </p>
                 
                 <m.button

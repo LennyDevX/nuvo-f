@@ -2,7 +2,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
-import { cspConfig } from './src/security/contentSecurityPolicy';
 
 export default defineConfig({
   plugins: [react()],
@@ -27,23 +26,12 @@ export default defineConfig({
     include: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'recharts'],
   },
   server: {
-    port: 5173,
-    strictPort: true,
-    headers: {
-      'Content-Security-Policy': Object.entries(cspConfig.directives)
-        .map(([key, values]) => `${key} ${values.join(' ')}`)
-        .join('; '),
-    },
+    port: 3000,
+    strictPort: false,
+    host: true,
     open: true,
     cors: true,
-    hmr: {
-      // Use manual to ensure WebSocket works properly
-      protocol: 'ws',
-      host: 'localhost',
-      port: 5173
-    },
     watch: {
-      // Required for some Windows setups
       usePolling: true
     }  
   },
@@ -70,5 +58,11 @@ export default defineConfig({
     commonjsOptions: {
       include: [/node_modules/],
     },
+  },
+  assetsInclude: ['**/*.html'],
+  experimental: {
+    renderBuiltUrl(filename) {
+      return filename;
+    }
   }
 });

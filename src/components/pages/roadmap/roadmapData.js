@@ -98,10 +98,12 @@ export const roadmapData = {
         progress: 25,
         phase: "Innovation Phase",
         items: [
+          { text: "Launch the Nuvos-Dashboard", status: "in-progress", date: "Apr 2026" },
           { text: "Develop NFT system for digital products", status: "in-progress", date: "Apr 2025" },
           { text: "Implement enhanced UI/UX designs for mobile", status: "pending", date: "May 2025" },
           { text: "Integrate components with NFTs utility", status: "pending", date: "Jun 2025" },
-          { text: "Implement AI-Hub for advanced features", status: "pending", date: "Jun 2025" }
+          { text: "Implement AI-Hub for advanced features", status: "pending", date: "Jun 2025" },
+          
         ]
       }
     ],

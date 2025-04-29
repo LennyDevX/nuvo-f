@@ -41,7 +41,11 @@ const P2E = createLazyComponent(() => import('../components/pages/P2E/Game'));
 const NotFound = createLazyComponent(() => import('../components/pages/NotFound'));
 const AIHub = createLazyComponent(() => import('../components/pages/AIHub/AIHub.jsx'));
 const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTHome.jsx'));
-const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/TokenizationTool.jsx'));
+const NFTDashboard = createLazyComponent(() => import('../components/pages/TokenizationApp/dashboard/NFTDashboard.jsx'));
+const NFTDetail = createLazyComponent(() => import('../components/pages/TokenizationApp/components/NFTDetail.jsx'));
+const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/steps/TokenizationTool.jsx'));
+const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
+
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -110,8 +114,23 @@ export const routes = [
     loader: async () => null
   },
   {
+    path: "/my-nfts",
+    element: withSuspense(<MainLayout><NFTDashboard /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/nft/:tokenId",
+    element: withSuspense(<MainLayout><NFTDetail /></MainLayout>),
+    loader: async () => null
+  },
+  {
     path: "/tokenize",
     element: withSuspense(<MainLayout><TokenizationTool /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/profile",
+    element: withSuspense(<MainLayout><ProfilePage /></MainLayout>),
     loader: async () => null
   }
 ];

@@ -42,6 +42,26 @@ const Footer = () => {
                   Airdrops
                 </NavLink>
               </li>
+              <li>
+                <NavLink 
+                  to="/about"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  About
+                </NavLink>
+              </li>
+              <li>
+                <NavLink 
+                  to="/nfts"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  NFTs
+                </NavLink>
+              </li>
             </ul>
           </div>
 
@@ -89,14 +109,15 @@ const Footer = () => {
               </li>
               <li>
                 <NavLink 
-                  to="/about"
+                  to="/ai"
                   prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"
                   onClick={() => window.scrollTo(0, 0)}
                 >
-                  About
+                  AI-Hub
                 </NavLink>
               </li>
+              
             </ul>
           </div>
 
@@ -141,7 +162,7 @@ const Footer = () => {
             © {new Date().getFullYear()} Nuvos Cloud. All rights reserved.
           </p>
           <p className="text-gray-500 text-xs mt-2">
-            BETA v3.0 - USE AT YOUR OWN RISK
+            BETA v3.1 - USE AT YOUR OWN RISK
           </p>
         </div>
       </div>

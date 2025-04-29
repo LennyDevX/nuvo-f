@@ -11,21 +11,24 @@ import { FaCoins, FaExternalLinkAlt } from 'react-icons/fa';
 import { calculateROIProgress } from '../../../utils/RoiCalculations';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
+import { globalRateLimiter } from "../../../utils/RateLimiter";
+import { globalCache } from "../../../utils/CacheManager";
 
-const UPDATE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+// Constantes optimizadas con nombres más descriptivos
+const FULL_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos para refresh completo
+const REWARDS_UPDATE_INTERVAL = 30000; // 30 segundos para recompensas (más frecuente)
 const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS;
-const REWARDS_UPDATE_INTERVAL = 30000; // 30 seconds
+const DASHBOARD_CACHE_KEY = 'dashboard_data';
+const DASHBOARD_CACHE_TTL = 2 * 60 * 1000; // 2 minutos
 
 const DashboardStaking = () => {
   const { account, network, balance } = useContext(WalletContext);
   const [isConnected, setIsConnected] = useState(false);
   const [roiProgress, setRoiProgress] = useState(0);
 
-  // Add reference for last rewards fetch
   const lastRewardsFetch = useRef(0);
   const intervalRef = useRef(null);
-  
-  // Custom hooks
+
   const {
     depositAmount,
     availableRewards,
@@ -41,7 +44,6 @@ const DashboardStaking = () => {
 
   const { balance: treasuryBalance } = useTreasuryBalance(TREASURY_ADDRESS);
 
-  // Ensure values are not undefined before passing - memoized
   const safeData = useMemo(() => ({
     depositAmount: depositAmount || '0',
     availableRewards: availableRewards || '0',
@@ -51,45 +53,66 @@ const DashboardStaking = () => {
     treasuryBalance: treasuryBalance || '0'
   }), [depositAmount, availableRewards, totalWithdrawn, firstDepositTime, totalPoolBalance, treasuryBalance]);
 
-  // Memoized connection check
   useEffect(() => {
     setIsConnected(Boolean(account && network && balance !== null));
   }, [account, network, balance]);
 
-  // Optimized data fetching with cleanup
+  const handleDataFetch = useCallback(async (force = false) => {
+    if (!isConnected) return;
+
+    const rateLimiterKey = `dashboard_refresh_${account}`;
+    if (!force && !globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      console.log("Rate limited dashboard refresh, using cached data if available");
+
+      const cachedData = await globalCache.get(
+        `${DASHBOARD_CACHE_KEY}_${account}`,
+        null
+      );
+
+      if (cachedData) {
+        console.log("Using cached dashboard data");
+        return;
+      }
+    }
+
+    const now = Date.now();
+    let shouldUpdateRewards = now - lastRewardsFetch.current >= REWARDS_UPDATE_INTERVAL;
+
+    try {
+      await fetchContractData(true);
+
+      if (shouldUpdateRewards) {
+        lastRewardsFetch.current = now;
+        await fetchContractData(false, true);
+      }
+
+      globalCache.set(
+        `${DASHBOARD_CACHE_KEY}_${account}`,
+        { timestamp: now },
+        DASHBOARD_CACHE_TTL
+      );
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+    }
+  }, [isConnected, account, fetchContractData]);
+
   useEffect(() => {
     if (!isConnected) return;
 
-    const fetchDataAndRewards = async () => {
-      try {
-        await fetchContractData(true);
-        
-        const now = Date.now();
-        if (now - lastRewardsFetch.current >= REWARDS_UPDATE_INTERVAL) {
-          lastRewardsFetch.current = now;
-          // Force rewards update
-          await fetchContractData(false, true);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      }
-    };
+    handleDataFetch(true);
 
-    // Initial fetch
-    fetchDataAndRewards();
-    
-    // Setup interval with cleanup
-    intervalRef.current = setInterval(fetchDataAndRewards, UPDATE_INTERVAL);
-    
+    intervalRef.current = setInterval(() => {
+      handleDataFetch(false);
+    }, FULL_REFRESH_INTERVAL);
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [isConnected, fetchContractData]);
+  }, [isConnected, handleDataFetch]);
 
-  // Memoized ROI calculation
   useEffect(() => {
     if (safeData.depositAmount !== '0') {
       const roi = calculateROIProgress(safeData.depositAmount, safeData.totalWithdrawn);
@@ -97,7 +120,6 @@ const DashboardStaking = () => {
     }
   }, [safeData.depositAmount, safeData.totalWithdrawn]);
 
-  // Memoized treasury address validation
   useEffect(() => {
     if (!TREASURY_ADDRESS) {
       console.error('Treasury address is not configured in environment variables');
@@ -114,7 +136,6 @@ const DashboardStaking = () => {
     }
   }, []);
 
-  // Only log in development, memoized
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.debug("Dashboard State:", {
@@ -126,44 +147,39 @@ const DashboardStaking = () => {
     }
   }, [safeData.depositAmount, safeData.totalWithdrawn, safeData.treasuryBalance, roiProgress]);
 
-  // Memoized animation variants
   const letterVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: (i) => ({
       opacity: 1,
       transition: {
-        delay: i * 0.05, // Reducido de 0.10 a 0.05 para acelerar la animación
-        duration: 0.15, // Reducido de 0.2 a 0.15
+        delay: i * 0.05,
+        duration: 0.15,
         ease: "easeOut"
       }
     })
   }), []);
 
-  // Memoized container animation
   const containerVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05, // Reducido de 0.10 a 0.05
-        delayChildren: 0.05, // Reducido de 0.1 a 0.05
+        staggerChildren: 0.05,
+        delayChildren: 0.05,
         ease: "easeOut",
-        duration: 0.6 // Agregado para hacer la transición más rápida
+        duration: 0.6
       }
     }
   }), []);
 
-  // Optimized handler for deposit success
   const handleDepositSuccessCallback = useCallback(() => {
     handleDepositSuccess();
   }, [handleDepositSuccess]);
 
-  // Optimized handler for data fetching
   const handleFetchData = useCallback((...args) => {
     return fetchContractData(...args);
   }, [fetchContractData]);
 
-  // Render optimized for mobile with conditional content loading
   const renderDashboardContent = useCallback(() => {
     if (!isConnected) {
       return (
@@ -230,21 +246,20 @@ const DashboardStaking = () => {
 
   return (
     <div className="relative bg-nuvo-gradient min-h-screen pt-18 pb-12 flex flex-col items-center">
-      <SpaceBackground customClass="" /> {/* Reducido de 90% a 80% para menor sobrecarga */}
+      <SpaceBackground customClass="" />
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation} strict>
-          {/* Redesigned Hero Section - optimizado */}
           <m.div
-            className="text-center mb-10" // Reducido de mb-16 a mb-12
+            className="text-center mb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6 }} // Reducido de 1 a 0.6
+            transition={{ duration: 0.6 }}
           >
             <m.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="mb-4 overflow-hidden" // Reducido de mb-6 a mb-4
+              className="mb-4 overflow-hidden"
             >
               {Array.from("Smart Staking").map((char, index) => (
                 <m.span
@@ -254,16 +269,14 @@ const DashboardStaking = () => {
                   className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
                             text-5xl sm:text-6xl md:text-7xl font-bold"
                   style={{
-                    willChange: "transform, opacity", // Añadido para optimizar rendimiento
-                    transform: "translateZ(0)" // Forzar aceleración por hardware
+                    willChange: "transform, opacity",
+                    transform: "translateZ(0)"
                   }}
                 >
                   {char === ' ' ? '\u00A0' : char}
                 </m.span>
               ))}
             </m.div>
-            
-            {/* Simplificado a una sola animación para el texto descriptivo */}
             <m.div
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
@@ -278,7 +291,6 @@ const DashboardStaking = () => {
               </p>
             </m.div>
           </m.div>
-
           <div className="container mx-auto space-y-8">
             <AnimatePresence mode="wait">
               {renderDashboardContent()}
@@ -286,13 +298,11 @@ const DashboardStaking = () => {
           </div>
         </LazyMotion>
       </div>
-
       {error && !loading && <ErrorMessage error={error} />}
     </div>
   );
 }
 
-// Add display name for better debugging
 DashboardStaking.displayName = 'DashboardStaking';
 
 export default React.memo(DashboardStaking);

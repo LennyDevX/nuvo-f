@@ -1,86 +1,108 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 import { FaWallet, FaChartLine, FaHistory, FaInfoCircle } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import Tooltip from '../../../ui/Tooltip';
 
+// Fallback function for formatting dates if the context one is unavailable
+const localFormatDate = (timestamp) => {
+  if (!timestamp || timestamp === 0) return 'Never';
+  try {
+    return new Date(timestamp * 1000).toLocaleDateString();
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid Date';
+  }
+};
 
 const StakingStatusCard = ({ account, depositAmount }) => {
   const { state, STAKING_CONSTANTS, refreshUserInfo, formatWithdrawDate } = useStaking();
   const { stakingStats, userDeposits, userInfo } = state;
+  const refreshTimeoutRef = useRef(null);
+  const lastRefreshRef = useRef(0);
 
+  // Use either the context formatter or the local fallback
+  const formatDate = formatWithdrawDate || localFormatDate;
 
-    // Add this after getting useStaking values
-  useEffect(() => {
-    console.log("StakingStatusCard props and state:", {
-      account,
-      depositAmount,
-      userInfo,
-      stakingStats
-    });
-  }, [account, depositAmount, userInfo, stakingStats]);
-
-  // Add immediate data fetch on mount
-  useEffect(() => {
+  // Debounced refresh function to prevent frequent UI updates
+  const debouncedRefresh = useCallback(async (force = false) => {
     if (!account) return;
+    
+    const now = Date.now();
+    // If not forced, only refresh if it's been at least 10 seconds since last refresh
+    if (!force && now - lastRefreshRef.current < 10000) {
+      return;
+    }
+    
+    try {
+      lastRefreshRef.current = now;
+      await refreshUserInfo(account);
+    } catch (error) {
+      console.error("Error refreshing user info:", error);
+    }
+  }, [account, refreshUserInfo]);
 
-    const fetchInitialData = async () => {
-      try {
-        console.log("Initial fetch for account:", account);
-        const result = await refreshUserInfo(account);
-        console.log("Initial fetch result:", result);
-      } catch (error) {
-        console.error("Error in initial fetch:", error);
-      }
-    };
-
-    fetchInitialData();
-  }, [account]); // Only run on mount and account change
-
-  // Regular polling
+  // Consolidated useEffect for data fetching
   useEffect(() => {
     if (!account) return;
     
-    const interval = setInterval(() => {
-      refreshUserInfo(account).catch(console.error);
+    // Initial fetch
+    debouncedRefresh(true);
+    
+    // Set up polling interval
+    const intervalId = setInterval(() => {
+      debouncedRefresh();
     }, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, [account, debouncedRefresh]);
 
-    return () => clearInterval(interval);
-  }, [account, refreshUserInfo]);
-
-  // Add debug logging
+  // Controlled debug logging - reduce frequency
   useEffect(() => {
-    console.log("Current staking stats:", {
-      depositAmount,
-      userDeposits: userDeposits?.length,
-      stakingStats
-    });
-  }, [depositAmount, userDeposits, stakingStats]);
+    if (!account) return;
+    
+    const logData = () => {
+      console.log("StakingStatusCard data:", {
+        depositAmount,
+        userDeposits: userDeposits?.length,
+        stakingStats: { 
+          pendingRewards: stakingStats?.pendingRewards, 
+          lastWithdraw: stakingStats?.lastWithdraw 
+        }
+      });
+    };
+    
+    // Only log when data significantly changes
+    if (depositAmount || userDeposits?.length || stakingStats?.pendingRewards) {
+      logData();
+    }
+  }, [account, depositAmount, userDeposits?.length, stakingStats?.pendingRewards]);
 
   const memoizedValues = useMemo(() => {
     const values = {
       actualDepositsCount: userDeposits?.length || 0,
       actualRemainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - (userDeposits?.length || 0),
-      lastWithdrawDate: stakingStats.lastWithdraw ? formatWithdrawDate(stakingStats.lastWithdraw) : 'Never',
+      lastWithdrawDate: stakingStats.lastWithdraw ? formatDate(stakingStats.lastWithdraw) : 'Never',
       // Use depositAmount instead of userInfo.totalStaked if it's more accurate
       totalStaked: depositAmount || userInfo?.totalStaked || '0',
       efficiency: ((userDeposits?.length || 0) / STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER) * 100,
       pendingRewards: stakingStats.pendingRewards || '0'
     };
     
-    console.log("Memoized values with depositAmount:", {
-      ...values,
-      rawDepositAmount: depositAmount,
-      rawTotalStaked: userInfo?.totalStaked
-    });
     return values;
   }, [
     userDeposits?.length,
     STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER,
     stakingStats,
     userInfo,
-    depositAmount // Add depositAmount to dependencies
+    depositAmount,
+    formatDate
   ]);
 
   return (

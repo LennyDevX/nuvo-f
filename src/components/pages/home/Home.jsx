@@ -14,6 +14,7 @@ const AirdropInfo = lazyWithPreload(() => import('./WhitelistToken'));
 const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
+const TokenizationSection = lazyWithPreload(() => import('./TokenizationSection'));
 
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,6 +37,11 @@ const Home = () => {
       setIsLoaded(true);
     }, 100); // Small delay to ensure header renders first
     
+    // Show modal automatically after a slight delay to ensure page loads first
+    const modalTimer = setTimeout(() => {
+      setIsModalOpen(true);
+    }, 800);
+    
     // Preload some components after initial render
     setTimeout(() => {
       Features.preload();
@@ -44,6 +50,7 @@ const Home = () => {
     return () => {
       window.removeEventListener('resize', checkMobile);
       clearTimeout(timer);
+      clearTimeout(modalTimer);
     };
   }, []);
   
@@ -83,8 +90,10 @@ const Home = () => {
                   {/* More aggressive lazy loading on mobile */}
                   {shouldLoadIntersectionObserverComponents && (
                     <>
+                      
                       <RewardDeveloper />
                       <AirdropInfo />
+                      <TokenizationSection />
                       <Features />
                     </>
                   )}

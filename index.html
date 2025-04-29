@@ -4,28 +4,56 @@
     <meta charset="UTF-8" />
     <!-- Remove unused font preload and replace with proper font loading strategy -->
     <link rel="icon" type="image/webp" href="/LogoNuvos.webp" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=5.0" />
     <meta name="description" content="Nuvos - Your Web3 Platform" />
     <meta name="theme-color" content="#000000" />
     <title>Nuvos</title>
 
-    <!-- Optimized CSP -->
+    <!-- Static CSP Meta Tag for Development - Allows Vite HMR -->
+    <!-- NOTE: Replace or remove this tag for production builds -->
     <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    connect-src 'self' 
-      https://*.dodoex.io 
-      https://*.alchemy.com 
-      wss://*.alchemy.com 
-      https://*.googleapis.com 
-      https://*.firebase.com 
-      https://*.firebaseio.com 
-      https://identitytoolkit.googleapis.com
-      https://polygon-rpc.com
-      https://rpc-mainnet.matic.network
-      https://matic-mainnet.chainstacklabs.com
-      https://rpc-mumbai.maticvigil.com
-      https://matic-mumbai.chainstacklabs.com;
-    img-src 'self' data: https://*.dodoex.io https://static.okx.com https://polygonscan.com https://*.googleapis.com;
+      default-src 'self';
+      connect-src 'self'
+                  data:
+                  https://api.pinata.cloud
+                  https://gateway.pinata.cloud
+                  https://ipfs.io
+                  https://cloudflare-ipfs.com
+                  https://*.ipfs.dweb.link
+                  https://*.ipfs.cf-ipfs.com
+                  https://*.ipfs.nftstorage.link
+                  https://*.ipfs.w3s.link
+                  https://*.dodoex.io
+                  https://nuvos.app
+                  https://*.nuvos.app
+                  https://*.alchemy.com
+                  wss://*.alchemy.com
+                  https://*.googleapis.com
+                  https://*.firebase.com
+                  https://*.firebaseio.com
+                  https://identitytoolkit.googleapis.com
+                  https://polygon-rpc.com
+                  https://rpc-mainnet.matic.network
+                  https://matic-mainnet.chainstacklabs.com
+                  https://rpc-mumbai.maticvigil.com
+                  https://matic-mumbai.chainstacklabs.com
+                  ws://localhost:*
+                  wss://localhost:*;
+      img-src 'self' data: 
+                   https://gateway.pinata.cloud 
+                   https://ipfs.io
+                   https://cloudflare-ipfs.com
+                   https://*.ipfs.dweb.link
+                   https://*.ipfs.cf-ipfs.com
+                   https://*.ipfs.nftstorage.link
+                   https://*.ipfs.w3s.link
+                   https://images.dodoex.io
+                   https://*.dodoex.io
+                   https://nuvos.app
+                   https://*.nuvos.app
+                   https://static.okx.com 
+                   https://polygonscan.com 
+                   https://*.googleapis.com;
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com;
       style-src 'self' 'unsafe-inline';
       font-src 'self' data:;
@@ -40,6 +68,10 @@
     <link rel="dns-prefetch" href="https://api.dodoex.io">
     <link rel="dns-prefetch" href="https://polygon-mainnet.g.alchemy.com">
     <link rel="dns-prefetch" href="https://static.okx.com">
+    <link rel="dns-prefetch" href="https://gateway.pinata.cloud">
+    <link rel="dns-prefetch" href="https://ipfs.io">
+    <link rel="dns-prefetch" href="https://cloudflare-ipfs.com">
+    <link rel="dns-prefetch" href="https://nuvos.app">
     
     <!-- Preload critical content -->
     <link 

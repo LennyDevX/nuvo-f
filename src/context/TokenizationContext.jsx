@@ -4,8 +4,9 @@ const TokenizationContext = createContext();
 
 export const TokenizationProvider = ({ children }) => {
   // State management
-  const [currentStep, setCurrentStep] = useState('capture');
-  const [image, setImage] = useState(null);
+  const [currentStep, setCurrentStep] = useState('upload'); // Cambiar de 'capture' a 'upload'
+  const [image, setImage] = useState(null); // URL para visualización
+  const [imageFile, setImageFile] = useState(null); // Objeto File/Blob para subir a Pinata
   const [isUploading, setIsUploading] = useState(false);
   const [metadata, setMetadata] = useState({
     name: '',
@@ -18,16 +19,14 @@ export const TokenizationProvider = ({ children }) => {
   const [mintingError, setMintingError] = useState(null);
   const [mintedNFT, setMintedNFT] = useState(null);
   
-  // Refs
+  // Refs - Eliminamos referencias a cámara/canvas
   const fileInputRef = useRef(null);
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const streamRef = useRef(null);
   
   // Reset form function
   const resetForm = () => {
-    setCurrentStep('capture');
+    setCurrentStep('upload'); // Cambiar de 'capture' a 'upload'
     setImage(null);
+    setImageFile(null);
     setMetadata({
       name: '',
       description: '',
@@ -46,6 +45,8 @@ export const TokenizationProvider = ({ children }) => {
         setCurrentStep,
         image,
         setImage,
+        imageFile,
+        setImageFile,
         isUploading,
         setIsUploading,
         metadata,
@@ -57,9 +58,6 @@ export const TokenizationProvider = ({ children }) => {
         mintedNFT,
         setMintedNFT,
         fileInputRef,
-        videoRef,
-        canvasRef,
-        streamRef,
         resetForm
       }}
     >

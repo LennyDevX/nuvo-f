@@ -12,25 +12,39 @@ const AirdropHeroSection = ({ setActiveTab }) => {
   };
 
   return (
-    <motion.section 
-      className="text-center mb-12" 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-    >
-      
-      
-      <div className="">
+    <div className="text-center mb-12">
+      <motion.div 
+        className="mb-4" 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+      >
         <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 drop-shadow-[0_2px_4px_rgba(168,85,247,0.6)]">
           Join the Future of Finance
         </h1>
-        
-        <p className="text-xl md:text-2xl text-white max-w-3xl mx-auto">
+      </motion.div>
+      
+      {/* Párrafo con animación fade-in */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+      >
+        <p 
+          className="text-xl md:text-2xl text-white max-w-3xl mx-auto"
+          style={{ position: 'relative', zIndex: 10 }}
+        >
           Participate in our community airdrop and receive NUVOS tokens to access exclusive features and participate in our Smart Staking program.
         </p>
-      </div>
+      </motion.div>
       
-      <div className="flex flex-wrap justify-center items-center gap-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="flex flex-wrap justify-center items-center gap-4"
+      >
         {/* Wallet display moved to where register button was */}
         {account ? (
           <motion.div
@@ -63,8 +77,8 @@ const AirdropHeroSection = ({ setActiveTab }) => {
         >
           <FaCoins /> Learn About Staking
         </motion.button>
-      </div>
-    </motion.section>
+      </motion.div>
+    </div>
   );
 };
 
