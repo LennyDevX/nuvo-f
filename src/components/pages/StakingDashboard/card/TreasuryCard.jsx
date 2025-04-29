@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { FaPiggyBank, FaInfoCircle, FaChartLine, FaHistory, FaLock, FaChevronDown, FaChevronUp, FaExchangeAlt, FaShieldAlt, FaFileInvoiceDollar } from 'react-icons/fa';
 import BaseCard from './BaseCard';
 import { formatBalance } from '../../../../utils/formatters';
@@ -7,27 +7,53 @@ import Tooltip from '../../../ui/Tooltip';
 import { globalRateLimiter } from '../../../../utils/RateLimiter';
 import { globalCache } from '../../../../utils/CacheManager';
 
-// Constantes para la gestión de datos de tesorería
+// Constantes para la gestión de datos de tesorería - increased to reduce API pressure
 const TREASURY_CACHE_KEY = 'treasury_metrics_card';
-const TREASURY_CACHE_TTL = 3 * 60 * 1000; // 3 minutos
-const TREASURY_UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos
+const TREASURY_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const TREASURY_UPDATE_INTERVAL = 3 * 60 * 1000; // 3 minutos
+const TREASURY_MIN_REFRESH_INTERVAL = 60 * 1000; // 60 segundos minimum between refreshes
+const MAX_RETRY_ATTEMPTS = 3;
 
 const TreasuryCard = () => {
   const { state, getTreasuryMetrics } = useStaking();
   const { treasuryMetrics } = state;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const lastUpdateRef = useRef(0);
+  const isUpdatingRef = useRef(false);
+  const retryCountRef = useRef(0);
 
-  // Optimización: Función para actualizar métricas de tesorería con caché
+  // Optimización: Función para actualizar métricas de tesorería con caché y retry logic
   const updateTreasuryMetrics = useCallback(async (force = false) => {
+    // Prevent concurrent updates
+    if (isUpdatingRef.current) {
+      return;
+    }
+    
+    const now = Date.now();
+    
+    // Enforce minimum refresh interval unless forced
+    if (!force && (now - lastUpdateRef.current < TREASURY_MIN_REFRESH_INTERVAL)) {
+      return;
+    }
+    
     // Verificar rate limiting excepto si es forzado
-    const rateLimiterKey = 'treasury_metrics_update';
-    if (!force && !globalRateLimiter.canMakeCall(rateLimiterKey)) {
+    if (!force && !globalRateLimiter.canMakeCall(TREASURY_CACHE_KEY)) {
       console.log("Rate limited treasury metrics update");
       return;
     }
     
-    setLoading(true);
+    // Reset error state on new attempt
+    setError(null);
+    
+    // Prevent UI flickering by not showing loading state for quick refreshes
+    const loadingDelay = setTimeout(() => {
+      if (isUpdatingRef.current) {
+        setLoading(true);
+      }
+    }, 500);
+    
+    isUpdatingRef.current = true;
     
     try {
       // Intentar obtener de caché primero si no es forzado
@@ -37,24 +63,62 @@ const TreasuryCard = () => {
         console.log("Using cached treasury metrics");
       } else {
         // Si no hay caché o es forzado, obtener datos frescos
-        console.log("Fetching fresh treasury metrics");
-        await getTreasuryMetrics();
+        if (now - lastUpdateRef.current > TREASURY_MIN_REFRESH_INTERVAL * 2) {
+          console.log("Fetching fresh treasury metrics");
+        }
         
-        // Guardar en caché para futuros usos
-        globalCache.set(TREASURY_CACHE_KEY, true, TREASURY_CACHE_TTL);
+        try {
+          await getTreasuryMetrics();
+          // Reset retry counter on success
+          retryCountRef.current = 0;
+          lastUpdateRef.current = now;
+          
+          // Guardar en caché para futuros usos
+          globalCache.set(TREASURY_CACHE_KEY, true, TREASURY_CACHE_TTL);
+        } catch (fetchError) {
+          // Detect the block range error
+          const isBlockRangeError = fetchError.message && 
+            (fetchError.message.includes("block range") || 
+             fetchError.message.includes("-32600"));
+          
+          console.warn("Error fetching treasury metrics:", 
+            isBlockRangeError ? "Block range limit exceeded" : fetchError.message);
+          
+          if (retryCountRef.current < MAX_RETRY_ATTEMPTS) {
+            retryCountRef.current++;
+            
+            // Implement exponential backoff for retries
+            const backoffDelay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+            console.log(`Will retry in ${backoffDelay/1000} seconds (attempt ${retryCountRef.current}/${MAX_RETRY_ATTEMPTS})`);
+            
+            setTimeout(() => {
+              updateTreasuryMetrics(true);
+            }, backoffDelay);
+          } else {
+            setError("Unable to fetch latest metrics. Using cached data.");
+            // Still use what we have in the state
+            console.log("Using fallback metrics from state");
+            // Cache the error state to prevent frequent retries
+            globalCache.set(TREASURY_CACHE_KEY, true, TREASURY_CACHE_TTL / 2);
+          }
+        }
       }
     } catch (error) {
       console.error("Error updating treasury metrics:", error);
-      setError("Failed to update treasury data");
+      setError("Unable to update treasury data");
     } finally {
+      clearTimeout(loadingDelay);
       setLoading(false);
+      isUpdatingRef.current = false;
     }
   }, [getTreasuryMetrics]);
 
   // Optimización: Carga inicial y configuración de intervalo
   useEffect(() => {
-    // Actualización inicial
-    updateTreasuryMetrics(true);
+    // Actualización inicial con delay para no competir con otros componentes
+    const initialTimeout = setTimeout(() => {
+      updateTreasuryMetrics(true);
+    }, 2500); // Increased to 2.5 seconds to reduce initial load and avoid conflicts
     
     // Configurar intervalo con frecuencia adecuada
     const intervalId = setInterval(() => {
@@ -62,6 +126,7 @@ const TreasuryCard = () => {
     }, TREASURY_UPDATE_INTERVAL);
     
     return () => {
+      clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
   }, [updateTreasuryMetrics]);
@@ -92,8 +157,12 @@ const TreasuryCard = () => {
       <BaseCard 
         title="Treasury" 
         icon={<FaPiggyBank className="text-fuchsia-400" />}
-        loading={loading}
-        error={error}>
+        loading={loading}>
+        {error && (
+          <div className="text-amber-400 text-xs mb-2 flex items-center">
+            <FaInfoCircle className="mr-1" /> {error}
+          </div>
+        )}
         <div className="flex flex-col h-full space-y-4">
           {/* Main Balance */}
           <div className=" p-4 rounded-xl border border-violet-700/20 shadow-sm hover:shadow-md hover:shadow-fuchsia-900/5 transition-all duration-300">

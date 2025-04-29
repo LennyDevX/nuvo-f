@@ -1,11 +1,18 @@
 import React from 'react';
 import { m } from 'framer-motion';
-import { FaGem, FaUnlock } from 'react-icons/fa';
+import { FaGem, FaUnlock, FaChevronRight } from 'react-icons/fa';
 import { fadeIn } from '../../../utils/animationVariants';
 import { useAnimationContext } from '../../animation/AnimationProvider';
+import { Link, useNavigate } from 'react-router-dom';
 
 const RewardDeveloper = () => {
   const { reducedMotion: prefersReducedMotion } = useAnimationContext();
+  const navigate = useNavigate();
+  
+  const handleNavigation = (path) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
 
   return (
     <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
@@ -71,7 +78,7 @@ const RewardDeveloper = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="grid grid-cols-1 xs:grid-cols-2 gap-2 mt-2 md:mt-8"
           >
-            {[
+            {[ 
               { value: "Digital Assets 💎", label: "Collectible Artworks", icon: <FaGem /> },
               { value: "Utility Access 🔓", label: "Cross-Platform Benefits", icon: <FaUnlock /> }
             ].map((stat, index) => (
@@ -87,6 +94,24 @@ const RewardDeveloper = () => {
                 </div>
               </m.div>
             ))}
+          </m.div>
+          
+          {/* New NFT Button - Added below the grid */}
+          <m.div 
+            initial={prefersReducedMotion ? {} : { opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="flex justify-center mt-4 md:mt-8"
+          >
+            <m.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium flex items-center gap-2 shadow-lg shadow-purple-900/30"
+              onClick={() => handleNavigation('/nfts')}
+            >
+              Explore NFT Collection <FaChevronRight className="text-sm" />
+            </m.button>
           </m.div>
         </div>
       </div>

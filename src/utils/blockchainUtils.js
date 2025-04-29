@@ -197,4 +197,77 @@ export const fetchTokenBalances = async (address, provider) => {
   }
 };
 
-// Add additional blockchain utility functions as needed...
+/**
+ * Safely fetch logs from a blockchain by dividing the request into smaller chunks
+ * to handle RPC provider limitations (typically 500 blocks per request)
+ * 
+ * @param {Object} provider - Ethers provider
+ * @param {Object} filter - Log filter object
+ * @param {number} chunkSize - Maximum blocks per request (default: 480)
+ * @param {number} maxRetries - Maximum retry attempts per chunk
+ * @returns {Array} - Combined array of log results
+ */
+export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRetries = 3) => {
+  if (!provider) throw new Error('Provider is required');
+  
+  try {
+    const currentBlock = await provider.getBlockNumber();
+    const startBlock = filter.fromBlock === 0 || !filter.fromBlock ? 
+      Math.max(0, currentBlock - 50000) : // Start from recent history instead of genesis
+      parseInt(filter.fromBlock);
+    
+    const endBlock = filter.toBlock === 'latest' ? currentBlock : parseInt(filter.toBlock);
+    
+    // If range is already small enough, make direct request
+    if (endBlock - startBlock <= chunkSize) {
+      return await provider.getLogs({
+        ...filter,
+        fromBlock: ethers.toQuantity(startBlock),
+        toBlock: ethers.toQuantity(endBlock)
+      });
+    }
+    
+    // Otherwise fetch in chunks
+    console.log(`Fetching logs in chunks from block ${startBlock} to ${endBlock}`);
+    const logs = [];
+    
+    for (let from = startBlock; from < endBlock; from += chunkSize) {
+      const to = Math.min(from + chunkSize - 1, endBlock);
+      
+      let attempt = 0;
+      let success = false;
+      
+      while (!success && attempt < maxRetries) {
+        try {
+          const chunk = await provider.getLogs({
+            ...filter,
+            fromBlock: ethers.toQuantity(from),
+            toBlock: ethers.toQuantity(to)
+          });
+          
+          logs.push(...chunk);
+          success = true;
+          console.log(`Successfully fetched logs for blocks ${from}-${to}: ${chunk.length} results`);
+        } catch (error) {
+          attempt++;
+          console.warn(`Error fetching logs for blocks ${from}-${to} (attempt ${attempt}/${maxRetries}):`, error.message);
+          
+          if (attempt >= maxRetries) {
+            console.error(`Max retries exceeded for blocks ${from}-${to}`);
+          } else {
+            // Exponential backoff
+            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+          }
+        }
+      }
+      
+      // Add small delay between chunks to prevent rate limiting
+      await new Promise(r => setTimeout(r, 300));
+    }
+    
+    return logs;
+  } catch (error) {
+    console.error('Error fetching logs in chunks:', error);
+    return [];
+  }
+};

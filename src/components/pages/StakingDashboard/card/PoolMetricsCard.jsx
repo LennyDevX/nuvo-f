@@ -10,15 +10,18 @@ import { globalCache } from '../../../../utils/CacheManager';
 
 // Constantes para caché y actualización
 const METRICS_CACHE_KEY = 'pool_metrics_card';
-const METRICS_CACHE_TTL = 3 * 60 * 1000; // 3 minutos (increased to reduce refreshes)
-const METRICS_UPDATE_INTERVAL = 2 * 60 * 1000; // 2 minutos (increased to reduce refreshes)
-const METRICS_MIN_REFRESH_INTERVAL = 30 * 1000; // 30 segundos minimum between refreshes
+const METRICS_CACHE_TTL = 5 * 60 * 1000; // 5 minutos (increased to reduce refreshes)
+const METRICS_UPDATE_INTERVAL = 3 * 60 * 1000; // 3 minutos (increased to reduce refreshes)
+const METRICS_MIN_REFRESH_INTERVAL = 60 * 1000; // 60 segundos minimum between refreshes
+const MAX_RETRY_ATTEMPTS = 3;
 
 const PoolMetricsCard = () => {
   const { state, getPoolMetrics } = useStaking();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const lastUpdateRef = useRef(0);
   const isUpdatingRef = useRef(false);
+  const retryCountRef = useRef(0);
   
   // Datos memoizados para evitar cálculos innecesarios
   const metrics = useMemo(() => ({
@@ -48,6 +51,9 @@ const PoolMetricsCard = () => {
       return;
     }
     
+    // Reset error state on new attempt
+    setError(null);
+    
     // Prevent UI flickering by not showing loading state for quick refreshes
     const loadingDelay = setTimeout(() => {
       if (isUpdatingRef.current) {
@@ -58,7 +64,7 @@ const PoolMetricsCard = () => {
     isUpdatingRef.current = true;
     
     try {
-      // Intentar obtener de caché primero
+      // Try to get from cache first
       const cachedMetrics = !force && await globalCache.get(METRICS_CACHE_KEY, null);
       
       if (cachedMetrics) {
@@ -69,14 +75,45 @@ const PoolMetricsCard = () => {
           console.log("Fetching fresh pool metrics");
         }
         
-        await getPoolMetrics();
-        lastUpdateRef.current = now;
-        
-        // Guardar en caché para futuros usos
-        globalCache.set(METRICS_CACHE_KEY, true, METRICS_CACHE_TTL);
+        try {
+          await getPoolMetrics();
+          // Reset retry counter on success
+          retryCountRef.current = 0;
+          lastUpdateRef.current = now;
+          
+          // Save to cache for future use
+          globalCache.set(METRICS_CACHE_KEY, true, METRICS_CACHE_TTL);
+        } catch (fetchError) {
+          // Detect the block range error
+          const isBlockRangeError = fetchError.message && 
+            (fetchError.message.includes("block range") || 
+             fetchError.message.includes("-32600"));
+          
+          console.warn("Error fetching pool metrics:", 
+            isBlockRangeError ? "Block range limit exceeded" : fetchError.message);
+          
+          if (retryCountRef.current < MAX_RETRY_ATTEMPTS) {
+            retryCountRef.current++;
+            
+            // Implement exponential backoff for retries
+            const backoffDelay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000);
+            console.log(`Will retry in ${backoffDelay/1000} seconds (attempt ${retryCountRef.current}/${MAX_RETRY_ATTEMPTS})`);
+            
+            setTimeout(() => {
+              updatePoolMetrics(true);
+            }, backoffDelay);
+          } else {
+            setError("Unable to fetch latest metrics. Using cached data.");
+            // Still use what we have in the state
+            console.log("Using fallback metrics from state");
+            // Cache the error state to prevent frequent retries
+            globalCache.set(METRICS_CACHE_KEY, true, METRICS_CACHE_TTL / 2);
+          }
+        }
       }
     } catch (error) {
       console.error("Error updating pool metrics:", error);
+      setError("Unable to update metrics");
     } finally {
       clearTimeout(loadingDelay);
       setLoading(false);
@@ -89,7 +126,7 @@ const PoolMetricsCard = () => {
     // Actualización inicial con delay para no competir con otros componentes
     const initialTimeout = setTimeout(() => {
       updatePoolMetrics(true);
-    }, 1000);
+    }, 2000); // Increased to 2 seconds to reduce initial load
     
     // Configurar intervalo con limpieza adecuada
     const intervalId = setInterval(() => {
@@ -132,6 +169,11 @@ const PoolMetricsCard = () => {
       title="Pool Statistics" 
       icon={<FaChartBar className="text-indigo-400" />}
       loading={loading}>
+      {error && (
+        <div className="text-amber-400 text-xs mb-2 flex items-center">
+          <FaInfoCircle className="mr-1" /> {error}
+        </div>
+      )}
       <div className="flex flex-col h-full space-y-4">
         {/* TVL and Users Row */}
         <div className="grid grid-cols-3 gap-3">

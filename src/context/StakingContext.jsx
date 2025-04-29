@@ -307,117 +307,74 @@ export const StakingProvider = ({ children }) => {
     }
   };
 
-  const getPoolEvents = async () => {
-    const rateLimiterKey = 'pool_events';
-    if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
-      console.log("Rate limited, skipping pool events fetch");
-      
-      const cachedEvents = globalCache.get('pool_events', null);
-      if (cachedEvents) return cachedEvents;
-      
-      return { deposits: [], withdrawals: [] };
-    }
+  // Helper function to fetch logs in chunks respecting the 500 block limit
+  const fetchLogsInChunks = async (filter, maxRetries = 3) => {
+    if (!provider) return [];
     
-    if (!state.contract || !provider) {
-      console.error("getPoolEvents: Contract or provider not available.");
-      return { deposits: [], withdrawals: [] };
-    }
-
-    const signerAddress = await getSignerAddress();
-    if (!signerAddress) {
-      console.error("getPoolEvents: Could not get signer address.");
-      return { deposits: [], withdrawals: [] };
-    }
-    console.log(`getPoolEvents: Fetching events for user: ${signerAddress}`);
-
-    if (!ABI || !ABI.abi || !Array.isArray(ABI.abi) || ABI.abi.length === 0) {
-       console.error("Staking Contract ABI is empty or invalid in StakingContract.json. Cannot parse logs correctly.");
-       return { deposits: [], withdrawals: [] };
-    }
-
     try {
-      const depositTopic = ethers.id("DepositMade(address,uint256,uint256,uint256,uint256)");
-      const withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
-      const userTopic = ethers.zeroPadValue(signerAddress, 32);
-      const fromBlock = 0;
-
-      const [depositLogs, withdrawalLogs] = await Promise.all([
-        provider.getLogs({
-          address: CONTRACT_ADDRESS,
-          topics: [depositTopic, userTopic],
-          fromBlock: fromBlock,
-          toBlock: 'latest'
-        }),
-        provider.getLogs({
-          address: CONTRACT_ADDRESS,
-          topics: [withdrawalTopic, userTopic],
-          fromBlock: fromBlock,
-          toBlock: 'latest'
-        })
-      ]);
-
-      console.log(`getPoolEvents: Found ${depositLogs.length} deposit logs and ${withdrawalLogs.length} withdrawal logs.`);
-
-      const iface = new ethers.Interface(ABI.abi);
-
-      const processedDeposits = depositLogs.map(log => {
-        try {
-          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
-          if (!parsed || !parsed.args) return null;
-          return {
-            transactionHash: log.transactionHash,
-            blockNumber: log.blockNumber,
-            args: {
-              user: parsed.args.user,
-              amount: parsed.args.amount?.toString() || '0',
-              timestamp: Number(parsed.args.timestamp || 0),
-              commission: parsed.args.commission?.toString() || '0',
-              depositId: parsed.args.depositId?.toString() || '0'
-            }
-          };
-        } catch (error) {
-          console.error('Error parsing deposit log:', log, error);
-          return null;
-        }
-      }).filter(Boolean);
-
-      const processedWithdrawals = await Promise.all(withdrawalLogs.map(async (log) => {
-        try {
-          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
-          if (!parsed || !parsed.args) return null;
-
-          const block = await provider.getBlock(log.blockNumber);
-          const blockTimestamp = block ? block.timestamp : Math.floor(Date.now() / 1000);
-
-          return {
-            transactionHash: log.transactionHash,
-            blockNumber: log.blockNumber,
-            blockTimestamp: blockTimestamp,
-            args: {
-              user: parsed.args.user,
-              amount: parsed.args.amount?.toString() || '0',
-              commission: parsed.args.commission?.toString() || '0'
-            }
-          };
-        } catch (error) {
-          console.error('Error parsing withdrawal log or fetching block:', log, error);
-          return null;
-        }
-      }));
-
-      const result = {
-        deposits: processedDeposits,
-        withdrawals: processedWithdrawals.filter(Boolean)
-      };
-
-      console.log("getPoolEvents: Processed events:", result);
+      const currentBlock = await provider.getBlockNumber();
+      const startBlock = parseInt(filter.fromBlock) || 0;
+      const endBlock = filter.toBlock === 'latest' ? currentBlock : parseInt(filter.toBlock);
       
-      globalCache.set('pool_events', result, CACHE_CONFIG.POOL_EVENTS.ttl);
+      // Use a reasonable chunk size to avoid RPC errors (smaller than 500)
+      const CHUNK_SIZE = 480;
       
-      return result;
+      // If the request is already small enough, just make a direct request
+      if (endBlock - startBlock <= CHUNK_SIZE) {
+        return await provider.getLogs({
+          ...filter,
+          fromBlock: ethers.toQuantity(startBlock),
+          toBlock: ethers.toQuantity(endBlock)
+        });
+      }
+      
+      // Otherwise, split into chunks and combine results
+      console.log(`Chunking log requests from ${startBlock} to ${endBlock}`);
+      const allLogs = [];
+      
+      // Start from a reasonable point in time to avoid fetching the entire chain history
+      // For example, we could start from 7 days ago (~40,320 blocks on Polygon)
+      // This is a compromise between data completeness and performance
+      const effectiveStartBlock = Math.max(startBlock, endBlock - 40320);
+      
+      for (let from = effectiveStartBlock; from < endBlock; from += CHUNK_SIZE) {
+        const to = Math.min(from + CHUNK_SIZE - 1, endBlock);
+        
+        let retryCount = 0;
+        let success = false;
+        
+        while (!success && retryCount < maxRetries) {
+          try {
+            console.log(`Fetching logs from block ${from} to ${to} (attempt ${retryCount + 1})`);
+            const chunkLogs = await provider.getLogs({
+              ...filter,
+              fromBlock: ethers.toQuantity(from),
+              toBlock: ethers.toQuantity(to)
+            });
+            
+            allLogs.push(...chunkLogs);
+            success = true;
+          } catch (error) {
+            retryCount++;
+            console.warn(`Error fetching logs for blocks ${from}-${to}:`, error);
+            
+            if (retryCount >= maxRetries) {
+              console.error(`Failed to fetch logs after ${maxRetries} attempts`);
+            } else {
+              // Wait before retry with exponential backoff
+              await new Promise(r => setTimeout(r, 1000 * Math.pow(2, retryCount)));
+            }
+          }
+        }
+        
+        // Small delay between chunks to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
+      }
+      
+      return allLogs;
     } catch (error) {
-      console.error('Error in getPoolEvents:', error);
-      return { deposits: [], withdrawals: [] };
+      console.error('Error fetching logs in chunks:', error);
+      return [];
     }
   };
 
@@ -433,21 +390,22 @@ export const StakingProvider = ({ children }) => {
             state.contract.uniqueUsersCount()
           ]);
     
-          const filter = {
+          // Use chunking for logs retrieval
+          const rewardWithdrawalFilter = {
             address: CONTRACT_ADDRESS,
-            fromBlock: 0,
-            toBlock: 'latest'
+            topics: [ethers.id("WithdrawalMade(address,uint256,uint256)")],
+            fromBlock: 0
           };
-    
+          
+          const emergencyWithdrawFilter = {
+            address: CONTRACT_ADDRESS,
+            topics: [ethers.id("EmergencyWithdraw(address,uint256,uint256)")],
+            fromBlock: 0
+          };
+          
           const [rewardWithdrawals, emergencyWithdraws] = await Promise.all([
-            provider.getLogs({
-              ...filter,
-              topics: [ethers.id("WithdrawalMade(address,uint256,uint256)")]
-            }),
-            provider.getLogs({
-              ...filter,
-              topics: [ethers.id("EmergencyWithdraw(address,uint256,uint256)")]
-            })
+            fetchLogsInChunks(rewardWithdrawalFilter),
+            fetchLogsInChunks(emergencyWithdrawFilter)
           ]);
     
           const withdrawInterface = new ethers.Interface([
@@ -554,48 +512,36 @@ export const StakingProvider = ({ children }) => {
             const blocksIn24Hours = 43200;
             const fromBlock = Math.max(0, currentBlock - blocksIn24Hours);
     
-            const getComissions = async (retryCount = 0) => {
-              try {
-                const commissionFilter = {
-                  address: CONTRACT_ADDRESS,
-                  topics: [ethers.id("CommissionPaid(address,uint256,uint256)")],
-                  fromBlock,
-                  toBlock: 'latest'
-                };
-    
-                const logs = await provider.getLogs(commissionFilter);
-                const iface = new ethers.Interface([
-                  "event CommissionPaid(address indexed receiver, uint256 amount, uint256 timestamp)"
-                ]);
-    
-                let dailyCommissions = BigInt(0);
-                logs.forEach(log => {
-                  try {
-                    const decoded = iface.parseLog({
-                      topics: log.topics,
-                      data: log.data
-                    });
-                    dailyCommissions += BigInt(decoded.args.amount || 0);
-                  } catch (err) {
-                    console.warn('Error decoding commission log:', err);
-                  }
-                });
-    
-                return dailyCommissions.toString();
-              } catch (error) {
-                if (error.code === 429 && retryCount < 3) {
-                  await new Promise(r => setTimeout(r, 1000 * Math.pow(2, retryCount)));
-                  return getComissions(retryCount + 1);
-                }
-                throw error;
-              }
+            const commissionFilter = {
+              address: CONTRACT_ADDRESS,
+              topics: [ethers.id("CommissionPaid(address,uint256,uint256)")],
+              fromBlock
             };
     
-            const dailyCommissions = await getComissions();
+            // Use the chunking function for fetching logs
+            const logs = await fetchLogsInChunks(commissionFilter);
+            
+            const iface = new ethers.Interface([
+              "event CommissionPaid(address indexed receiver, uint256 amount, uint256 timestamp)"
+            ]);
+    
+            let dailyCommissions = BigInt(0);
+            logs.forEach(log => {
+              try {
+                const decoded = iface.parseLog({
+                  topics: log.topics,
+                  data: log.data
+                });
+                dailyCommissions += BigInt(decoded.args.amount || 0);
+              } catch (err) {
+                console.warn('Error decoding commission log:', err);
+              }
+            });
+    
             metrics = {
               ...metrics,
-              dailyCommissions,
-              dailyGrowth: calculateDailyGrowth(treasuryBalance, dailyCommissions)
+              dailyCommissions: dailyCommissions.toString(),
+              dailyGrowth: calculateDailyGrowth(treasuryBalance, dailyCommissions.toString())
             };
           } catch (error) {
             console.warn('Error getting commission events, using fallback:', error);
@@ -669,6 +615,120 @@ export const StakingProvider = ({ children }) => {
     };
   }, []);
 
+  const getPoolEvents = async () => {
+    const rateLimiterKey = 'pool_events';
+    if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
+      console.log("Rate limited, skipping pool events fetch");
+      
+      const cachedEvents = await globalCache.get('pool_events', null);
+      if (cachedEvents) return cachedEvents;
+      
+      return { deposits: [], withdrawals: [] };
+    }
+    
+    if (!state.contract || !provider) {
+      console.error("getPoolEvents: Contract or provider not available.");
+      return { deposits: [], withdrawals: [] };
+    }
+
+    const signerAddress = await getSignerAddress();
+    if (!signerAddress) {
+      console.error("getPoolEvents: Could not get signer address.");
+      return { deposits: [], withdrawals: [] };
+    }
+    console.log(`getPoolEvents: Fetching events for user: ${signerAddress}`);
+
+    if (!ABI || !ABI.abi || !Array.isArray(ABI.abi) || ABI.abi.length === 0) {
+       console.error("Staking Contract ABI is empty or invalid in StakingContract.json. Cannot parse logs correctly.");
+       return { deposits: [], withdrawals: [] };
+    }
+
+    try {
+      const depositTopic = ethers.id("DepositMade(address,uint256,uint256,uint256,uint256)");
+      const withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
+      const userTopic = ethers.zeroPadValue(signerAddress, 32);
+      
+      // Use the fetchLogsInChunks function to avoid block range errors
+      const [depositLogs, withdrawalLogs] = await Promise.all([
+        fetchLogsInChunks({
+          address: CONTRACT_ADDRESS,
+          topics: [depositTopic, userTopic],
+          fromBlock: 0,
+          toBlock: 'latest'
+        }),
+        fetchLogsInChunks({
+          address: CONTRACT_ADDRESS,
+          topics: [withdrawalTopic, userTopic],
+          fromBlock: 0,
+          toBlock: 'latest'
+        })
+      ]);
+
+      console.log(`getPoolEvents: Found ${depositLogs.length} deposit logs and ${withdrawalLogs.length} withdrawal logs.`);
+
+      const iface = new ethers.Interface(ABI.abi);
+
+      const processedDeposits = depositLogs.map(log => {
+        try {
+          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
+          if (!parsed || !parsed.args) return null;
+          return {
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            args: {
+              user: parsed.args.user,
+              amount: parsed.args.amount?.toString() || '0',
+              timestamp: Number(parsed.args.timestamp || 0),
+              commission: parsed.args.commission?.toString() || '0',
+              depositId: parsed.args.depositId?.toString() || '0'
+            }
+          };
+        } catch (error) {
+          console.error('Error parsing deposit log:', log, error);
+          return null;
+        }
+      }).filter(Boolean);
+
+      const processedWithdrawals = await Promise.all(withdrawalLogs.map(async (log) => {
+        try {
+          const parsed = iface.parseLog({ topics: [...log.topics], data: log.data });
+          if (!parsed || !parsed.args) return null;
+
+          const block = await provider.getBlock(log.blockNumber);
+          const blockTimestamp = block ? block.timestamp : Math.floor(Date.now() / 1000);
+
+          return {
+            transactionHash: log.transactionHash,
+            blockNumber: log.blockNumber,
+            blockTimestamp: blockTimestamp,
+            args: {
+              user: parsed.args.user,
+              amount: parsed.args.amount?.toString() || '0',
+              commission: parsed.args.commission?.toString() || '0'
+            }
+          };
+        } catch (error) {
+          console.error('Error parsing withdrawal log or fetching block:', log, error);
+          return null;
+        }
+      }));
+
+      const result = {
+        deposits: processedDeposits,
+        withdrawals: processedWithdrawals.filter(Boolean)
+      };
+
+      console.log("getPoolEvents: Processed events:", result);
+      
+      globalCache.set('pool_events', result, CACHE_CONFIG.POOL_EVENTS.ttl);
+      
+      return result;
+    } catch (error) {
+      console.error('Error in getPoolEvents:', error);
+      return { deposits: [], withdrawals: [] };
+    }
+  };
+
   const contextValue = {
     state,
     setState,
@@ -680,7 +740,7 @@ export const StakingProvider = ({ children }) => {
     getContractStatus,
     formatWithdrawDate,
     getPoolMetrics,
-    getPoolEvents,
+    getPoolEvents, // Make sure this is included correctly
     getTreasuryMetrics,
     getSignerAddress
   };

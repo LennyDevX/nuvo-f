@@ -260,7 +260,7 @@ const Header = ({ openUpdatesModal }) => {
 
             <div className="pt-6 flex flex-wrap gap-5">
               <m.a
-                href="#get-started"
+                href="/profile"
                 whileHover={{
                   scale: 1.05,
                   boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)"

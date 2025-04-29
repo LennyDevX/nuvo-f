@@ -37,6 +37,11 @@ const Home = () => {
       setIsLoaded(true);
     }, 100); // Small delay to ensure header renders first
     
+    // Show modal automatically after a slight delay to ensure page loads first
+    const modalTimer = setTimeout(() => {
+      setIsModalOpen(true);
+    }, 800);
+    
     // Preload some components after initial render
     setTimeout(() => {
       Features.preload();
@@ -45,6 +50,7 @@ const Home = () => {
     return () => {
       window.removeEventListener('resize', checkMobile);
       clearTimeout(timer);
+      clearTimeout(modalTimer);
     };
   }, []);
   
