@@ -1,31 +1,22 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FaPlus, 
-  FaTh, 
-  FaList, 
-  FaDownload, 
-  FaTimes,
-  FaFilter
-} from 'react-icons/fa';
-import { ethers } from 'ethers'; 
-import SpaceBackground from '../../../effects/SpaceBackground';
+import React, { useState, useCallback, useEffect, useContext, useMemo } from 'react';
+import { ethers } from 'ethers';
+import { motion } from 'framer-motion';
+import { FaRedo } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import useUserNFTs from '../../../../hooks/useUserNFTs';
-import NFTCollection from '../collection/NFTCollection';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
+import NFTCollection from '../collection/NFTCollection';
+import SpaceBackground from '../../../effects/SpaceBackground';
 
 const NFTDashboard = () => {
-  const { account, walletConnected } = useContext(WalletContext);
-  const { nfts, loading, error } = useUserNFTs(account);
-  const [filteredNfts, setFilteredNfts] = useState([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // <-- Cambiar a false
-  const [searchTerm, setSearchTerm] = useState('');
-  const [mobileSearchTerm, setMobileSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('recent');
-  const [activeView, setActiveView] = useState('grid');
+  // Add React useContext import to fix the error
+  const { account } = useContext(WalletContext);
+  
+  // Use the hook to get NFT data
+  const { nfts, loading, error, refreshNFTs } = useUserNFTs(account);
+
+  // State for filters
   const [filters, setFilters] = useState({
     categories: [
       { label: 'Art', value: 'art', selected: false },
@@ -41,10 +32,25 @@ const NFTDashboard = () => {
   });
 
   // Use useRef to keep a stable value for recentActivity
-  const recentActivityRef = useRef(Math.floor(Math.random() * 5));
+  const [recentActivity, setRecentActivity] = useState(Math.floor(Math.random() * 5));
   
+  // State for view and search
+  const [activeView, setActiveView] = useState('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('recent');
+
+  // Add a refresh function to pass down to the NFT collection
+  const handleRefreshNFTs = useCallback(() => {
+    if (refreshNFTs && typeof refreshNFTs === 'function') {
+      refreshNFTs();
+    } else {
+      // If refreshNFTs isn't available, reload the page as a fallback
+      window.location.reload();
+    }
+  }, [refreshNFTs]);
+
   // Calculate collection stats with enhanced information
-  const stats = {
+  const stats = useMemo(() => ({
     totalNFTs: nfts.length,
     listedNFTs: nfts.filter(nft => nft.isForSale).length,
     totalValue: nfts
@@ -63,8 +69,10 @@ const NFTDashboard = () => {
         }, 0).toFixed(2)
       : "0.00",
     // Use the stable reference value for recent activity
-    recentActivity: recentActivityRef.current
-  };
+    recentActivity: recentActivity,
+    // Calculate unique categories
+    uniqueCategories: new Set(nfts.map(nft => nft.category || 'collectible')).size
+  }), [nfts, recentActivity]);
 
   // Handle filter changes
   const handleFilterChange = (filterType, value) => {
@@ -90,28 +98,29 @@ const NFTDashboard = () => {
     });
   };
 
-  // Apply filters to nfts
-  useEffect(() => {
-    if (!nfts) return;
+  // Handle search term changes
+  const handleSearchChange = (term) => {
+    setSearchTerm(term);
+  };
 
+  // Handle sort option changes
+  const handleSortChange = (option) => {
+    setSortOption(option);
+  };
+
+  // Filter and sort NFTs based on current criteria
+  const filteredNFTs = useMemo(() => {
+    // Start with all NFTs
     let result = [...nfts];
     
-    // Apply search
-    if (searchTerm) {
-      result = result.filter(nft => 
-        nft.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        nft.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    // Apply category filters
-    const selectedCategories = filters.categories.filter(c => c.selected).map(c => c.value);
+    // Apply category filters if any are selected
+    const selectedCategories = filters.categories.filter(cat => cat.selected).map(cat => cat.value);
     if (selectedCategories.length > 0) {
       result = result.filter(nft => selectedCategories.includes(nft.category));
     }
     
-    // Apply status filters
-    const selectedStatuses = filters.statuses.filter(s => s.selected).map(s => s.value);
+    // Apply status filters if any are selected
+    const selectedStatuses = filters.statuses.filter(status => status.selected).map(status => status.value);
     if (selectedStatuses.length > 0) {
       result = result.filter(nft => {
         if (selectedStatuses.includes('forSale') && nft.isForSale) return true;
@@ -120,298 +129,104 @@ const NFTDashboard = () => {
       });
     }
     
-    // Apply sorting
-    switch (sortBy) {
-      case 'name':
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'price-high':
-        result.sort((a, b) => {
-          const aPrice = a.isForSale && a.price ? parseFloat(ethers.formatEther(a.price)) : 0;
-          const bPrice = b.isForSale && b.price ? parseFloat(ethers.formatEther(b.price)) : 0;
-          return bPrice - aPrice;
-        });
-        break;
-      case 'price-low':
-        result.sort((a, b) => {
-          const aPrice = a.isForSale && a.price ? parseFloat(ethers.formatEther(a.price)) : 0;
-          const bPrice = b.isForSale && b.price ? parseFloat(ethers.formatEther(b.price)) : 0;
-          return aPrice - bPrice;
-        });
-        break;
-      case 'likes':
-        result.sort((a, b) => (b.likes || 0) - (a.likes || 0));
-        break;
-      default: // recent
-        // Assuming tokenId is sequential or there's a timestamp
-        result.sort((a, b) => b.tokenId - a.tokenId);
+    // Apply search term filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(nft => 
+        (nft.name && nft.name.toLowerCase().includes(term)) || 
+        (nft.description && nft.description.toLowerCase().includes(term))
+      );
     }
     
-    setFilteredNfts(result);
-  }, [nfts, searchTerm, filters, sortBy]);
-
-  // Mobile sidebar enhancements
-  const toggleMobileSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-    // When opening sidebar on mobile, scroll to top to ensure good visibility
-    if (!sidebarOpen && window.innerWidth < 768) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-  
-  const closeSidebar = () => {
-    setSidebarOpen(false);
-  };
-
-  // Check if we're on mobile (for conditional rendering)
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Search handlers
-  const handleDesktopSearch = (term) => {
-    setSearchTerm(term);
-  };
-
-  const handleApplyMobileSearch = () => {
-    setSearchTerm(mobileSearchTerm);
-    closeSidebar();
-  };
-
-  // Mobile sidebar animation variants
-  const mobileSidebarVariants = {
-    hidden: { y: "100%", opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { 
-        type: "spring", 
-        damping: 25, 
-        stiffness: 300 
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortOption) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'price-high':
+          return parseFloat(ethers.formatEther(b.price || 0)) - parseFloat(ethers.formatEther(a.price || 0));
+        case 'price-low':
+          return parseFloat(ethers.formatEther(a.price || 0)) - parseFloat(ethers.formatEther(b.price || 0));
+        case 'likes':
+          return parseInt(b.likes || 0) - parseInt(a.likes || 0);
+        case 'recent':
+        default:
+          // Assuming newer NFTs have higher tokenIds
+          return parseInt(b.tokenId) - parseInt(a.tokenId);
       }
-    },
-    exit: { 
-      y: "100%", 
-      opacity: 0,
-      transition: { 
-        duration: 0.3, 
-        ease: "easeInOut" 
-      }
-    }
-  };
+    });
+    
+    return result;
+  }, [nfts, filters, searchTerm, sortOption]);
 
-  if (!walletConnected) {
-    return (
-      <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
-        <SpaceBackground />
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-4xl mx-auto text-center bg-black/50 backdrop-blur-md p-8 rounded-xl border border-purple-500/20 shadow-xl">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-500 mb-4">
-              NFT Dashboard
-            </h1>
-            <p className="text-gray-300 mb-8">Connect your wallet to manage your tokenized NFTs</p>
+  // For mobile view toggling
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
+
+  return (
+    <div className="relative min-h-screen bg-nuvo-gradient pb-12">
+      <SpaceBackground customClass="" />
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="flex flex-col space-y-6">
+          {/* Dashboard Header */}
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">
+                NFT Dashboard
+              </h1>
+              <p className="text-gray-300">Manage and explore your digital assets</p>
+            </div>
+            
+            <button 
+              onClick={handleRefreshNFTs} 
+              className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors shadow-md shadow-purple-900/20"
+            >
+              <FaRedo /> Refresh NFTs
+            </button>
+          </div>
+          
+          {/* Stats Overview - Pass true for isMobile on smaller screens */}
+          <NFTDashboardStats stats={stats} isMobile={true} />
+          
+          {/* Mobile Filters Toggle */}
+          <div className="md:hidden">
+            <button 
+              onClick={toggleMobileFilters}
+              className="w-full py-3 bg-purple-500/20 backdrop-blur-sm text-white rounded-lg flex items-center justify-center border border-purple-500/20 shadow-sm"
+            >
+              {showMobileFilters ? "Hide Filters" : "Show Filters"}
+            </button>
+          </div>
+          
+          {/* Main Content */}
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Sidebar - Hidden on mobile unless toggled */}
+            <div className={`${showMobileFilters ? 'block' : 'hidden'} md:block md:w-64 flex-shrink-0`}>
+              <NFTDashboardSidebar 
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                onSearchChange={handleSearchChange}
+                onSearchApply={() => setShowMobileFilters(false)}
+                searchValue={searchTerm}
+                onSortChange={handleSortChange}
+                activeView={activeView}
+                isMobile={true}
+                stats={stats} 
+              />
+            </div>
+            
+            {/* NFT Collection */}
+            <div className="flex-1 bg-black/20 backdrop-blur-md p-4 rounded-xl border border-purple-500/20">
+              <NFTCollection 
+                nfts={filteredNFTs}
+                loading={loading}
+                error={error}
+                onRetry={handleRefreshNFTs}
+              />
+            </div>
           </div>
         </div>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
-      <SpaceBackground />
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {/* Dashboard Header */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-500">
-                NFT Dashboard
-              </h1>
-              <p className="text-gray-300 mt-2">
-                Manage your tokenized assets in one place
-              </p>
-            </div>
-            <div className="flex space-x-3 mt-4 md:mt-0">
-              <Link
-                to="/tokenize"
-                className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-              >
-                <FaPlus className="mr-2" /> Create New NFT
-              </Link>
-            </div>
-          </div>
-
-          {/* Dashboard Stats Cards - Now using the new component */}
-          <NFTDashboardStats stats={stats} isMobile={isMobile} />
-
-          {/* Main Dashboard Content */}
-          <div className="flex flex-col md:flex-row gap-6 relative">
-            {/* Desktop Sidebar - Only visible on desktop */}
-            {!isMobile && (
-              <motion.div 
-                className="md:w-64 flex-shrink-0 hidden md:block"
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <NFTDashboardSidebar 
-                  stats={stats}
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onSearchChange={handleDesktopSearch}
-                  searchValue={searchTerm}
-                  onSearchApply={null}
-                  onSortChange={setSortBy}
-                  activeView={activeView}
-                  isMobile={false}
-                />
-              </motion.div>
-            )}
-            
-            {/* NFT Collection */}
-            <motion.div 
-              className="flex-grow"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="bg-black/30 backdrop-blur-sm rounded-xl p-4 border border-purple-500/20">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <div className="flex justify-between items-center w-full sm:w-auto mb-4 sm:mb-0">
-                    <h2 className="text-xl font-bold text-white">
-                      {searchTerm ? 'Search Results' : 'Your NFTs'}
-                      <span className="ml-2 text-sm text-gray-400">({filteredNfts.length} items)</span>
-                    </h2>
-                    
-                    {/* Mobile Filter Button - Only visible on mobile */}
-                    {isMobile && (
-                      <button 
-                        onClick={toggleMobileSidebar}
-                        className="p-3 bg-purple-600 rounded-full text-white shadow-lg flex items-center justify-center"
-                        aria-label="Open Filters"
-                      >
-                        <FaFilter size={16} />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => setActiveView('grid')}
-                      className={`p-2 rounded-lg ${
-                        activeView === 'grid' 
-                          ? 'bg-purple-500/50 text-white' 
-                          : 'bg-black/40 text-gray-400 hover:bg-black/60'
-                      }`}
-                    >
-                      <FaTh size={14} />
-                    </button>
-                    <button
-                      onClick={() => setActiveView('list')}
-                      className={`p-2 rounded-lg ${
-                        activeView === 'list' 
-                          ? 'bg-purple-500/50 text-white' 
-                          : 'bg-black/40 text-gray-400 hover:bg-black/60'
-                      }`}
-                    >
-                      <FaList size={14} />
-                    </button>
-                    <button
-                      className="p-2 bg-black/40 text-gray-400 hover:bg-black/60 rounded-lg"
-                      title="Export Collection"
-                    >
-                      <FaDownload size={14} />
-                    </button>
-                  </div>
-                </div>
-                
-                <NFTCollection 
-                  nfts={filteredNfts} 
-                  loading={loading} 
-                  error={error} 
-                />
-              </div>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Mobile Sidebar Overlay - Appears from bottom */}
-      <AnimatePresence>
-        {sidebarOpen && isMobile && (
-          <motion.div 
-            className="fixed inset-0 bg-black/70 z-50 flex flex-col justify-end"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gray-900 rounded-t-2xl p-5 h-[80vh] overflow-y-auto"
-              variants={mobileSidebarVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white">Filters & Options</h3>
-                <button 
-                  onClick={closeSidebar}
-                  className="p-2 bg-gray-800 rounded-full text-gray-300 hover:bg-gray-700"
-                >
-                  <FaTimes size={18} />
-                </button>
-              </div>
-
-              <NFTDashboardSidebar 
-                stats={stats}
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                // Remove the immediate close on search for mobile
-                onSearchChange={isMobile ? setMobileSearchTerm : setSearchTerm}
-                onSearchApply={handleApplyMobileSearch}  // New prop for applying search
-                searchValue={isMobile ? mobileSearchTerm : searchTerm} // Pass the current search value
-                onSortChange={(sort) => {
-                  setSortBy(sort);
-                  // Keep closing on sort change as this is a select box with immediate effect
-                  if (isMobile) closeSidebar();
-                }}
-                activeView={activeView}
-                isMobile={true}
-              />
-
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={closeSidebar}
-                  className="w-full max-w-xs py-3 bg-purple-600 rounded-lg text-white font-medium"
-                >
-                  View Results
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      
-      {/* Floating Action Button for mobile - Always accessible */}
-      {isMobile && !sidebarOpen && (
-        <button
-          onClick={toggleMobileSidebar}
-          className="fixed bottom-6 right-6 z-40 p-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full text-white shadow-lg flex items-center justify-center"
-          aria-label="Open Filters"
-        >
-          <FaFilter size={20} />
-        </button>
-      )}
     </div>
   );
 };

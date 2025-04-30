@@ -3,8 +3,8 @@ import axios from 'axios';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../Abi/TokenizationApp.json';
 
-const PINATA_API_KEY = import.meta.env.VITE_PINATA_API_KEY;
-const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SECRET_KEY;
+const PINATA_API_KEY = import.meta.env.VITE_PINATA_API;
+const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SKe;
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
 // Mapa de traducción de categorías (inglés → español)

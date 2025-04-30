@@ -42,7 +42,7 @@ export default function useUserNFTs(address) {
         const base64Data = tokenURI.split(',')[1];
         const jsonString = atob(base64Data);
         metadata = { ...metadata, ...JSON.parse(jsonString) };
-      } else if (tokenURI.startsWith('data:,')) {
+      } else if (tokenURI.startsWith('data:,' )) {
         // Formato simple data URI (no base64)
         const dataJson = decodeURIComponent(tokenURI.substring(6));
         try {
@@ -172,6 +172,7 @@ export default function useUserNFTs(address) {
       if (!isMounted) return;
       setLoading(true);
       setError(null);
+      setNfts([]); // Reset NFTs before fetching
 
       try {
         // Conectar al provider con timeout
@@ -186,10 +187,60 @@ export default function useUserNFTs(address) {
           provider
         );
 
-        // Obtener tokens del creador
-        const tokenIds = await contract.getTokensByCreator(address);
+        // Obtener tokens del creador con mejor manejo de errores
+        let tokenIds = [];
+        try {
+          console.log("Calling getTokensByCreator for address:", address);
+          const rawResult = await contract.getTokensByCreator(address);
+          console.log("Raw result from getTokensByCreator:", rawResult);
+          
+          // Check if result is valid
+          if (rawResult) {
+            // Ensure it's an array
+            tokenIds = Array.isArray(rawResult) ? rawResult : [];
+            console.log("Processed token IDs:", tokenIds);
+          } else {
+            console.warn("getTokensByCreator returned empty or invalid result");
+          }
+        } catch (tokenError) {
+          console.error("Error getting tokens by creator:", tokenError);
+          
+          // Try fallback method if available
+          try {
+            // Some contracts might have alternative methods to get tokens
+            // Example: If a balanceOf function exists
+            const balance = await contract.balanceOf(address);
+            console.log("User token balance:", balance.toString());
+            
+            // If user has tokens, we can try to get them one by one
+            if (balance && Number(balance) > 0) {
+              const tempTokenIds = [];
+              for (let i = 0; i < Number(balance); i++) {
+                try {
+                  // Example: Using tokenOfOwnerByIndex if it exists
+                  const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+                  if (tokenId) tempTokenIds.push(tokenId);
+                } catch (indexError) {
+                  console.warn("Could not get token by index:", indexError);
+                  break;
+                }
+              }
+              tokenIds = tempTokenIds;
+            }
+          } catch (fallbackError) {
+            console.warn("Fallback method also failed:", fallbackError);
+            // Continue with empty tokenIds array
+          }
+        }
         
         if (!isMounted) return;
+        
+        if (tokenIds.length === 0) {
+          console.log("No tokens found for address:", address);
+          setNfts([]);
+          setLoading(false);
+          return;
+        }
         
         // Procesar tokens en lotes para no sobrecargar la red
         const BATCH_SIZE = 5;
@@ -203,12 +254,18 @@ export default function useUserNFTs(address) {
             processToken(tokenId, contract, address)
           );
           
-          const batchResults = await Promise.all(batchPromises);
-          results.push(...batchResults);
-          
-          // Actualización incremental para mejorar UX
-          if (isMounted) {
-            setNfts(prev => [...prev, ...batchResults]);
+          try {
+            const batchResults = await Promise.all(batchPromises);
+            const validResults = batchResults.filter(result => !result.error);
+            results.push(...validResults);
+            
+            // Actualización incremental para mejorar UX
+            if (isMounted) {
+              setNfts(prev => [...prev, ...validResults]);
+            }
+          } catch (batchError) {
+            console.error("Error processing batch:", batchError);
+            // Continue with the next batch
           }
         }
         
@@ -219,7 +276,18 @@ export default function useUserNFTs(address) {
       } catch (err) {
         console.error("Error fetching user NFTs:", err);
         if (isMounted) {
-          setError(err.message || "Error al obtener tus NFTs");
+          // Mejorar mensajes de error específicos para una mejor experiencia de usuario
+          let userFriendlyError = "Error al obtener tus NFTs";
+          
+          if (err.message.includes("BAD_DATA")) {
+            userFriendlyError = "No se pudieron decodificar los datos del contrato. Es posible que aún no tengas NFTs o que estés en la red incorrecta.";
+          } else if (err.message.includes("network")) {
+            userFriendlyError = "Error de conexión a la red blockchain. Por favor verifica tu conexión.";
+          } else if (err.message.includes("user rejected")) {
+            userFriendlyError = "Operación cancelada por el usuario.";
+          }
+          
+          setError(userFriendlyError);
         }
       } finally {
         if (isMounted) {
