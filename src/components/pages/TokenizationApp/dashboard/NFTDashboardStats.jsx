@@ -16,7 +16,8 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
     listedNFTs, 
     totalValue, 
     uniqueCategories = 1, // Nuevo campo
-    topNFTValue = '0.00'
+    topNFTValue = '0.00',
+    recentActivity = 0 // Add the missing property with a default value
   } = stats;
 
   // Animation for cards

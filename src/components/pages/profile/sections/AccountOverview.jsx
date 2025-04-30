@@ -5,6 +5,65 @@ import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
 import useUserNFTs from '../../../../hooks/useUserNFTs';
 
+// Lista de imágenes de respaldo en orden de preferencia
+const FALLBACK_IMAGES = [
+  '/LogoNuvos.webp',
+  '/NFT-X1.webp',
+  '/NuvosToken.webp',
+  '/placeholder-nft.webp'
+];
+
+// Componente para manejar imágenes de NFT con múltiples respaldos
+const NFTImage = ({ src, alt, className }) => {
+  const [currentSrc, setCurrentSrc] = useState(src);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    // Reiniciar el estado cuando cambia la fuente original
+    setCurrentSrc(src);
+    setFallbackIndex(0);
+    setHasError(false);
+  }, [src]);
+
+  const handleError = () => {
+    // Si la imagen original falla, intentamos con la primera alternativa
+    if (currentSrc === src && fallbackIndex < FALLBACK_IMAGES.length) {
+      console.log(`Image failed to load: ${src}. Trying fallback: ${FALLBACK_IMAGES[fallbackIndex]}`);
+      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
+      setFallbackIndex(prevIndex => prevIndex + 1);
+    } 
+    // Si ya estamos usando una alternativa y falla, probamos con la siguiente
+    else if (fallbackIndex < FALLBACK_IMAGES.length) {
+      console.log(`Fallback image failed: ${currentSrc}. Trying next fallback: ${FALLBACK_IMAGES[fallbackIndex]}`);
+      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
+      setFallbackIndex(prevIndex => prevIndex + 1);
+    } 
+    // Si todas las alternativas fallan, mostramos un icono
+    else {
+      console.log(`All fallback images failed for: ${alt}`);
+      setHasError(true);
+    }
+  };
+
+  if (hasError) {
+    return (
+      <div className={`flex items-center justify-center ${className}`}>
+        <FaImage className="text-lg text-purple-400" />
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={currentSrc} 
+      alt={alt} 
+      className={className}
+      onError={handleError}
+    />
+  );
+};
+
 const AccountOverview = ({ account, balance, network, nfts = [] }) => {
   const [copied, setCopied] = useState(false);
   const { state } = useStaking();
@@ -158,20 +217,11 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
               <div className="flex flex-wrap gap-2 mt-3 mb-2">
                 {actualNfts.slice(0, 3).map((nft, idx) => (
                   <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
-                    {nft.image ? (
-                      <img 
-                        src={nft.image} 
-                        alt={nft.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.src = "/LogoNuvos.webp";
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <FaImage className="text-purple-400 opacity-50" />
-                      </div>
-                    )}
+                    <NFTImage 
+                      src={nft.image} 
+                      alt={nft.name || `NFT #${nft.tokenId}`} 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ))}
                 {nftCount > 3 && (

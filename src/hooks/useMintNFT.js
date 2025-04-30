@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../Abi/TokenizationApp.json';
@@ -23,61 +23,68 @@ export default function useMintNFT() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState(null);
+  
+  // Usar una referencia para la instancia de axios para evitar recrearla
+  const axiosInstanceRef = useRef(axios.create({
+    headers: {
+      pinata_api_key: PINATA_API_KEY,
+      pinata_secret_api_key: PINATA_SECRET_KEY,
+    },
+  }));
 
-  // 1. Subir imagen a Pinata
-  const uploadImageToIPFS = async (file) => {
+  // 1. Subir imagen a Pinata (optimizado y con useCallback)
+  const uploadImageToIPFS = useCallback(async (file) => {
     try {
       // Verificar que file es un objeto File/Blob válido
       if (!file || !(file instanceof Blob)) {
         throw new Error("File is not a valid Blob or File object");
       }
 
-      console.log("Uploading file to IPFS:", file);
-      
       const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
       const data = new FormData();
       data.append('file', file);
       
-      const res = await axios.post(url, data, {
-        maxContentLength: 'Infinity',
+      // Usar la instancia cacheada de axios con timeout y opciones de retry
+      const res = await axiosInstanceRef.current.post(url, data, {
+        maxContentLength: Infinity,
+        timeout: 30000, // 30s timeout
         headers: {
           'Content-Type': 'multipart/form-data',
-          pinata_api_key: PINATA_API_KEY,
-          pinata_secret_api_key: PINATA_SECRET_KEY,
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          console.log(`Upload progress: ${percentCompleted}%`);
         },
       });
       
-      console.log("IPFS upload response:", res.data);
       return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
     } catch (error) {
       console.error("Error uploading to IPFS:", error);
-      throw error;
+      throw new Error(`Error al subir imagen: ${error.message || 'Error desconocido'}`);
     }
-  };
+  }, []);
 
-  // 2. Subir metadatos a Pinata
-  const uploadMetadataToIPFS = async (metadata) => {
+  // 2. Subir metadatos a Pinata (optimizado y con useCallback)
+  const uploadMetadataToIPFS = useCallback(async (metadata) => {
     try {
-      console.log("Uploading metadata to IPFS:", metadata);
-      
       const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-      const res = await axios.post(url, metadata, {
-        headers: {
-          pinata_api_key: PINATA_API_KEY,
-          pinata_secret_api_key: PINATA_SECRET_KEY,
-        },
+      
+      // Usar la instancia cacheada de axios
+      const res = await axiosInstanceRef.current.post(url, metadata, {
+        timeout: 15000, // 15s timeout
       });
       
-      console.log("Metadata upload response:", res.data);
       return `https://gateway.pinata.cloud/ipfs/${res.data.IpfsHash}`;
     } catch (error) {
       console.error("Error uploading metadata:", error);
-      throw error;
+      throw new Error(`Error al subir metadatos: ${error.message || 'Error desconocido'}`);
     }
-  };
+  }, []);
 
-  // 3. Mintear NFT en el contrato
-  const mintNFT = async ({ file, name, description, category, royalty }) => {
+  // 3. Mintear NFT en el contrato (optimizado con useCallback)
+  const mintNFT = useCallback(async ({ file, name, description, category, royalty }) => {
+    // Crear un AbortController para manejar cancelaciones
+    const abortController = new AbortController();
     setLoading(true);
     setError(null);
     setSuccess(false);
@@ -118,14 +125,46 @@ export default function useMintNFT() {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
       
+      // Convertir el royalty a un formato adecuado para el contrato
+      // El error está aquí - necesitamos asegurarnos de que royalty sea un número o una cadena antes de usarlo
+      const royaltyValue = typeof royalty === 'bigint' ? royalty : 
+                          typeof royalty === 'string' ? royalty :
+                          typeof royalty === 'number' ? royalty.toString() : 
+                          '0';
+                          
       console.log("Calling contract.createNFT with:", {
         metadataUrl,
         category: translatedCategory,
-        royalty
+        royalty: royaltyValue
       });
       
+      // Estimar gas para la transacción
+      let gasEstimate;
+      try {
+        gasEstimate = await contract.createNFT.estimateGas(
+          metadataUrl, 
+          translatedCategory, 
+          royaltyValue
+        );
+      } catch (gasError) {
+        console.warn("Error estimating gas:", gasError);
+        // Continuar sin la estimación de gas
+      }
+      
+      // Si tenemos una estimación, añadir un 20% extra
+      const txOptions = {};
+      if (gasEstimate) {
+        txOptions.gasLimit = BigInt(Math.floor(Number(gasEstimate) * 1.2));
+      }
+      
       // Llamar a createNFT con la categoría traducida
-      const tx = await contract.createNFT(metadataUrl, translatedCategory, royalty);
+      const tx = await contract.createNFT(
+        metadataUrl, 
+        translatedCategory, 
+        royaltyValue,
+        txOptions
+      );
+      
       setTxHash(tx.hash);
       console.log("Transaction sent, hash:", tx.hash);
       
@@ -141,19 +180,25 @@ export default function useMintNFT() {
           try {
             return contract.interface.parseLog(log);
           } catch (e) {
+            console.warn("Error parsing log:", e);
             return null;
           }
         })
         .filter(Boolean)[0];
       
-      const tokenId = tokenMintedEvent ? tokenMintedEvent.args[0] : null;
-      console.log("New token ID:", tokenId);
+      let tokenId = null;
+      if (tokenMintedEvent && tokenMintedEvent.args && tokenMintedEvent.args[0]) {
+        tokenId = tokenMintedEvent.args[0].toString();
+        console.log("New token ID:", tokenId);
+      } else {
+        console.warn("Could not extract token ID from event");
+      }
       
       return { 
         imageUrl, 
         metadataUrl, 
         txHash: tx.hash,
-        tokenId: tokenId ? tokenId.toString() : null
+        tokenId: tokenId
       };
     } catch (err) {
       console.error("Error in mintNFT:", err);
@@ -163,7 +208,7 @@ export default function useMintNFT() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [uploadImageToIPFS, uploadMetadataToIPFS]);
 
   return { mintNFT, loading, error, success, txHash };
 }
