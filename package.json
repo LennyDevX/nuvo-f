@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@dodoex/widgets": "^3.0.1",
+    "@google/generative-ai": "^0.2.1",
     "@types/lodash": "^4.17.16",
     "chart.js": "^4.4.8",
     "cors": "^2.8.5",
@@ -44,6 +45,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
     "buffer": "^6.0.3",
+    "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -54,7 +56,6 @@
     "stream-browserify": "^3.0.0",
     "tailwindcss": "^3.4.1",
     "util": "^0.12.5",
-    "vite": "^6.2.6",
-    "concurrently": "^8.2.2"
+    "vite": "^6.2.6"
   }
 }

@@ -45,7 +45,7 @@ const NFTDashboard = createLazyComponent(() => import('../components/pages/Token
 const NFTDetail = createLazyComponent(() => import('../components/pages/TokenizationApp/components/NFTDetail.jsx'));
 const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/steps/TokenizationTool.jsx'));
 const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
-
+const ChatPage = createLazyComponent(() => import('../components/pages/chat/ChatPage'));
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -107,6 +107,11 @@ export const routes = [
   {
     path: "/ai",
     element: withSuspense(<MainLayout><AIHub /></MainLayout>)
+  },
+  {
+    path: "/chat",
+    element: withSuspense(<MainLayout><ChatPage /></MainLayout>),
+    loader: async () => null
   },
   {
     path: "/nfts",

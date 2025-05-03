@@ -10,7 +10,8 @@ import {
   FaExternalLinkAlt,
   FaImage,
   FaRobot,
-  FaCamera
+  FaCamera,
+  FaComments
 } from 'react-icons/fa';
 
 // Importa la variable de entorno
@@ -102,6 +103,7 @@ const Navbar = () => {
     { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
     { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
     { path: '/ai', label: 'AI Hub', icon: FaRobot },
+    { path: '/chat', label: 'Chat AI', icon: FaComments },
   ], []);
 
   // Memoized logo click handler

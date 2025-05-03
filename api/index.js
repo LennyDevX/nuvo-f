@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import geminiRouter from './gemini/index.js';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -18,10 +19,8 @@ app.get('/api/hello', (_, res) => {
   res.json({ message: 'Hola desde el servidor de Nuvos-App!' });
 });
 
-// Nueva ruta de prueba
-app.get('/api/test', (_, res) => {
-  res.json({ message: 'Ruta de prueba funcionando correctamente!' });
-});
+// Usar el router de Gemini
+app.use('/api/gemini', geminiRouter);
 
 // Verificar el entorno de ejecución
 const isVercel = process.env.VERCEL === '1';
