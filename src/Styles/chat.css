@@ -532,3 +532,53 @@
     transform: scale(0.9);
   }
 }
+
+/* Enhanced markdown styling for chat */
+.markdown-body {
+  background-color: transparent !important;
+}
+
+.markdown-body pre {
+  background-color: rgba(30, 30, 30, 0.6) !important;
+  border-radius: 8px;
+}
+
+.markdown-body code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85em;
+}
+
+.markdown-body table {
+  display: block;
+  width: 100%;
+  overflow: auto;
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+}
+
+.markdown-body table th {
+  font-weight: 600;
+  background-color: rgba(80, 80, 80, 0.3);
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 6px 13px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.markdown-body table tr {
+  background-color: rgba(50, 50, 50, 0.3);
+  border-top: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.markdown-body table tr:nth-child(2n) {
+  background-color: rgba(70, 70, 70, 0.3);
+}
+
+/* Smooth text rendering */
+.markdown-body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

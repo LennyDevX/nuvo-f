@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { FaPaperPlane, FaRobot, FaUser, FaSpinner } from 'react-icons/fa';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const GeminiChat = () => {
   const [messages, setMessages] = useState([]);
@@ -104,14 +106,14 @@ const GeminiChat = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-900/30 backdrop-blur-xl border-0 shadow-2xl overflow-hidden">
-      {/* Message container - Adding better padding and ensuring content doesn't overlap buttons */}
+      {/* Message container - Using padding to create space from navbar */}
       <div 
         ref={chatContainerRef}
         className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-purple-500/20 scrollbar-track-transparent"
-        style={{ height: 'calc(100% - 116px)' }} // Adjusted for header + input area
+        style={{ height: 'calc(100% - 76px)' }} // Adjusted for input area height only
       >
-        {/* Increased padding at top and sides for better text readability */}
-        <div className="p-4 sm:p-6 pt-20 h-full"> {/* Added significant top padding (pt-20) to ensure no overlap with buttons */}
+        {/* Adjusted padding at top for better text readability without header bar */}
+        <div className="p-4 sm:p-6 pt-16 h-full"> {/* Reduced from pt-28 to pt-16 */}
           <AnimatePresence mode="wait">
             {isInitializing ? (
               <m.div 
@@ -130,7 +132,7 @@ const GeminiChat = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center justify-center h-full text-center pt-10" // Added top padding
+                className="flex flex-col items-center justify-center h-full text-center mt-8" // Added top margin
               >
                 <div className="mb-4">
                   <m.div 
@@ -189,7 +191,7 @@ const GeminiChat = () => {
                 key="messages"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-5 pb-3" // Increased spacing between messages and bottom padding
+                className="space-y-5 pb-3 mt-6" // Added top margin for message content
               >
                 {messages.map((msg, index) => (
                   <m.div 
@@ -197,9 +199,9 @@ const GeminiChat = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-1`} // Added bottom margin
+                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} mb-1`}
                   >
-                    <div className={`flex max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}> {/* Reduced max-width */}
+                    <div className={`flex max-w-[80%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                       <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 
                         ${msg.sender === 'user' ? 'bg-indigo-600/80 backdrop-blur-sm ml-2' : 'bg-purple-800/80 backdrop-blur-sm mr-2'} 
                         ${msg.text.includes('Error:') ? 'bg-red-700/80 backdrop-blur-sm' : ''}`}
@@ -212,9 +214,34 @@ const GeminiChat = () => {
                           : 'bg-gray-800/40 backdrop-blur-sm text-gray-100 rounded-tl-none'}
                         ${msg.text.includes('Error:') ? 'bg-red-900/40 backdrop-blur-sm border-l-2 border-red-500' : ''}`}
                       >
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed"> {/* Improved text styling */}
-                          {msg.text}
-                        </p>
+                        {msg.sender === 'user' ? (
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                            {msg.text}
+                          </p>
+                        ) : (
+                          <ReactMarkdown
+                            children={msg.text}
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              h1: ({node, ...props}) => <h1 className="text-xl font-bold text-purple-300 mt-2 mb-1" {...props} />,
+                              h2: ({node, ...props}) => <h2 className="text-lg font-semibold text-purple-200 mt-2 mb-1" {...props} />,
+                              h3: ({node, ...props}) => <h3 className="text-base font-semibold text-purple-100 mt-2 mb-1" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 text-sm" {...props} />,
+                              ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2 text-sm" {...props} />,
+                              li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                              p: ({node, ...props}) => <p className="mb-2 text-sm leading-relaxed" {...props} />,
+                              code: ({node, inline, className, children, ...props}) =>
+                                inline
+                                  ? <code className="bg-gray-700/80 px-1 rounded text-xs font-mono" {...props}>{children}</code>
+                                  : <pre className="bg-gray-800/80 p-3 rounded-md font-mono text-xs overflow-x-auto whitespace-pre mb-2" {...props}><code>{children}</code></pre>,
+                              blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-purple-400 pl-4 italic text-gray-300 my-2" {...props} />,
+                              a: ({node, ...props}) => <a className="text-purple-300 underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                              table: ({node, ...props}) => <table className="min-w-full text-xs my-2 border border-gray-700" {...props} />,
+                              th: ({node, ...props}) => <th className="bg-gray-700/60 px-2 py-1 font-semibold" {...props} />,
+                              td: ({node, ...props}) => <td className="border px-2 py-1" {...props} />,
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   </m.div>

@@ -2,8 +2,6 @@ import React from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { FaBars, FaUser } from 'react-icons/fa';
 import GeminiChat from '../../../GeminiChat/GeminiChat';
-import '../../../../styles/chat.css'; // Import your CSS file for chat styles
-
 
 const ChatContainer = ({ 
   leftSidebarOpen, 
