@@ -1,31 +1,25 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
-import geminiRouter from './gemini/index.js';
-
-// Cargar variables de entorno
-dotenv.config();
+import env from './config/environment.js';
+import routes from './routes/index.js';
+import errorHandler from './middlewares/error-handler.js';
 
 // Crear la aplicación express
 const app = express();
-const port = process.env.PORT || 3001;
+const port = env.port;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Ruta de prueba
-app.get('/api/hello', (_, res) => {
-  res.json({ message: 'Hola desde el servidor de Nuvos-App!' });
-});
+// Rutas API
+app.use('/api', routes);
 
-// Usar el router de Gemini
-app.use('/api/gemini', geminiRouter);
+// Middleware de manejo de errores (debe estar al final)
+app.use(errorHandler);
 
 // Verificar el entorno de ejecución
-const isVercel = process.env.VERCEL === '1';
-
-if (isVercel) {
+if (env.isVercel) {
   // En Vercel, exportamos la aplicación como un módulo
   console.log('Running on Vercel');
 } else {
@@ -35,5 +29,5 @@ if (isVercel) {
   });
 }
 
-// Export the app at the top level
+// Export the app for serverless environments
 export default app;
