@@ -5,7 +5,7 @@
 /**
  * Default placeholder image to use when IPFS content cannot be loaded
  */
-export const DEFAULT_PLACEHOLDER = '/assets/images/nft-placeholder.png';
+export const DEFAULT_PLACEHOLDER = '/LogoNuvos.webp';
 
 /**
  * List of supported IPFS gateways

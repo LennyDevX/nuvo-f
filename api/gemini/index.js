@@ -1,27 +1,28 @@
 import express from 'express';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const router = express.Router();
 const apiKey = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(apiKey);
+const ai = new GoogleGenAI({ apiKey });
 
-// Función para procesar solicitudes a Gemini
-async function processGeminiRequest(prompt, model = 'gemini-2.0-flash-lite') {
+// Función para procesar solicitudes a Gemini usando el nuevo SDK y sintaxis correcta
+async function processGeminiRequest(prompt, model = 'gemini-2.0-flash') {
   if (!apiKey) {
     throw new Error('API key no configurada');
   }
-  
   if (!prompt) {
     throw new Error('Se requiere un prompt');
   }
-  
-  const geminiModel = genAI.getGenerativeModel({ model });
-  const result = await geminiModel.generateContent(prompt);
-  const response = await result.response;
-  return response.text();
+  // Sintaxis oficial del nuevo SDK
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+  });
+  // El texto generado está en response.text
+  return response.text;
 }
 
 // Ruta POST para Gemini
@@ -60,6 +61,64 @@ router.get('/', async (req, res) => {
       error: 'Error al procesar la solicitud con Gemini',
       details: error.message 
     });
+  }
+});
+
+// Endpoint especial para Function Calling
+router.post('/function-calling', async (req, res) => {
+  try {
+    const { prompt, model = 'gemini-2.0-flash', functionDeclarations, functionCallingMode = 'ANY', allowedFunctionNames } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({ error: 'Se requiere un prompt' });
+    }
+
+    // Ejemplo de functionDeclaration si no se envía ninguna
+    const defaultFunctionDeclaration = {
+      name: 'controlLight',
+      parameters: {
+        type: 'object',
+        description: 'Set the brightness and color temperature of a room light.',
+        properties: {
+          brightness: {
+            type: 'number',
+            description: 'Light level from 0 to 100. Zero is off and 100 is full brightness.'
+          },
+          colorTemperature: {
+            type: 'string',
+            description: 'Color temperature: daylight, cool, or warm.'
+          }
+        },
+        required: ['brightness', 'colorTemperature']
+      }
+    };
+
+    const tools = [{ functionDeclarations: functionDeclarations || [defaultFunctionDeclaration] }];
+
+    const config = {
+      toolConfig: {
+        functionCallingConfig: {
+          mode: functionCallingMode, // 'ANY', 'NONE', 'AUTO', etc.
+          allowedFunctionNames: allowedFunctionNames || ['controlLight']
+        }
+      },
+      tools
+    };
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
+      config
+    });
+
+    res.json({
+      message: 'Respuesta de Gemini con Function Calling',
+      response: response.text,
+      functionCalls: response.functionCalls || null
+    });
+  } catch (error) {
+    console.error('Error en function-calling:', error);
+    res.status(500).json({ error: 'Error en function-calling', details: error.message });
   }
 });
 
