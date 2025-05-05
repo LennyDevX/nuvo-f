@@ -18,7 +18,7 @@ const GeminiChat = () => {
   useEffect(() => {
     const checkApiConnection = async () => {
       try {
-        const apiUrl = '/api/hello';
+        const apiUrl = '/server/hello';
         const response = await fetch(apiUrl);
         
         if (response.ok) {
@@ -97,7 +97,7 @@ const GeminiChat = () => {
     setIsLoading(true);
 
     try {
-      const apiUrl = '/api/gemini';
+      const apiUrl = '/server/gemini';
       
       // Incluye el historial completo de la conversación
       const formattedMessages = [...formatMessagesForAPI(), {

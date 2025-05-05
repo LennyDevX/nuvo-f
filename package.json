@@ -11,9 +11,10 @@
     "vercel-build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "start:api": "node api/index.js",
-    "dev:api": "nodemon api/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run dev:api\""
+    "start:api": "node server/index.js",
+    "dev:api": "nodemon server/index.js",
+    "dev:server": "nodemon server/index.js",
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\""
   },
   "dependencies": {
     "@dodoex/widgets": "^3.0.1",
