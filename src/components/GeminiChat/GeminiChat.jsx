@@ -9,6 +9,7 @@ const GeminiChat = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [streamedResponse, setStreamedResponse] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -45,6 +46,46 @@ const GeminiChat = () => {
     }
   }, [isInitializing]);
 
+  // Convierte el historial de mensajes al formato que espera la API de Gemini
+  const formatMessagesForAPI = () => {
+    return messages.map(msg => ({
+      role: msg.sender === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }));
+  };
+
+  // Función para procesar la respuesta en streaming
+  const processStreamResponse = async (reader) => {
+    setStreamedResponse('');
+    const decoder = new TextDecoder();
+    let partialResponse = '';
+    
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunk = decoder.decode(value);
+        partialResponse += chunk;
+        setStreamedResponse(partialResponse);
+      }
+      
+      // Cuando termina el streaming, actualiza los mensajes con la respuesta completa
+      setMessages((prev) => [
+        ...prev, 
+        { text: partialResponse, sender: 'bot' }
+      ]);
+      setStreamedResponse('');
+    } catch (error) {
+      console.error('Error procesando streaming:', error);
+      setStreamedResponse('');
+      setMessages((prev) => [
+        ...prev,
+        { text: `Error: ${error.message}`, sender: 'bot error' }
+      ]);
+    }
+  };
+
   // Función para enviar mensajes a la API de Gemini
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -58,27 +99,39 @@ const GeminiChat = () => {
     try {
       const apiUrl = '/api/gemini';
       
+      // Incluye el historial completo de la conversación
+      const formattedMessages = [...formatMessagesForAPI(), {
+        role: 'user',
+        parts: [{ text: input }]
+      }];
+      
+      // Usa streaming para respuestas más fluidas
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: input }),
+        body: JSON.stringify({ 
+          messages: formattedMessages,
+          stream: true 
+        }),
       });
       
       if (!response.ok) {
         throw new Error(`Error de servidor: ${response.status}`);
       }
       
-      const text = await response.text();
-      
-      if (!text) {
-        throw new Error('Respuesta vacía del servidor');
+      // Procesar la respuesta en streaming
+      if (response.body) {
+        const reader = response.body.getReader();
+        await processStreamResponse(reader);
+      } else {
+        // Fallback si no hay soporte de streaming
+        const text = await response.text();
+        const data = JSON.parse(text);
+        setMessages((prev) => [...prev, { 
+          text: data.response || 'No se recibió respuesta', 
+          sender: 'bot' 
+        }]);
       }
-      
-      const data = JSON.parse(text);
-      setMessages((prev) => [...prev, { 
-        text: data.response || 'No se recibió respuesta', 
-        sender: 'bot' 
-      }]);
     } catch (error) {
       console.error('Error completo:', error);
       setMessages((prev) => [...prev, { 
@@ -96,7 +149,7 @@ const GeminiChat = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages]);
+  }, [messages, streamedResponse]);
 
   // Función para aplicar ejemplo de consulta
   const handleSuggestionClick = (suggestion) => {
@@ -246,7 +299,40 @@ const GeminiChat = () => {
                     </div>
                   </m.div>
                 ))}
-                {isLoading && (
+                
+                {/* Muestra la respuesta que está llegando en streaming */}
+                {isLoading && streamedResponse ? (
+                  <m.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="flex flex-row">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-800/80 backdrop-blur-sm mr-2">
+                        <FaRobot className="text-white text-xs" />
+                      </div>
+                      <div className="py-3 px-4 rounded-2xl bg-gray-800/40 backdrop-blur-sm text-gray-100 rounded-tl-none">
+                        <ReactMarkdown
+                          children={streamedResponse}
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            h1: ({node, ...props}) => <h1 className="text-xl font-bold text-purple-300 mt-2 mb-1" {...props} />,
+                            h2: ({node, ...props}) => <h2 className="text-lg font-semibold text-purple-200 mt-2 mb-1" {...props} />,
+                            h3: ({node, ...props}) => <h3 className="text-base font-semibold text-purple-100 mt-2 mb-1" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2 text-sm" {...props} />,
+                            ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2 text-sm" {...props} />,
+                            li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                            p: ({node, ...props}) => <p className="mb-2 text-sm leading-relaxed" {...props} />,
+                            code: ({node, inline, className, children, ...props}) =>
+                              inline
+                                ? <code className="bg-gray-700/80 px-1 rounded text-xs font-mono" {...props}>{children}</code>
+                                : <pre className="bg-gray-800/80 p-3 rounded-md font-mono text-xs overflow-x-auto whitespace-pre mb-2" {...props}><code>{children}</code></pre>,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </m.div>
+                ) : isLoading && (
                   <m.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
