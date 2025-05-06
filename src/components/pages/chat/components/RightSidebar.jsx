@@ -12,7 +12,7 @@ const RightSidebar = ({
   balance,
   nfts,
   nftsLoading,
-  userDeposits,
+  // userDeposits is unused
   depositCount,
   pendingRewards,
   stakingStats
@@ -91,18 +91,10 @@ const RightSidebar = ({
                   </div>
                 </div>
               ) : (
-                <div className="bg-gray-800/30 backdrop-blur-md rounded-lg p-5 border border-purple-500/20 text-center mb-6">
-                  <p className="text-gray-300 mb-4">Connect your wallet to view your profile</p>
-                  <m.button 
-                    className="bg-purple-600/80 backdrop-blur-sm hover:bg-purple-700/80 text-white px-5 py-2.5 rounded-lg text-sm transition-colors"
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Connect Wallet
-                  </m.button>
+                <div className="bg-gray-800/30 backdrop-blur-md rounded-lg p-5 border border-purple-500/20 text-center">
+                  <p className="text-sm text-gray-400">Connect your wallet to view your profile</p>
                 </div>
-              )}
-              
+              )}             
               {/* NFT section */}
               {walletConnected && (
                 <div className="mb-6">
@@ -224,9 +216,7 @@ const RightSidebar = ({
                     <FaExternalLinkAlt className="text-xs ml-1" />
                   </m.button>
                 </Link>
-                <p className="text-xs text-center text-gray-400 mt-3">
-                  Access all your stats, NFTs, and settings
-                </p>
+                
               </div>
             )}
             

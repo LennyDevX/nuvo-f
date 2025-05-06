@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
-import { FaPaperPlane, FaRobot, FaUser, FaSpinner } from 'react-icons/fa';
+import { FaPaperPlane, FaUser, FaSpinner } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import AnimatedAILogo from '../effects/AnimatedAILogo';
 
 const GeminiChat = () => {
   const [messages, setMessages] = useState([]);
@@ -200,7 +201,7 @@ const GeminiChat = () => {
                       repeatType: "reverse" 
                     }}
                   >
-                    <FaRobot className="text-white text-2xl sm:text-3xl" />
+                    <AnimatedAILogo />
                   </m.div>
                   <m.h3 
                     className="text-2xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-500 mb-2 sm:mb-4"
@@ -259,7 +260,7 @@ const GeminiChat = () => {
                         ${msg.sender === 'user' ? 'bg-indigo-600/80 backdrop-blur-sm ml-2' : 'bg-purple-800/80 backdrop-blur-sm mr-2'} 
                         ${msg.text.includes('Error:') ? 'bg-red-700/80 backdrop-blur-sm' : ''}`}
                       >
-                        {msg.sender === 'user' ? <FaUser className="text-white text-xs" /> : <FaRobot className="text-white text-xs" />}
+                        {msg.sender === 'user' ? <FaUser className="text-white text-xs" /> : <div className="w-7 h-7 flex items-center justify-center"><AnimatedAILogo /></div>}
                       </div>
                       <div className={`py-3 px-4 rounded-2xl 
                         ${msg.sender === 'user' 
@@ -309,7 +310,7 @@ const GeminiChat = () => {
                   >
                     <div className="flex flex-row">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-800/80 backdrop-blur-sm mr-2">
-                        <FaRobot className="text-white text-xs" />
+                        <div className="w-7 h-7 flex items-center justify-center"><AnimatedAILogo /></div>
                       </div>
                       <div className="py-3 px-4 rounded-2xl bg-gray-800/40 backdrop-blur-sm text-gray-100 rounded-tl-none">
                         <ReactMarkdown
@@ -340,7 +341,7 @@ const GeminiChat = () => {
                   >
                     <div className="flex flex-row">
                       <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-800/80 backdrop-blur-sm mr-2">
-                        <FaRobot className="text-white text-xs" />
+                        <div className="w-7 h-7 flex items-center justify-center"><AnimatedAILogo /></div>
                       </div>
                       <div className="py-3 px-4 rounded-2xl bg-gray-800/40 backdrop-blur-sm text-gray-100 rounded-tl-none">
                         <div className="flex space-x-2">
