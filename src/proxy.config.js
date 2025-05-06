@@ -6,5 +6,13 @@ export const proxyConfig = {
     pathRewrite: {
       '^/api/dodoex': ''
     }
+  },
+  '/server': {
+    target: 'http://localhost:3001', // Cambia el puerto si tu backend usa otro
+    changeOrigin: true,
+    secure: false,
+    pathRewrite: {
+      '^/server': ''
+    }
   }
 };

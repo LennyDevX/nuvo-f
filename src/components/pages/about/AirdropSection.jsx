@@ -1,7 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaGift, FaRocket } from 'react-icons/fa';
-import { airdropInfo } from './AirdropConfig.js';  // Fixed capitalization to match filename
+import { airdropInfo } from './airdropConfig.js';  // Fixed capitalization to match filename
 
 const AirdropSection = () => {
   const cardVariants = {

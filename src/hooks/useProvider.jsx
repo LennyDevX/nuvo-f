@@ -22,7 +22,7 @@ const useProvider = () => {
   const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
   const CHAIN_ID = parseInt(import.meta.env.VITE_CHAIN_ID || "137");
   
-  // Fix the RPC URL format - don't append Alchemy key in the env var
+  // Get the RPC URL from environment variables
   const RPC_URL = import.meta.env.VITE_RPC_URL_POLYGON || 
     `https://polygon-${CHAIN_ID === 137 ? 'mainnet' : 'mumbai'}.g.alchemy.com/v2/`;
 
@@ -38,10 +38,16 @@ const useProvider = () => {
       networkInitialized.current = true;
       
       try {
-        // Properly format the URL with Alchemy key
-        const alchemyUrl = RPC_URL.includes('alchemy.com') 
-          ? `${RPC_URL}${ALCHEMY_KEY}` // Add key only if it's an Alchemy URL
-          : RPC_URL;
+        // Check if the URL already contains the API key to prevent duplication
+        let alchemyUrl = RPC_URL;
+        
+        if (RPC_URL.includes('alchemy.com/v2/') && !RPC_URL.includes(ALCHEMY_KEY)) {
+          // Only append the key if the URL is for Alchemy but doesn't already contain the key
+          alchemyUrl = `${RPC_URL}${ALCHEMY_KEY}`;
+        } else if (RPC_URL.includes('alchemy.com') && !RPC_URL.includes('/v2/')) {
+          // If it's Alchemy but missing the v2/ path
+          alchemyUrl = `${RPC_URL}/v2/${ALCHEMY_KEY}`;
+        }
 
         console.log(`Connecting to ${CHAIN_ID === 137 ? 'Polygon Mainnet' : 'Mumbai Testnet'}...`);
         

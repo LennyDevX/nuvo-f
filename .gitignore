@@ -26,6 +26,7 @@ dist-ssr
 .vercel
 
 # Environment variables
+# Dotenv environment variables file
 .env
 .env.local
 .env.development.local

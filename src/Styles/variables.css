@@ -3,13 +3,36 @@
   --transition-fast: 200ms;
   --transition-normal: 300ms;
   --transition-slow: 500ms;
-  --header-height: 4rem;
+  --header-height: 64px;
+  --sidebar-width: 280px;
+  --sidebar-transition: all 0.3s ease;
+  --chat-spacing: 12px;
+  --button-size: 36px;
+  --container-padding: 12px;
+  
+  /* Chat UI variables */
+  --chat-input-height: 70px;
+  --chat-border-radius: 1.2rem;
+  --chat-message-spacing: 1rem;
+  --chat-bottom-spacing: 1.5rem;
+  --blur-default: 12px;
+
+  /* Colors - can be expanded as needed */
+  --purple-primary: rgb(147, 51, 234);
+  --purple-secondary: rgba(147, 51, 234, 0.2);
+  --purple-accent: rgba(168, 85, 247, 0.5);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   :root {
     --transition-fast: 150ms;
     --transition-normal: 250ms;
-    --header-height: 3.5rem;
+    --header-height: 56px;
+    --chat-input-height: 62px;
+    --chat-border-radius: 0.8rem;
+    --chat-message-spacing: 0.8rem;
+    --chat-bottom-spacing: 0.75rem;
+    --container-padding: 8px;
+    --chat-spacing: 6px;
   }
 }

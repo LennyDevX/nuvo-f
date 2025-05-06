@@ -29,6 +29,9 @@ export const cspConfig = {
       'https://matic-mainnet.chainstacklabs.com',
       'https://rpc-mumbai.maticvigil.com',
       'https://matic-mumbai.chainstacklabs.com',
+      'https://*.vercel.app',
+      'https://*.vercel.com',
+      'https://vercel.live',
       process.env.NODE_ENV === 'development' ? 'ws://localhost:*' : null,
       process.env.NODE_ENV === 'development' ? 'wss://localhost:*' : null
     ].filter(Boolean),
@@ -48,20 +51,26 @@ export const cspConfig = {
       'https://*.ipfs.nftstorage.link',
       'https://*.ipfs.w3s.link',
       'https://nuvos.app',
-      'https://*.nuvos.app'
+      'https://*.nuvos.app',
+      'https://*.vercel.app'
     ],
     'script-src': [
       "'self'",
       "'unsafe-inline'",
       "'unsafe-eval'",
       'https://*.firebaseapp.com',
-      'https://apis.google.com'
+      'https://apis.google.com',
+      'https://*.vercel.app',
+      'https://*.vercel.com',
+      'https://vercel.live'
     ],
     'style-src': ["'self'", "'unsafe-inline'"],
     'frame-src': [
       "'self'",
       'https://widget.dodoex.io',
-      'https://*.firebaseapp.com'
+      'https://*.firebaseapp.com',
+      'https://*.vercel.app',
+      'https://*.vercel.com'
     ]
   }
 };

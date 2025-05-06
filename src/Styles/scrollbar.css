@@ -14,6 +14,7 @@
 }
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;
@@ -21,6 +22,20 @@
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: rgba(139, 92, 246, 0.2);
   border-radius: 20px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+/* Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.2) transparent;
+}
+/* Hide scrollbar for mobile */
+@media (max-width: 640px) {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 2px;
+  }
 }
 /* Custom scrollbar global */
 ::-webkit-scrollbar {
