@@ -11,6 +11,9 @@ const GeminiChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [streamedResponse, setStreamedResponse] = useState('');
+  const [timeoutExceeded, setTimeoutExceeded] = useState(false);
+  const timeoutRef = useRef(null);
+  const [lastInput, setLastInput] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -94,19 +97,23 @@ const GeminiChat = () => {
 
     const userMessage = { text: input, sender: 'user' };
     setMessages((prev) => [...prev, userMessage]);
+    setLastInput(input);
     setInput('');
     setIsLoading(true);
+    setTimeoutExceeded(false);
+
+    // Inicia timeout para UX resiliente
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setTimeoutExceeded(true);
+    }, 30000); // 30 segundos
 
     try {
       const apiUrl = '/server/gemini';
-      
-      // Incluye el historial completo de la conversación
       const formattedMessages = [...formatMessagesForAPI(), {
         role: 'user',
-        parts: [{ text: input }]
+        parts: [{ text: userMessage.text }]
       }];
-      
-      // Usa streaming para respuestas más fluidas
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,17 +122,13 @@ const GeminiChat = () => {
           stream: true 
         }),
       });
-      
       if (!response.ok) {
         throw new Error(`Error de servidor: ${response.status}`);
       }
-      
-      // Procesar la respuesta en streaming
       if (response.body) {
         const reader = response.body.getReader();
         await processStreamResponse(reader);
       } else {
-        // Fallback si no hay soporte de streaming
         const text = await response.text();
         const data = JSON.parse(text);
         setMessages((prev) => [...prev, { 
@@ -141,8 +144,26 @@ const GeminiChat = () => {
       }]);
     } finally {
       setIsLoading(false);
+      setTimeoutExceeded(false);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
       inputRef.current?.focus();
     }
+  };
+
+  // Permitir cancelar la espera
+  const handleCancelTimeout = () => {
+    setIsLoading(false);
+    setTimeoutExceeded(false);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  };
+
+  // Permitir reintentar el último mensaje
+  const handleRetryTimeout = () => {
+    setInput(lastInput);
+    setTimeoutExceeded(false);
+    setIsLoading(false);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   // Desplazar al último mensaje cuando se actualiza la lista
@@ -160,6 +181,32 @@ const GeminiChat = () => {
 
   return (
     <div className="flex flex-col h-full w-full bg-gray-900/30 backdrop-blur-xl border-0 shadow-2xl overflow-hidden">
+      {/* Overlay de timeout prolongado */}
+      <AnimatePresence>
+        {timeoutExceeded && (
+          <m.div
+            key="timeout-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md"
+          >
+            <FaSpinner className="animate-spin text-4xl text-purple-400 mb-4" />
+            <p className="text-amber-400 text-lg font-semibold mb-2">This is taking longer than expected...</p>
+            <p className="text-gray-300 mb-4 text-sm">The AI is still processing your request. You can wait, cancel, or retry.</p>
+            <div className="flex gap-4">
+              <button
+                onClick={handleCancelTimeout}
+                className="px-4 py-2 rounded bg-gray-700/80 text-gray-200 hover:bg-gray-600/80 transition"
+              >Cancel</button>
+              <button
+                onClick={handleRetryTimeout}
+                className="px-4 py-2 rounded bg-purple-600/80 text-white hover:bg-purple-700/80 transition"
+              >Retry</button>
+            </div>
+          </m.div>
+        )}
+      </AnimatePresence>
       {/* Message container - Using padding to create space from navbar */}
       <div 
         ref={chatContainerRef}
