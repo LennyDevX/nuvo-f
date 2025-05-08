@@ -33,7 +33,7 @@ const createLazyComponent = (importFn) => {
 const Home = createLazyComponent(() => import('../components/pages/home/Home'));
 const About = createLazyComponent(() => import('../components/pages/about/About'));
 const SwapToken = createLazyComponent(() => import('../components/pages/SwapToken'));
-const DashboardStaking = createLazyComponent(() => import('../components/pages/StakingDashboard/DashboardStaking'));
+const Base = createLazyComponent(() => import('../components/pages/StakingDashboard/Base'));
 const TokenomicsDashboard = createLazyComponent(() => import('../components/pages/tokenomics/TokenomicsDashboard'));
 const AirdropDashboard = createLazyComponent(() => import('../components/pages/AirdropDashboard/AirdropDashboard'));
 const Roadmap = createLazyComponent(() => import('../components/pages/roadmap/Roadmap.jsx'));
@@ -68,7 +68,7 @@ export const routes = [
   },
   {
     path: "/staking",
-    element: withSuspense(<MainLayout><DashboardStaking /></MainLayout>),
+    element: withSuspense(<MainLayout><Base /></MainLayout>),
     loader: async () => null
   },
   {
