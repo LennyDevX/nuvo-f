@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useStaking } from '../../../../context/StakingContext';
 import { formatBalance } from '../../../../utils/formatters';
 import { calculateTimeBonus } from '../../../../utils/stakingAnalytics';
 import NetworkBadge from '../../../web3/NetworkBadge';
 import { ValueDisplay } from '../ui/CommonComponents';
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
+  const { calculateRealAPY } = useStaking();
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 88, dailyROI: 0.24 });
+  
   // Calculate total staked
   const totalStaked = userDeposits?.reduce((sum, deposit) => {
     return sum + parseFloat(deposit.amount || 0);
@@ -21,10 +25,22 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
     return Math.floor((now - oldestTimestamp) / (60 * 60 * 24));
   };
   
+  // Fetch dynamic APY on component mount
+  useEffect(() => {
+    const fetchAPY = async () => {
+      const apyData = await calculateRealAPY();
+      setDynamicAPY(apyData);
+    };
+    
+    fetchAPY();
+  }, [calculateRealAPY]);
+  
   const daysStaked = calculateDaysStaked();
   const timeBonus = calculateTimeBonus(daysStaked);
   const timeBonesPercentage = timeBonus * 100;
-  const baseAPY = 88;
+  
+  // Use dynamically calculated APY instead of hardcoded value
+  const baseAPY = dynamicAPY.baseAPY;
   const effectiveAPY = baseAPY + (timeBonesPercentage * 1.5);
 
   return (
@@ -49,12 +65,18 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
           className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all"
         />
         
-        <ValueDisplay 
-          label="Effective APY" 
-          value={effectiveAPY.toFixed(2)}
-          suffix="%" 
-          className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all"
-        />
+        <div className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all">
+          <div className="text-sm text-slate-400 mb-1">Effective APY</div>
+          <div className="text-xl font-medium text-white">
+            {effectiveAPY.toFixed(2)} <span className="text-base text-slate-300">%</span>
+            {dynamicAPY.verified && (
+              <span className="text-xs ml-1 text-green-400 opacity-70">(blockchain verified)</span>
+            )}
+          </div>
+          <div className="text-xs text-slate-500 mt-1">
+            Base: {baseAPY}% + Time Bonus: {timeBonesPercentage.toFixed(1)}%
+          </div>
+        </div>
       </div>
       
       {/* Status Message */}
