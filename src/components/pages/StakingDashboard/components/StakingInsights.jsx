@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaChartBar } from 'react-icons/fa';
-import { calculateTimeBonus } from '../../../../utils/stakingAnalytics';
+import { calculateTimeBonus } from '../../../../utils/staking/stakingAnalytics';
 import { StakingSection, ValueDisplay, ProgressBar } from '../ui/CommonComponents';
 
 const StakingInsights = ({ userDeposits, maxDeposits }) => {

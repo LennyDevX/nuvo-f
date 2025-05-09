@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../Abi/TokenizationApp.json';
+import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 
 const PINATA_API_KEY = import.meta.env.VITE_PINATA_API;
 const PINATA_SECRET_KEY = import.meta.env.VITE_PINATA_SKe;

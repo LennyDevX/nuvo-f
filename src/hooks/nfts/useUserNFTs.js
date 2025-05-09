@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../Abi/TokenizationApp.json';
+import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 
 // Definir una constante para la dirección del contrato
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";

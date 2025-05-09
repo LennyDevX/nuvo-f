@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ethers } from 'ethers';
 import { FaCoins, FaPlus, FaMinus } from 'react-icons/fa';
-import { formatBalance } from '../../../../utils/formatters';
+import { formatBalance } from '../../../../utils/blockchain/formatters';
 import { useStaking } from '../../../../context/StakingContext';
 import { StakingSection, ValueDisplay, ActionButton } from '../ui/CommonComponents';
 

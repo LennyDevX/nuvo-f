@@ -3,7 +3,7 @@ import AnimationProvider from '../../animation/AnimationProvider';
 import HeroSection from './SmartStaking';
 import SpaceBackground from '../../effects/SpaceBackground';
 import LoadingFallback from '../../ui/LoadingFallback';
-import lazyWithPreload from '../../../utils/lazyWithPreload';
+import lazyWithPreload from '../../../utils/performance/lazyWithPreload';
 
 // Load the Header first and NOT lazily
 import Header from './Header';

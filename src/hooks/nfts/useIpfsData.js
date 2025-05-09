@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchFromIpfs } from '../utils/ipfsUtils';
+import { fetchFromIpfs } from '../../utils/ipfsUtils';
 
 /**
  * Custom hook for fetching data from IPFS

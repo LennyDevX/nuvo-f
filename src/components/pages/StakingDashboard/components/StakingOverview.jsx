@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStaking } from '../../../../context/StakingContext';
-import { formatBalance } from '../../../../utils/formatters';
-import { calculateTimeBonus } from '../../../../utils/stakingAnalytics';
+import { formatBalance } from '../../../../utils/blockchain/formatters';
+import { calculateTimeBonus } from '../../../../utils/staking/stakingAnalytics';
 import NetworkBadge from '../../../web3/NetworkBadge';
 import { ValueDisplay } from '../ui/CommonComponents';
 

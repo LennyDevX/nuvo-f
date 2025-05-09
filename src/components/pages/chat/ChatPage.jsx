@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import SpaceBackground from '../../effects/SpaceBackground';
 import { WalletContext } from '../../../context/WalletContext';
 import { useStaking } from '../../../context/StakingContext';
-import useUserNFTs from '../../../hooks/useUserNFTs';
+import useUserNFTs from '../../../hooks/nfts/useUserNFTs';
 import RefreshManager from '../../DevUtils/RefreshManager';
 
 // Import styles for chat text optimization

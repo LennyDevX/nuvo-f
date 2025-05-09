@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import useProvider from '../hooks/useProvider';
+import useProvider from '../hooks/blockchain/useProvider';
 import ABI from '../Abi/StakingContract.json';
-import { globalRateLimiter } from '../utils/RateLimiter';
-import { globalCache } from '../utils/CacheManager';
+import { globalRateLimiter } from '../utils/performance/RateLimiter';
+import { globalCache } from '../utils/cache/CacheManager';
 
 // Constants extracted to the top level
 export const STAKING_CONSTANTS = {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { cacheData, getCachedData } from '../utils/cacheUtils';
+import { cacheData, getCachedData } from '../../utils/cacheUtils';
 
 /**
  * Hook for fetching data with localStorage caching

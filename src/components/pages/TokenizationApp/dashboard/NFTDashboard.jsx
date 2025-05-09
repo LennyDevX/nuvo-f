@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { motion } from 'framer-motion';
 import { FaRedo } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
-import useUserNFTs from '../../../../hooks/useUserNFTs';
+import useUserNFTs from '../../../../hooks/nfts/useUserNFTs';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';

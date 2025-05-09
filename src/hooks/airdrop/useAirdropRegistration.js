@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers, formatEther } from 'ethers';
-import AirdropABI from '../Abi/Airdrop.json';
+import AirdropABI from '../../Abi/Airdrop.json';
 
 export const useAirdropRegistration = (provider, account) => {
     const [registrationError, setRegistrationError] = useState(null);

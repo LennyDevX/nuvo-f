@@ -5,12 +5,12 @@ import {
   addThrottledMouseListener,
   addThrottledTouchListener,
   combineEventListeners
-} from '../../utils/eventHandlers';
+} from '../../utils/errors/eventHandlers';
 import { 
   isMobileDevice, 
   isLowPerformanceDevice,
-  getRecommendedParticleCount 
-} from '../../utils/MobileUtils';
+  getRecommendedParticleCount  
+} from '../../utils/mobile/MobileUtils';
 
 const AnimatedAILogo = () => {
   const canvasRef = useRef(null);

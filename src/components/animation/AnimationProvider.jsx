@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { LazyMotion, domAnimation, AnimatePresence, MotionConfig } from 'framer-motion';
-import useReducedMotion from '../../hooks/useReducedMotion';
+import useReducedMotion from '../../hooks/performance/useReducedMotion';
 
 // Create context for animation settings
 export const AnimationContext = createContext({

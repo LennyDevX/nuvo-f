@@ -1,10 +1,10 @@
 // src/hooks/useContractData.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-import ABI from "../Abi/StakingContract.json";
-import useProvider from "./useProvider";
-import { globalRateLimiter } from "../utils/RateLimiter";
-import { globalCache } from "../utils/CacheManager";
+import ABI from "../../Abi/StakingContract.json";
+import useProvider from "../useProvider";
+import { globalRateLimiter } from "../../utils/RateLimiter";
+import { globalCache } from "../../utils/CacheManager";
 
 const POLLING_INTERVAL = 30000; // 30 seconds
 const CACHE_DURATION = 5000; // 5 seconds

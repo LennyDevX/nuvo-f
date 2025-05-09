@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect, useRef, useCallback, useMemo } 
 import { ethers } from 'ethers';
 import { WalletContext } from '../../context/WalletContext';
 import WalletUtils from "../web3/WalletUtils";
-import { detectWallet } from '../../utils/walletDetector';
+import { detectWallet } from '../../utils/blockchain/walletDetector';
 import MetaMaskLogo from '/metamask-logo.png';
 import TrustWalletLogo from '/trustwallet-logo.png';
 import { useNavigate } from 'react-router-dom';
