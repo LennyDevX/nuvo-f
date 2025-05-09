@@ -1,56 +1,20 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Pie } from 'react-chartjs-2';
-import { chartOptions } from '../../../utils/chart/chartConfig';
-import '../../../utils/chart/chartSetup';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, 
+  Legend
+} from 'recharts';
+import { 
+  tokenDistributionData, 
+  tokenDistributionDetails,
+  pieChartStyle,
+} from '../../../utils/chart/chartConfig';
+import { chartColors, gradientDefs } from '../../../utils/chart/chartSetup';
 
 const TokenDistribution = () => {
-  const chartRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Nueva distribución de tokens con colores actualizados
-  const updatedTokenDistribution = useMemo(() => {
-    return {
-      labels: [
-        'Staking Rewards', 
-        'Treasury', 
-        'Community Incentives', 
-        'Marketing', 
-        'Development', 
-        'Founder & Team'
-      ],
-      datasets: [
-        {
-          data: [20, 15, 20, 15, 20, 10], // Porcentajes actuales
-          backgroundColor: [
-            'rgba(111, 76, 255, 0.8)',    // Púrpura vibrante
-            'rgba(66, 184, 255, 0.8)',    // Azul celeste
-            'rgba(255, 84, 174, 0.8)',    // Rosa intenso
-            'rgba(255, 177, 27, 0.8)',    // Ámbar
-            'rgba(0, 201, 167, 0.8)',     // Verde turquesa
-            'rgba(232, 65, 121, 0.8)'     // Rosa frambuesa
-          ],
-          borderColor: [
-            'rgba(111, 76, 255, 1)',
-            'rgba(66, 184, 255, 1)',
-            'rgba(255, 84, 174, 1)',
-            'rgba(255, 177, 27, 1)',
-            'rgba(0, 201, 167, 1)',
-            'rgba(232, 65, 121, 1)'
-          ],
-          hoverBackgroundColor: [
-            'rgba(111, 76, 255, 0.9)',
-            'rgba(66, 184, 255, 0.9)',
-            'rgba(255, 84, 174, 0.9)',
-            'rgba(255, 177, 27, 0.9)',
-            'rgba(0, 201, 167, 0.9)',
-            'rgba(232, 65, 121, 0.9)'
-          ]
-        }
-      ]
-    };
-  }, []);
-  
   // Check for mobile device
   useEffect(() => {
     const checkMobile = () => {
@@ -71,117 +35,33 @@ const TokenDistribution = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       if (timeoutId) clearTimeout(timeoutId);
-      if (chartRef.current && chartRef.current.chartInstance) {
-        chartRef.current.chartInstance.destroy();
-      }
     };
   }, []);
 
-  // Memoize chart options based on device type
-  const options = useMemo(() => {
-    const baseOptions = {
-      ...chartOptions,
-      plugins: {
-        ...chartOptions.plugins,
-        id: 'tokenDistribution',
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              size: isMobile ? 10 : 12,
-              family: "'Inter', sans-serif"
-            },
-            color: 'rgb(209, 213, 219)',
-            padding: isMobile ? 10 : 15,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            boxWidth: isMobile ? 6 : 10
-          }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleFont: {
-            size: isMobile ? 12 : 14,
-            weight: 'bold'
-          },
-          bodyFont: {
-            size: isMobile ? 11 : 13
-          },
-          borderColor: 'rgba(139, 92, 246, 0.3)',
-          borderWidth: 1,
-          callbacks: {
-            label: (context) => {
-              const value = context.parsed;
-              const label = context.label;
-              return ` ${label}: ${value}%`;
-            },
-            afterLabel: (context) => {
-              const descriptions = {
-                'Staking Rewards': 'Long-term holder incentives',
-                'Treasury': 'Protocol development & security',
-                'Community Incentives': 'Ecosystem growth initiatives',
-                'Marketing': 'Marketing & partnerships',
-                'Development': 'Technical improvements & innovation',
-                'Founder & Team': 'Core team allocation'
-              };
-              return `  ${descriptions[context.label] || ''}`;
-            }
-          }
-        }
-      },
-      animation: {
-        animateRotate: !isMobile,
-        animateScale: !isMobile,
-        duration: isMobile ? 600 : 1200
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: true
-      },
-      elements: {
-        arc: {
-          borderWidth: 2,
-          borderColor: '#000',
-          hoverBorderColor: '#fff',
-          hoverBorderWidth: 2,
-          hoverOffset: isMobile ? 3 : 5
-        }
-      },
-      responsive: true,
-      maintainAspectRatio: true
-    };
-    
-    return baseOptions;
-  }, [isMobile]);
+  // Create a unique ID for this chart's gradient definitions
+  const chartId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
+  
+  // Get selected category info
+  const selectedCategory = activeIndex !== null ? tokenDistributionData[activeIndex] : null;
 
-  // Memoize key points content con colores específicos para cada elemento
+  // Memoize key points content with specific colors for each element
+  const keyPointsItems = [
+    { color: 'text-purple-600', text: '20% allocated to staking rewards' },
+    { color: 'text-blue-400', text: '15% treasury allocation' },
+    { color: 'text-pink-400', text: '20% community incentives' },
+    { color: 'text-amber-400', text: '15% marketing' },
+    { color: 'text-green-400', text: '20% development' },
+    { color: 'text-pink-500', text: '10% founder & team' },
+  ];
+
   const keyPointsContent = useMemo(() => (
     <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-600">•</span>
-        <span>20% allocated to staking rewards</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-blue-400">•</span>
-        <span>15% treasury allocation</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-pink-400">•</span>
-        <span>20% community incentives</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-amber-400">•</span>
-        <span>15% marketing</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-green-400">•</span>
-        <span>20% development</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-pink-500">•</span>
-        <span>10% founder & team</span>
-      </li>
+      {keyPointsItems.map((item, idx) => (
+        <li key={item.text} className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+          <span className={item.color}>•</span>
+          <span>{item.text}</span>
+        </li>
+      ))}
     </ul>
   ), []);
 
@@ -192,18 +72,97 @@ const TokenDistribution = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <h2 className="text-xl font-bold text-white mb-4 tracking-wide">
-        Token Distribution
-      </h2>
-      {/* Manteniendo el mismo tamaño para ambos gráficos */}
-      <div className="aspect-square max-w-[360px] md:max-w-[400px] mx-auto hover:scale-105 transition-transform duration-300">
-        <Pie 
-          ref={chartRef}
-          data={updatedTokenDistribution} 
-          options={options}
-        />
+      <div className="flex flex-col md:flex-row items-center justify-between">
+        <h2 className="text-xl font-bold text-white mb-4 tracking-wide">Token Distribution</h2>
+        
+        {/* Selected category info panel */}
+        {selectedCategory && (
+          <div className="bg-[#1a1333]/50 border-l-2 border-purple-600 pl-3 py-1 mb-4 md:mb-0 w-full md:max-w-[220px] transition-all">
+            <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
+            <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
+            <div className="text-xs text-gray-300 opacity-80 line-clamp-2">
+              {tokenDistributionDetails[selectedCategory.name] || ""}
+            </div>
+          </div>
+        )}
       </div>
-      <div className="mt-6 space-y-4">
+      
+      <div className="aspect-square h-[300px] md:h-[330px] mx-auto">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            {/* Custom gradient definitions */}
+            <defs>
+              {Object.values(gradientDefs(chartId)).map((gradient, gradIdx) => (
+                <linearGradient 
+                  key={gradient.id || `gradient-${gradIdx}`} 
+                  id={gradient.id || `gradient-${gradIdx}`} 
+                  x1={gradient.x1} y1={gradient.y1} 
+                  x2={gradient.x2} y2={gradient.y2}
+                >
+                  {gradient.stops.map((stop, i) => (
+                    <stop 
+                      key={`${gradient.id || gradIdx}-stop-${i}`} 
+                      offset={stop.offset} 
+                      stopColor={stop.color} 
+                      stopOpacity={stop.opacity || 1} 
+                    />
+                  ))}
+                </linearGradient>
+              ))}
+            </defs>
+            
+            {/* Main pie chart */}
+            <Pie
+              data={tokenDistributionData}
+              cx="50%"
+              cy="50%"
+              {...pieChartStyle}
+              isAnimationActive={false}
+              dataKey="value"
+              onClick={(_, idx) => setActiveIndex(idx === activeIndex ? null : idx)}
+            >
+              {tokenDistributionData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color}
+                  stroke={activeIndex === index ? "#ffffff" : "rgba(0,0,0,0.3)"}
+                  strokeWidth={activeIndex === index ? 2 : 1}
+                  style={{ 
+                    filter: activeIndex === index ? 'brightness(1.2)' : 'none',
+                    transition: 'all 0.3s'
+                  }}
+                />
+              ))}
+            </Pie>
+
+            {/* Simple legend */}
+            <Legend 
+              layout="horizontal" 
+              verticalAlign="bottom" 
+              align="center"
+              formatter={(value, entry, idx) => (
+                <span
+                  style={{
+                    color: activeIndex === idx ? '#ffffff' : 'rgb(209, 213, 219)',
+                    fontSize: isMobile ? 11 : 13,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    padding: '2px 4px',
+                    borderRadius: '2px',
+                    background: activeIndex === idx ? 'rgba(124, 58, 237, 0.2)' : 'transparent'
+                  }}
+                  onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                >
+                  {value}
+                </span>
+              )}
+              iconSize={isMobile ? 8 : 10}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      
+      <div className="mt-4 md:mt-6">
         <h3 className="text-xl font-semibold text-purple-400 mb-2 tracking-wide">
           Key Points
         </h3>
