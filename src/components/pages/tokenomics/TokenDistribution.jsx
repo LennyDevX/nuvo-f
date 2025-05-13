@@ -117,7 +117,7 @@ const TokenDistribution = () => {
               cx="50%"
               cy="50%"
               {...pieChartStyle}
-              isAnimationActive={false}
+              isAnimationActive={true}
               dataKey="value"
               onClick={(_, idx) => setActiveIndex(idx === activeIndex ? null : idx)}
             >
@@ -125,11 +125,14 @@ const TokenDistribution = () => {
                 <Cell 
                   key={`cell-${index}`} 
                   fill={entry.color}
-                  stroke={activeIndex === index ? "#ffffff" : "rgba(0,0,0,0.3)"}
-                  strokeWidth={activeIndex === index ? 2 : 1}
+                  stroke="rgba(0,0,0,0.2)"
+                  strokeWidth={0.5}
                   style={{ 
+                    opacity: activeIndex === null || activeIndex === index ? 1 : 0.4,
                     filter: activeIndex === index ? 'brightness(1.2)' : 'none',
-                    transition: 'all 0.3s'
+                    transition: 'all 0.3s',
+                    transform: activeIndex === index ? 'scale(1.05)' : 'scale(1)',
+                    transformOrigin: '50% 50%'
                   }}
                 />
               ))}

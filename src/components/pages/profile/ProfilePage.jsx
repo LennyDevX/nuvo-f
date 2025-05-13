@@ -211,12 +211,7 @@ const ProfilePage = () => {
             </div>
             <p className="text-purple-300 text-xl font-medium">Loading profile data...</p>
             <p className="text-purple-200/60 mt-2">Fetching your information from the blockchain</p>
-            <button 
-              onClick={() => setIsLoading(false)}
-              className="mt-6 px-4 py-2 bg-purple-600/50 hover:bg-purple-600/70 rounded-lg text-white"
-            >
-              Skip Loading
-            </button>
+           
           </div>
         </div>
       </div>
