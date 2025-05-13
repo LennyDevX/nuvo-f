@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaEdit, FaCoins, FaSpinner, FaShieldAlt } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import { WalletContext } from '../../../../context/WalletContext';
-import useMintNFT from '../../../../hooks/useMintNFT';
+import useMintNFT from '../../../../hooks/nfts/useMintNFT';
 import TransactionToast from '../../../ui/TransactionToast';
 
 const PreviewStep = () => {

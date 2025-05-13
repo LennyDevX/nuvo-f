@@ -1,6 +1,7 @@
 import express from 'express';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
+import { DEFAULT_MODEL } from '../config/ai-config.js';
 
 dotenv.config();
 
@@ -80,7 +81,7 @@ router.use(rateLimit);
 router.use(requireApiKey);
 
 // --- Función para procesar solicitudes a Gemini ---
-async function processGeminiRequest(contents, model = 'gemini-2.0-flash', params = {}) {
+async function processGeminiRequest(contents, model = DEFAULT_MODEL, params = {}) {
   if (!apiKey) throw new Error('API key no configurada');
   if (!contents) throw new Error('Se requiere un prompt o historial de mensajes');
   // Llama al modelo Gemini
@@ -115,7 +116,7 @@ async function streamText(res, text) {
 // --- POST principal con soporte mejorado para historial y streaming ---
 router.post('/', async (req, res) => {
   try {
-    const { prompt, model, messages, temperature, maxTokens, stream } = req.body;
+    const { prompt, model = DEFAULT_MODEL, messages, temperature, maxTokens, stream } = req.body;
     
     // Soporte para historial de mensajes (array) o prompt simple
     const contents = messages && Array.isArray(messages) && messages.length > 0
@@ -130,7 +131,7 @@ router.post('/', async (req, res) => {
     if (temperature !== undefined) params.temperature = temperature;
     if (maxTokens !== undefined) params.maxOutputTokens = maxTokens;
 
-    const response = await processGeminiRequest(contents, model || 'gemini-2.0-flash', params);
+    const response = await processGeminiRequest(contents, model, params);
 
     // Si se pide streaming, envía la respuesta en chunks
     if (stream) {
@@ -163,7 +164,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const prompt = req.query.prompt;
-    const model = req.query.model;
+    const model = req.query.model || DEFAULT_MODEL;
     const text = await processGeminiRequest(prompt, model);
     res.json({
       message: 'Respuesta de Gemini generada correctamente',
@@ -182,7 +183,7 @@ router.get('/', async (req, res) => {
 // --- Endpoint especial para Function Calling ---
 router.post('/function-calling', async (req, res) => {
   try {
-    const { prompt, model = 'gemini-2.0-flash', functionDeclarations, functionCallingMode = 'ANY', allowedFunctionNames } = req.body;
+    const { prompt, model = DEFAULT_MODEL, functionDeclarations, functionCallingMode = 'ANY', allowedFunctionNames } = req.body;
 
     if (!prompt) {
       return res.status(400).json({ error: 'Se requiere un prompt' });

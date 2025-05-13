@@ -145,7 +145,7 @@ export const WalletProvider = ({ children }) => {
         initProvider();
     }, []);
 
-    const getNetworkName = (chainId) => {
+    const getNetworkName = useCallback((chainId) => {
         const networks = {
             '1': 'Ethereum',
             '137': 'Polygon',
@@ -155,9 +155,9 @@ export const WalletProvider = ({ children }) => {
             // Add more networks as needed
         };
         return networks[chainId] || `Chain ID: ${chainId}`;
-    };
+    }, []);
 
-    const setupEventListeners = (provider) => {
+    const setupEventListeners = useCallback((provider) => {
         if (window.ethereum) {
             // Handle account changes
             window.ethereum.on('accountsChanged', async (accounts) => {
@@ -188,9 +188,9 @@ export const WalletProvider = ({ children }) => {
                 handleDisconnect();
             });
         }
-    };
+    }, []);
 
-    const ensureProvider = async () => {
+    const ensureProvider = useCallback(async () => {
         if (!provider && window.ethereum && account) {
             try {
                 const newProvider = new ethers.BrowserProvider(window.ethereum);
@@ -206,9 +206,9 @@ export const WalletProvider = ({ children }) => {
             throw new Error("Provider not available");
         }
         return provider;
-    };
+    }, [provider, account]);
 
-    const handleDisconnect = () => {
+    const handleDisconnect = useCallback(() => {
         setAccount(null);
         setBalance(null);
         setNetwork(null);
@@ -218,7 +218,7 @@ export const WalletProvider = ({ children }) => {
         localStorage.removeItem('walletBalance');
         localStorage.removeItem('walletNetwork');
         localStorage.removeItem('walletConnected');
-    };
+    }, []);
 
     const value = {
         account,

@@ -3,7 +3,7 @@ import { motion as m } from 'framer-motion';
 import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, FaImage, FaShoppingCart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
-import useUserNFTs from '../../../../hooks/useUserNFTs';
+import useUserNFTs from '../../../../hooks/nfts/useUserNFTs';
 
 // Lista de imágenes de respaldo en orden de preferencia
 const FALLBACK_IMAGES = [

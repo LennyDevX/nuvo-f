@@ -1,6 +1,8 @@
 /**
  * Utility functions for handling IPFS URLs
+ * This extends the functionality in blockchainUtils.js
  */
+import { ipfsToHttp, fetchTokenMetadata } from './blockchainUtils';
 
 /**
  * Default placeholder image to use when IPFS content cannot be loaded
@@ -56,6 +58,7 @@ export const extractIpfsCid = (url) => {
 
 /**
  * Creates a proper IPFS URL using the preferred gateway
+ * This is a compatibility function that calls ipfsToHttp from blockchainUtils
  * @param {string} cidOrUrl - Either a CID or an IPFS URL
  * @param {number} gatewayIndex - The index of the gateway to use
  * @param {boolean} useFallback - Whether to use the default placeholder as fallback
@@ -64,24 +67,11 @@ export const extractIpfsCid = (url) => {
 export const createIpfsUrl = (cidOrUrl, gatewayIndex = 0, useFallback = true) => {
   if (!cidOrUrl) return useFallback ? DEFAULT_PLACEHOLDER : null;
   
-  // If it's a data URI, return it as is
-  if (cidOrUrl.startsWith('data:')) {
-    return cidOrUrl;
-  }
-
-  // If it's a complete URL with http/https that's not IPFS related, return it
-  if ((cidOrUrl.startsWith('http://') || cidOrUrl.startsWith('https://')) && 
-      !cidOrUrl.includes('/ipfs/')) {
-    return cidOrUrl;
-  }
-  
-  const cid = extractIpfsCid(cidOrUrl);
-  if (!cid) return useFallback ? cidOrUrl : DEFAULT_PLACEHOLDER; // If we can't extract a CID, return the original URL or placeholder
-  
-  // Use the specified gateway or default to the first one
+  // Use the gateway corresponding to the index
   const gateway = IPFS_GATEWAYS[gatewayIndex] || IPFS_GATEWAYS[0];
   
-  return `${gateway}${cid}`;
+  // Call the unified function from blockchainUtils
+  return ipfsToHttp(cidOrUrl, gateway) || (useFallback ? DEFAULT_PLACEHOLDER : null);
 };
 
 /**
@@ -106,85 +96,48 @@ export const decodeDataUri = (dataUri) => {
 
 /**
  * Tries to fetch from all available gateways until one succeeds
+ * This is a compatibility function that uses fetchTokenMetadata
  * @param {string} cidOrUrl - Either a CID or an IPFS URL
  * @param {Object} fetchOptions - Options for the fetch call
  * @param {boolean} returnPlaceholderOnError - Whether to return placeholder data on error
  * @returns {Promise<Response>} The fetch response
  */
 export const fetchFromIpfs = async (cidOrUrl, fetchOptions = {}, returnPlaceholderOnError = true) => {
-  // Special handling for data URIs
-  if (cidOrUrl && cidOrUrl.startsWith('data:')) {
-    const decodedData = decodeDataUri(cidOrUrl);
-    if (decodedData) {
-      // Create a mock response with the decoded data
+  try {
+    // Try to use the enhanced fetchTokenMetadata first
+    const metadata = await fetchTokenMetadata(cidOrUrl);
+    
+    // Convert to response-like object for compatibility
+    return {
+      ok: true,
+      json: () => Promise.resolve(metadata),
+      text: () => Promise.resolve(JSON.stringify(metadata)),
+      headers: {
+        get: () => 'application/json'
+      }
+    };
+  } catch (error) {
+    console.error(`Failed to fetch from IPFS ${cidOrUrl}:`, error);
+    
+    if (returnPlaceholderOnError) {
+      // Return a mock response with placeholder data
       return {
         ok: true,
-        json: () => Promise.resolve(decodedData),
-        text: () => Promise.resolve(JSON.stringify(decodedData)),
+        json: () => Promise.resolve({
+          name: 'Metadata no disponible',
+          description: 'No se pudo cargar la información del NFT',
+          image: DEFAULT_PLACEHOLDER,
+          error: true
+        }),
+        text: () => Promise.resolve('Metadata no disponible'),
         headers: {
           get: () => 'application/json'
         }
       };
     }
+    throw error;
   }
-  
-  const cid = extractIpfsCid(cidOrUrl);
-  if (!cid) {
-    // If we can't extract a CID, try the original URL
-    try {
-      return await fetch(cidOrUrl, fetchOptions);
-    } catch (error) {
-      console.error(`Failed to fetch from URL ${cidOrUrl}:`, error);
-      if (returnPlaceholderOnError) {
-        // Return a mock response with placeholder data
-        return {
-          ok: true,
-          json: () => Promise.resolve({
-            name: 'Metadata no disponible',
-            description: 'No se pudo cargar la información del NFT',
-            image: DEFAULT_PLACEHOLDER,
-            error: true
-          }),
-          text: () => Promise.resolve('Metadata no disponible'),
-          headers: {
-            get: () => 'application/json'
-          }
-        };
-      }
-      throw error;
-    }
-  }
-  
-  // Try each gateway in order
-  for (let i = 0; i < IPFS_GATEWAYS.length; i++) {
-    const url = createIpfsUrl(cid, i, false);
-    try {
-      console.log(`Intentando cargar desde: ${url}`);
-      const response = await fetch(url, fetchOptions);
-      if (response.ok) {
-        return response;
-      }
-    } catch (error) {
-      console.error(`Gateway ${url} falló:`, error);
-    }
-  }
-  
-  if (returnPlaceholderOnError) {
-    // Return a mock response with placeholder data
-    return {
-      ok: true,
-      json: () => Promise.resolve({
-        name: 'Metadata no disponible',
-        description: 'No se pudo cargar la información del NFT',
-        image: DEFAULT_PLACEHOLDER,
-        error: true
-      }),
-      text: () => Promise.resolve('Metadata no disponible'),
-      headers: {
-        get: () => 'application/json'
-      }
-    };
-  }
-  
-  throw new Error('Falló la carga desde todos los gateways IPFS');
 };
+
+// Export ipfsToHttp from blockchainUtils for convenience
+export { ipfsToHttp, fetchTokenMetadata } from './blockchainUtils';

@@ -5,8 +5,6 @@ import { useStaking } from '../../../../context/StakingContext';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useContext } from 'react';
 import { ethers } from 'ethers';
-import { globalRateLimiter } from '../../../../utils/RateLimiter';
-import { globalCache } from '../../../../utils/CacheManager';
 
 const TransactionsSection = () => {
   const { state, getPoolEvents } = useStaking();

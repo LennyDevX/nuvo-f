@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchFromIpfs } from '../../utils/ipfsUtils';
+import { fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
 
 /**
  * Custom hook for fetching data from IPFS
@@ -22,19 +22,15 @@ const useIpfsData = (cidOrUrl) => {
     setError(null);
 
     try {
-      const response = await fetchFromIpfs(cidOrUrl);
-      const contentType = response.headers.get('content-type');
+      // Use our enhanced fetchTokenMetadata function that's more robust
+      const metadata = await fetchTokenMetadata(cidOrUrl);
       
-      if (contentType && contentType.includes('application/json')) {
-        const jsonData = await response.json();
-        setData(jsonData);
-      } else if (contentType && contentType.includes('image/')) {
-        const blobUrl = URL.createObjectURL(await response.blob());
-        setData({ imageUrl: blobUrl, contentType });
-      } else {
-        const text = await response.text();
-        setData({ content: text, contentType });
+      // Process image URLs if present
+      if (metadata.image) {
+        metadata.imageUrl = ipfsToHttp(metadata.image);
       }
+      
+      setData(metadata);
     } catch (err) {
       console.error('Error fetching from IPFS:', err);
       setError(err);

@@ -1,248 +1,167 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import { fetchNFTs, fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
+import useProvider from '../blockchain/useProvider';
 
-// Definir una constante para la dirección del contrato
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
+// Use the contract address from .env directly
+const CONTRACT_ADDRESS = "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
 
 // Usar LogoNuvos.webp como la imagen de placeholder
 const DEFAULT_IMAGE = "/LogoNuvos.webp";
 
-// Crear un cache simple para metadatos
-const metadataCache = new Map();
-
 export default function useUserNFTs(address) {
+  // Rename provider to avoid shadowing
+  const { provider: ethProvider } = useProvider();
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(0);
-
-  // Función optimizada para obtener metadatos con cache
-  const fetchMetadata = useCallback(async (tokenURI, tokenId) => {
-    const cacheKey = `${tokenURI}-${tokenId}`;
-    
-    // Comprobar si hay datos en caché
-    if (metadataCache.has(cacheKey)) {
-      return metadataCache.get(cacheKey);
-    }
-    
-    // Metadatos predeterminados
-    let metadata = {
-      name: `NFT #${tokenId}`,
-      description: "Sin descripción",
-      image: DEFAULT_IMAGE,
-      attributes: []
-    };
-
-    try {
-      if (!tokenURI) return metadata;
-      
-      if (tokenURI.startsWith('data:application/json;base64,')) {
-        // Decodificar data URI base64
-        const base64Data = tokenURI.split(',')[1];
-        const jsonString = atob(base64Data);
-        metadata = { ...metadata, ...JSON.parse(jsonString) };
-      } else if (tokenURI.startsWith('data:,' )) {
-        // Formato simple data URI (no base64)
-        const dataJson = decodeURIComponent(tokenURI.substring(6));
-        try {
-          const parsedData = JSON.parse(dataJson);
-          metadata = { ...metadata, ...parsedData };
-          
-          // Manejar casos especiales
-          if (!metadata.image && parsedData.image_url) {
-            metadata.image = parsedData.image_url;
-          }
-        } catch (e) {
-          console.error(`Error parsing data URI JSON for ${tokenId}:`, e);
-        }
-      } else if (tokenURI.startsWith('ipfs://')) {
-        // Convertir IPFS URI a HTTP gateway
-        const ipfsGateway = 'https://ipfs.io/ipfs/';
-        const ipfsHash = tokenURI.replace('ipfs://', '');
-        const url = `${ipfsGateway}${ipfsHash}`;
-        
-        // Usar AbortController para establecer un timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        try {
-          const response = await fetch(url, { 
-            signal: controller.signal,
-            cache: 'force-cache' 
-          });
-          const data = await response.json();
-          metadata = { ...metadata, ...data };
-          clearTimeout(timeoutId);
-        } catch (err) {
-          clearTimeout(timeoutId);
-          console.warn(`Timeout or error fetching IPFS metadata for ${tokenId}`);
-        }
-      } else if (tokenURI.startsWith('http')) {
-        // URL HTTP estándar con timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        try {
-          const response = await fetch(tokenURI, { 
-            signal: controller.signal,
-            cache: 'force-cache'
-          });
-          const data = await response.json();
-          metadata = { ...metadata, ...data };
-          clearTimeout(timeoutId);
-        } catch (err) {
-          clearTimeout(timeoutId);
-          console.warn(`Timeout or error fetching HTTP metadata for ${tokenId}`);
-        }
-      }
-
-      // Corregir la URL de la imagen si es IPFS
-      if (metadata.image && metadata.image.startsWith('ipfs://')) {
-        const ipfsGateway = 'https://ipfs.io/ipfs/';
-        const ipfsHash = metadata.image.replace('ipfs://', '');
-        metadata.image = `${ipfsGateway}${ipfsHash}`;
-      }
-      
-      // Guardar en caché
-      metadataCache.set(cacheKey, metadata);
-      return metadata;
-    } catch (error) {
-      console.error(`Error processing metadata for ${tokenId}:`, error);
-      return metadata;
-    }
-  }, []);
 
   // Función para refrescar los NFTs
   const refreshNFTs = useCallback(() => {
     setLastUpdated(Date.now());
   }, []);
 
-  // Función optimizada para procesar un token individual
-  const processToken = useCallback(async (tokenId, contract, address) => {
-    try {
-      const tokenIdString = tokenId.toString();
-      
-      // Usar Promise.all para paralelizar solicitudes
-      const [tokenURI, tokenData, likes, owner] = await Promise.all([
-        contract.tokenURI(tokenId),
-        contract.getListedToken(tokenId),
-        contract.getLikesCount(tokenId),
-        contract.ownerOf(tokenId)
-      ]);
-      
-      // Obtener metadatos con caché
-      const metadata = await fetchMetadata(tokenURI, tokenIdString);
-
-      // Construir el objeto NFT
-      return {
-        tokenId: tokenIdString,
-        tokenURI,
-        name: metadata.name || `NFT #${tokenIdString}`,
-        description: metadata.description || "Sin descripción",
-        image: metadata.image || DEFAULT_IMAGE,
-        attributes: metadata.attributes || [],
-        owner,
-        creator: address,
-        price: tokenData[3] ? tokenData[3] : ethers.parseEther("0"),
-        isForSale: tokenData[4],
-        likes: likes.toString(),
-        category: tokenData[6] || "collectibles"
-      };
-    } catch (err) {
-      console.error(`Error processing token ${tokenId}:`, err);
-      return {
-        tokenId: tokenId.toString(),
-        error: true,
-        errorMessage: err.message,
-        image: DEFAULT_IMAGE,
-        name: `NFT #${tokenId.toString()}`
-      };
-    }
-  }, [fetchMetadata]);
-
-  // Efecto principal optimizado
+  // Efecto principal optimizado - using enhanced fetchNFTs
   useEffect(() => {
     if (!address) return;
     
     const abortController = new AbortController();
     let isMounted = true;
+    
+    console.log("Fetching NFTs for address:", address);
+    console.log("Using contract address:", CONTRACT_ADDRESS);
 
-    const fetchUserNFTs = async () => {
+    const getAndProcessNFTs = async () => {
       if (!isMounted) return;
       setLoading(true);
       setError(null);
-      setNfts([]); // Reset NFTs before fetching
-
+      setNfts([]); // Clear any existing NFTs to avoid duplicates
+      
       try {
-        // Conectar al provider con timeout
+        // Try to use our enhanced fetchNFTs function first
+        if (ethProvider) {
+          try {
+            console.log("Using enhanced fetchNFTs function with specific contract filtering");
+            // Explicitly specify contract address to filter results
+            const fetchedNfts = await fetchNFTs(address, ethProvider, {
+              contractAddress: CONTRACT_ADDRESS,
+              limit: 100,
+              withMetadata: true
+            });
+            
+            // Filter NFTs by contract to ensure we only get the ones from our Tokenization contract
+            const filteredNfts = fetchedNfts.filter(nft => {
+              // Convert addresses to lowercase for case-insensitive comparison
+              const nftContract = nft.contract?.toLowerCase();
+              const ourContract = CONTRACT_ADDRESS.toLowerCase();
+              
+              // Log for debugging
+              if (nftContract) {
+                console.log(`Comparing NFT contract: ${nftContract} with our contract: ${ourContract}`);
+              }
+              
+              return nftContract === ourContract;
+            });
+            
+            console.log(`Filtered NFTs from ${fetchedNfts.length} down to ${filteredNfts.length} for our contract`);
+            
+            // Make sure each NFT has a unique identifier to avoid duplicate key warnings
+            const uniqueNfts = filteredNfts.map((nft, index) => {
+              // Create a unique ID using contract address and token ID if available
+              const uniqueId = `${nft.contract || CONTRACT_ADDRESS}-${nft.tokenId || `unknown-${index}`}`;
+              return {
+                ...nft,
+                uniqueId,
+                // Ensure every NFT has a tokenId
+                tokenId: nft.tokenId || `unknown-${index}`
+              };
+            });
+            
+            if (uniqueNfts.length > 0) {
+              console.log("Successfully filtered NFTs for our contract:", uniqueNfts.length);
+              setNfts(uniqueNfts);
+              setLoading(false);
+              return;
+            } else {
+              console.log("No NFTs found for our contract using enhanced method, trying fallback");
+            }
+          } catch (enhancedError) {
+            console.warn("Enhanced NFT fetch failed, falling back to contract:", enhancedError);
+          }
+        }
+        
+        // Fallback to direct contract method
+        console.log("Using direct contract method to fetch NFTs");
+        
+        // Connect to provider without shadowing
         if (!window.ethereum) {
           throw new Error("No se encontró una wallet de Ethereum");
         }
         
-        const provider = new ethers.BrowserProvider(window.ethereum);
+        // Use browserProvider to avoid shadowing
+        const browserProvider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
           CONTRACT_ADDRESS,
           TokenizationAppABI.abi,
-          provider
+          browserProvider
         );
-
-        // Obtener tokens del creador con mejor manejo de errores
+        
+        // First check direct balance with the contract
         let tokenIds = [];
         try {
-          console.log("Calling getTokensByCreator for address:", address);
-          const rawResult = await contract.getTokensByCreator(address);
-          console.log("Raw result from getTokensByCreator:", rawResult);
+          // Check user's balance of NFTs from our contract
+          const balance = await contract.balanceOf(address);
+          console.log("User has", balance.toString(), "NFTs from our contract");
           
-          // Check if result is valid
-          if (rawResult) {
-            // Ensure it's an array
-            tokenIds = Array.isArray(rawResult) ? rawResult : [];
-            console.log("Processed token IDs:", tokenIds);
-          } else {
-            console.warn("getTokensByCreator returned empty or invalid result");
-          }
-        } catch (tokenError) {
-          console.error("Error getting tokens by creator:", tokenError);
-          
-          // Try fallback method if available
-          try {
-            // Some contracts might have alternative methods to get tokens
-            // Example: If a balanceOf function exists
-            const balance = await contract.balanceOf(address);
-            console.log("User token balance:", balance.toString());
-            
-            // If user has tokens, we can try to get them one by one
-            if (balance && Number(balance) > 0) {
-              const tempTokenIds = [];
-              for (let i = 0; i < Number(balance); i++) {
-                try {
-                  // Example: Using tokenOfOwnerByIndex if it exists
-                  const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-                  if (tokenId) tempTokenIds.push(tokenId);
-                } catch (indexError) {
-                  console.warn("Could not get token by index:", indexError);
-                  break;
-                }
+          if (balance && Number(balance) > 0) {
+            // Get each tokenId the user owns
+            for (let i = 0; i < Number(balance); i++) {
+              try {
+                const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+                console.log("Found token:", tokenId.toString());
+                if (tokenId) tokenIds.push(tokenId);
+              } catch (indexError) {
+                console.warn("Could not get token by index:", indexError);
               }
-              tokenIds = tempTokenIds;
             }
-          } catch (fallbackError) {
-            console.warn("Fallback method also failed:", fallbackError);
-            // Continue with empty tokenIds array
           }
+          
+          // Try to also get tokens created by this user
+          try {
+            console.log("Checking for tokens created by user");
+            if (contract.getTokensByCreator) {
+              const createdTokens = await contract.getTokensByCreator(address);
+              if (createdTokens && createdTokens.length) {
+                // Merge with existing tokenIds, ensuring no duplicates
+                const existingIds = new Set(tokenIds.map(id => id.toString()));
+                createdTokens.forEach(token => {
+                  if (!existingIds.has(token.toString())) {
+                    tokenIds.push(token);
+                  }
+                });
+                console.log("Added creator tokens, total tokens:", tokenIds.length);
+              }
+            }
+          } catch (creatorError) {
+            console.warn("Could not get creator tokens:", creatorError.message);
+          }
+        } catch (balanceError) {
+          console.error("Error checking token balance:", balanceError);
+          // No tokens found
         }
         
         if (!isMounted) return;
         
         if (tokenIds.length === 0) {
-          console.log("No tokens found for address:", address);
+          console.log("No tokens found from our contract for address:", address);
           setNfts([]);
           setLoading(false);
           return;
         }
         
-        // Procesar tokens en lotes para no sobrecargar la red
+        // Process tokens in batches with enhanced fetchTokenMetadata
         const BATCH_SIZE = 5;
         const results = [];
         
@@ -250,33 +169,79 @@ export default function useUserNFTs(address) {
           if (!isMounted) break;
           
           const batch = tokenIds.slice(i, i + BATCH_SIZE);
-          const batchPromises = batch.map(tokenId => 
-            processToken(tokenId, contract, address)
-          );
+          const batchPromises = batch.map(async (tokenId, batchIndex) => {
+            try {
+              const tokenIdString = tokenId.toString();
+              
+              const [tokenURI, tokenData, likes, owner] = await Promise.all([
+                contract.tokenURI(tokenId),
+                contract.getListedToken(tokenId),
+                contract.getLikesCount(tokenId),
+                contract.ownerOf(tokenId)
+              ]);
+              
+              // Use enhanced fetchTokenMetadata
+              const metadata = await fetchTokenMetadata(tokenURI);
+              
+              // Create a unique identifier for this NFT
+              const uniqueId = `${CONTRACT_ADDRESS}-${tokenIdString}-${i}-${batchIndex}`;
+
+              return {
+                tokenId: tokenIdString,
+                uniqueId, // Add a unique ID to avoid key warnings
+                tokenURI,
+                contract: CONTRACT_ADDRESS, // Explicitly set the contract address
+                name: metadata.name || `NFT #${tokenIdString}`,
+                description: metadata.description || "Sin descripción",
+                image: metadata.image ? ipfsToHttp(metadata.image) : DEFAULT_IMAGE,
+                attributes: metadata.attributes || [],
+                owner,
+                creator: address,
+                price: tokenData[3] ? tokenData[3] : ethers.parseEther("0"),
+                isForSale: tokenData[4],
+                likes: likes.toString(),
+                category: tokenData[6] || "collectibles"
+              };
+            } catch (err) {
+              console.error(`Error processing token ${tokenId}:`, err);
+              // Return null for failed tokens, and filter them out later
+              return null;
+            }
+          });
           
           try {
             const batchResults = await Promise.all(batchPromises);
-            const validResults = batchResults.filter(result => !result.error);
-            results.push(...validResults);
+            // Filter out null results from failed tokens
+            const validResults = batchResults.filter(Boolean);
             
-            // Actualización incremental para mejorar UX
-            if (isMounted) {
-              setNfts(prev => [...prev, ...validResults]);
+            if (validResults.length > 0) {
+              results.push(...validResults);
+              
+              // Incremental update for better UX
+              if (isMounted) {
+                setNfts(prev => {
+                  // Use a Map to ensure uniqueness by tokenId
+                  const nftMap = new Map(prev.map(nft => [nft.uniqueId, nft]));
+                  validResults.forEach(nft => nftMap.set(nft.uniqueId, nft));
+                  return Array.from(nftMap.values());
+                });
+              }
             }
           } catch (batchError) {
             console.error("Error processing batch:", batchError);
-            // Continue with the next batch
           }
         }
         
-        // Actualización final completa
+        // Final update with all unique NFTs
         if (isMounted) {
-          setNfts(results);
+          // Use a Map to ensure uniqueness
+          const uniqueNfts = Array.from(new Map(results.map(nft => [nft.uniqueId, nft])).values());
+          console.log(`Final NFTs from contract: ${uniqueNfts.length}`);
+          setNfts(uniqueNfts);
         }
       } catch (err) {
-        console.error("Error fetching user NFTs:", err);
+        console.error("Error fetching Tokenization NFTs:", err);
         if (isMounted) {
-          // Mejorar mensajes de error específicos para una mejor experiencia de usuario
           let userFriendlyError = "Error al obtener tus NFTs";
           
           if (err.message.includes("BAD_DATA")) {
@@ -296,14 +261,14 @@ export default function useUserNFTs(address) {
       }
     };
 
-    fetchUserNFTs();
+    getAndProcessNFTs();
 
     // Cleanup function
     return () => {
       isMounted = false;
       abortController.abort();
     };
-  }, [address, lastUpdated, processToken]);
+  }, [address, lastUpdated, ethProvider]);
 
   return { nfts, loading, error, refreshNFTs };
 }

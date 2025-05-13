@@ -3,7 +3,7 @@ import { motion as m } from 'framer-motion';
 import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
-import useUserNFTs from '../../../../hooks/useUserNFTs';
+import useUserNFTs from '../../../../hooks/nfts/useUserNFTs';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";

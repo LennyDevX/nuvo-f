@@ -48,7 +48,10 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {nfts.map((nft) => (
-        <NFTCard key={nft.tokenId} nft={nft} />
+        <NFTCard 
+          key={nft.id || `${nft.contractAddress}-${nft.tokenId}`} 
+          nft={nft} 
+        />
       ))}
     </div>
   );

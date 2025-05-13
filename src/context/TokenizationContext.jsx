@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useRef } from 'react';
+import { uploadFileToIPFS, uploadJsonToIPFS } from '../utils/blockchain/blockchainUtils';
 
 const TokenizationContext = createContext();
 
@@ -18,13 +19,15 @@ export const TokenizationProvider = ({ children }) => {
   const [isMinting, setIsMinting] = useState(false);
   const [mintingError, setMintingError] = useState(null);
   const [mintedNFT, setMintedNFT] = useState(null);
+  const [ipfsImageUri, setIpfsImageUri] = useState(null); // Add IPFS URI state
+  const [ipfsMetadataUri, setIpfsMetadataUri] = useState(null); // Add IPFS URI state
   
   // Refs - Eliminamos referencias a cámara/canvas
   const fileInputRef = useRef(null);
   
   // Reset form function
   const resetForm = () => {
-    setCurrentStep('upload'); // Cambiar de 'capture' a 'upload'
+    setCurrentStep('upload');
     setImage(null);
     setImageFile(null);
     setMetadata({
@@ -36,6 +39,40 @@ export const TokenizationProvider = ({ children }) => {
     });
     setMintedNFT(null);
     setMintingError(null);
+    setIpfsImageUri(null);
+    setIpfsMetadataUri(null);
+  };
+  
+  // Function to upload image to IPFS
+  const handleImageUpload = async (file) => {
+    setIsUploading(true);
+    try {
+      // Use our enhanced IPFS upload utility
+      const imageUri = await uploadFileToIPFS(file);
+      setIpfsImageUri(imageUri);
+      return imageUri;
+    } catch (error) {
+      console.error("Failed to upload image:", error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Function to upload metadata to IPFS
+  const handleMetadataUpload = async (metadataObj) => {
+    setIsUploading(true);
+    try {
+      // Use our enhanced IPFS upload utility
+      const metadataUri = await uploadJsonToIPFS(metadataObj);
+      setIpfsMetadataUri(metadataUri);
+      return metadataUri;
+    } catch (error) {
+      console.error("Failed to upload metadata:", error);
+      throw error;
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -58,7 +95,11 @@ export const TokenizationProvider = ({ children }) => {
         mintedNFT,
         setMintedNFT,
         fileInputRef,
-        resetForm
+        resetForm,
+        ipfsImageUri,
+        ipfsMetadataUri,
+        handleImageUpload,
+        handleMetadataUpload
       }}
     >
       {children}

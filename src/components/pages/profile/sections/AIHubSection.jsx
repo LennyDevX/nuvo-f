@@ -3,7 +3,7 @@ import { motion as m } from 'framer-motion';
 import { FaRobot, FaChartLine, FaBrain, FaLightbulb, FaExclamationCircle, FaSpinner, FaCheckCircle, FaCoins, FaCalendarAlt, FaPercent, FaCubes } from 'react-icons/fa';
 import { useStaking } from '../../../../context/StakingContext';
 import { ethers } from 'ethers';
-import { analyzeStakingPortfolio } from '../../../../utils/stakingAnalytics';
+import { analyzeStakingPortfolio } from '../../../../utils/staking/stakingAnalytics';
 
 // --- Component ---
 const AIHubSection = ({ account }) => {

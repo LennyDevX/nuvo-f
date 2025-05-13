@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { FaCheckCircle, FaExternalLinkAlt, FaWallet, FaPlus, FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useTokenization } from '../../../../context/TokenizationContext';
-import { DEFAULT_PLACEHOLDER } from '../../../../utils/ipfsUtils';
+import { DEFAULT_PLACEHOLDER } from '../../../../utils/blockchain/blockchainUtils';
 
 const SuccessStep = () => {
   const navigate = useNavigate();

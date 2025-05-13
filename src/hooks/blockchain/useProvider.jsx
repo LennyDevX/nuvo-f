@@ -17,6 +17,7 @@ const PUBLIC_RPC_ENDPOINTS = {
 const useProvider = () => {
   const [provider, setProvider] = useState(null);
   const [error, setError] = useState(null);
+  const [account, setAccount] = useState(null);
   const providerRef = useRef(null);
   const networkInitialized = useRef(false);
   const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
@@ -117,9 +118,43 @@ const useProvider = () => {
     };
   }, [ALCHEMY_KEY, RPC_URL, CHAIN_ID]);
 
+  // Attempt to get the connected account from the browser's ethereum provider
+  useEffect(() => {
+    const getAccount = async () => {
+      if (window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            setAccount(accounts[0]);
+          }
+          
+          // Listen for account changes
+          window.ethereum.on('accountsChanged', (accounts) => {
+            if (accounts.length > 0) {
+              setAccount(accounts[0]);
+            } else {
+              setAccount(null);
+            }
+          });
+        } catch (err) {
+          console.error("Failed to get accounts:", err);
+        }
+      }
+    };
+    
+    getAccount();
+    
+    return () => {
+      if (window.ethereum && window.ethereum.removeListener) {
+        window.ethereum.removeListener('accountsChanged', () => {});
+      }
+    };
+  }, []);
+
   return { 
     provider: providerRef.current, 
     error, 
+    account,
     isInitialized: networkInitialized.current && providerRef.current !== null 
   };
 };
