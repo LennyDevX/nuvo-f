@@ -10,6 +10,7 @@ const RevenueStreams = lazy(() => import('./RevenueStreams'));
 const HeroSection = lazy(() => import("./HeroSection"));
 const SupplyTracker = lazy(() => import('./SupplyTracker'));
 const TokenomicsExplanation = lazy(() => import('./TokenomicsExplanation'));
+const KeyMetrics = lazy(() => import('./KeyMetrics')); // Add KeyMetrics component
 
 // Create loading fallback
 const LoadingFallback = () => (
@@ -45,6 +46,7 @@ const TokenomicsDashboard = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="w-full pt-16 pb-6 md:pt-20 relative z-10"
+            key="tokenomics-dashboard-main" // Add unique key here
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               {/* Hero Section */}
@@ -73,6 +75,7 @@ const TokenomicsDashboard = () => {
 
               {/* Key Metrics */}
               <Suspense fallback={<LoadingFallback />}>
+                <KeyMetrics />
               </Suspense>
 
               {/* Tokenomics Explanation */}
@@ -87,6 +90,7 @@ const TokenomicsDashboard = () => {
         <TokenInfoModal 
           isOpen={isTokenModalOpen} 
           onClose={handleCloseTokenModal} 
+          key="token-info-modal" // Add unique key here
         />
       </AnimationProvider>
     </MainLayout>
