@@ -6,9 +6,11 @@ import { FaCoins } from 'react-icons/fa';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
 import StakingDashboard from "./StakingDashboard";
+import { useStaking } from "../../../context/StakingContext";
 
 const DashboardStaking = () => {
   const { account, network, balance } = useContext(WalletContext);
+  const { state } = useStaking();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,6 +26,23 @@ const DashboardStaking = () => {
     
     return () => clearTimeout(timer);
   }, [account, network, balance]);
+
+  // Mostrar error si el contrato está pausado o migrado
+  useEffect(() => {
+    if (state.isContractPaused) {
+      setError({
+        title: "Staking Paused",
+        message: "The staking contract is currently paused for maintenance."
+      });
+    } else if (state.isMigrated) {
+      setError({
+        title: "Contract Migrated",
+        message: "The staking contract has been migrated to a new version."
+      });
+    } else {
+      setError(null);
+    }
+  }, [state.isContractPaused, state.isMigrated]);
 
   const letterVariants = {
     hidden: { opacity: 0 },

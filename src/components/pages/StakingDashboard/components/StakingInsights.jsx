@@ -1,9 +1,32 @@
-import React from 'react';
-import { FaChartBar } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaChartBar, FaCalendarAlt } from 'react-icons/fa';
 import { calculateTimeBonus } from '../../../../utils/staking/stakingAnalytics';
 import { StakingSection, ValueDisplay, ProgressBar } from '../ui/CommonComponents';
+import { useStaking } from '../../../../context/StakingContext';
+import { formatBalance } from '../../../../utils/blockchain/formatters';
 
 const StakingInsights = ({ userDeposits, maxDeposits }) => {
+  const { getDetailedStakingStats, getSignerAddress } = useStaking();
+  const [detailedStats, setDetailedStats] = useState(null);
+  
+  useEffect(() => {
+    const fetchDetailedStats = async () => {
+      if (userDeposits?.length > 0) {
+        const address = await getSignerAddress();
+        if (address) {
+          try {
+            const stats = await getDetailedStakingStats(address);
+            setDetailedStats(stats);
+          } catch (error) {
+            console.error("Error fetching detailed stats:", error);
+          }
+        }
+      }
+    };
+    
+    fetchDetailedStats();
+  }, [userDeposits, getDetailedStakingStats, getSignerAddress]);
+  
   // Calculate days staked
   const calculateDaysStaked = () => {
     if (!userDeposits || userDeposits.length === 0) return 0;
@@ -41,6 +64,41 @@ const StakingInsights = ({ userDeposits, maxDeposits }) => {
           barColor="bg-gradient-to-r from-teal-500 to-emerald-500"
         />
         
+        {/* Earnings Projections - New section using detailed stats */}
+        {detailedStats && (
+          <div className="mt-4 pt-5 border-t border-slate-700/30">
+            <h4 className="text-base font-medium text-white mb-3 flex items-center">
+              <FaCalendarAlt className="mr-2 text-indigo-400" />
+              Reward Projections
+            </h4>
+            
+            <div className="space-y-3">
+              <ProjectionItem 
+                period="1 Month" 
+                value={detailedStats.projections?.oneMonth} 
+              />
+              <ProjectionItem 
+                period="3 Months" 
+                value={detailedStats.projections?.threeMonths} 
+              />
+              <ProjectionItem 
+                period="6 Months" 
+                value={detailedStats.projections?.sixMonths} 
+              />
+              <ProjectionItem 
+                period="1 Year" 
+                value={detailedStats.projections?.oneYear} 
+              />
+            </div>
+            
+            {detailedStats.summary?.estimatedMonthlyRewards && (
+              <div className="text-xs text-indigo-400/90 mt-4 py-2 px-3 bg-indigo-900/20 rounded-lg border border-indigo-900/30">
+                Based on your current stake, you could earn approximately {detailedStats.summary.estimatedMonthlyRewards} POL per month.
+              </div>
+            )}
+          </div>
+        )}
+        
         {/* Time Bonus Information */}
         <div className="mt-4 pt-5 border-t border-slate-700/30">
           <h4 className="text-base font-medium text-white mb-3">Time Bonus Tiers</h4>
@@ -68,6 +126,13 @@ const BonusTier = ({ days, bonus, currentDays }) => (
       <span className="text-slate-300">{days} Day Bonus</span>
     </div>
     <span className="text-white">+{bonus}%</span>
+  </div>
+);
+
+const ProjectionItem = ({ period, value }) => (
+  <div className="flex justify-between items-center p-2 rounded-lg hover:bg-slate-800/40 transition-colors">
+    <span className="text-slate-300">{period}</span>
+    <span className="text-white font-medium">{formatBalance(value || 0)} POL</span>
   </div>
 );
 

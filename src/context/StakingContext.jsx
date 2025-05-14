@@ -53,7 +53,9 @@ const defaultState = {
     depositsCount: 0,
     remainingSlots: 300
   },
-  isPending: false
+  isPending: false,
+  eventListeners: null,
+  currentTx: null
 };
 
 const StakingContext = createContext({
@@ -74,6 +76,7 @@ export const StakingProvider = ({ children }) => {
   const [state, setState] = useState(defaultState);
   const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
   const refreshTimeoutRef = useRef(null);
+  const functionsRef = useRef({});
 
   // Helper functions
   const getSignerAddress = useCallback(async () => {
@@ -96,37 +99,6 @@ export const StakingProvider = ({ children }) => {
     return new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
   }, [CONTRACT_ADDRESS]);
 
-  // Initialize the contract
-  useEffect(() => {
-    if (!isInitialized || !provider || !CONTRACT_ADDRESS) return;
-
-    const initializeContract = async () => {
-      try {
-        // Verify contract exists at address
-        const code = await provider.getCode(CONTRACT_ADDRESS);
-        if (code === '0x') {
-          throw new Error('Contract not deployed at address');
-        }
-
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-        contract.provider = provider;
-        
-        setState(prev => ({ ...prev, contract }));
-
-        // Initial status fetch
-        try {
-          await getContractStatus(contract);
-        } catch (statusError) {
-          console.warn("Initial status fetch failed:", statusError);
-        }
-      } catch (err) {
-        console.error("Contract initialization error:", err);
-      }
-    };
-
-    initializeContract();
-  }, [provider, isInitialized, CONTRACT_ADDRESS]);
-
   // Contract status fetcher with rate limiting and caching
   const getContractStatus = useCallback(async (contractInstance = state.contract) => {
     if (!contractInstance || !provider || !isInitialized) return;
@@ -140,7 +112,6 @@ export const StakingProvider = ({ children }) => {
       return await globalCache.get(
         'contract_status',
         async () => {
-          // Use Promise.all for parallel execution
           const [paused, migrated, treasury, balance] = await Promise.all([
             contractInstance.paused().catch(() => false),
             contractInstance.migrated().catch(() => false), 
@@ -166,7 +137,7 @@ export const StakingProvider = ({ children }) => {
     }
   }, [provider, state.contract, isInitialized]);
 
-  // User info fetcher with rate limiting and caching
+  // Enhanced batching for user info updates
   const refreshUserInfo = useCallback(async (address) => {
     if (!state.contract || !address) {
       return;
@@ -182,13 +153,21 @@ export const StakingProvider = ({ children }) => {
       return await globalCache.get(
         cacheKey,
         async () => {
-          // Use Promise.all for parallel execution
-          const [userInfoResponse, depositsResponse] = await Promise.all([
+          const results = await Promise.allSettled([
             state.contract.getUserInfo(address),
-            state.contract.getUserDeposits(address)
+            state.contract.getUserDeposits(address),
+            state.contract.calculateRewards(address)
           ]);
-
-          // Format deposits array
+          
+          const userInfoResponse = results[0].status === 'fulfilled' ? results[0].value : {
+            totalDeposited: '0',
+            pendingRewards: '0', 
+            lastWithdraw: '0'
+          };
+          
+          const depositsResponse = results[1].status === 'fulfilled' ? results[1].value : [];
+          const calculatedRewards = results[2].status === 'fulfilled' ? results[2].value : BigInt(0);
+          
           const formattedDeposits = Array.isArray(depositsResponse) 
             ? depositsResponse.map(deposit => ({
                 amount: ethers.formatEther(deposit.amount || '0'),
@@ -198,12 +177,11 @@ export const StakingProvider = ({ children }) => {
 
           const now = Math.floor(Date.now() / 1000);
           
-          // Calculate ROI progress for each deposit using contract data
           let totalProgress = 0;
           formattedDeposits.forEach(deposit => {
             const timeStaked = now - deposit.timestamp;
             const daysStaked = timeStaked / (24 * 3600);
-            const dailyROI = STAKING_CONSTANTS.HOURLY_ROI * 24 * 100; // Convert to percentage
+            const dailyROI = STAKING_CONSTANTS.HOURLY_ROI * 24 * 100;
             const progress = Math.min(daysStaked * dailyROI, STAKING_CONSTANTS.MAX_ROI * 100);
             totalProgress += progress;
           });
@@ -212,7 +190,6 @@ export const StakingProvider = ({ children }) => {
             ? totalProgress / formattedDeposits.length 
             : 0;
 
-          // Format user info using proper field names from contract
           const formattedUserInfo = {
             totalStaked: ethers.formatEther(userInfoResponse.totalDeposited || '0'),
             pendingRewards: ethers.formatEther(userInfoResponse.pendingRewards || '0'),
@@ -221,7 +198,9 @@ export const StakingProvider = ({ children }) => {
             stakingDays: Math.floor((now - (formattedDeposits[0]?.timestamp || now)) / (24 * 3600))
           };
 
-          // Update state with the accurate contract data
+          formattedUserInfo.calculatedRewards = ethers.formatEther(calculatedRewards);
+          formattedUserInfo.timeBonus = calculateTimeBonus(now - (formattedDeposits[0]?.timestamp || now));
+
           setState(prev => ({
             ...prev,
             userInfo: formattedUserInfo,
@@ -235,7 +214,6 @@ export const StakingProvider = ({ children }) => {
               remainingSlots: STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER - formattedDeposits.length
             }
           }));
-
           return { userInfo: formattedUserInfo, deposits: formattedDeposits };
         },
         CACHE_CONFIG.USER_INFO.ttl
@@ -246,379 +224,418 @@ export const StakingProvider = ({ children }) => {
     }
   }, [state.contract]);
 
-  // Deposit function
-  const deposit = useCallback(async (amount) => {
-    try {
-      setState(prev => ({ ...prev, isPending: true }));
-      const contract = await getSignedContract();
-      
-      const tx = await contract.deposit({
-        value: amount,
-        gasLimit: 300000
-      });
-      
-      await tx.wait();
-      
-      // After deposit completes, refresh user info
-      const address = await getSignerAddress();
-      if (address) {
-        await refreshUserInfo(address);
-      }
-      
-      setState(prev => ({ ...prev, isPending: false }));
-      return true;
-    } catch (error) {
-      setState(prev => ({ ...prev, isPending: false }));
-      throw error;
-    }
-  }, [getSignedContract, getSignerAddress, refreshUserInfo]);
+  functionsRef.current.refreshUserInfo = refreshUserInfo;
+  functionsRef.current.getContractStatus = getContractStatus;
 
-  // Withdraw rewards function
-  const withdrawRewards = useCallback(async () => {
-    try {
-      setState(prev => ({ ...prev, isPending: true }));
-      const contract = await getSignedContract();
-      
-      const tx = await contract.withdraw();
-      await tx.wait();
-      
-      // After withdrawal completes, refresh user info
-      const address = await getSignerAddress();
-      if (address) {
-        await refreshUserInfo(address);
-      }
-      
-      setState(prev => ({ ...prev, isPending: false }));
-      return true;
-    } catch (error) {
-      setState(prev => ({ ...prev, isPending: false }));
-      throw error;
-    }
-  }, [getSignedContract, getSignerAddress, refreshUserInfo]);
-
-  // Withdraw all function (principal + rewards)
-  const withdrawAll = useCallback(async () => {
-    try {
-      setState(prev => ({ ...prev, isPending: true }));
-      const contract = await getSignedContract();
-      
-      const tx = await contract.withdrawAll();
-      await tx.wait();
-      
-      // After withdrawal completes, refresh user info
-      const address = await getSignerAddress();
-      if (address) {
-        await refreshUserInfo(address);
-        await getContractStatus();
-      }
-      
-      setState(prev => ({ ...prev, isPending: false }));
-      return true;
-    } catch (error) {
-      setState(prev => ({ ...prev, isPending: false }));
-      throw error;
-    }
-  }, [getSignedContract, getSignerAddress, refreshUserInfo, getContractStatus]);
-
-  // Emergency withdraw function
-  const emergencyWithdraw = useCallback(async () => {
-    try {
-      setState(prev => ({ ...prev, isPending: true }));
-      const contract = await getSignedContract();
-      
-      const tx = await contract.emergencyUserWithdraw();
-      await tx.wait();
-      
-      // After emergency withdrawal completes, refresh user info
-      const address = await getSignerAddress();
-      if (address) {
-        await refreshUserInfo(address);
-        await getContractStatus();
-      }
-      
-      setState(prev => ({ ...prev, isPending: false }));
-      return true;
-    } catch (error) {
-      setState(prev => ({ ...prev, isPending: false }));
-      throw error;
-    }
-  }, [getSignedContract, getSignerAddress, refreshUserInfo, getContractStatus]);
-
-  // Get pool events function - enhanced with improved fetchLogsInChunks utility
-  const getPoolEvents = useCallback(async (options = {}) => {
-    if (!state.contract) {
-      console.warn("Contract not initialized for getPoolEvents");
-      return { deposits: [], withdrawals: [] };
-    }
-    const address = await getSignerAddress();
-    if (!address) {
-      console.warn("No wallet connected for getPoolEvents");
-      return { deposits: [], withdrawals: [] };
-    }
-    
-    const rateLimiterKey = `pool_events_${address}`;
-    
-    // Skip rate limiter if forced refresh
-    if (!options.forceRefresh && !globalRateLimiter.canMakeCall(rateLimiterKey)) {
-      const cachedEvents = globalCache.get(`pool_events_${address}`, null);
-      if (cachedEvents) {
-        console.log("Using cached pool events");
-        return cachedEvents;
-      }
-      return { deposits: [], withdrawals: [] };
-    }
+  const setupContractEventListeners = useCallback((contract) => {
+    if (!contract || !provider) return;
     
     try {
-      // Allow bypassing cache for forced refresh
-      const cacheKey = `pool_events_${address}`;
-      if (options.forceRefresh) {
-        console.log("Forcing refresh of pool events, bypassing cache");
-        globalCache.remove(cacheKey);
+      const depositFilter = contract.filters.DepositMade();
+      const handleDeposit = async (user, depositId, amount, commission, timestamp) => {
+        const currentAddress = await getSignerAddress();
+        if (currentAddress && user.toLowerCase() === currentAddress.toLowerCase()) {
+          await functionsRef.current.refreshUserInfo(currentAddress);
+          await functionsRef.current.getContractStatus();
+        }
+      };
+      
+      const withdrawalFilter = contract.filters.WithdrawalMade();
+      const handleWithdrawal = async (user, amount, commission) => {
+        const currentAddress = await getSignerAddress();
+        if (currentAddress && user.toLowerCase() === currentAddress.toLowerCase()) {
+          await functionsRef.current.refreshUserInfo(currentAddress);
+          await functionsRef.current.getContractStatus();
+        }
+      };
+      
+      contract.on(depositFilter, handleDeposit);
+      contract.on(withdrawalFilter, handleWithdrawal);
+      
+      setState(prev => ({
+        ...prev, 
+        eventListeners: {
+          deposit: { filter: depositFilter, handler: handleDeposit },
+          withdrawal: { filter: withdrawalFilter, handler: handleWithdrawal }
+        }
+      }));
+    } catch (error) {
+      console.error("Error setting up event listeners:", error);
+    }
+  }, [provider, getSignerAddress]);
+
+  const removeContractEventListeners = useCallback((contract) => {
+    if (!contract || !state.eventListeners) return;
+    
+    try {
+      if (state.eventListeners.deposit) {
+        contract.off(state.eventListeners.deposit.filter, state.eventListeners.deposit.handler);
+      }
+      if (state.eventListeners.withdrawal) {
+        contract.off(state.eventListeners.withdrawal.filter, state.eventListeners.withdrawal.handler);
+      }
+    } catch (error) {
+      console.error("Error removing event listeners:", error);
+    }
+  }, [state.eventListeners]);
+
+  useEffect(() => {
+    if (!isInitialized || !provider || !CONTRACT_ADDRESS) return;
+
+    const initializeContract = async () => {
+      try {
+        const code = await provider.getCode(CONTRACT_ADDRESS);
+        if (code === '0x') {
+          throw new Error('Contract not deployed at address');
+        }
+
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
+        contract.provider = provider;
+        
+        setState(prev => ({ ...prev, contract }));
+
+        try {
+          await getContractStatus(contract);
+        } catch (statusError) {
+          console.warn("Initial status fetch failed:", statusError);
+        }
+
+        setupContractEventListeners(contract);
+      } catch (err) {
+        console.error("Contract initialization error:", err);
+      }
+    };
+
+    initializeContract();
+    
+    return () => {
+      if (state.contract) {
+        removeContractEventListeners(state.contract);
+      }
+    };
+  }, [provider, isInitialized, CONTRACT_ADDRESS, getContractStatus, setupContractEventListeners, removeContractEventListeners]);
+
+  // Format date helper
+  const formatWithdrawDate = useCallback((timestamp) => {
+    if (!timestamp || timestamp === 0) return 'Never';
+    try {
+      return new Date(timestamp * 1000).toLocaleDateString();
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid Date';
+    }
+  }, []);
+  
+  // Add this function to use the contract's native calculation
+  const calculateUserRewards = useCallback(async (address) => {
+    if (!state.contract || !address) return '0';
+    try {
+      const rewards = await state.contract.calculateRewards(address);
+      return ethers.formatEther(rewards);
+    } catch (error) {
+      console.error("Error calculating rewards:", error);
+      return '0';
+    }
+  }, [state.contract]);
+
+  // Get total deposits directly from contract
+  const getUserTotalDeposit = useCallback(async (address) => {
+    if (!state.contract || !address) return '0';
+    try {
+      const totalDeposit = await state.contract.getTotalDeposit(address);
+      return ethers.formatEther(totalDeposit);
+    } catch (error) {
+      console.error("Error getting total deposit:", error);
+      return '0';
+    }
+  }, [state.contract]);
+
+  // Enhanced transaction handling with better error messages
+  const executeTransaction = useCallback(async (transactionFn, options = {}) => {
+    const txType = options.type || 'transaction';
+    const updateData = options.updateData || (() => {});
+    
+    setState(prev => ({ 
+      ...prev, 
+      isPending: true,
+      currentTx: {
+        type: txType,
+        status: 'preparing',
+        hash: null,
+        error: null
+      }
+    }));
+    
+    try {
+      // Get contract with signer
+      const contract = await getSignedContract();
+      
+      // Prepare transaction
+      setState(prev => ({ 
+        ...prev, 
+        currentTx: {
+          ...prev.currentTx,
+          status: 'awaiting_confirmation'
+        }
+      }));
+      
+      // Execute the transaction function
+      const tx = await transactionFn(contract);
+      
+      // Transaction sent
+      setState(prev => ({ 
+        ...prev, 
+        currentTx: {
+          ...prev.currentTx,
+          status: 'pending',
+          hash: tx.hash
+        }
+      }));
+      
+      console.log(`${txType} transaction sent:`, tx.hash);
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      // Transaction confirmed
+      setState(prev => ({ 
+        ...prev, 
+        isPending: false,
+        currentTx: {
+          ...prev.currentTx,
+          status: receipt.status === 1 ? 'confirmed' : 'failed'
+        }
+      }));
+      
+      // After transaction completes, refresh user info
+      const address = await getSignerAddress();
+      if (address) {
+        await Promise.all([
+          refreshUserInfo(address),
+          getContractStatus(),
+          updateData(address)
+        ]);
       }
       
-      return await globalCache.get(
-        cacheKey,
-        async () => {
-          console.log("Fetching contract transactions for deposits and withdrawals");
-          try {
-            const latestBlock = await provider.getBlockNumber();
-            const fromBlock = Math.max(0, latestBlock - 30000);
-            
-            console.log(`Fetching events from block ${fromBlock} to ${latestBlock}`);
-            
-            // Define default event signatures - we'll use these if we can't find them in the ABI
-            let depositTopic = ethers.id("DepositMade(address,uint256,uint256,uint256)");
-            let withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
-            
-            // Safely check the contract interface events
-            try {
-              if (state.contract && state.contract.interface && state.contract.interface.events) {
-                // Debug: Output available events safely
-                console.log("Contract has events dictionary:", 
-                  Object.keys(state.contract.interface.events).length, 
-                  "event types available"
-                );
-                
-                // Try to find deposit and withdrawal events in the contract ABI
-                for (const eventSig in state.contract.interface.events) {
-                  const event = state.contract.interface.events[eventSig];
-                  if (event && event.name) {
-                    const eventName = event.name.toLowerCase();
-                    if (eventName.includes('deposit')) {
-                      console.log(`Found deposit event: ${event.name}`);
-                      depositTopic = event.topicHash;
-                    }
-                    if (eventName.includes('withdraw')) {
-                      console.log(`Found withdrawal event: ${event.name}`);
-                      withdrawalTopic = event.topicHash;
-                    }
-                  }
-                }
-              } else {
-                console.warn("Contract interface events not accessible, using default event signatures");
-              }
-            } catch (e) {
-              console.error("Error accessing contract events:", e);
-              // We'll use the default signatures defined above
-            }
-            
-            // Format address for topics
-            const encodedAddress = ethers.zeroPadValue(address, 32);
-            
-            console.log('Using event topics:', { 
-              depositTopic, 
-              withdrawalTopic, 
-              encodedAddress, 
-              contractAddress: CONTRACT_ADDRESS
-            });
-            
-            // Fetch logs with error handling
-            console.log("Fetching deposit logs...");
-            let depositLogs = [];
-            try {
-              depositLogs = await fetchLogsInChunks(provider, {
-                address: CONTRACT_ADDRESS,
-                topics: [depositTopic, encodedAddress],
-                fromBlock,
-                toBlock: latestBlock,
-                chunkSize: 250 
-              });
-              console.log(`Found ${depositLogs.length} deposit logs`);
-            } catch (err) {
-              console.error("Error fetching deposit logs:", err);
-            }
-            
-            console.log("Fetching withdrawal logs...");
-            let withdrawalLogs = [];
-            try {
-              withdrawalLogs = await fetchLogsInChunks(provider, {
-                address: CONTRACT_ADDRESS,
-                topics: [withdrawalTopic, encodedAddress],
-                fromBlock,
-                toBlock: latestBlock,
-                chunkSize: 250
-              });
-              console.log(`Found ${withdrawalLogs.length} withdrawal logs`);
-            } catch (err) {
-              console.error("Error fetching withdrawal logs:", err);
-            }
-            
-            // Process deposit logs with defensive coding
-            const deposits = [];
-            for (const log of depositLogs) {
-              try {
-                // Try to parse using interface if available
-                let parsed;
-                if (state.contract && state.contract.interface) {
-                  parsed = state.contract.interface.parseLog({
-                    topics: log.topics,
-                    data: log.data
-                  });
-                }
-                
-                // If parsing failed, create a simple object with the basics
-                if (!parsed) {
-                  console.log("Could not parse deposit log, using raw data");
-                  parsed = {
-                    args: {
-                      user: address,
-                      amount: log.data ? ethers.toBeHex(log.data) : '0',
-                      timestamp: Math.floor(Date.now() / 1000) - 86400,
-                      commission: '0'
-                    }
-                  };
-                }
-                
-                deposits.push({
-                  transactionHash: log.transactionHash || `deposit-${Date.now()}-${Math.random()}`,
-                  blockNumber: log.blockNumber || 0,
-                  args: parsed.args,
-                  blockTimestamp: null // Will be filled later
-                });
-              } catch (err) {
-                console.error("Failed to process deposit log:", err);
-              }
-            }
-            
-            // Process withdrawal logs with defensive coding
-            const withdrawals = [];
-            for (const log of withdrawalLogs) {
-              try {
-                // Try to parse using interface if available
-                let parsed;
-                if (state.contract && state.contract.interface) {
-                  parsed = state.contract.interface.parseLog({
-                    topics: log.topics,
-                    data: log.data
-                  });
-                }
-                
-                // If parsing failed, create a simple object with the basics
-                if (!parsed) {
-                  console.log("Could not parse withdrawal log, using raw data");
-                  parsed = {
-                    args: {
-                      user: address,
-                      amount: log.data ? ethers.toBeHex(log.data) : '0',
-                      commission: '0'
-                    }
-                  };
-                }
-                
-                withdrawals.push({
-                  transactionHash: log.transactionHash || `withdrawal-${Date.now()}-${Math.random()}`,
-                  blockNumber: log.blockNumber || 0,
-                  args: parsed.args,
-                  blockTimestamp: null // Will be filled later
-                });
-              } catch (err) {
-                console.error("Failed to process withdrawal log:", err);
-              }
-            }
-            
-            console.log(`Successfully processed ${deposits.length} deposits and ${withdrawals.length} withdrawals`);
-            
-            // Get timestamps for all events
-            const allLogs = [...deposits, ...withdrawals];
-            const uniqueBlockNumbers = [...new Set(
-              allLogs
-                .filter(e => e.blockNumber && e.blockNumber > 0)
-                .map(e => e.blockNumber)
-            )];
-            
-            if (uniqueBlockNumbers.length > 0) {
-              // Fetch blocks in smaller batches to avoid timeouts
-              const batchSize = 20;
-              const blockMap = {};
-              
-              for (let i = 0; i < uniqueBlockNumbers.length; i += batchSize) {
-                const batch = uniqueBlockNumbers.slice(i, i + batchSize);
-                try {
-                  const blocks = await Promise.all(
-                    batch.map(bn => provider.getBlock(bn).catch(() => null))
-                  );
-                  blocks.forEach(b => {
-                    if (b) blockMap[b.number] = b;
-                  });
-                } catch (e) {
-                  console.warn("Error fetching blocks batch:", e);
-                }
-                
-                // Small delay between batches
-                if (i + batchSize < uniqueBlockNumbers.length) {
-                  await new Promise(resolve => setTimeout(resolve, 100));
-                }
-              }
-              
-              // Add timestamps to all events
-              for (const deposit of deposits) {
-                if (!deposit.blockTimestamp) {
-                  deposit.blockTimestamp = 
-                    blockMap[deposit.blockNumber]?.timestamp || 
-                    Math.floor(Date.now() / 1000) - 86400;
-                }
-              }
-              
-              for (const withdrawal of withdrawals) {
-                if (!withdrawal.blockTimestamp) {
-                  withdrawal.blockTimestamp = 
-                    blockMap[withdrawal.blockNumber]?.timestamp || 
-                    Math.floor(Date.now() / 1000) - 3600;
-                }
-              }
-            }
-            
-            // Check if we found any real events
-            if (deposits.length > 0 || withdrawals.length > 0) {
-              console.log("Successfully retrieved blockchain events");
-              return { deposits, withdrawals, source: 'blockchain' };
-            }
-            
-            // If we get here, we couldn't find any events via logs or direct contract calls
-            throw new Error("No events found for this address");
-            
-          } catch (error) {
-            console.error("Error in blockchain events fetch:", error);
-            return { 
-              deposits: [], 
-              withdrawals: [],
-              error: error.message,
-              source: 'error'
-            };
-          }
-        },
-        options.forceRefresh ? 0 : CACHE_CONFIG.POOL_EVENTS.ttl
-      );
+      return {
+        success: receipt.status === 1,
+        hash: tx.hash,
+        receipt
+      };
     } catch (error) {
-      console.error("Error fetching pool events:", error);
-      return { 
-        deposits: [], 
-        withdrawals: [],
-        error: error.message,
-        source: 'error'
+      console.error(`Error in ${txType}:`, error);
+      
+      // Parse error for more user-friendly message
+      let errorMessage = error.message || 'Transaction failed';
+      
+      // Check for common wallet error patterns and simplify the message
+      if (errorMessage.includes('user rejected') || 
+          errorMessage.includes('user denied') || 
+          errorMessage.includes('rejected by user') ||
+          errorMessage.includes('cancelled by user') ||
+          errorMessage.includes('User denied')) {
+        errorMessage = 'Transaction cancelled';
+      } else if (errorMessage.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds in your wallet';
+      } else if (errorMessage.toLowerCase().includes('gas')) {
+        errorMessage = 'Network fee issue';
+      } else if (errorMessage.includes('nonce')) {
+        errorMessage = 'Transaction sequence error';
+      } else if (errorMessage.includes('intrinsic gas')) {
+        errorMessage = 'Gas estimation failed';
+      } else if (errorMessage.length > 100) {
+        // Truncate overly long error messages
+        errorMessage = errorMessage.substring(0, 100) + '...';
+      }
+      
+      setState(prev => ({ 
+        ...prev, 
+        isPending: false,
+        currentTx: {
+          ...prev.currentTx,
+          status: 'failed',
+          error: errorMessage
+        }
+      }));
+      
+      return {
+        success: false,
+        error: error
       };
     }
-  }, [state.contract, provider, CONTRACT_ADDRESS, state.userDeposits, state.userInfo, getSignerAddress]);
+  }, [getSignedContract, getSignerAddress, refreshUserInfo, getContractStatus]);
+
+  // Updated deposit function using executeTransaction
+  const deposit = useCallback(async (amount) => {
+    return executeTransaction(
+      async (contract) => {
+        return await contract.deposit({
+          value: amount,
+          gasLimit: 300000
+        });
+      },
+      { type: 'deposit' }
+    );
+  }, [executeTransaction]);
+
+  // Updated withdrawRewards function using executeTransaction
+  const withdrawRewards = useCallback(async () => {
+    return executeTransaction(
+      async (contract) => {
+        return await contract.withdraw();
+      },
+      { type: 'withdraw_rewards' }
+    );
+  }, [executeTransaction]);
+
+  // Updated withdrawAll function using executeTransaction
+  const withdrawAll = useCallback(async () => {
+    return executeTransaction(
+      async (contract) => {
+        return await contract.withdrawAll();
+      },
+      { type: 'withdraw_all' }
+    );
+  }, [executeTransaction]);
+
+  // Updated emergencyWithdraw function using executeTransaction  
+  const emergencyWithdraw = useCallback(async () => {
+    return executeTransaction(
+      async (contract) => {
+        return await contract.emergencyUserWithdraw();
+      },
+      { type: 'emergency_withdraw' }
+    );
+  }, [executeTransaction]);
+
+  // Add new function to calculate detailed rewards statistics
+  const getDetailedStakingStats = useCallback(async (address) => {
+    if (!state.contract || !address) return null;
+    
+    try {
+      // Get all the required data
+      const [userInfo, deposits, currentBlockNumber] = await Promise.all([
+        state.contract.getUserInfo(address).catch(() => ({ totalDeposited: '0', pendingRewards: '0', lastWithdraw: '0' })),
+        state.contract.getUserDeposits(address).catch(() => []),
+        provider.getBlockNumber().catch(() => null)
+      ]);
+      
+      // Get current timestamp
+      const currentTimestamp = Math.floor(Date.now() / 1000);
+      
+      // Get current block if available
+      let blockTimestamp = currentTimestamp;
+      if (currentBlockNumber) {
+        try {
+          const block = await provider.getBlock(currentBlockNumber);
+          if (block) blockTimestamp = block.timestamp;
+        } catch (e) {
+          console.warn("Failed to get block timestamp:", e);
+        }
+      }
+      
+      // Format deposits and calculate stats
+      const formattedDeposits = Array.isArray(deposits) 
+        ? deposits.map((deposit, index) => {
+            const amount = ethers.formatEther(deposit.amount || '0');
+            const timestamp = Number(deposit.timestamp || '0');
+            const timeStaked = blockTimestamp - timestamp;
+            const daysStaked = timeStaked / (24 * 3600);
+            
+            // Calculate rewards for this specific deposit
+            const rewardsData = calculateStakingRewards(
+              amount, 
+              daysStaked, 
+              STAKING_CONSTANTS.HOURLY_ROI,
+              STAKING_CONSTANTS.MAX_ROI
+            );
+            
+            // Calculate time to next bonus
+            let nextBonusTime = null;
+            let nextBonusPercentage = null;
+            
+            if (daysStaked < STAKING_CONSTANTS.TIME_BONUSES.QUARTER.days) {
+              nextBonusTime = STAKING_CONSTANTS.TIME_BONUSES.QUARTER.days - daysStaked;
+              nextBonusPercentage = STAKING_CONSTANTS.TIME_BONUSES.QUARTER.bonus * 100;
+            } else if (daysStaked < STAKING_CONSTANTS.TIME_BONUSES.HALF_YEAR.days) {
+              nextBonusTime = STAKING_CONSTANTS.TIME_BONUSES.HALF_YEAR.days - daysStaked;
+              nextBonusPercentage = STAKING_CONSTANTS.TIME_BONUSES.HALF_YEAR.bonus * 100;
+            } else if (daysStaked < STAKING_CONSTANTS.TIME_BONUSES.YEAR.days) {
+              nextBonusTime = STAKING_CONSTANTS.TIME_BONUSES.YEAR.days - daysStaked;
+              nextBonusPercentage = STAKING_CONSTANTS.TIME_BONUSES.YEAR.bonus * 100;
+            }
+            
+            return {
+              id: index,
+              amount,
+              timestamp,
+              daysStaked: Math.floor(daysStaked),
+              progress: rewardsData.progress,
+              estimatedRewards: rewardsData.rewards,
+              timeToMaxRewards: Math.max(0, rewardsData.daysToMax - daysStaked),
+              nextBonus: nextBonusTime ? {
+                days: Math.ceil(nextBonusTime),
+                percentage: nextBonusPercentage
+              } : null
+            };
+          })
+        : [];
+      
+      // Calculate totals and averages
+      const totalStaked = ethers.formatEther(userInfo.totalDeposited || '0');
+      const pendingRewards = ethers.formatEther(userInfo.pendingRewards || '0');
+      
+      // Calculate average ROI progress
+      let totalProgress = 0;
+      formattedDeposits.forEach(deposit => {
+        totalProgress += deposit.progress;
+      });
+      
+      const avgProgress = formattedDeposits.length > 0 
+        ? totalProgress / formattedDeposits.length 
+        : 0;
+      
+      // Calculate current time bonus
+      const oldestDepositTime = formattedDeposits.length > 0 
+        ? Math.min(...formattedDeposits.map(d => d.timestamp)) 
+        : currentTimestamp;
+      
+      const stakingDays = Math.floor((currentTimestamp - oldestDepositTime) / (24 * 3600));
+      const currentTimeBonus = calculateTimeBonus(stakingDays * 24 * 3600);
+      
+      // Calculate estimated monthly rewards at current rate
+      const dailyROI = STAKING_CONSTANTS.HOURLY_ROI * 24; // Daily ROI as decimal
+      const baseMonthlyRewards = parseFloat(totalStaked) * dailyROI * 30; // 30 days
+      const boostedMonthlyRewards = baseMonthlyRewards * currentTimeBonus;
+      
+      return {
+        summary: {
+          totalStaked,
+          pendingRewards,
+          deposits: formattedDeposits.length,
+          oldestDeposit: oldestDepositTime,
+          newestDeposit: formattedDeposits.length > 0 
+            ? Math.max(...formattedDeposits.map(d => d.timestamp)) 
+            : 0,
+          stakingDays,
+          lastWithdraw: Number(userInfo.lastWithdraw || '0'),
+          avgProgress,
+          currentTimeBonus,
+          estimatedMonthlyRewards: boostedMonthlyRewards.toFixed(4)
+        },
+        deposits: formattedDeposits,
+        projections: {
+          oneMonth: calculateStakingRewards(totalStaked, 30, STAKING_CONSTANTS.HOURLY_ROI, STAKING_CONSTANTS.MAX_ROI).rewards,
+          threeMonths: calculateStakingRewards(totalStaked, 90, STAKING_CONSTANTS.HOURLY_ROI, STAKING_CONSTANTS.MAX_ROI).rewards,
+          sixMonths: calculateStakingRewards(totalStaked, 180, STAKING_CONSTANTS.HOURLY_ROI, STAKING_CONSTANTS.MAX_ROI).rewards,
+          oneYear: calculateStakingRewards(totalStaked, 365, STAKING_CONSTANTS.HOURLY_ROI, STAKING_CONSTANTS.MAX_ROI).rewards
+        }
+      };
+    } catch (error) {
+      console.error("Error getting detailed staking stats:", error);
+      return null;
+    }
+  }, [state.contract, provider, calculateTimeBonus]);
 
   // Calculate real APY based on contract data - using enhanced calculateStakingRewards
   const calculateRealAPY = useCallback(async () => {
@@ -656,51 +673,189 @@ export const StakingProvider = ({ children }) => {
     }
   }, [state.contract, provider]);
 
-  // Format date helper
-  const formatWithdrawDate = useCallback((timestamp) => {
-    if (!timestamp || timestamp === 0) return 'Never';
-    try {
-      return new Date(timestamp * 1000).toLocaleDateString();
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid Date';
+  // Get pool events function - Implementación corregida
+  const getPoolEvents = useCallback(async (options = {}) => {
+    if (!state.contract || !provider) {
+      console.warn("Contract not initialized or provider missing for getPoolEvents");
+      return { deposits: [], withdrawals: [] };
     }
-  }, []);
-
-  // Add this function to use the contract's native calculation
-  const calculateUserRewards = useCallback(async (address) => {
-    if (!state.contract || !address) return '0';
-    try {
-      const rewards = await state.contract.calculateRewards(address);
-      return ethers.formatEther(rewards);
-    } catch (error) {
-      console.error("Error calculating rewards:", error);
-      return '0';
+    
+    const address = await getSignerAddress();
+    if (!address) {
+      console.warn("No wallet connected for getPoolEvents");
+      return { deposits: [], withdrawals: [] };
     }
-  }, [state.contract]);
-
-  // Get total deposits directly from contract
-  const getUserTotalDeposit = useCallback(async (address) => {
-    if (!state.contract || !address) return '0';
+    
+    const rateLimiterKey = `pool_events_${address}`;
+    
     try {
-      const totalDeposit = await state.contract.getTotalDeposit(address);
-      return ethers.formatEther(totalDeposit);
-    } catch (error) {
-      console.error("Error getting total deposit:", error);
-      return '0';
-    }
-  }, [state.contract]);
-
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearInterval(refreshTimeoutRef.current);
+      // Bypass cache if force refresh is requested
+      const cacheKey = `pool_events_${address}`;
+      if (options.forceRefresh) {
+        console.log("Forcing refresh of pool events");
+        globalCache.set(cacheKey, null);
+      } else if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
+        // Try to use cached data if available
+        const cachedData = globalCache.get(cacheKey);
+        if (cachedData) {
+          console.log("Using cached pool events data");
+          return cachedData;
+        }
       }
-    };
-  }, []);
 
-  // Context value
+      return await globalCache.get(
+        cacheKey,
+        async () => {
+          console.log("Fetching contract transactions for deposits and withdrawals");
+          try {
+            const latestBlock = await provider.getBlockNumber();
+            // Limitamos a los últimos 5000 bloques para evitar timeouts (aproximadamente 1-2 días de eventos en Polygon)
+            const fromBlock = Math.max(0, latestBlock - 5000);
+            console.log(`Fetching events from block ${fromBlock} to ${latestBlock}`);
+            
+            // Define event topics using correct ethers v6 formatting
+            const depositTopic = ethers.id("DepositMade(address,uint256,uint256,uint256,uint256)");
+            const withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
+            
+            // Important: For topic filtering with an address parameter, add it correctly to the topics array
+            // Topic format for addresses needs to be padded to 32 bytes (64 characters + 0x)
+            const paddedAddress = ethers.zeroPadValue(address, 32).toLowerCase();
+            
+            console.log("Using address for event filter:", address);
+            console.log("Padded address for topics:", paddedAddress);
+            
+            // Fetch deposits - with better error handling
+            console.log("Fetching deposit logs...");
+            let depositLogs = [];
+            try {
+              depositLogs = await fetchLogsInChunks(provider, {
+                address: CONTRACT_ADDRESS,
+                topics: [depositTopic, paddedAddress],
+                fromBlock: fromBlock,
+                toBlock: latestBlock
+              });
+              console.log(`Found ${depositLogs.length} deposit logs`);
+              
+              // Decode deposit logs
+              if (depositLogs.length > 0) {
+                const iface = new ethers.Interface(ABI.abi);
+                depositLogs = depositLogs.map(log => {
+                  try {
+                    const parsedLog = iface.parseLog({
+                      topics: log.topics, 
+                      data: log.data
+                    });
+                    return {
+                      ...log,
+                      args: parsedLog.args,
+                      blockTimestamp: log.blockTimestamp || 0
+                    };
+                  } catch (e) {
+                    console.warn("Failed to parse deposit log", e);
+                    return log;
+                  }
+                });
+              }
+            } catch (err) {
+              console.error("Error fetching deposit logs:", err);
+            }
+            
+            // Fetch withdrawals - with better error handling
+            console.log("Fetching withdrawal logs...");
+            let withdrawalLogs = [];
+            try {
+              withdrawalLogs = await fetchLogsInChunks(provider, {
+                address: CONTRACT_ADDRESS,
+                topics: [withdrawalTopic, paddedAddress],
+                fromBlock: fromBlock,
+                toBlock: latestBlock
+              });
+              console.log(`Found ${withdrawalLogs.length} withdrawal logs`);
+              
+              // Decode withdrawal logs
+              if (withdrawalLogs.length > 0) {
+                const iface = new ethers.Interface(ABI.abi);
+                withdrawalLogs = withdrawalLogs.map(log => {
+                  try {
+                    const parsedLog = iface.parseLog({
+                      topics: log.topics, 
+                      data: log.data
+                    });
+                    return {
+                      ...log,
+                      args: parsedLog.args,
+                      blockTimestamp: log.blockTimestamp || 0
+                    };
+                  } catch (e) {
+                    console.warn("Failed to parse withdrawal log", e);
+                    return log;
+                  }
+                });
+              }
+            } catch (err) {
+              console.error("Error fetching withdrawal logs:", err);
+            }
+            
+            // Get timestamps for logs
+            const logsWithTimestamps = async (logs) => {
+              return Promise.all(logs.map(async (log) => {
+                if (!log.blockNumber) return log;
+                
+                try {
+                  const block = await provider.getBlock(log.blockNumber);
+                  return {
+                    ...log,
+                    blockTimestamp: block ? block.timestamp : 0
+                  };
+                } catch (e) {
+                  console.warn("Failed to get timestamp for log", e);
+                  return log;
+                }
+              }));
+            };
+            
+            // Add timestamps to logs
+            try {
+              if (depositLogs.length > 0) {
+                depositLogs = await logsWithTimestamps(depositLogs);
+              }
+              if (withdrawalLogs.length > 0) {
+                withdrawalLogs = await logsWithTimestamps(withdrawalLogs);
+              }
+            } catch (e) {
+              console.warn("Error adding timestamps to logs:", e);
+            }
+            
+            // Return filtered events
+            return { 
+              deposits: depositLogs, 
+              withdrawals: withdrawalLogs,
+              source: 'blockchain' 
+            };
+          } catch (error) {
+            console.error("Error in blockchain events fetch:", error);
+            return { 
+              deposits: [], 
+              withdrawals: [],
+              error: error.message, 
+              source: 'error'
+            };
+          }
+        },
+        options.forceRefresh ? 0 : CACHE_CONFIG.POOL_EVENTS.ttl
+      );
+    } catch (error) {
+      console.error("Error fetching pool events:", error);
+      return { 
+        deposits: [], 
+        withdrawals: [],
+        error: error.message,
+        source: 'error'
+      };
+    }
+  }, [state.contract, provider, CONTRACT_ADDRESS, getSignerAddress]);
+
+  // Context value - ACTUALIZADO: incluir todas las funciones que necesitan los componentes
   const contextValue = {
     state,
     STAKING_CONSTANTS,
@@ -711,11 +866,12 @@ export const StakingProvider = ({ children }) => {
     getContractStatus,
     formatWithdrawDate,
     getSignerAddress,
-    getPoolEvents,
-    calculateRealAPY,
-    emergencyWithdraw,
     calculateUserRewards,
-    getUserTotalDeposit
+    getUserTotalDeposit,
+    emergencyWithdraw,
+    getPoolEvents,          // Añadido
+    calculateRealAPY,       // Añadido
+    getDetailedStakingStats // Añadido
   };
 
   return (
@@ -725,7 +881,6 @@ export const StakingProvider = ({ children }) => {
   );
 };
 
-// Helper function to calculate time bonus - renamed to avoid conflict
 export const calculateTimeBonus = (stakingTime) => {
   const daysStaked = Math.floor(stakingTime / (24 * 3600));
   return calculateTimeBonusFromUtils(daysStaked, STAKING_CONSTANTS.TIME_BONUSES);

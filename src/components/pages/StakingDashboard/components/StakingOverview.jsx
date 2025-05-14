@@ -6,8 +6,9 @@ import NetworkBadge from '../../../web3/NetworkBadge';
 import { ValueDisplay } from '../ui/CommonComponents';
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
-  const { calculateRealAPY } = useStaking();
+  const { calculateRealAPY, getDetailedStakingStats } = useStaking();
   const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 88, dailyROI: 0.24 });
+  const [detailedStats, setDetailedStats] = useState(null);
   
   // Calculate total staked
   const totalStaked = userDeposits?.reduce((sum, deposit) => {
@@ -35,6 +36,23 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
     fetchAPY();
   }, [calculateRealAPY]);
   
+  // Fetch detailed stats if available
+  useEffect(() => {
+    const fetchDetailedStats = async () => {
+      const signerAddress = await getDetailedStakingStats();
+      if (signerAddress && userDeposits?.length > 0) {
+        const stats = await getDetailedStakingStats(signerAddress);
+        if (stats) {
+          setDetailedStats(stats);
+        }
+      }
+    };
+    
+    if (userDeposits?.length > 0) {
+      fetchDetailedStats();
+    }
+  }, [userDeposits, getDetailedStakingStats]);
+  
   const daysStaked = calculateDaysStaked();
   const timeBonus = calculateTimeBonus(daysStaked);
   const timeBonesPercentage = timeBonus * 100;
@@ -42,6 +60,9 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
   // Use dynamically calculated APY instead of hardcoded value
   const baseAPY = dynamicAPY.baseAPY;
   const effectiveAPY = baseAPY + (timeBonesPercentage * 1.5);
+  
+  // Get monthly projected rewards if available
+  const monthlyProjection = detailedStats?.projections?.oneMonth || null;
 
   return (
     <div className="nuvos-card mb-8">
@@ -76,6 +97,11 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
           <div className="text-xs text-slate-500 mt-1">
             Base: {baseAPY}% + Time Bonus: {timeBonesPercentage.toFixed(1)}%
           </div>
+          {monthlyProjection && (
+            <div className="text-xs text-indigo-400 mt-2">
+              Est. monthly: {formatBalance(monthlyProjection)} POL
+            </div>
+          )}
         </div>
       </div>
       
