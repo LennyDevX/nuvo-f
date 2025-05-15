@@ -1,18 +1,21 @@
 // src/hooks/useContractData.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ethers } from "ethers";
-import ABI from "../../Abi/StakingContract.json";
-import useProvider from "../useProvider";
+import { useStakingContract } from './useStakingContract';
+import { useStakingRewards } from './useStakingRewards';
 import { globalRateLimiter } from "../../utils/RateLimiter";
 import { globalCache } from "../../utils/CacheManager";
 
 const POLLING_INTERVAL = 30000; // 30 seconds
 const CACHE_DURATION = 5000; // 5 seconds
 const UPDATE_INTERVAL = 30000; // 30 seconds
-const DEBOUNCE_DELAY = 1000; // 1 second
 
 const useContractData = (account) => {
-  const { provider, isInitialized } = useProvider();
+  // Use our specialized hooks
+  const { contract, isInitialized } = useStakingContract();
+  const { refreshUserInfo } = useStakingRewards();
+
+  // State management
   const [data, setData] = useState({
     depositAmount: 0,
     availableRewards: 0,
@@ -25,52 +28,14 @@ const useContractData = (account) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const cache = useRef({});
-  const intervalRef = useRef(null);
   const isInitialLoad = useRef(true);
   const mounted = useRef(true);
   const lastFetchTime = useRef(0);
   const fetchTimeout = useRef(null);
 
-  const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || "";
-
-  const initContract = useCallback(async () => {
-    if (!provider || !CONTRACT_ADDRESS || !isInitialized) return null;
-    try {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
-      
-      // Ensure contract interface is properly initialized
-      if (!contract.interface) {
-        console.error("Contract interface not found");
-        return null;
-      }
-
-      // Add callStatic interface
-      contract.callStatic = contract.connect(provider);
-
-      // Verify contract exists
-      const code = await provider.getCode(CONTRACT_ADDRESS);
-      if (code === '0x') {
-        throw new Error('Contract not deployed');
-      }
-
-      // Bind all methods
-      Object.getOwnPropertyNames(Object.getPrototypeOf(contract))
-        .filter(name => typeof contract[name] === 'function')
-        .forEach(name => {
-          contract[name] = contract[name].bind(contract);
-        });
-
-      return contract;
-    } catch (error) {
-      console.error("Contract initialization error:", error);
-      return null;
-    }
-  }, [provider, CONTRACT_ADDRESS, isInitialized]);
-
-  const fetchContractData = useCallback(async (force = false, fetchRewards = false) => {
-    if (!provider || !account || !CONTRACT_ADDRESS || !isInitialized) {
-      console.log("Missing dependencies:", { provider: !!provider, account, CONTRACT_ADDRESS, isInitialized });
+  const fetchContractData = useCallback(async (force = false) => {
+    if (!contract || !account || !isInitialized) {
+      console.log("Missing dependencies:", { contract: !!contract, account, isInitialized });
       return;
     }
 
@@ -103,48 +68,28 @@ const useContractData = (account) => {
         }
       }
 
-      const contract = await initContract();
-      if (!contract || !contract.callStatic) {
-        console.error("Contract or callStatic not initialized");
-        return;
-      }
+      // Use our refreshUserInfo function from useStakingRewards
+      const userData = await refreshUserInfo(account);
+      
+      if (userData) {
+        const newData = {
+          depositAmount: userData.userInfo.totalStaked,
+          availableRewards: userData.userInfo.calculatedRewards,
+          totalPoolBalance: userData.userInfo.totalPoolBalance || '0',
+          firstDepositTime: userData.deposits[0]?.timestamp || null,
+          deposits: userData.deposits.map(d => ({
+            amount: d.amount,
+            timestamp: d.timestamp
+          }))
+        };
 
-      let rewards;
-      try {
-        rewards = await contract.callStatic.calculateRewards(account);
-      } catch (err) {
-        console.warn("Error calculating rewards:", err);
-        rewards = BigInt(0);
-      }
+        setData(prevData => ({ ...prevData, ...newData }));
 
-      const [poolBalance, deposit, deposits] = await Promise.all([
-        contract.callStatic.getContractBalance().catch(() => BigInt(0)),
-        contract.callStatic.getTotalDeposit(account).catch(() => BigInt(0)),
-        contract.callStatic.getUserDeposits(account)
-          .then(deps => deps.map(d => ({
-            amount: safeValue(d.amount),
-            timestamp: Number(d.timestamp || 0)
-          })))
-          .catch(() => [])
-      ]);
-
-      const newData = {
-        depositAmount: formatAmount(deposit),
-        availableRewards: formatAmount(rewards),
-        totalPoolBalance: formatAmount(poolBalance),
-        firstDepositTime: deposits[0]?.timestamp || null,
-        deposits: deposits.map(d => ({
-          amount: formatAmount(d.amount),
-          timestamp: d.timestamp
-        }))
-      };
-
-      setData(prevData => ({ ...prevData, ...newData }));
-
-      // Cache the new data
-      if (newData && Object.keys(newData).length > 0) {
-        const cacheKey = `contractData_${account}`;
-        globalCache.set(cacheKey, newData, CACHE_DURATION);
+        // Cache the new data
+        if (newData && Object.keys(newData).length > 0) {
+          const cacheKey = `contractData_${account}`;
+          globalCache.set(cacheKey, newData, CACHE_DURATION);
+        }
       }
 
       lastFetchTime.current = Date.now();
@@ -158,8 +103,9 @@ const useContractData = (account) => {
         isInitialLoad.current = false;
       }
     }
-  }, [provider, account, CONTRACT_ADDRESS, isInitialized, initContract]);
+  }, [contract, account, isInitialized, refreshUserInfo]);
 
+  // Format utility functions
   const safeValue = (value) => {
     try {
       if (typeof value === 'bigint') return value;
@@ -173,16 +119,6 @@ const useContractData = (account) => {
     }
   };
 
-  const safeCall = async (promise, defaultValue = BigInt(0)) => {
-    try {
-      const result = await promise;
-      return safeValue(result);
-    } catch (err) {
-      console.warn('Safe call error:', err);
-      return defaultValue;
-    }
-  };
-
   const formatAmount = (value) => {
     try {
       const bigIntValue = safeValue(value);
@@ -193,17 +129,17 @@ const useContractData = (account) => {
     }
   };
 
+  // Fetch withdrawal events
   const fetchWithdrawalEvents = useCallback(async () => {
-    if (!provider || !account) return;
+    if (!contract || !account) return;
 
     try {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, provider);
       const filter = contract.filters.WithdrawalMade(account);
       const events = await contract.queryFilter(filter);
 
       const withdrawals = await Promise.all(
         events.map(async (event) => {
-          const block = await provider.getBlock(event.blockNumber);
+          const block = await contract.provider.getBlock(event.blockNumber);
           const amount = event.args?.amount ? safeValue(event.args.amount) : BigInt(0);
           return {
             netAmount: ethers.formatEther(amount.toString()),
@@ -233,11 +169,12 @@ const useContractData = (account) => {
       console.error("Error fetching withdrawal events:", err);
       setError("Error al obtener eventos de retiro");
     }
-  }, [provider, account]);
+  }, [contract, account]);
 
+  // Handle withdrawal success
   const handleWithdrawalSuccess = useCallback(async (amount) => {
     try {
-      await fetchContractData();
+      await fetchContractData(true);
       
       const netAmount = amount ? ethers.formatEther(amount) : '0';
       const timestamp = new Date().toISOString();
@@ -267,16 +204,17 @@ const useContractData = (account) => {
 
       await Promise.all([
         fetchWithdrawalEvents(),
-        fetchContractData(),
+        fetchContractData(true),
       ]);
     } catch (err) {
       console.error("Error updating data after withdrawal:", err);
     }
   }, [account, fetchContractData, fetchWithdrawalEvents]);
 
+  // Handle deposit success
   const handleDepositSuccess = useCallback(async () => {
     try {
-      await fetchContractData();
+      await fetchContractData(true);
       const cacheKey = `contractData_${account}`;
       globalCache.clear(cacheKey);
     } catch (err) {
@@ -285,10 +223,11 @@ const useContractData = (account) => {
     }
   }, [account, fetchContractData]);
 
+  // Setup polling interval
   useEffect(() => {
     mounted.current = true;
 
-    if (account && provider) {
+    if (account && contract) {
       fetchContractData(true);
 
       const pollData = () => {
@@ -307,7 +246,7 @@ const useContractData = (account) => {
         clearTimeout(fetchTimeout.current);
       }
     };
-  }, [account, provider, fetchContractData]);
+  }, [account, contract, fetchContractData]);
 
   return {
     ...data,

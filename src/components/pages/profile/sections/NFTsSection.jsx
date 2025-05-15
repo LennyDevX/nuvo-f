@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,22 @@ const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
 
 const NFTsSection = ({ account }) => {
   const [selectedNFT, setSelectedNFT] = useState(null);
+  // Add state to track if content should be shown while still loading
+  const [showPreview, setShowPreview] = useState(false);
   const { nfts, loading, error } = useUserNFTs(account);
+  
+  // Show preview after a short delay even if still loading
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => {
+        setShowPreview(true);
+      }, 1500); // Show preview after 1.5 seconds even if still loading
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowPreview(false); // Reset when loading completes
+    }
+  }, [loading]);
   
   // Debug for checking raw NFT data
   useEffect(() => {
@@ -27,9 +42,70 @@ const NFTsSection = ({ account }) => {
     // Mostramos todos los NFTs, solo filtramos los que tienen un error explícito
     return nfts.filter(nft => !nft.error);
   }, [nfts]);
+
+  // Cache rendered NFT elements to prevent rerenders
+  const renderedNFTs = useCallback(() => {
+    return realNfts.map((nft, index) => (
+      <m.div
+        key={`${nft.tokenId}-${index}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: index * 0.1 }}
+        className="bg-black/40 border border-purple-500/20 rounded-xl overflow-hidden hover:border-purple-500/40 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-purple-500/20 flex flex-col"
+        onClick={() => setSelectedNFT(nft)}
+      >
+        {/* Contenedor de imagen mejorado - ratio fijo y objeto contenido en lugar de recortado */}
+        <div className="relative w-full pt-[100%] bg-purple-900/10">
+          {nft.image ? (
+            <img 
+              src={nft.image} 
+              alt={nft.name || `NFT #${nft.tokenId}`} 
+              className="absolute inset-0 w-full h-full object-contain p-2"
+              onError={(e) => {
+                e.target.src = PLACEHOLDER_IMAGE;
+              }}
+              loading="lazy" // Add lazy loading
+            />
+          ) : (
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+              <FaImage className="text-3xl text-purple-400" />
+            </div>
+          )}
+          {nft.isForSale && nft.price && (
+            <div className="absolute top-2 right-2 bg-green-600/80 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">
+              {ethers.formatUnits(nft.price, 18)} POL
+            </div>
+          )}
+        </div>
+        
+        {/* NFT text content */}
+        <div className="p-4 flex-grow flex flex-col justify-between">
+          <div>
+            <h3 className="text-white font-medium mb-2 text-lg leading-tight min-h-[3.5rem]">
+              {nft.name || `NFT #${nft.tokenId}`}
+            </h3>
+            <p className="text-gray-400 text-sm min-h-[2.5rem] mb-2">
+              {nft.description && nft.description.length > 80
+                ? `${nft.description.substring(0, 80)}...`
+                : nft.description || "Sin descripción"}
+            </p>
+          </div>
+          
+          <div className="flex items-center justify-between mt-auto pt-2 border-t border-purple-500/10">
+            <span className="text-xs text-purple-400">ID: #{nft.tokenId}</span>
+            {nft.likes && parseInt(nft.likes) > 0 && (
+              <div className="text-xs text-pink-400">
+                ♥ {nft.likes} likes
+              </div>
+            )}
+          </div>
+        </div>
+      </m.div>
+    ));
+  }, [realNfts]);
   
-  // Show loading state
-  if (loading) {
+  // Show loading state, but with a shorter duration
+  if (loading && !showPreview) {
     return (
       <m.div
         initial={{ opacity: 0 }}
@@ -123,68 +199,18 @@ const NFTsSection = ({ account }) => {
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
           <FaImage className="text-purple-400" /> Tus NFTs
         </h2>
-        <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm">
-          {realNfts.length} {realNfts.length === 1 ? 'NFT' : 'NFTs'}
-        </span>
+        <div className="flex items-center gap-2">
+          {loading && showPreview && (
+            <FaSpinner className="text-purple-400 animate-spin" />
+          )}
+          <span className="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-sm">
+            {realNfts.length} {realNfts.length === 1 ? 'NFT' : 'NFTs'}
+          </span>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {realNfts.map((nft, index) => (
-          <m.div
-            key={`${nft.tokenId}-${index}`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="bg-black/40 border border-purple-500/20 rounded-xl overflow-hidden hover:border-purple-500/40 transition-all duration-300 cursor-pointer hover:shadow-lg hover:shadow-purple-500/20 flex flex-col"
-            onClick={() => setSelectedNFT(nft)}
-          >
-            {/* Contenedor de imagen mejorado - ratio fijo y objeto contenido en lugar de recortado */}
-            <div className="relative w-full pt-[100%] bg-purple-900/10">
-              {nft.image ? (
-                <img 
-                  src={nft.image} 
-                  alt={nft.name || `NFT #${nft.tokenId}`} 
-                  className="absolute inset-0 w-full h-full object-contain p-2"
-                  onError={(e) => {
-                    e.target.src = PLACEHOLDER_IMAGE;
-                  }}
-                />
-              ) : (
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                  <FaImage className="text-3xl text-purple-400" />
-                </div>
-              )}
-              {nft.isForSale && nft.price && (
-                <div className="absolute top-2 right-2 bg-green-600/80 text-white text-xs px-2 py-1 rounded-lg backdrop-blur-sm">
-                  {ethers.formatUnits(nft.price, 18)} POL
-                </div>
-              )}
-            </div>
-            
-            {/* Contenido de texto mejorado con espaciado adecuado */}
-            <div className="p-4 flex-grow flex flex-col justify-between">
-              <div>
-                <h3 className="text-white font-medium mb-2 text-lg leading-tight min-h-[3.5rem]">
-                  {nft.name || `NFT #${nft.tokenId}`}
-                </h3>
-                <p className="text-gray-400 text-sm min-h-[2.5rem] mb-2">
-                  {nft.description && nft.description.length > 80
-                    ? `${nft.description.substring(0, 80)}...`
-                    : nft.description || "Sin descripción"}
-                </p>
-              </div>
-              
-              <div className="flex items-center justify-between mt-auto pt-2 border-t border-purple-500/10">
-                <span className="text-xs text-purple-400">ID: #{nft.tokenId}</span>
-                {nft.likes && parseInt(nft.likes) > 0 && (
-                  <div className="text-xs text-pink-400">
-                    ♥ {nft.likes} likes
-                  </div>
-                )}
-              </div>
-            </div>
-          </m.div>
-        ))}
+        {renderedNFTs()}
       </div>
       
       {/* NFT Detail Modal */}

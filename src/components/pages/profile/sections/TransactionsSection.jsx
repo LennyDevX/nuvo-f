@@ -136,6 +136,11 @@ const TransactionsSection = () => {
       setIsLoading(true);
       setError(null);
       
+      // Add a short timeout to ensure UI doesn't feel "jumpy"
+      // This prevents rapid loading/unloading of states
+      const minLoadingTime = 1000; // 1 second minimum loading time
+      const loadingStartTime = Date.now();
+      
       try {
         const eventTransactions = await fetchTransactionEvents();
         
@@ -219,7 +224,17 @@ const TransactionsSection = () => {
         setError("Failed to load transactions: " + error.message);
         setStakingTransactions([]);
       } finally {
-        setIsLoading(false);
+        // Ensure minimum loading time for better UX
+        const elapsedTime = Date.now() - loadingStartTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        
+        if (remainingTime > 0) {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, remainingTime);
+        } else {
+          setIsLoading(false);
+        }
       }
     };
     

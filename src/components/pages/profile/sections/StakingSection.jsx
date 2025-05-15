@@ -79,14 +79,31 @@ const StakingSection = ({ account }) => {
         setIsLoading(true);
         setFetchError(null);
         
-        // Directly fetch fresh data from the contract
-        const result = await refreshUserInfo(account);
-        console.log("StakingSection refreshUserInfo result:", result);
+        // Use a shorter timeout to force rendering even if the API is slow
+        const timeoutPromise = new Promise(resolve => {
+          setTimeout(() => {
+            resolve({ timeout: true });
+          }, 1500); // 1.5 sec timeout instead of waiting indefinitely
+        });
+        
+        // Race between the actual API call and the timeout
+        const result = await Promise.race([
+          refreshUserInfo(account),
+          timeoutPromise
+        ]);
+        
+        if (result && result.timeout) {
+          console.log("StakingSection using timeout fallback - will update when data arrives");
+          // We'll keep loading indicator but show partial UI
+        } else {
+          console.log("StakingSection refreshUserInfo result:", result);
+        }
         
         // Add a small delay to ensure state updates
         setTimeout(() => {
           setIsLoading(false);
-        }, 500);
+        }, 300); // Reduced from 500ms to 300ms
+        
       } catch (error) {
         console.error("Error fetching staking data:", error);
         setFetchError("Failed to load staking data. Please try again.");
@@ -100,12 +117,12 @@ const StakingSection = ({ account }) => {
       fetchStakingData();
     }
     
-    // Refresh data every 30 seconds
+    // Reduced polling interval from 30s to 15s for more frequent updates
     const intervalId = setInterval(() => {
       if (account) {
         refreshUserInfo(account).catch(console.error);
       }
-    }, 30000);
+    }, 15000);
 
     return () => clearInterval(intervalId);
   }, [account, refreshUserInfo]);

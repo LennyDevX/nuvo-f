@@ -43,7 +43,7 @@ const ProfilePage = () => {
 
   // Add timeout to prevent infinite loading state
   useEffect(() => {
-    // Set a timeout to force exit loading state if it takes too long
+    // Reduce timeout from 15s to 8s
     loadingTimeoutRef.current = setTimeout(() => {
       if (isLoading) {
         console.log("Loading timeout reached - forcing exit from loading state");
@@ -52,7 +52,7 @@ const ProfilePage = () => {
           setError("Loading took too long. Please try again or check your connection.");
         }
       }
-    }, 15000); // 15 seconds timeout
+    }, 8000); // Reduced from 15 seconds to 8 seconds timeout
 
     return () => {
       if (loadingTimeoutRef.current) {
@@ -67,7 +67,6 @@ const ProfilePage = () => {
       if (!walletConnected || !account) return;
       
       // Make sure we have a valid provider and it's initialized
-      // This is crucial - we need to check isInitialized from WalletContext
       if (!provider || !isInitialized) {
         console.log("Provider not ready yet, will try again when initialized");
         return;
@@ -77,42 +76,37 @@ const ProfilePage = () => {
         setIsLoading(true);
         console.log("Starting to fetch blockchain data with provider:", !!provider);
         
-        // Use try-catch for each API call separately to prevent one failure from blocking everything
-        let nftData = [];
-        let txData = [];
-        let tokenData = [];
-        
-        try {
-          console.log("Fetching NFTs...");
-          nftData = await fetchNFTs(account, provider, {
-            // Specify contract address for targeted NFT fetch
+        // Optimized: Run all data fetching in parallel using Promise.allSettled
+        // This prevents one slow operation from blocking everything
+        const [nftResult, txResult, tokenResult] = await Promise.allSettled([
+          fetchNFTs(account, provider, {
             contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS
-          });
-          console.log("NFTs fetched successfully:", nftData.length);
-        } catch (nftError) {
-          console.error("Error fetching NFTs:", nftError);
-          // Continue with empty array
-        }
-        
-        try {
-          console.log("Fetching transactions...");
-          txData = await fetchTransactions(account, provider);
-          console.log("Transactions fetched successfully:", txData.length);
-        } catch (txError) {
-          console.error("Error fetching transactions:", txError);
-          // Continue with empty array
-        }
-        
-        try {
-          console.log("Fetching token balances...");
-          tokenData = await fetchTokenBalances(account, provider, {
+          }).catch(err => {
+            console.error("Error fetching NFTs:", err);
+            return [];
+          }),
+          
+          fetchTransactions(account, provider).catch(err => {
+            console.error("Error fetching transactions:", err);
+            return [];
+          }),
+          
+          fetchTokenBalances(account, provider, {
             nuvoTokenAddress: import.meta.env.VITE_NUVO_TOKEN
-          });
-          console.log("Token balances fetched successfully:", tokenData.length);
-        } catch (tokenError) {
-          console.error("Error fetching token balances:", tokenError);
-          // Continue with empty array
-        }
+          }).catch(err => {
+            console.error("Error fetching token balances:", err);
+            return [];
+          })
+        ]);
+        
+        // Process results safely
+        const nftData = nftResult.status === 'fulfilled' ? nftResult.value : [];
+        const txData = txResult.status === 'fulfilled' ? txResult.value : [];
+        const tokenData = tokenResult.status === 'fulfilled' ? tokenResult.value : [];
+        
+        console.log("Data fetching complete - NFTs:", nftData.length, 
+                   "Transactions:", txData.length, 
+                   "Tokens:", tokenData.length);
         
         setNfts(nftData);
         setMintedNFTs(nftData.filter(nft => nft.minter?.toLowerCase() === account.toLowerCase()));
@@ -140,12 +134,13 @@ const ProfilePage = () => {
 
   // Force exit from loading state after component mount
   useEffect(() => {
+    // Reduced from 5 seconds to 3 seconds for faster rendering
     const timer = setTimeout(() => {
       if (isLoading && walletConnected) {
         console.log("Forcing exit from initial loading state");
         setIsLoading(false);
       }
-    }, 5000); // 5 seconds max initial loading
+    }, 3000); // 3 seconds max initial loading (reduced from 5 seconds)
     
     return () => clearTimeout(timer);
   }, [isLoading, walletConnected]);

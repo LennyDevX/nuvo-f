@@ -1,4 +1,10 @@
 import { ethers } from 'ethers';
+import {
+  shouldFetchLogs,
+  getCachedLogs,
+  cacheLogResult,
+  markLogQueryInProgress
+} from './blockchainLogCache';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [
@@ -61,6 +67,14 @@ const setCachedData = (key, data) => {
 };
 
 /**
+ * Utility: Check if ENS is supported on the current chain
+ * Only Ethereum Mainnet (chainId 1) supports ENS
+ */
+export const isENSSupported = (chainId) => {
+  return chainId === 1;
+};
+
+/**
  * Fetch NFTs owned by an address using multiple providers with fallbacks
  * 
  * @param {string} address - Wallet address to fetch NFTs for
@@ -104,8 +118,8 @@ export const fetchNFTs = async (address, provider, options = {}) => {
           tokenURI: nft.tokenUri?.gateway || "",
           standard: nft.id.tokenMetadata?.tokenType || "ERC721",
           attributes: nft.metadata?.attributes || [],
-          minter: address,
-          owner: address
+          minter: address, // Always address, never ENS
+          owner: address   // Always address, never ENS
         }));
         
         return setCachedData(cacheKey, processedNfts);
@@ -138,8 +152,8 @@ export const fetchNFTs = async (address, provider, options = {}) => {
           tokenURI: nft.token_uri || "",
           standard: nft.contract_type,
           attributes: nft.metadata?.attributes || [],
-          minter: nft.minter_address || address,
-          owner: address
+          minter: nft.minter_address || address, // Always address, never ENS
+          owner: address   // Always address, never ENS
         }));
         
         return setCachedData(cacheKey, processedNfts);
@@ -193,7 +207,7 @@ export const fetchNFTs = async (address, provider, options = {}) => {
             standard: "ERC721",
             attributes: metadata.attributes || [],
             minter: address, // Assuming owner is minter as a fallback
-            owner: address
+            owner: address   // Always address, never ENS
           });
         } catch (tokenError) {
           console.warn(`Error processing token at index ${i}:`, tokenError);
@@ -388,7 +402,7 @@ export const fetchTransactions = async (address, provider, options = {}) => {
         const txs = [];
         for (let i = blockNumber; i > startBlock && txs.length < limit; i -= 10) {
           try {
-            const block = await provider.getBlock(i, true);
+            const block = await provider.getBlock(i, { includeTransactions: true });
             if (!block || !block.transactions) continue;
             
             // Filter transactions that involve our address
@@ -962,7 +976,7 @@ export const calculateTimeBonus = (stakingDays, bonusConfig = {
  */
 export const uploadJsonToIPFS = async (data, options = {}) => {
   const PINATA_API_KEY = options.apiKey || import.meta.env.VITE_PINATA_API;
-  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK; // Changed from VITE_PINATA_SECRET
+  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK;
   
   if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
     throw new Error("Pinata API keys required");
@@ -1002,7 +1016,7 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
  */
 export const uploadFileToIPFS = async (file, options = {}) => {
   const PINATA_API_KEY = options.apiKey || import.meta.env.VITE_PINATA_API;
-  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK; // Changed from VITE_PINATA_SECRET
+  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK;
   
   if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
     throw new Error("Pinata API keys required");
@@ -1063,34 +1077,48 @@ export const ipfsToHttp = (uri, gateway = 'https://ipfs.io/ipfs/') => {
  */
 export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRetries = 3) => {
   if (!provider) throw new Error('Provider is required');
-  
+
+  const cacheKey = `logs_${filter.address || 'all'}_${(filter.topics || []).join('-')}_${filter.fromBlock}_${filter.toBlock}`;
+
+  // Usa el caché y evita múltiples fetch simultáneos
+  if (!shouldFetchLogs(cacheKey)) {
+    const cachedData = getCachedLogs(cacheKey);
+    if (cachedData) return cachedData;
+    // Si hay una consulta en progreso, espera un poco y reintenta (simple polling)
+    await new Promise(r => setTimeout(r, 500));
+    return getCachedLogs(cacheKey) || [];
+  }
+
+  markLogQueryInProgress(cacheKey);
+
   try {
     const currentBlock = await provider.getBlockNumber();
-    const startBlock = filter.fromBlock === 0 || !filter.fromBlock ? 
-      Math.max(0, currentBlock - 50000) : // Start from recent history instead of genesis
+    const startBlock = filter.fromBlock === 0 || !filter.fromBlock ?
+      Math.max(0, currentBlock - 50000) :
       parseInt(filter.fromBlock);
-    
+
     const endBlock = filter.toBlock === 'latest' ? currentBlock : parseInt(filter.toBlock);
-    
-    // If range is already small enough, make direct request
+
+    // Si el rango es pequeño, consulta directo
     if (endBlock - startBlock <= chunkSize) {
-      return await provider.getLogs({
+      const logs = await provider.getLogs({
         ...filter,
         fromBlock: ethers.toQuantity(startBlock),
         toBlock: ethers.toQuantity(endBlock)
       });
+      cacheLogResult(cacheKey, logs);
+      return logs;
     }
-    
-    // Otherwise fetch in chunks
-    console.log(`Fetching logs in chunks from block ${startBlock} to ${endBlock}`);
+
+    // Solo un log de inicio
+    console.info(`[LogFetch] Fetching logs in chunks: ${startBlock} to ${endBlock}`);
+
     const logs = [];
-    
     for (let from = startBlock; from < endBlock; from += chunkSize) {
       const to = Math.min(from + chunkSize - 1, endBlock);
-      
       let attempt = 0;
       let success = false;
-      
+
       while (!success && attempt < maxRetries) {
         try {
           const chunk = await provider.getLogs({
@@ -1098,30 +1126,25 @@ export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRe
             fromBlock: ethers.toQuantity(from),
             toBlock: ethers.toQuantity(to)
           });
-          
           logs.push(...chunk);
           success = true;
-          console.log(`Successfully fetched logs for blocks ${from}-${to}: ${chunk.length} results`);
         } catch (error) {
           attempt++;
-          console.warn(`Error fetching logs for blocks ${from}-${to} (attempt ${attempt}/${maxRetries}):`, error.message);
-          
           if (attempt >= maxRetries) {
-            console.error(`Max retries exceeded for blocks ${from}-${to}`);
+            console.error(`[LogFetch] Max retries exceeded for blocks ${from}-${to}: ${error.message}`);
           } else {
-            // Exponential backoff
             await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
           }
         }
       }
-      
-      // Add small delay between chunks to prevent rate limiting
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 200)); // Menor delay para más eficiencia
     }
-    
+
+    cacheLogResult(cacheKey, logs);
     return logs;
   } catch (error) {
-    console.error('Error fetching logs in chunks:', error);
+    console.error('[LogFetch] Error fetching logs in chunks:', error);
+    cacheLogResult(cacheKey, null);
     return [];
   }
 };
