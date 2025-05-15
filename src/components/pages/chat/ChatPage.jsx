@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect, useCallback } from 'react';
 import SpaceBackground from '../../effects/SpaceBackground';
 import { WalletContext } from '../../../context/WalletContext';
 import { useStaking } from '../../../context/StakingContext';
-import useUserNFTs from '../../../hooks/nfts/useUserNFTs';
+import { useTokenization } from '../../../context/TokenizationContext';
 import RefreshManager from '../../DevUtils/RefreshManager';
 
 // Import styles for chat text optimization
@@ -20,7 +20,14 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { account, walletConnected, balance, network } = useContext(WalletContext);
   const { state: stakingState, refreshUserInfo } = useStaking();
-  const { nfts, loading: nftsLoading } = useUserNFTs(account);
+  const { nfts, nftsLoading, updateUserAccount } = useTokenization();
+  
+  // Update TokenizationContext with current user account
+  useEffect(() => {
+    if (account) {
+      updateUserAccount(account);
+    }
+  }, [account, updateUserAccount]);
   
   // Log para depuración
   useEffect(() => {

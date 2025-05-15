@@ -48,13 +48,16 @@ const StakingStats = ({ userDeposits, maxDeposits }) => {
               <span>Average Deposit:</span>
               <span className="text-white text-right">{averageAmount.toFixed(2)} POL</span>
               
-              <span>First Deposit:</span>
+              <span>Current Position Age:</span>
               <span className="text-white text-right">
-                {daysStaked > 0 ? `${daysStaked} days ago` : 'Today'}
+                {daysStaked > 0 ? `${daysStaked} days` : 'Today'}
               </span>
               
               <span>Total Deposits:</span>
               <span className="text-white text-right">{userDeposits.length} position{userDeposits.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="text-xs text-slate-500 mt-2">
+              Note: Position age resets after claiming rewards or withdrawing
             </div>
           </div>
         )}

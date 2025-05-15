@@ -3,7 +3,7 @@ import { motion as m } from 'framer-motion';
 import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
-import useUserNFTs from '../../../../hooks/nfts/useUserNFTs';
+import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
@@ -14,7 +14,19 @@ const NFTsSection = ({ account }) => {
   const [selectedNFT, setSelectedNFT] = useState(null);
   // Add state to track if content should be shown while still loading
   const [showPreview, setShowPreview] = useState(false);
-  const { nfts, loading, error } = useUserNFTs(account);
+  const { 
+    nfts, 
+    nftsLoading: loading, 
+    nftsError: error, 
+    updateUserAccount 
+  } = useTokenization();
+  
+  // Update TokenizationContext with current user account
+  useEffect(() => {
+    if (account) {
+      updateUserAccount(account);
+    }
+  }, [account, updateUserAccount]);
   
   // Show preview after a short delay even if still loading
   useEffect(() => {

@@ -3,7 +3,7 @@ import { motion as m } from 'framer-motion';
 import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, FaImage, FaShoppingCart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
-import useUserNFTs from '../../../../hooks/nfts/useUserNFTs';
+import { useTokenization } from '../../../../context/TokenizationContext';
 
 // Lista de imágenes de respaldo en orden de preferencia
 const FALLBACK_IMAGES = [
@@ -69,8 +69,19 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
   const { state } = useStaking();
   const { userDeposits = [] } = state;
   
-  // Usar el hook directamente para obtener los NFTs reales del usuario
-  const { nfts: userNfts, loading: nftsLoading } = useUserNFTs(account);
+  // Use centralized NFT hooks from TokenizationContext
+  const { 
+    nfts: userNfts, 
+    nftsLoading, 
+    updateUserAccount 
+  } = useTokenization();
+  
+  // Update TokenizationContext with current user account
+  useEffect(() => {
+    if (account) {
+      updateUserAccount(account);
+    }
+  }, [account, updateUserAccount]);
   
   // Create a censored version of the wallet address
   const censoredAddress = account ? 

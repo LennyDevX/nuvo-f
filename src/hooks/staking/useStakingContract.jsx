@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { ethers } from 'ethers';
-import useProvider from '../useProvider';
+import useProvider from '../blockchain/useProvider'; // Updated import path
 import ABI from '../../Abi/StakingContract.json';
 import { globalCache } from '../../utils/cache/CacheManager';
 
