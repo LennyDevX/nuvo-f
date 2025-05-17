@@ -58,6 +58,7 @@ const StakingActions = ({
   const tooltipRef = useRef(null);
   const buttonRef = useRef(null);
   const previousTxRef = useRef(null);
+  const transactionTimerRef = useRef(null);
 
   const {
     withdrawRewards,
@@ -114,6 +115,24 @@ const StakingActions = ({
     return () => clearInterval(interval);
   }, [account, calculateUserRewards]);
 
+  // Function to reset transaction state
+  const resetTransactionState = useCallback(() => {
+    if (isPending) {
+      setIsPending(false);
+      updateStatus('info', 'Transaction state has been reset. You can try again now.');
+      
+      // Clear any existing timer
+      if (transactionTimerRef.current) {
+        clearTimeout(transactionTimerRef.current);
+        transactionTimerRef.current = null;
+      }
+      
+      // Force refresh user info to ensure we have latest state
+      refreshUserInfo(account);
+    }
+  }, [isPending, setIsPending, updateStatus, refreshUserInfo, account]);
+
+  // Mejora recomendada: Consolidar el reseteo automático
   useEffect(() => {
     if (
       !currentTx ||
@@ -126,6 +145,7 @@ const StakingActions = ({
 
     previousTxRef.current = { ...currentTx };
 
+    // Update isPending based on transaction status
     const isPendingStatus = currentTx.status !== 'confirmed' && currentTx.status !== 'failed';
     setIsPending(isPendingStatus);
 
@@ -137,13 +157,47 @@ const StakingActions = ({
         emergency_withdraw: 'Emergency withdrawal successful! Your funds have been returned to your wallet.'
       };
 
+      // Force refresh user info after a successful transaction
+      refreshUserInfo(account);
+      
       const action = successMessages[currentTx.type] || 'Transaction successful!';
       updateStatus('success', action);
     } else if (currentTx.status === 'failed') {
       const errorMsg = getErrorMessageForTransaction(currentTx.type, currentTx.error);
       updateStatus('error', errorMsg);
+      
+      // PROBLEMA POTENCIAL: Este setTimeout podría causar una desincronización 
+      // con el estado global si otra parte está también gestionando isPending
+      // Es mejor dejar que el efecto dedicado a monitorear transacciones se encargue de esto
+      // o usar resetTransactionState directamente
+      setTimeout(() => {
+        resetTransactionState(); // Usar la función de reinicio consolidada en vez de solo setIsPending
+      }, 3000);
     }
-  }, [currentTx, setIsPending, updateStatus]);
+  }, [currentTx, setIsPending, updateStatus, refreshUserInfo, account, resetTransactionState]);
+  
+  // Set up a transaction timeout to automatically clear stuck transactions
+  useEffect(() => {
+    // Clear any existing timer
+    if (transactionTimerRef.current) {
+      clearTimeout(transactionTimerRef.current);
+      transactionTimerRef.current = null;
+    }
+    
+    // If a transaction is pending, set a timeout to automatically reset after 2 minutes
+    if (isPending && currentTx && ['pending', 'awaiting_confirmation', 'preparing'].includes(currentTx.status)) {
+      transactionTimerRef.current = setTimeout(() => {
+        console.log("Auto-resetting stuck transaction after timeout");
+        resetTransactionState();
+      }, 120000); // 2 minutes
+    }
+    
+    return () => {
+      if (transactionTimerRef.current) {
+        clearTimeout(transactionTimerRef.current);
+      }
+    };
+  }, [isPending, currentTx, resetTransactionState]);
 
   const handleDepositSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -203,7 +257,7 @@ const StakingActions = ({
 
   return (
     <StakingSection title="Rewards & Actions" icon={<FaCoins />} className="h-auto">
-      {currentTx && <TransactionStatus tx={currentTx} className="mb-5" />}
+      {currentTx && <TransactionStatus tx={currentTx} className="mb-5" onReset={resetTransactionState} />}
 
       <div className="space-y-8">
         <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/30 p-4">

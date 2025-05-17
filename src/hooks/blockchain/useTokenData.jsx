@@ -1,8 +1,10 @@
 import { useCallback, useState, useRef, useEffect, useMemo } from 'react';
 import { ethers } from 'ethers';
 import useProvider from './useProvider';
-import { globalRateLimiter } from '../utils/RateLimiter';
-import { globalCache } from '../utils/CacheManager';
+// Updated imports to use new utilities and paths
+import { globalCache } from '../../utils/cache/CacheManager';
+import { dedupRequest } from '../../utils/performance/RateLimiter';
+import { trackApiCall } from '../../utils/blockchain/apiMonitor';
 
 // Minimal ABI for the NUVO token contract functions we need
 const TOKEN_ABI = [
@@ -39,138 +41,92 @@ const useTokenData = (contractAddress, refreshInterval = 30000) => {
   const [tokenData, setTokenData] = useState(DEFAULT_DATA);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const lastFetchedRef = useRef(0);
+  // lastFetchedRef is no longer needed due to getOptimizedData and dedupRequest
   const isMounted = useRef(true);
 
   // Create memoized formatNumber function to prevent recreations
   const formatNumber = useMemo(() => (value) => {
-    if (!value) return '0';
+    if (!value && value !== 0) return '0'; // Handle 0 correctly
     return parseFloat(ethers.formatEther(value));
   }, []);
 
-  // Fetch individual data with memoized implementation
-  const fetchIndividualData = useCallback(async (contract) => {
-    if (!contract) return false;
+  // Helper function to fetch individual data points; returns data or throws error.
+  // Memoized because it's used in fetchTokenData's useCallback.
+  const fetchIndividualDataFromContract = useCallback(async (contract) => {
+    if (!contract) throw new Error("Contract not provided to fetchIndividualDataFromContract");
 
-    try {
-      // Use object structure to make data collection cleaner
-      const dataPoints = [
-        { key: 'maxSupply', method: 'cap' },
-        { key: 'totalSupply', method: 'totalSupply' },
-        { key: 'targetSupply', method: 'targetSupply' },
-        { key: 'burnTarget', method: 'getBurnTarget' },
-        { key: 'totalBurned', method: 'totalBurnedTokens' },
-        { key: 'remainingToBurn', method: 'remainingToBurn' },
-        { key: 'burnProgress', method: 'burnProgress' }
-      ];
+    const dataPoints = [
+      { key: 'maxSupply', method: 'cap' },
+      { key: 'totalSupply', method: 'totalSupply' },
+      { key: 'targetSupply', method: 'targetSupply' },
+      { key: 'burnTarget', method: 'getBurnTarget' },
+      { key: 'totalBurned', method: 'totalBurnedTokens' },
+      { key: 'remainingToBurn', method: 'remainingToBurn' },
+      { key: 'burnProgress', method: 'burnProgress' }
+    ];
 
-      const collectedData = {};
+    const collectedData = {};
+    let success = false;
 
-      // Sequential fetching to avoid rate limits
-      for (const { key, method } of dataPoints) {
-        try {
-          const result = await contract[method]();
+    for (const { key, method } of dataPoints) {
+      try {
+        const result = await contract[method]();
+        if (key === 'burnProgress') {
+          collectedData[key] = Number(result); // Assumes result is a number or BigNumber convertible to number
+        } else {
           collectedData[key] = formatNumber(result);
-        } catch (err) {
-          console.warn(`Failed to fetch ${method}:`, err);
         }
+        success = true;
+      } catch (err) {
+        console.warn(`Failed to fetch ${method}:`, err);
       }
-
-      // Only update state if we have at least some data and component is still mounted
-      if (Object.keys(collectedData).length > 0 && isMounted.current) {
-        setTokenData(prev => ({
-          ...prev,
-          ...collectedData,
-          circulatingSupply: collectedData.totalSupply
-        }));
-        return true;
-      }
-
-      return false;
-    } catch (err) {
-      console.error("Error in fetchIndividualData:", err);
-      return false;
     }
+
+    if (success) {
+      const baseData = { ...DEFAULT_DATA }; // Start with defaults
+      const finalData = { ...baseData, ...collectedData };
+      // Recalculate circulatingSupply if totalSupply was fetched
+      if (collectedData.totalSupply !== undefined) {
+        finalData.circulatingSupply = collectedData.totalSupply;
+      }
+      return finalData;
+    }
+    
+    throw new Error("Failed to fetch any individual token data points.");
   }, [formatNumber]);
 
+
   const fetchTokenData = useCallback(async () => {
-    // Use rate limiter to prevent too many calls
-    const rateLimiterKey = `token_data_${contractAddress}`;
-    if (!globalRateLimiter.canMakeCall(rateLimiterKey)) {
-      console.log("Rate limited, skipping token data fetch");
-      // Intentar usar caché existente si está disponible
-      try {
-        const cacheKey = `tokenData_${contractAddress}`;
-        const cachedData = await globalCache.get(cacheKey, null);
-        if (cachedData) {
-          setTokenData(cachedData);
-          setError(null);
-          return;
-        }
-      } catch (err) {
-        console.warn("Cache retrieval failed");
-      }
-      return;
-    }
-
-    // Skip if recently fetched (throttle requests)
-    const now = Date.now();
-    if (now - lastFetchedRef.current < refreshInterval / 2) return;
-
-    lastFetchedRef.current = now;
-
     if (!isMounted.current) return;
     setIsLoading(true);
+    setError(null); // Clear previous errors at the start of a new fetch attempt
 
-    // Try to get data from cache first
-    const cacheKey = `tokenData_${contractAddress}`;
-    try {
-      const cachedData = await globalCache.get(cacheKey, null, refreshInterval / 2);
-      if (cachedData) {
-        setTokenData(cachedData);
-        setError(null);
-        setIsLoading(false);
-        return;
-      }
-    } catch (err) {
-      // Just continue if cache fails
-      console.warn("Cache retrieval failed, fetching fresh data");
-    }
+    // Key for getOptimizedData (dedupRequest, trackApiCall, and cache)
+    const dataFetchKey = `token_data_${contractAddress}`;
 
     try {
-      if (!provider || !contractAddress || !isInitialized) {
-        if (import.meta.env.DEV) {
-          console.log("Provider not available or not initialized, using mock data");
-          setTokenData(DEFAULT_DATA);
-          setError(null);
-        } else {
-          setError("Provider not available");
+      const coreFetchFn = async () => {
+        if (!provider || !contractAddress || !isInitialized) {
+          if (import.meta.env.DEV) {
+            console.log("Provider not available or not initialized, using mock data");
+            return { ...DEFAULT_DATA }; // Return a copy
+          }
+          throw new Error("Provider not available");
         }
-        setIsLoading(false);
-        return;
-      }
 
-      // Validate contract address format
-      if (!ethers.isAddress(contractAddress)) {
-        if (import.meta.env.DEV) {
-          console.log("Invalid contract address, using mock data");
-          setTokenData(DEFAULT_DATA);
-          setError(null);
-        } else {
-          setError("Invalid contract address format");
+        if (!ethers.isAddress(contractAddress)) {
+          if (import.meta.env.DEV) {
+            console.log("Invalid contract address, using mock data");
+            return { ...DEFAULT_DATA }; // Return a copy
+          }
+          throw new Error("Invalid contract address format");
         }
-        setIsLoading(false);
-        return;
-      }
 
-      const contract = new ethers.Contract(contractAddress, TOKEN_ABI, provider);
+        const contract = new ethers.Contract(contractAddress, TOKEN_ABI, provider);
 
-      // Try to get all stats in one call first
-      try {
-        const stats = await contract.getTokenStats();
-
-        if (isMounted.current) {
-          setTokenData({
+        try {
+          const stats = await contract.getTokenStats();
+          return {
             maxSupply: formatNumber(stats.maxSupply),
             totalSupply: formatNumber(stats.currentSupply),
             targetSupply: formatNumber(stats.targetFinalSupply),
@@ -179,37 +135,44 @@ const useTokenData = (contractAddress, refreshInterval = 30000) => {
             burnProgress: Number(stats.currentBurnProgress),
             remainingToBurn: formatNumber(stats.currentRemainingToBurn),
             circulatingSupply: formatNumber(stats.currentSupply)
-          });
-          setError(null);
+          };
+        } catch (statsError) {
+          console.warn("getTokenStats failed, falling back to individual calls:", statsError);
+          try {
+            return await fetchIndividualDataFromContract(contract);
+          } catch (individualError) {
+            if (import.meta.env.DEV) {
+              console.log("Individual fetch failed, using default data in development mode:", individualError);
+              return { ...DEFAULT_DATA }; // Return a copy
+            }
+            // Re-throw the error from individual fetch if not in DEV mode or if it's critical
+            throw new Error(`Failed to fetch token data: ${individualError.message}`);
+          }
         }
-      } catch (statsError) {
-        console.warn("getTokenStats failed, falling back to individual calls:", statsError);
+      };
 
-        // If getting all stats fails, try individual calls
-        const success = await fetchIndividualData(contract);
-
-        if (!success && !import.meta.env.DEV) {
-          throw new Error("Failed to fetch token data via individual methods");
-        } else if (!success && import.meta.env.DEV) {
-          console.log("Using default data in development mode");
-          setTokenData(DEFAULT_DATA);
-        }
-      }
-
-      // Cache successful results
-      if (isMounted.current && tokenData) {
-        globalCache.set(cacheKey, tokenData, refreshInterval / 2);
+      const data = await getOptimizedData(dataFetchKey, coreFetchFn);
+      
+      if (isMounted.current) {
+        setTokenData(data);
+        // setError(null); // Already cleared at the beginning
       }
     } catch (err) {
       if (isMounted.current) {
+        console.error("Error fetching token data:", err);
         setError(err.message || "Error fetching token data");
+        // Optionally, set to DEFAULT_DATA on error, especially in DEV
+        if (import.meta.env.DEV) {
+            console.log("Setting token data to default due to error in DEV mode.");
+            setTokenData({ ...DEFAULT_DATA }); // Set to a copy of default data
+        }
       }
     } finally {
       if (isMounted.current) {
         setIsLoading(false);
       }
     }
-  }, [provider, contractAddress, isInitialized, fetchIndividualData, formatNumber, refreshInterval]);
+  }, [provider, contractAddress, isInitialized, formatNumber, fetchIndividualDataFromContract]);
 
   // Set up polling with proper cleanup
   useEffect(() => {

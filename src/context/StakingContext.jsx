@@ -149,6 +149,89 @@ export const StakingProvider = ({ children }) => {
     }
   }, [getSignerAddress, refreshUserInfo, getPoolEvents]);
 
+  // Add debugging for transaction state changes
+  useEffect(() => {
+    if (currentTx) {
+      console.log(`Transaction update [${currentTx.type}]: ${currentTx.status}`, currentTx);
+    }
+  }, [currentTx]);
+  
+  // Fix the transaction monitoring function
+  useEffect(() => {
+    // If there's a pending transaction, set a safety timeout
+    if (isPending && currentTx && currentTx.status === 'pending') {
+      const safety = setTimeout(() => {
+        console.log("Safety timeout: transaction appears stuck, resetting state");
+        setState(prev => ({
+          ...prev,
+          isPending: false,
+          currentTx: {
+            ...prev.currentTx,
+            status: 'failed',
+            error: "Transaction timed out. It may still complete in your wallet."
+          }
+        }));
+      }, 60000); // 1 minute timeout
+      
+      return () => clearTimeout(safety);
+    }
+  }, [isPending, currentTx]);
+  
+  // Improve state synchronization to ensure isPending and currentTx stay in sync
+  useEffect(() => {
+    setState(prev => {
+      // If the transaction completed but isPending is still true, reset it
+      if (!isPending && prev.isPending) {
+        return {
+          ...prev,
+          isPending: false
+        };
+      }
+      
+      // If transaction is pending but our state doesn't reflect it, update
+      if (isPending && !prev.isPending) {
+        return {
+          ...prev,
+          isPending: true
+        };
+      }
+      
+      // If currentTx changed, update it in our state
+      if (currentTx && (!prev.currentTx || 
+          currentTx.status !== prev.currentTx.status || 
+          currentTx.hash !== prev.currentTx.hash)) {
+        return {
+          ...prev,
+          currentTx
+        };
+      }
+      
+      return prev;
+    });
+  }, [isPending, currentTx]);
+  
+  // Add a function to manually refresh the user's state
+  const forceRefresh = useCallback(async (address) => {
+    if (!address) return;
+    
+    try {
+      console.log("Forcing refresh of user data...");
+      const userInfo = await refreshUserInfo(address);
+      if (userInfo) {
+        setState(prev => ({
+          ...prev,
+          userInfo: userInfo.userInfo,
+          userDeposits: userInfo.deposits,
+          stakingStats: userInfo.stakingStats
+        }));
+      }
+      return true;
+    } catch (error) {
+      console.error("Failed to refresh user data:", error);
+      return false;
+    }
+  }, [refreshUserInfo]);
+  
   // Context value with all necessary functions and state
   const contextValue = {
     state: {
@@ -172,7 +255,8 @@ export const StakingProvider = ({ children }) => {
     getDetailedStakingStats,
     handleWithdrawalSuccess,
     handleDepositSuccess,
-    isInitialized
+    isInitialized,
+    forceRefresh
   };
 
   return (

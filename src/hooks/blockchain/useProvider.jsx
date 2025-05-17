@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ethers } from "ethers";
+import { globalCache } from '../../utils/cache/CacheManager';
 
 // Public RPC fallbacks if primary provider fails
 const PUBLIC_RPC_ENDPOINTS = {
@@ -33,8 +34,15 @@ const useProvider = () => {
   const initProvider = useCallback(async () => {
     // Set initializing flag to prevent concurrent initialization attempts
     networkInitialized.current = true;
+    const cacheKey = `network-${CHAIN_ID}`;
     
     try {
+      const cachedNetwork = await globalCache.get(cacheKey);
+      if (cachedNetwork) {
+        setChainId(cachedNetwork.chainId);
+        console.log("Loaded network info from cache:", cachedNetwork.name);
+      }
+
       // Check if the URL already contains the API key to prevent duplication
       let alchemyUrl = RPC_URL;
       
@@ -62,6 +70,7 @@ const useProvider = () => {
         const network = await provider.getNetwork();
         setChainId(network.chainId);
         console.log("Network connection successful:", network.name);
+        await globalCache.set(cacheKey, { chainId: network.chainId, name: network.name }, 30 * 60 * 1000); // 30 minutes
       } catch (networkError) {
         console.error("Primary RPC endpoint failed:", networkError);
         
@@ -78,6 +87,7 @@ const useProvider = () => {
             const network = await fallbackProvider.getNetwork();
             setChainId(network.chainId);
             console.log("Fallback connection successful!");
+            await globalCache.set(cacheKey, { chainId: network.chainId, name: network.name }, 30 * 60 * 1000); // 30 minutes
             
             // Store the working fallback provider
             providerRef.current = fallbackProvider;
@@ -108,6 +118,22 @@ const useProvider = () => {
     }
   }, [ALCHEMY_KEY, RPC_URL, CHAIN_ID]);
 
+  // Access browser wallet provider for sending transactions
+  const getWalletProvider = useCallback(async () => {
+    if (!window.ethereum) {
+      throw new Error("No wallet detected");
+    }
+    
+    try {
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await browserProvider.getSigner();
+      return { browserProvider, signer };
+    } catch (error) {
+      console.error("Failed to get wallet provider:", error);
+      throw error;
+    }
+  }, []);
+
   // Connect to wallet
   const connect = useCallback(async () => {
     if (!window.ethereum) {
@@ -128,12 +154,9 @@ const useProvider = () => {
         const chainId = await window.ethereum.request({ method: 'eth_chainId' });
         setChainId(parseInt(chainId, 16));
         
-        // Initialize browser provider if needed
+        // Initialize provider if needed
         if (!providerRef.current) {
-          const browserProvider = new ethers.BrowserProvider(window.ethereum);
-          providerRef.current = browserProvider;
-          setProvider(browserProvider);
-          networkInitialized.current = true;
+          await initProvider();
         }
         
         return true;
@@ -146,18 +169,17 @@ const useProvider = () => {
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [initProvider]);
 
   // Initial provider setup
   useEffect(() => {
-    // Add this to prevent duplicate initializations
     if (providerRef.current || networkInitialized.current) {
       console.log("Provider already initialized, skipping");
       return;
     }
 
     initProvider();
-
+    
     return () => {
       if (providerRef.current?.removeAllListeners) {
         providerRef.current.removeAllListeners();
@@ -220,8 +242,16 @@ const useProvider = () => {
     }
   }, []);
 
+  // Debug provider status
+  useEffect(() => {
+    if (providerRef.current) {
+      console.log("Provider ready:", !!providerRef.current);
+    }
+  }, [providerRef.current]);
+
   return { 
     provider: providerRef.current, 
+    getWalletProvider,
     error,
     account,
     chainId,

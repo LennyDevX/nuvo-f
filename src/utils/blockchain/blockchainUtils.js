@@ -372,9 +372,14 @@ export const fetchTransactions = async (address, provider, options = {}) => {
           ? 'https://api.polygonscan.com/api' 
           : 'https://api-testnet.polygonscan.com/api';
         
+        // Set a timeout for the API request to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKeys.polygonscan}&offset=${limit}`;
         
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         const data = await response.json();
         
         if (data.status === '1' && Array.isArray(data.result)) {
@@ -391,7 +396,7 @@ export const fetchTransactions = async (address, provider, options = {}) => {
       }
     }
     
-    // Direct blockchain method using provider
+    // Direct blockchain method using provider with improved timeout handling
     if (provider) {
       try {
         console.log("Fetching transactions directly from blockchain");

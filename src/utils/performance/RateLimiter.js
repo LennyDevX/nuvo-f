@@ -57,3 +57,18 @@ export class RateLimiter {
 }
 
 export const globalRateLimiter = new RateLimiter();
+
+const pendingRequests = new Map();
+
+export function dedupRequest(key, requestFn) {
+  if (pendingRequests.has(key)) {
+    return pendingRequests.get(key);
+  }
+  
+  const promise = requestFn().finally(() => {
+    pendingRequests.delete(key);
+  });
+  
+  pendingRequests.set(key, promise);
+  return promise;
+}

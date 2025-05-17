@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { cacheData, getCachedData } from '../../utils/cacheUtils';
+// import { trackApiCall } from '...'; // TODO: Import or define trackApiCall
 
 /**
  * Hook for fetching data with localStorage caching
@@ -60,4 +61,37 @@ export default function useCachedData(key, fetchFn, options = {}) {
   const refetch = () => fetchData(true);
   
   return { data, loading, error, refetch };
+}
+
+/**
+ * Hook for fetching blockchain data with localStorage caching and API call tracking.
+ * Reuses useCachedData with optimizations for blockchain data.
+ * @param {string} key - Cache key (will be prefixed with 'blockchain-')
+ * @param {Function} fetchFn - Async function to fetch data
+ * @param {Object} options - Configuration options for useCachedData
+ * @returns {Object} { data, loading, error, refetch }
+ */
+export function useBlockchainData(key, fetchFn, options = {}) {
+  // Reutiliza el hook pero con optimizaciones para blockchain
+  const enhancedFetchFn = async () => {
+    // Assuming trackApiCall is defined elsewhere and imported
+    // For example: import { trackApiCall } from './apiAnalytics'; 
+    try {
+      const data = await fetchFn();
+      // trackApiCall(key, true); // Uncomment when trackApiCall is available
+      console.log(`API call for ${key} successful (simulated track)`); // Placeholder
+      return data;
+    } catch (error) {
+      // trackApiCall(key, false); // Uncomment when trackApiCall is available
+      console.error(`API call for ${key} failed (simulated track)`, error); // Placeholder
+      throw error;
+    }
+  };
+  
+  // Usar el hook existente con la función mejorada
+  return useCachedData(`blockchain-${key}`, enhancedFetchFn, {
+    ...options,
+    // TTL más corto para datos blockchain que cambian frecuentemente
+    ttl: options.ttl || 60000 // 1 minuto por defecto para datos blockchain
+  });
 }

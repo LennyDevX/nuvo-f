@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 export const StakingSection = ({ title, icon, children, className = "" }) => (
   <div className={`nuvos-card flex flex-col h-full ${className}`}>
@@ -58,15 +58,30 @@ export const ActionButton = ({ onClick, icon, label, isPrimary = false, disabled
   );
 };
 
-export const TransactionStatus = ({ tx, className = "" }) => {
+export const TransactionStatus = ({ tx, className = "", onReset = null }) => {
   if (!tx) return null;
+  
+  // Add timeout detection - a transaction is likely stuck if it's been pending for over 45 seconds
+  const [potentiallyStuck, setPotentiallyStuck] = useState(false);
+  
+  useEffect(() => {
+    let timer;
+    if (tx.status === 'pending' || tx.status === 'awaiting_confirmation' || tx.status === 'preparing') {
+      // Set a timer to detect potentially stuck transactions after 45 seconds
+      timer = setTimeout(() => setPotentiallyStuck(true), 45000);
+    } else {
+      setPotentiallyStuck(false);
+    }
+    
+    return () => clearTimeout(timer);
+  }, [tx.status]);
   
   const getStatusColor = (status) => {
     switch (status) {
       case 'preparing':
       case 'awaiting_confirmation':
       case 'pending':
-        return 'bg-blue-900/20 border-blue-800/30 text-blue-300';
+        return potentiallyStuck ? 'bg-yellow-900/20 border-yellow-800/30 text-yellow-300' : 'bg-blue-900/20 border-blue-800/30 text-blue-300';
       case 'confirmed':
         return 'bg-green-900/20 border-green-800/30 text-green-300';
       case 'failed':
@@ -79,11 +94,13 @@ export const TransactionStatus = ({ tx, className = "" }) => {
   const getStatusMessage = (status, type) => {
     switch (status) {
       case 'preparing':
-        return 'Preparing transaction...';
+        return potentiallyStuck ? 'Transaction preparation taking longer than expected...' : 'Preparing transaction...';
       case 'awaiting_confirmation':
-        return 'Please confirm in your wallet...';
+        return potentiallyStuck ? 'Waiting for wallet confirmation. Did you confirm in your wallet?' : 'Please confirm in your wallet...';
       case 'pending':
-        return `Transaction in progress: ${type}`;
+        return potentiallyStuck ? 
+          `Transaction might be stuck: ${type}. Try resetting.` : 
+          `Transaction in progress: ${type}`;
       case 'confirmed':
         return `${type.charAt(0).toUpperCase() + type.slice(1)} successful!`;
       case 'failed':
@@ -94,40 +111,52 @@ export const TransactionStatus = ({ tx, className = "" }) => {
   };
   
   return (
-    <div className={`p-3 border rounded-lg mb-4 flex items-center space-x-3 ${getStatusColor(tx.status)} ${className}`}>
-      <div className="flex-shrink-0">
-        {tx.status === 'confirmed' && (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-        {tx.status === 'failed' && (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        )}
-        {(tx.status === 'pending' || tx.status === 'preparing' || tx.status === 'awaiting_confirmation') && (
-          <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        )}
-      </div>
-      <div className="flex-grow">
-        <div className="text-sm">
-          {getStatusMessage(tx.status, tx.type)}
+    <div className={`p-3 border rounded-lg mb-4 flex items-center justify-between ${getStatusColor(tx.status)} ${className}`}>
+      <div className="flex items-center">
+        <div className="flex-shrink-0 mr-3">
+          {tx.status === 'confirmed' && (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {tx.status === 'failed' && (
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {(tx.status === 'pending' || tx.status === 'preparing' || tx.status === 'awaiting_confirmation') && (
+            <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          )}
         </div>
-        {tx.hash && (
-          <a
-            href={`https://polygonscan.com/tx/${tx.hash}`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-xs hover:underline"
-          >
-            View on Explorer
-          </a>
-        )}
+        <div className="flex-grow">
+          <div className="text-sm">
+            {getStatusMessage(tx.status, tx.type)}
+          </div>
+          {tx.hash && (
+            <a
+              href={`https://polygonscan.com/tx/${tx.hash}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs hover:underline"
+            >
+              View on Explorer
+            </a>
+          )}
+        </div>
       </div>
+      
+      {/* Add reset button for potentially stuck transactions */}
+      {(potentiallyStuck || tx.status === 'failed') && onReset && (
+        <button 
+          onClick={onReset}
+          className="ml-2 px-2 py-1 text-xs rounded-md bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+        >
+          Reset
+        </button>
+      )}
     </div>
   );
 };

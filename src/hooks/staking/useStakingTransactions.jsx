@@ -4,12 +4,66 @@ import { useStakingContract } from './useStakingContract';
 export function useStakingTransactions() {
   const { getSignedContract, getSignerAddress, getContractStatus } = useStakingContract();
   const [isPending, setIsPending] = useState(false);
-  const [currentTx, setCurrentTx] = useState({
-    type: null,
-    status: null,
-    hash: null,
-    error: null
-  });
+  const [currentTx, setCurrentTx] = useState(null);
+
+  // Add a function to reset transaction state
+  const resetTxState = useCallback(() => {
+    setIsPending(false);
+    setCurrentTx(prev => prev ? {...prev, status: 'failed', error: 'Transaction manually reset by user'} : null);
+  }, []);
+  
+  // Add transaction tracking with timeouts
+  const trackTransaction = useCallback(async (tx, type) => {
+    try {
+      if (!tx) {
+        throw new Error("No transaction to track");
+      }
+      
+      // Update to pending status
+      setIsPending(true);
+      setCurrentTx({
+        type,
+        status: 'pending',
+        hash: tx.hash || null,
+        error: null
+      });
+      
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      // Update to confirmed status
+      setCurrentTx(prev => ({
+        ...prev,
+        status: 'confirmed',
+        hash: receipt.transactionHash
+      }));
+      
+      // Allow UI to show success for a moment before clearing
+      setTimeout(() => {
+        setIsPending(false);
+      }, 2000);
+      
+      return receipt;
+    } catch (error) {
+      console.error(`Transaction failed (${type}):`, error);
+      
+      // Handle user rejections differently
+      const userRejected = error.message?.includes('user rejected');
+      
+      setCurrentTx(prev => ({
+        ...prev,
+        status: 'failed',
+        error: userRejected ? 'Transaction rejected by user' : error.message
+      }));
+      
+      // Clear pending state after a delay
+      setTimeout(() => {
+        setIsPending(false);
+      }, 3000);
+      
+      throw error;
+    }
+  }, []);
 
   const executeTransaction = useCallback(async (transactionFn, options = {}) => {
     const txType = options.type || 'transaction';
@@ -156,6 +210,8 @@ export function useStakingTransactions() {
     isPending,
     executeTransaction,
     currentTx,
-    txHash: currentTx.hash
+    txHash: currentTx?.hash,
+    resetTxState,
+    trackTransaction
   };
 }

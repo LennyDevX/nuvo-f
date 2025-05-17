@@ -1,10 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaPlus } from 'react-icons/fa';
 import { ethers } from 'ethers';
-import LoadingOverlay from '../../../LoadOverlay/LoadingSpinner';
+import LoadingSpinner from '../../../LoadOverlay/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
+
+// Add image preloading helper
+const preloadImage = (src) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(src);
+    img.onerror = () => reject();
+    img.src = src;
+  });
+};
 
 const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   // Handle retry action by forwarding to parent component if provided
@@ -20,9 +30,7 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   if (loading) {
     return (
       <div className="h-60 flex items-center justify-center">
-        <LoadingOverlay isLoading={true} message="Loading your NFTs...">
-          <div className="w-full h-full"></div>
-        </LoadingOverlay>
+        <LoadingSpinner size="default" message="Loading your NFTs..." />
       </div>
     );
   }
@@ -63,10 +71,34 @@ const NFTCard = ({ nft }) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   
-  // Format price nicely
-  const formattedPrice = nft.price && ethers.formatEther ? 
-    parseFloat(ethers.formatEther(nft.price)).toFixed(4) : 
-    "0.0000";
+  // Format price nicely - memoize to avoid unnecessary calculations
+  const formattedPrice = useMemo(() => {
+    if (!nft.price || !ethers.formatEther) return "0.0000";
+    return parseFloat(ethers.formatEther(nft.price)).toFixed(4);
+  }, [nft.price]);
+
+  // Preload image when component mounts
+  useEffect(() => {
+    if (!nft.image) {
+      setImageLoading(false);
+      setImageError(true);
+      return;
+    }
+
+    let isMounted = true;
+    preloadImage(nft.image)
+      .then(() => {
+        if (isMounted) setImageLoading(false);
+      })
+      .catch(() => {
+        if (isMounted) {
+          setImageLoading(false);
+          setImageError(true);
+        }
+      });
+    
+    return () => { isMounted = false; };
+  }, [nft.image]);
 
   return (
     <motion.div
@@ -80,20 +112,21 @@ const NFTCard = ({ nft }) => {
       <div className="aspect-square relative overflow-hidden">
         {imageLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <FaSpinner className="text-purple-400 animate-spin" />
+            {/* Use the m component from LoadingSpinner without the overlay */}
+            <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
           </div>
         )}
         <img 
-          src={nft.image || "/LogoNuvos.webp"} 
+          src={!imageError ? nft.image || "/LogoNuvos.webp" : "/LogoNuvos.webp"}
           alt={nft.name} 
-          className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${imageError ? 'hidden' : ''}`}
+          className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${imageError ? 'opacity-80' : ''}`}
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
           onLoad={() => setImageLoading(false)}
-          onError={(e) => {
+          onError={() => {
             setImageLoading(false);
             setImageError(true);
-            e.target.src = "/LogoNuvos.webp";
           }}
+          loading="lazy" // Add native lazy loading
         />
         
         {/* Sale Status Badge */}
