@@ -8,8 +8,12 @@ import { formatEther } from 'ethers';
  */
 export const formatBalance = (value, decimals = 3) => {
   if (!value) return '0.000';
+  
   try {
     let numValue;
+    
+    // Log the input value for debugging
+    console.debug('formatBalance input:', value, typeof value);
     
     // If it's already a decimal number
     if (typeof value === 'number' || (typeof value === 'string' && value.includes('.'))) {
@@ -19,10 +23,15 @@ export const formatBalance = (value, decimals = 3) => {
       numValue = parseFloat(formatEther(value.toString()));
     }
     
+    // Make sure we don't lose small values due to toFixed rounding
+    if (numValue > 0 && numValue < 0.001 && decimals <= 3) {
+      return '< 0.001';
+    }
+    
     // Format the number with the specified decimal places
     return numValue.toFixed(decimals);
   } catch (error) {
-    console.error('Error formatting balance:', error);
+    console.error('Error formatting balance:', error, 'Value was:', value);
     return '0.000';
   }
 };
