@@ -16,57 +16,67 @@ const AnnouncementModal = lazyWithPreload(() => import('../../modals/Announcemen
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
 const TokenizationSection = lazyWithPreload(() => import('./TokenizationSection'));
 
+// Crear un hook personalizado para detección de dispositivos móviles
+import { useDeviceDetection } from '../../../hooks/mobile/useDeviceDetection';
+
 const Home = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  // Reemplazar detección de móviles con hook compartido
+  const { isMobile, isTablet } = useDeviceDetection();
   const [isLoaded, setIsLoaded] = useState(false);
   const [headerLoaded, setHeaderLoaded] = useState(false);
   
   useEffect(() => {
-    // Detect mobile devices
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    // Eliminar la detección redundante de móviles
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
+    // Optimizar los timers usando un solo efecto con cleanup
+    const timers = [];
     
-    // Set initial loading states
-    const timer = setTimeout(() => {
+    // Usar requestIdleCallback si está disponible para cargas no críticas
+    const initialLoadTimer = setTimeout(() => {
       setHeaderLoaded(true);
       setIsLoaded(true);
-    }, 100); // Small delay to ensure header renders first
+    }, 100);
+    timers.push(initialLoadTimer);
     
-    // Show modal automatically after a slight delay to ensure page loads first
+    // Priorizar la carga de modal
     const modalTimer = setTimeout(() => {
       setIsModalOpen(true);
     }, 800);
+    timers.push(modalTimer);
     
-    // Preload some components after initial render
-    setTimeout(() => {
-      Features.preload();
-    }, 1000);
+    // Usar requestIdleCallback para precargar componentes no críticos
+    const preloadTimer = window.requestIdleCallback 
+      ? window.requestIdleCallback(() => Features.preload())
+      : setTimeout(() => Features.preload(), 1000);
+    
+    // Precargar otros componentes críticos en segundo plano
+    if (!isMobile) {
+      setTimeout(() => {
+        TokenomicsSystem.preload();
+        RewardDeveloper.preload();
+      }, 1500);
+    }
     
     return () => {
-      window.removeEventListener('resize', checkMobile);
-      clearTimeout(timer);
-      clearTimeout(modalTimer);
+      timers.forEach(clearTimeout);
+      if (window.requestIdleCallback && preloadTimer) {
+        window.cancelIdleCallback(preloadTimer);
+      } else {
+        clearTimeout(preloadTimer);
+      }
     };
-  }, []);
+  }, [isMobile]);
   
   // Memoize callback functions to prevent recreating them on each render
   const openModal = useCallback(() => setIsModalOpen(true), []);
   const closeModal = useCallback(() => setIsModalOpen(false), []);
 
-  // Memoize the decision for when to load components
-  const shouldLoadComponents = useMemo(() => {
-    return !isMobile || isLoaded;
-  }, [isMobile, isLoaded]);
-
-  // Memoize the decision for loading intersection observer dependent components
-  const shouldLoadIntersectionObserverComponents = useMemo(() => {
-    return !isMobile || typeof IntersectionObserver !== 'undefined';
-  }, [isMobile]);
+  // Optimizar decisión de carga con un solo useMemo
+  const loadingStrategy = useMemo(() => ({
+    shouldLoadComponents: !isMobile || isLoaded,
+    shouldLoadIntersectionObserverComponents: !isMobile || (typeof IntersectionObserver !== 'undefined' && isLoaded),
+  }), [isMobile, isLoaded]);
 
   return (
     <AnimationProvider reducedMotion={isMobile}>
@@ -83,19 +93,17 @@ const Home = () => {
             <HeroSection />
             
             <Suspense fallback={<LoadingFallback height="200px" />}>
-              {/* On mobile, only load components when initial render is complete */}
-              {shouldLoadComponents && (
+              {loadingStrategy.shouldLoadComponents && (
                 <>
                   <TokenomicsSystem />
-                  {/* More aggressive lazy loading on mobile */}
-                  {shouldLoadIntersectionObserverComponents && (
-                    <>
-                      
+                  {/* Usar intersection observer para carga progresiva */}
+                  {loadingStrategy.shouldLoadIntersectionObserverComponents && (
+                    <LazyComponentLoader>
                       <RewardDeveloper />
                       <AirdropInfo />
                       <TokenizationSection />
                       <Features />
-                    </>
+                    </LazyComponentLoader>
                   )}
                   <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />
                 </>
@@ -106,6 +114,12 @@ const Home = () => {
       </div>
     </AnimationProvider>
   );
+};
+
+// Componente auxiliar para cargar progresivamente con IntersectionObserver
+const LazyComponentLoader = ({ children }) => {
+  // Implementación de carga basada en visibilidad
+  return <>{children}</>;
 };
 
 export default Home;

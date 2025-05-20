@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { m, useScroll, useTransform } from 'framer-motion';
 import NFTHeroSection from './NFTHeroSection';
-import NFTExplainerSection from './NFTExplainerSection';
-import NFTCallToAction from './NFTCallToAction';
+// Lazy load components that aren't immediately visible
+const NFTExplainerSection = lazy(() => import('./NFTExplainerSection'));
+const NFTCallToAction = lazy(() => import('./NFTCallToAction'));
 import AnimationProvider from '../../animation/AnimationProvider';
 import SpaceBackground from '../../effects/SpaceBackground';
-import WhitelistModal from '../../modals/WhitelistModal';
+// Lazy load modal since it's conditionally rendered
+const WhitelistModal = lazy(() => import('../../modals/WhitelistModal'));
+
+// Loading fallback component
+const LoadingFallback = () => (
+  <div className="p-4 text-center text-white">Loading...</div>
+);
 
 const NFTHome = () => {
   const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 1000], [0, 200]);
+  // Optimize transform calculation with better performance bounds
+  const y = useTransform(scrollY, [0, 1000], [0, 200], { clamp: true });
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -19,16 +27,20 @@ const NFTHome = () => {
         <div className="relative">
           <m.div style={{ y }} className="relative z-10 pt-20">
             <NFTHeroSection />
-            <NFTExplainerSection />
-            <NFTCallToAction onOpenModal={() => setIsModalOpen(true)} />
+            <Suspense fallback={<LoadingFallback />}>
+              <NFTExplainerSection />
+              <NFTCallToAction onOpenModal={() => setIsModalOpen(true)} />
+            </Suspense>
           </m.div>
         </div>
         {isModalOpen && (
-          <WhitelistModal onClose={() => setIsModalOpen(false)} />
+          <Suspense fallback={<LoadingFallback />}>
+            <WhitelistModal onClose={() => setIsModalOpen(false)} />
+          </Suspense>
         )}
       </div>
     </AnimationProvider>
   );
 };
 
-export default NFTHome;
+export default React.memo(NFTHome);

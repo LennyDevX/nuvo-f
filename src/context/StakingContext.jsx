@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useStakingContract } from '../hooks/staking/useStakingContract';
 import { useStakingTransactions } from '../hooks/staking/useStakingTransactions';
 import { useStakingRewards } from '../hooks/staking/useStakingRewards';
@@ -26,6 +26,9 @@ const defaultState = {
   isPending: false,
   currentTx: null
 };
+
+// Add debug control flag to reduce console spam
+const DEBUG_MODE = false;
 
 const StakingContext = createContext({
   state: defaultState
@@ -81,6 +84,9 @@ export const StakingProvider = ({ children }) => {
     totalPoolBalance,
     treasuryAddress
   });
+  
+  // Cache for avoiding redundant operations
+  const lastLoggedInfo = useRef(null);
   
   // Sync contract status with state
   useEffect(() => {
@@ -149,9 +155,9 @@ export const StakingProvider = ({ children }) => {
     }
   }, [getSignerAddress, refreshUserInfo, getPoolEvents]);
 
-  // Add debugging for transaction state changes
+  // Add debugging for transaction state changes - only when needed
   useEffect(() => {
-    if (currentTx) {
+    if (currentTx && DEBUG_MODE) {
       console.log(`Transaction update [${currentTx.type}]: ${currentTx.status}`, currentTx);
     }
   }, [currentTx]);
@@ -210,13 +216,41 @@ export const StakingProvider = ({ children }) => {
     });
   }, [isPending, currentTx]);
   
-  // Add a function to manually refresh the user's state
+  // Add optimized refresh with error handling and retries
   const forceRefresh = useCallback(async (address) => {
     if (!address) return;
     
     try {
-      console.log("Forcing refresh of user data...");
-      const userInfo = await refreshUserInfo(address);
+      if (DEBUG_MODE) console.log("Forcing refresh of user data...");
+      
+      // Add retries for better reliability
+      const maxRetries = 3;
+      let retryCount = 0;
+      let success = false;
+      let userInfo = null;
+      
+      while (!success && retryCount < maxRetries) {
+        try {
+          // Add smaller batch sizes for events to prevent RPC errors
+          const options = {
+            batchSize: 100, // Fetch logs in smaller batches to avoid RPC errors
+            retryDelay: 1000 * (retryCount + 1) // Exponential backoff
+          };
+          
+          userInfo = await refreshUserInfo(address, options);
+          success = true;
+        } catch (error) {
+          retryCount++;
+          
+          if (retryCount >= maxRetries) {
+            throw error;
+          }
+          
+          // Wait before retry with exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
+      
       if (userInfo) {
         setState(prev => ({
           ...prev,
@@ -225,6 +259,7 @@ export const StakingProvider = ({ children }) => {
           stakingStats: userInfo.stakingStats
         }));
       }
+      
       return true;
     } catch (error) {
       console.error("Failed to refresh user data:", error);

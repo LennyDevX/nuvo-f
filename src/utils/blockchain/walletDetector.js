@@ -1,11 +1,20 @@
+import { detectDevice } from '../../hooks/mobile/useDeviceDetection';
+
+/**
+ * Detecta el wallet disponible en el navegador
+ * @returns {Object} Información sobre el wallet detectado
+ */
 export const detectWallet = () => {
   const { ethereum } = window;
+  const device = detectDevice();
   
   if (!ethereum) {
     return {
       available: false,
       type: null,
-      reason: 'No Web3 wallet detected'
+      reason: 'No Web3 wallet detected',
+      isExtension: !device.isMobile,
+      isMobile: device.isMobile
     };
   }
 
@@ -28,8 +37,8 @@ export const detectWallet = () => {
     type: primaryWallet,
     hasMultipleWallets,
     providers: ethereum.providers,
-    isExtension: !navigator.userAgent.match(/Android|iPhone|iPad|iPod/i),
-    isMobile: !!navigator.userAgent.match(/Android|iPhone|iPad|iPod/i)
+    isExtension: !device.isMobile,
+    isMobile: device.isMobile
   };
 };
 
@@ -62,14 +71,16 @@ export const openWalletDeepLink = (walletType, dappUrl) => {
   // Fallback timer to redirect to store if deep link fails
   setTimeout(() => {
     const links = getWalletDownloadLink(walletType);
-    const os = getMobileOS();
-    window.location.href = links[os] || links.extension;
+    const device = detectDevice();
+    window.location.href = links[device.os] || links.extension;
   }, 1500);
 };
 
+/**
+ * @deprecated Use detectDevice().os from useDeviceDetection instead
+ */
 export const getMobileOS = () => {
-  const ua = navigator.userAgent;
-  if (/android/i.test(ua)) return 'android';
-  if (/iPad|iPhone|iPod/.test(ua)) return 'ios';
-  return 'extension';
+  console.warn("Deprecated: Use detectDevice().os from useDeviceDetection instead");
+  const { os } = detectDevice();
+  return os;
 };

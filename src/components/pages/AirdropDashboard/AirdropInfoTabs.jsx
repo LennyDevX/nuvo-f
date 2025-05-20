@@ -1,11 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaGift, FaChartLine, FaQuestionCircle, FaCheckCircle, FaTimes, FaArrowRight, FaShieldAlt, FaMoneyBillWave, FaDatabase } from 'react-icons/fa';
+import { useAnimationConfig } from '../../animation/AnimationProvider';
+import memoWithName from '../../../utils/performance/memoWithName';
+import useIntersectionObserver from '../../../hooks/performance/useIntersectionObserver';
 
-const AirdropInfoTabs = () => {
-  const [activeTab, setActiveTab] = useState('about');
+// Componente Tab memoizado
+const Tab = memoWithName(({ id, label, icon, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 ${
+      active 
+        ? 'bg-purple-600/30 text-white font-medium border border-purple-500/50' 
+        : 'hover:bg-purple-600/10 text-gray-300'
+    }`}
+  >
+    {icon}
+    <span>{label}</span>
+  </button>
+));
 
-  const stakingBenefits = [
+// Componente FaqItem memoizado
+const FaqItem = memoWithName(({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+  const reduceAnimations = shouldReduceMotion || isLowPerformance;
+  
+  // Optimizar animaciones para preferencias de usuario
+  const animationProps = useMemo(() => {
+    if (reduceAnimations) {
+      return {
+        initial: { height: 0, opacity: 0 },
+        animate: { height: 'auto', opacity: 1 },
+        exit: { height: 0, opacity: 0 },
+        transition: { duration: 0.1 }
+      };
+    }
+    
+    return {
+      initial: { height: 0, opacity: 0 },
+      animate: { height: 'auto', opacity: 1 },
+      exit: { height: 0, opacity: 0 },
+      transition: { duration: 0.3 }
+    };
+  }, [reduceAnimations]);
+  
+  return (
+    <div className="border-b border-purple-500/20 last:border-b-0">
+      <button
+        className="flex justify-between items-center w-full py-4 text-left"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <h3 className="text-white font-medium">{question}</h3>
+        <span className={`text-purple-400 transform transition-transform duration-200 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
+          {isOpen ? <FaTimes /> : <FaArrowRight />}
+        </span>
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            {...animationProps}
+            className="overflow-hidden"
+          >
+            <p className="text-gray-300 pb-4">{answer}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+
+const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
+  // Si no se pasa setActiveTab desde el padre, crear uno local
+  const [localActiveTab, setLocalActiveTab] = useState(activeTab);
+  const currentActiveTab = setActiveTab ? activeTab : localActiveTab;
+  const updateActiveTab = setActiveTab || setLocalActiveTab;
+  
+  const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
+  const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+  const reduceAnimations = shouldReduceMotion || isLowPerformance;
+
+  // Memoizar datos estáticos
+  const stakingBenefits = useMemo(() => [
     {
       icon: <FaChartLine className="text-green-400" />,
       title: "High APY",
@@ -26,9 +102,9 @@ const AirdropInfoTabs = () => {
       title: "Governance Rights",
       description: "Staked tokens grant you voting rights in platform governance decisions."
     }
-  ];
+  ], []);
 
-  const faqItems = [
+  const faqItems = useMemo(() => [
     {
       question: "What is the NUVO Airdrop?",
       answer: "The NUVO Airdrop is a distribution of NUVO tokens to early supporters and community members. These tokens can be used for governance, staking, and accessing premium features on the Nuvos platform."
@@ -49,85 +125,66 @@ const AirdropInfoTabs = () => {
       question: "How do I start staking my tokens?",
       answer: "After receiving your tokens, visit the Staking dashboard, connect your wallet, and select the amount of tokens you wish to stake. You can choose from different staking plans based on your preference."
     }
-  ];
+  ], []);
 
-  const Tab = ({ id, label, icon, active }) => (
-    <button
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all duration-200 ${
-        active 
-          ? 'bg-purple-600/30 text-white font-medium border border-purple-500/50' 
-          : 'hover:bg-purple-600/10 text-gray-300'
-      }`}
-    >
-      {icon}
-      <span>{label}</span>
-    </button>
-  );
+  // Memoizar handlers con useCallback
+  const handleTabChange = useCallback((tabId) => {
+    updateActiveTab(tabId);
+  }, [updateActiveTab]);
 
-  const FaqItem = ({ question, answer }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    
-    return (
-      <div className="border-b border-purple-500/20 last:border-b-0">
-        <button
-          className="flex justify-between items-center w-full py-4 text-left"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <h3 className="text-white font-medium">{question}</h3>
-          <span className={`text-purple-400 transform transition-transform duration-200 ${isOpen ? 'rotate-45' : 'rotate-0'}`}>
-            {isOpen ? <FaTimes /> : <FaArrowRight />}
-          </span>
-        </button>
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <p className="text-gray-300 pb-4">{answer}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
+  const tabs = useMemo(() => [
+    { 
+      id: 'about', 
+      label: 'About Airdrop', 
+      icon: <FaGift />,
+      onClick: () => handleTabChange('about')
+    },
+    { 
+      id: 'staking', 
+      label: 'Smart Staking', 
+      icon: <FaChartLine />,
+      onClick: () => handleTabChange('staking')
+    },
+    { 
+      id: 'faq', 
+      label: 'FAQ', 
+      icon: <FaQuestionCircle />,
+      onClick: () => handleTabChange('faq')
+    }
+  ], [handleTabChange]);
+
+  // Animar sólo si es visible y no hay preferencia de reducción de movimiento
+  const motionProps = useMemo(() => {
+    return reduceAnimations 
+      ? { initial: { opacity: 1 }, animate: { opacity: 1 } }
+      : { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.5 } };
+  }, [reduceAnimations]);
+
+  // No renderizar contenido completo hasta que sea visible
+  if (!isVisible) {
+    return <div ref={ref} className="mb-24 min-h-[300px] scroll-mt-24"></div>;
+  }
 
   return (
-    <section id="info-section" className="mb-24 scroll-mt-24">
+    <section ref={ref} id="info-section" className="mb-24 scroll-mt-24">
       <div className="nuvos-card rounded-2xl border border-purple-500/20 overflow-hidden shadow-lg">
         
         <div className="flex gap-2 p-4 border-b border-purple-500/20 overflow-x-auto">
-          <Tab 
-            id="about" 
-            label="About Airdrop" 
-            icon={<FaGift />} 
-            active={activeTab === 'about'} 
-          />
-          <Tab 
-            id="staking" 
-            label="Smart Staking" 
-            icon={<FaChartLine />} 
-            active={activeTab === 'staking'} 
-          />
-          <Tab 
-            id="faq" 
-            label="FAQ" 
-            icon={<FaQuestionCircle />} 
-            active={activeTab === 'faq'} 
-          />
+          {tabs.map(tab => (
+            <Tab 
+              key={tab.id}
+              id={tab.id} 
+              label={tab.label} 
+              icon={tab.icon} 
+              active={currentActiveTab === tab.id} 
+              onClick={tab.onClick}
+            />
+          ))}
         </div>
         
         <div className="p-6 md:p-8">
-          {activeTab === 'about' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
+          {currentActiveTab === 'about' && (
+            <motion.div {...motionProps}>
               <h2 className="text-3xl font-bold mb-6 text-white text-center  ">NUVOS Airdrop Program</h2>
               
               <div className="space-y-6">
@@ -220,12 +277,8 @@ const AirdropInfoTabs = () => {
             </motion.div>
           )}
 
-          {activeTab === 'staking' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
+          {currentActiveTab === 'staking' && (
+            <motion.div {...motionProps}>
               <h2 className="text-3xl font-bold mb-6 text-white text-center">Smart Staking Program</h2>
               
               <div className="space-y-6">
@@ -324,12 +377,8 @@ const AirdropInfoTabs = () => {
             </motion.div>
           )}
 
-          {activeTab === 'faq' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
+          {currentActiveTab === 'faq' && (
+            <motion.div {...motionProps}>
               <h2 className="text-3xl font-bold mb-6 text-white">Frequently Asked Questions</h2>
               
               <div className="space-y-1 bg-black/20 rounded-xl p-6">
@@ -345,4 +394,4 @@ const AirdropInfoTabs = () => {
   );
 };
 
-export default AirdropInfoTabs;
+export default memoWithName(AirdropInfoTabs);

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useMemo, useRef } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { motion as m } from 'framer-motion';
 import { WalletContext } from '../../../context/WalletContext';
 import { useStaking } from '../../../context/StakingContext';
@@ -7,16 +7,27 @@ import SpaceBackground from '../../effects/SpaceBackground';
 import { FaUser, FaExclamationCircle, FaSync } from 'react-icons/fa';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import IntegrationList from './IntegrationList';
-import AccountOverview from './sections/AccountOverview';
-import TokensSection from './sections/TokensSection';
-import NFTsSection from './sections/NFTsSection';
-import TransactionsSection from './sections/TransactionsSection';
-import ActivitySection from './sections/ActivitySection';
-import AIHubSection from './sections/AIHubSection';
-import AirdropsSection from './sections/AirdropsSection';
-import GameSection from './sections/GameSection';
-import StakingSection from './sections/StakingSection';
+
+// Lazy load section components for code splitting
+const AccountOverview = lazy(() => import('./sections/AccountOverview'));
+const TokensSection = lazy(() => import('./sections/TokensSection'));
+const NFTsSection = lazy(() => import('./sections/NFTsSection'));
+const TransactionsSection = lazy(() => import('./sections/TransactionsSection'));
+const ActivitySection = lazy(() => import('./sections/ActivitySection'));
+const AIHubSection = lazy(() => import('./sections/AIHubSection'));
+const AirdropsSection = lazy(() => import('./sections/AirdropsSection'));
+const GameSection = lazy(() => import('./sections/GameSection'));
+const StakingSection = lazy(() => import('./sections/StakingSection'));
+
+// Import utility functions
 import { fetchNFTs, fetchTransactions, fetchTokenBalances } from '../../../utils/blockchain/blockchainUtils';
+
+// SectionLoader component for Suspense fallback
+const SectionLoader = () => (
+  <div className="nuvos-card rounded-xl border border-purple-500/30 p-6 flex items-center justify-center h-96">
+    <div className="w-10 h-10 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin"></div>
+  </div>
+);
 
 const ProfilePage = () => {
   const { account, walletConnected, balance, network, provider, isInitialized } = useContext(WalletContext);
@@ -61,28 +72,30 @@ const ProfilePage = () => {
     };
   }, [isLoading, nfts.length, transactions.length, tokenBalances.length]);
 
-  // Fetch user data when provider is ready
+  // Create a memoized cache key for data fetching to prevent unnecessary refetches
+  const fetchCacheKey = useMemo(() => {
+    return `${account}-${network}-${isInitialized}`;
+  }, [account, network, isInitialized]);
+
+  // Fetch user data when provider is ready - only when cache key changes
   useEffect(() => {
+    if (!walletConnected || !account || !provider || !isInitialized) return;
+    
+    let isMounted = true;
     const fetchUserData = async () => {
-      if (!walletConnected || !account) return;
-      
-      // Make sure we have a valid provider and it's initialized
-      if (!provider || !isInitialized) {
-        console.log("Provider not ready yet, will try again when initialized");
-        return;
-      }
-      
       try {
         setIsLoading(true);
-        console.log("Starting to fetch blockchain data with provider:", !!provider);
         
-        // Optimized: Run all data fetching in parallel using Promise.allSettled
-        // This prevents one slow operation from blocking everything
+        // Run all data fetching in parallel with AbortController for cleanup
+        const controller = new AbortController();
+        const signal = controller.signal;
+        
         const [nftResult, txResult, tokenResult] = await Promise.allSettled([
           fetchNFTs(account, provider, {
-            contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS
+            contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS,
+            signal
           }).catch(err => {
-            console.error("Error fetching NFTs:", err);
+            if (!signal.aborted) console.error("Error fetching NFTs:", err);
             return [];
           }),
           
@@ -99,31 +112,42 @@ const ProfilePage = () => {
           })
         ]);
         
-        // Process results safely
-        const nftData = nftResult.status === 'fulfilled' ? nftResult.value : [];
-        const txData = txResult.status === 'fulfilled' ? txResult.value : [];
-        const tokenData = tokenResult.status === 'fulfilled' ? tokenResult.value : [];
-        
-        console.log("Data fetching complete - NFTs:", nftData.length, 
-                   "Transactions:", txData.length, 
-                   "Tokens:", tokenData.length);
-        
-        setNfts(nftData);
-        setMintedNFTs(nftData.filter(nft => nft.minter?.toLowerCase() === account.toLowerCase()));
-        setTransactions(txData);
-        setTokenBalances(tokenData);
-        
-        setIsLoading(false);
-        setError(null); // Clear any previous errors
+        // Only update state if component is still mounted
+        if (isMounted) {
+          // Process results safely
+          const nftData = nftResult.status === 'fulfilled' ? nftResult.value : [];
+          const txData = txResult.status === 'fulfilled' ? txResult.value : [];
+          const tokenData = tokenResult.status === 'fulfilled' ? tokenResult.value : [];
+          
+          console.log("Data fetching complete - NFTs:", nftData.length, 
+                     "Transactions:", txData.length, 
+                     "Tokens:", tokenData.length);
+          
+          setNfts(nftData);
+          setMintedNFTs(nftData.filter(nft => nft.minter?.toLowerCase() === account.toLowerCase()));
+          setTransactions(txData);
+          setTokenBalances(tokenData);
+          
+          setIsLoading(false);
+          setError(null); // Clear any previous errors
+        }
       } catch (err) {
-        console.error("Error fetching blockchain data:", err);
-        setError("Failed to load blockchain data. Please try again later.");
-        setIsLoading(false);
+        if (isMounted) {
+          console.error("Error fetching blockchain data:", err);
+          setError("Failed to load blockchain data. Please try again later.");
+          setIsLoading(false);
+        }
       }
     };
     
     fetchUserData();
-  }, [account, walletConnected, provider, isInitialized]);
+    
+    return () => {
+      isMounted = false;
+      // Cancel in-flight requests when component unmounts
+      controller?.abort();
+    };
+  }, [fetchCacheKey]); // Use the memoized cache key instead of individual dependencies
 
   // Refresh staking data when connected
   useEffect(() => {
@@ -213,7 +237,7 @@ const ProfilePage = () => {
     );
   }
 
-  // Render profile content (this will now show even if not all data is loaded)
+  // Render profile content with Suspense for code splitting
   return (
     <div className="min-h-screen bg-nuvo-gradient relative">
       <SpaceBackground customClass="" />
@@ -283,33 +307,35 @@ const ProfilePage = () => {
               </m.div>
             </div>
 
-            {/* Right Content Area - Dynamic Section Rendering */}
+            {/* Right Content Area - Dynamic Section Rendering with Suspense */}
             <m.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="lg:col-span-3"
             >
-              {(() => {
-                switch (activeIntegration) {
-                  case 'overview':
-                    return <AccountOverview account={account} balance={balance} network={network} />;
-                  case 'nfts':
-                    return <NFTsSection account={account} />;
-                  case 'staking':
-                    return <StakingSection account={account} depositAmount={depositAmount} />;
-                  case 'transactions':
-                    return <TransactionsSection />;
-                  case 'ai-hub':
-                    return <AIHubSection account={account} />;
-                  case 'airdrops':
-                    return <AirdropsSection account={account} />;
-                  case 'game':
-                    return <GameSection account={account} />;
-                  default:
-                    return <AccountOverview account={account} balance={balance} network={network} />;
-                }
-              })()}
+              <Suspense fallback={<SectionLoader />}>
+                {(() => {
+                  switch (activeIntegration) {
+                    case 'overview':
+                      return <AccountOverview account={account} balance={balance} network={network} />;
+                    case 'nfts':
+                      return <NFTsSection account={account} />;
+                    case 'staking':
+                      return <StakingSection account={account} depositAmount={depositAmount} />;
+                    case 'transactions':
+                      return <TransactionsSection />;
+                    case 'ai-hub':
+                      return <AIHubSection account={account} />;
+                    case 'airdrops':
+                      return <AirdropsSection account={account} />;
+                    case 'game':
+                      return <GameSection account={account} />;
+                    default:
+                      return <AccountOverview account={account} balance={balance} network={network} />;
+                  }
+                })()}
+              </Suspense>
             </m.div>
           </div>
         </div>
@@ -318,4 +344,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default React.memo(ProfilePage);

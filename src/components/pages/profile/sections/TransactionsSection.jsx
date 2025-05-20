@@ -1,10 +1,120 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaHistory, FaChevronRight, FaExternalLinkAlt, FaCoins, FaSpinner } from 'react-icons/fa';
 import { useStaking } from '../../../../context/StakingContext';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useContext } from 'react';
 import { ethers } from 'ethers';
+
+// Extract transaction row as a separate memoized component
+const TransactionRow = React.memo(({ tx, formatDate, getPolygonScanUrl }) => (
+  <tr className="hover:bg-purple-900/20 transition-colors">
+    {/* Transaction type */}
+    <td className="py-4">
+      <div className="flex items-center gap-2">
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center 
+          ${tx.type === 'Stake Deposit' ? 'bg-blue-500/20' : 'bg-green-500/20'}`}>
+          <FaCoins className={`
+            ${tx.type === 'Stake Deposit' ? 'text-blue-400' : 'text-green-400'}`} 
+          />
+        </div>
+        <span className="text-white font-medium">{tx.type}</span>
+      </div>
+    </td>
+    
+    {/* Other columns */}
+    <td className="py-4 text-purple-300">{tx.description}</td>
+    <td className="py-4 text-white font-medium">
+      {parseFloat(tx.amount).toFixed(2)} {tx.asset}
+    </td>
+    <td className="py-4 text-purple-300">
+      {parseFloat(tx.commission).toFixed(2)} {tx.asset}
+    </td>
+    <td className="py-4 text-purple-300">{formatDate(tx.timestamp)}</td>
+    <td className="py-4 text-center">
+      <span className="inline-block px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
+        {tx.status}
+      </span>
+    </td>
+    <td className="py-4 text-right">
+      {!tx.isPlaceholder ? (
+        <a
+          href={getPolygonScanUrl(tx.hash, tx.isPlaceholder)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block p-2 text-purple-400 hover:text-purple-300 transition-colors"
+          title="View on PolygonScan"
+        >
+          <FaExternalLinkAlt />
+        </a>
+      ) : (
+        <span className="inline-block p-2 text-purple-800" title="Demo transaction">
+          <FaExternalLinkAlt />
+        </span>
+      )}
+    </td>
+  </tr>
+));
+
+// Virtualized transaction list to handle large numbers of transactions
+const VirtualizedTransactionList = ({ transactions, formatDate, getPolygonScanUrl }) => {
+  const containerRef = useRef(null);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 });
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && visibleRange.end < transactions.length) {
+          setVisibleRange(prev => ({
+            start: prev.start,
+            end: Math.min(prev.end + 10, transactions.length)
+          }));
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    const loadMoreTrigger = document.getElementById('load-more-trigger');
+    if (loadMoreTrigger) observer.observe(loadMoreTrigger);
+    
+    return () => {
+      if (loadMoreTrigger) observer.unobserve(loadMoreTrigger);
+    };
+  }, [transactions.length, visibleRange]);
+  
+  return (
+    <div ref={containerRef} className="overflow-x-auto">
+      <table className="w-full min-w-full divide-y divide-purple-500/20">
+        <thead>
+          <tr className="text-left text-sm text-purple-400">
+            <th className="pb-3 font-medium">Type</th>
+            <th className="pb-3 font-medium">Description</th>
+            <th className="pb-3 font-medium">Amount</th>
+            <th className="pb-3 font-medium">Commission</th>
+            <th className="pb-3 font-medium">Date</th>
+            <th className="pb-3 font-medium text-center">Status</th>
+            <th className="pb-3 font-medium text-right">View</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-purple-500/10">
+          {transactions.slice(0, visibleRange.end).map((tx) => (
+            <TransactionRow
+              key={tx.id}
+              tx={tx}
+              formatDate={formatDate}
+              getPolygonScanUrl={getPolygonScanUrl}
+            />
+          ))}
+        </tbody>
+      </table>
+      
+      {visibleRange.end < transactions.length && (
+        <div id="load-more-trigger" className="py-4 text-center">
+          <FaSpinner className="animate-spin text-purple-400 mx-auto" />
+        </div>
+      )}
+    </div>
+  );
+};
 
 const TransactionsSection = () => {
   const { state, getPoolEvents } = useStaking();
@@ -15,6 +125,7 @@ const TransactionsSection = () => {
   const STAKING_CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
   const [rawEvents, setRawEvents] = useState(null);
 
+  // Memoize processing function to avoid recreation on every render
   const processEvent = useCallback((event, type) => {
     if (!event || (!event.args && !event.isPlaceholder)) {
       console.warn("Invalid event data:", event);
@@ -77,9 +188,12 @@ const TransactionsSection = () => {
     }
   }, []);
 
+  // Cache event fetching in a stable callback
   const fetchTransactionEvents = useCallback(async () => {
     if (!account) return [];
-    setError(null);
+    
+    const controller = new AbortController();
+    const signal = controller.signal;
     
     try {
       console.log("Fetching transaction events for account:", account);
@@ -124,13 +238,19 @@ const TransactionsSection = () => {
       
       return allTransactions;
     } catch (error) {
-      console.error("Error fetching transaction events:", error);
-      setError("Failed to fetch transactions: " + error.message);
+      if (!signal.aborted) {
+        console.error("Error fetching transaction events:", error);
+        setError("Failed to fetch transactions: " + error.message);
+      }
       return [];
     }
   }, [account, getPoolEvents, processEvent]);
 
+  // Add cleanup for data fetching effects
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    
     const fetchTransactions = async () => {
       if (!account) return;
       setIsLoading(true);
@@ -238,21 +358,17 @@ const TransactionsSection = () => {
       }
     };
     
-    fetchTransactions();
+    if (account) {
+      fetchTransactions();
+    }
+    
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [account, fetchTransactionEvents, state.userDeposits, state.userInfo]);
 
-  const getPolygonScanUrl = useCallback((hash, isPlaceholder) => {
-    if (isPlaceholder || !hash || !hash.startsWith('0x') || hash.length !== 66) {
-        console.log("Cannot generate PolygonScan URL for invalid/placeholder hash:", hash);
-        return "#";
-    }
-    return `https://polygonscan.com/tx/${hash}`;
-  }, []);
-  
-  const getContractPolygonScanUrl = useCallback(() => {
-    return `https://polygonscan.com/address/${STAKING_CONTRACT_ADDRESS}`;
-  }, [STAKING_CONTRACT_ADDRESS]);
-
+  // Memoize formatting and URL helper functions
   const formatDate = useCallback((timestamp) => {
     if (!timestamp) return 'Unknown';
     
@@ -272,6 +388,18 @@ const TransactionsSection = () => {
       return 'Invalid Date';
     }
   }, []);
+  
+  const getPolygonScanUrl = useCallback((hash, isPlaceholder) => {
+    if (isPlaceholder || !hash || !hash.startsWith('0x') || hash.length !== 66) {
+        console.log("Cannot generate PolygonScan URL for invalid/placeholder hash:", hash);
+        return "#";
+    }
+    return `https://polygonscan.com/tx/${hash}`;
+  }, []);
+  
+  const getContractPolygonScanUrl = useCallback(() => {
+    return `https://polygonscan.com/address/${STAKING_CONTRACT_ADDRESS}`;
+  }, [STAKING_CONTRACT_ADDRESS]);
 
   if (isLoading) {
     return (
@@ -334,7 +462,7 @@ const TransactionsSection = () => {
     );
   }
 
-  // Display transactions with improved formatting
+  // Display transactions with improved virtualization
   return (
     <m.div
       initial={{ opacity: 0 }}
@@ -354,68 +482,11 @@ const TransactionsSection = () => {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-full divide-y divide-purple-500/20">
-          <thead>
-            <tr className="text-left text-sm text-purple-400">
-              <th className="pb-3 font-medium">Type</th>
-              <th className="pb-3 font-medium">Description</th>
-              <th className="pb-3 font-medium">Amount</th>
-              <th className="pb-3 font-medium">Commission</th>
-              <th className="pb-3 font-medium">Date</th>
-              <th className="pb-3 font-medium text-center">Status</th>
-              <th className="pb-3 font-medium text-right">View</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-purple-500/10">
-            {stakingTransactions.map((tx) => (
-              <tr key={tx.id} className="hover:bg-purple-900/20 transition-colors">
-                <td className="py-4">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center 
-                      ${tx.type === 'Stake Deposit' ? 'bg-blue-500/20' : 'bg-green-500/20'}`}>
-                      <FaCoins className={`
-                        ${tx.type === 'Stake Deposit' ? 'text-blue-400' : 'text-green-400'}`} 
-                      />
-                    </div>
-                    <span className="text-white font-medium">{tx.type}</span>
-                  </div>
-                </td>
-                <td className="py-4 text-purple-300">{tx.description}</td>
-                <td className="py-4 text-white font-medium">
-                  {parseFloat(tx.amount).toFixed(2)} {tx.asset}
-                </td>
-                <td className="py-4 text-purple-300">
-                  {parseFloat(tx.commission).toFixed(2)} {tx.asset}
-                </td>
-                <td className="py-4 text-purple-300">{formatDate(tx.timestamp)}</td>
-                <td className="py-4 text-center">
-                  <span className="inline-block px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                    {tx.status}
-                  </span>
-                </td>
-                <td className="py-4 text-right">
-                  {!tx.isPlaceholder ? (
-                    <a
-                      href={getPolygonScanUrl(tx.hash, tx.isPlaceholder)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block p-2 text-purple-400 hover:text-purple-300 transition-colors"
-                      title="View on PolygonScan"
-                    >
-                      <FaExternalLinkAlt />
-                    </a>
-                  ) : (
-                    <span className="inline-block p-2 text-purple-800" title="Demo transaction">
-                      <FaExternalLinkAlt />
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <VirtualizedTransactionList
+        transactions={stakingTransactions}
+        formatDate={formatDate}
+        getPolygonScanUrl={getPolygonScanUrl}
+      />
       
       <div className="mt-6 p-4 bg-black/30 border border-purple-500/20 rounded-lg text-center">
         <p className="text-sm text-purple-300">
@@ -434,4 +505,4 @@ const TransactionsSection = () => {
   );
 };
 
-export default TransactionsSection;
+export default React.memo(TransactionsSection);

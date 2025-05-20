@@ -105,16 +105,27 @@ export const easingTypes = {
 };
 
 /**
- * Configuration for when animations absolutely must be enabled
- * This includes all necessary properties to prevent null reference errors
+ * Get appropriate animation config based on device capabilities and user preferences
+ * @param {boolean} prefersReducedMotion - Whether user prefers reduced motion
+ * @param {boolean} isLowPerformance - Whether device is low performance
+ * @returns {Object} Animation configuration
+ */
+export const getAccessibleAnimationConfig = (prefersReducedMotion = false, isLowPerformance = false) => ({
+  isAnimationActive: !(prefersReducedMotion || isLowPerformance),
+  animationDuration: isLowPerformance ? 300 : 500,
+  animationEasing: 'ease'
+});
+
+/**
+ * Configuration for when animations absolutely must be disabled
  */
 export const safeAnimationConfig = {
-  isAnimationActive: false, // Set to false to completely avoid animation issues
+  isAnimationActive: false,
 };
 
 /**
  * Special version for Pie charts to prevent animation errors
  */
 export const safePieAnimationConfig = {
-  isAnimationActive: false, // Disable animations for pie charts
+  isAnimationActive: false,
 };

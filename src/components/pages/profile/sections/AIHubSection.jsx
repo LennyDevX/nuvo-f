@@ -1,13 +1,31 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaRobot, FaChartLine, FaBrain, FaLightbulb, FaExclamationCircle, FaSpinner, FaCheckCircle, FaCoins, FaCalendarAlt, FaPercent, FaCubes } from 'react-icons/fa';
 import { useStaking } from '../../../../context/StakingContext';
 import { ethers } from 'ethers';
 import { analyzeStakingPortfolio } from '../../../../utils/staking/stakingAnalytics';
 
+// Extract visualization components for better reuse and memoization
+const MetricCard = React.memo(({ name, value, icon }) => (
+  <div className="bg-black/20 p-3 rounded border border-purple-500/10 flex items-center gap-2">
+    {icon}
+    <div>
+      <div className="text-gray-400 text-xs">{name}</div>
+      <div className="text-white font-medium text-sm">{value}</div>
+    </div>
+  </div>
+));
+
+const RecommendationItem = React.memo(({ recommendation }) => (
+  <li className="bg-black/20 p-3 rounded border border-purple-500/10 flex items-start gap-2">
+    <FaLightbulb className="text-yellow-400 mt-1 flex-shrink-0" />
+    <span className="text-purple-300 text-sm">{recommendation}</span>
+  </li>
+));
+
 // --- Component ---
 const AIHubSection = ({ account }) => {
-  const { state, getPoolEvents } = useStaking(); // Access staking state and methods
+  const { state, getPoolEvents } = useStaking();
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [eventData, setEventData] = useState({
@@ -15,77 +33,96 @@ const AIHubSection = ({ account }) => {
     rewardsClaimed: 0,
   });
   
-  // Fetch event data when component mounts
+  // Use AbortController for cleanup in data fetching
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    
     const fetchEvents = async () => {
       try {
-        const events = await getPoolEvents();
+        const events = await getPoolEvents({ signal: controller.signal });
         
-        // Process withdrawals to calculate total withdrawn and rewards claimed
-        if (events && events.withdrawals) {
-          let totalWithdrawn = 0;
-          let rewardsClaimed = 0;
-          
-          events.withdrawals.forEach(withdrawal => {
-            // Regular withdrawals are rewards
-            if (withdrawal.args && withdrawal.args.amount) {
-              rewardsClaimed += parseFloat(ethers.formatEther(withdrawal.args.amount));
+        if (!isMounted || !events) return;
+        
+        // Optimize processing with early returns and efficient calculations
+        let totalWithdrawn = 0;
+        let rewardsClaimed = 0;
+        
+        // Process withdrawals efficiently
+        if (events.withdrawals?.length) {
+          rewardsClaimed = events.withdrawals.reduce((sum, withdrawal) => {
+            if (withdrawal.args?.amount) {
+              return sum + parseFloat(ethers.formatEther(withdrawal.args.amount));
             }
-          });
-          
-          // For emergency withdrawals, these are stake withdrawals
-          if (events.deposits) {
-            totalWithdrawn = events.deposits
-              .filter(deposit => deposit.args && deposit.args.amount && !deposit.active)
-              .reduce((sum, deposit) => sum + parseFloat(ethers.formatEther(deposit.args.amount)), 0);
-          }
-          
-          setEventData({
-            totalWithdrawn,
-            rewardsClaimed
-          });
+            return sum;
+          }, 0);
+        }
+        
+        // Process deposits efficiently 
+        if (events.deposits?.length) {
+          totalWithdrawn = events.deposits
+            .filter(deposit => deposit.args?.amount && !deposit.active)
+            .reduce((sum, deposit) => {
+              return sum + parseFloat(ethers.formatEther(deposit.args.amount));
+            }, 0);
+        }
+        
+        if (isMounted) {
+          setEventData({ totalWithdrawn, rewardsClaimed });
         }
       } catch (error) {
-        console.error("Error fetching pool events:", error);
+        if (!controller.signal.aborted && isMounted) {
+          console.error("Error fetching pool events:", error);
+        }
       }
     };
     
     if (account) {
       fetchEvents();
     }
+    
+    return () => {
+      isMounted = false;
+      controller.abort();
+    };
   }, [account, getPoolEvents]);
 
-  // Memoize necessary data from context to prevent unnecessary recalculations
-  const stakingDataForAnalysis = useMemo(() => {
-    return {
-      userDeposits: state.userDeposits,
-      stakingStats: {
-        totalStaked: state.userInfo?.totalStaked || '0',
-        pendingRewards: state.userInfo?.pendingRewards || '0'
-      },
-      totalWithdrawn: eventData.totalWithdrawn,
-      rewardsClaimed: eventData.rewardsClaimed,
-      stakingConstants: state.STAKING_CONSTANTS || {
-        HOURLY_ROI: 0.0001, // 0.01% hourly
-        MAX_ROI: 1.25, // 125%
-        MAX_DEPOSITS_PER_USER: 300 // Using correct value from contract
-      }
-    };
-  }, [state.userDeposits, state.userInfo, state.STAKING_CONSTANTS, eventData]);
+  // Memoize data for analysis to prevent unnecessary recalculations
+  const stakingDataForAnalysis = useMemo(() => ({
+    userDeposits: state.userDeposits,
+    stakingStats: {
+      totalStaked: state.userInfo?.totalStaked || '0',
+      pendingRewards: state.userInfo?.pendingRewards || '0'
+    },
+    totalWithdrawn: eventData.totalWithdrawn,
+    rewardsClaimed: eventData.rewardsClaimed,
+    stakingConstants: state.STAKING_CONSTANTS || {
+      HOURLY_ROI: 0.0001,
+      MAX_ROI: 1.25,
+      MAX_DEPOSITS_PER_USER: 300
+    }
+  }), [
+    state.userDeposits, 
+    state.userInfo?.totalStaked,
+    state.userInfo?.pendingRewards,
+    state.STAKING_CONSTANTS,
+    eventData
+  ]);
 
-
-  const runPortfolioAnalysis = () => {
+  // Debounce portfolio analysis to prevent rapid re-executions
+  const runPortfolioAnalysis = useCallback(() => {
+    if (analysisLoading) return; // Prevent multiple simultaneous analyses
+    
     setAnalysisLoading(true);
-    setAnalysisResults(null); // Clear previous results
+    setAnalysisResults(null);
 
-    // Simulate AI analysis time + run the actual algorithm
-    setTimeout(() => {
+    // Use a worker or setTimeout for heavy calculations to not block the UI
+    const analysisTimeoutId = setTimeout(() => {
       try {
         const results = analyzeStakingPortfolio(stakingDataForAnalysis);
         setAnalysisResults(results);
       } catch (error) {
         console.error("Analysis failed:", error);
-        // Set a fallback error state
         setAnalysisResults({
           score: 0,
           performanceSummary: "Analysis failed. Please try again.",
@@ -95,11 +132,13 @@ const AIHubSection = ({ account }) => {
       } finally {
         setAnalysisLoading(false);
       }
-    }, 1500); // Reduced delay
-  };
+    }, 800); // Reduced delay for better UX
+    
+    return () => clearTimeout(analysisTimeoutId);
+  }, [analysisLoading, stakingDataForAnalysis]);
 
-  // Map score to color and icon
-  const getScoreInfo = (score) => {
+  // Use stable functions for visual helpers
+  const getScoreInfo = useCallback((score) => {
     if (score >= 80) {
       return { color: 'text-green-400', icon: <FaCheckCircle className="text-green-400" /> };
     } else if (score >= 50) {
@@ -107,10 +146,9 @@ const AIHubSection = ({ account }) => {
     } else {
       return { color: 'text-red-400', icon: <FaExclamationCircle className="text-red-400" /> };
     }
-  };
+  }, []);
 
-  // Get metric icon based on name
-  const getMetricIcon = (metricName) => {
+  const getMetricIcon = useCallback((metricName) => {
     const icons = {
       'Effective APY': <FaPercent className="text-purple-400" />,
       'Days Staked': <FaCalendarAlt className="text-blue-400" />,
@@ -118,8 +156,9 @@ const AIHubSection = ({ account }) => {
       'Deposit Slots': <FaCubes className="text-green-400" />
     };
     return icons[metricName] || <FaChartLine className="text-purple-400" />;
-  };
+  }, []);
 
+  // Render with memoized components for better performance
   return (
     <m.div
       initial={{ opacity: 0 }}
@@ -135,7 +174,7 @@ const AIHubSection = ({ account }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Analysis Results */}
+        {/* Analysis Results - now with memoized components */}
         <div className="bg-black/30 p-5 rounded-xl border border-purple-500/30">
           <h3 className="text-lg font-medium text-white mb-3">Analysis Summary</h3>
           {analysisLoading ? (
@@ -166,20 +205,21 @@ const AIHubSection = ({ account }) => {
                
               {/* Display Key Metrics */}
               <div className="grid grid-cols-2 gap-4 mt-4">
-                {[
-                  { name: 'Effective APY', value: analysisResults.metrics.effectiveAPY },
-                  { name: 'Days Staked', value: analysisResults.metrics.daysStaked },
-                  { name: 'Total Earnings', value: `${analysisResults.metrics.totalEarnings} POL` },
-                  { name: 'Deposit Slots', value: analysisResults.metrics.depositUtilization }
-                ].map((metric, index) => (
-                  <div key={index} className="bg-black/20 p-3 rounded border border-purple-500/10 flex items-center gap-2">
-                    {getMetricIcon(metric.name)}
-                    <div>
-                      <div className="text-gray-400 text-xs">{metric.name}</div>
-                      <div className="text-white font-medium text-sm">{metric.value}</div>
-                    </div>
-                  </div>
-                ))}
+                {!analysisLoading && analysisResults && (
+                  [
+                    { name: 'Effective APY', value: analysisResults.metrics.effectiveAPY },
+                    { name: 'Days Staked', value: analysisResults.metrics.daysStaked },
+                    { name: 'Total Earnings', value: `${analysisResults.metrics.totalEarnings} POL` },
+                    { name: 'Deposit Slots', value: analysisResults.metrics.depositUtilization }
+                  ].map((metric, index) => (
+                    <MetricCard
+                      key={index}
+                      name={metric.name}
+                      value={metric.value}
+                      icon={getMetricIcon(metric.name)}
+                    />
+                  ))
+                )}
               </div>
             </div>
           ) : (
@@ -193,7 +233,7 @@ const AIHubSection = ({ account }) => {
           </p>
         </div>
 
-        {/* Recommendations */}
+        {/* Recommendations - now with memoized list items */}
         <div className="bg-black/30 p-5 rounded-xl border border-purple-500/30">
           <h3 className="text-lg font-medium text-white mb-3">AI Recommendations</h3>
            {analysisLoading ? (
@@ -203,10 +243,7 @@ const AIHubSection = ({ account }) => {
            ) : analysisResults && analysisResults.recommendations.length > 0 ? (
             <ul className="space-y-3">
               {analysisResults.recommendations.map((rec, index) => (
-                 <li key={index} className="bg-black/20 p-3 rounded border border-purple-500/10 flex items-start gap-2">
-                   <FaLightbulb className="text-yellow-400 mt-1 flex-shrink-0" />
-                   <span className="text-purple-300 text-sm">{rec}</span>
-                 </li>
+                 <RecommendationItem key={index} recommendation={rec} />
               ))}
             </ul>
           ) : analysisResults && analysisResults.recommendations.length === 0 ? (
@@ -290,4 +327,4 @@ const AIHubSection = ({ account }) => {
   );
 };
 
-export default AIHubSection;
+export default React.memo(AIHubSection);

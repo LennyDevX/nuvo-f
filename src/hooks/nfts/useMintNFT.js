@@ -1,11 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 import { uploadFileToIPFS, uploadJsonToIPFS, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
-// Mapa de traducción de categorías (inglés → español)
+// Move category map outside component to prevent recreation on each render
 const categoryMap = {
   'collectible': 'coleccionables',
   'artwork': 'arte',
@@ -16,7 +16,7 @@ const categoryMap = {
   'document': 'coleccionables'
 };
 
-// Local fallback for when IPFS upload fails
+// Local fallback for when IPFS upload fails - moved outside to avoid recreation
 const createLocalDataUrl = (file) => {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -31,6 +31,12 @@ export default function useMintNFT() {
   const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState(null);
 
+  // Memoize contract address validation to prevent rechecking on every render
+  const validatedContractAddress = useMemo(() => {
+    if (!CONTRACT_ADDRESS) return null;
+    return ethers.isAddress(CONTRACT_ADDRESS) ? CONTRACT_ADDRESS : null;
+  }, []);
+
   // Mint NFT using enhanced IPFS functions from blockchainUtils
   const mintNFT = useCallback(async ({ file, name, description, category, royalty }) => {
     setLoading(true);
@@ -41,18 +47,12 @@ export default function useMintNFT() {
     try {
       console.log("Starting NFT minting process");
       
-      // Check contract address
-      if (!CONTRACT_ADDRESS) {
-        throw new Error("Contract address not configured in environment variables");
+      // Use memoized contract address
+      if (!validatedContractAddress) {
+        throw new Error("Contract address is invalid or not configured");
       }
       
-      console.log("Using contract address:", CONTRACT_ADDRESS);
-      
-      // Validate contract address format
-      if (!ethers.isAddress(CONTRACT_ADDRESS)) {
-        console.error(`Invalid contract address format: ${CONTRACT_ADDRESS}`);
-        throw new Error("Contract address is invalid - check environment configuration");
-      }
+      console.log("Using contract address:", validatedContractAddress);
       
       // Traducir la categoría al español si existe en el mapa
       const translatedCategory = categoryMap[category.toLowerCase()] || 'coleccionables';
@@ -114,8 +114,8 @@ export default function useMintNFT() {
       const signer = await provider.getSigner();
       
       // Create contract instance
-      console.log("Creating contract instance with address:", CONTRACT_ADDRESS);
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      console.log("Creating contract instance with address:", validatedContractAddress);
+      const contract = new ethers.Contract(validatedContractAddress, TokenizationAppABI.abi, signer);
       
       // Convertir el royalty a un formato adecuado para el contrato
       // Use simple numeric value for royalty
@@ -240,7 +240,7 @@ export default function useMintNFT() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [validatedContractAddress]); // Add validatedContractAddress as dependency
 
   return { mintNFT, loading, error, success, txHash };
 }

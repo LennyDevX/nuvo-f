@@ -39,6 +39,35 @@ export const shimmerAnimation = {
   }
 };
 
+// Helper function to get animation variants based on reduced motion preference
+export const getAccessibleAnimationVariants = (prefersReducedMotion = false) => {
+  return {
+    cardVariants: prefersReducedMotion ? {
+      hover: { scale: 1 } // No movement when reduced motion is preferred
+    } : cardVariants,
+    
+    buttonVariants: prefersReducedMotion ? {
+      idle: { scale: 1 },
+      hover: { 
+        boxShadow: '0 0 15px rgba(149, 76, 233, 0.6)',
+        transition: { duration: 0.2 }
+      },
+      tap: { opacity: 0.9 }, // Subtle opacity change instead of movement
+      disabled: { opacity: 0.5 }
+    } : buttonVariants,
+    
+    containerFadeIn: prefersReducedMotion ? {
+      hidden: { opacity: 0.8 },
+      visible: { 
+        opacity: 1,
+        transition: { duration: 0.5 }
+      }
+    } : containerFadeIn,
+    
+    // Other accessible variants...
+  };
+};
+
 export const containerFadeIn = {
   hidden: { opacity: 0, y: 20 },
   visible: { 

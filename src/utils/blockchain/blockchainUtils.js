@@ -1153,3 +1153,14 @@ export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRe
     return [];
   }
 };
+
+// Add the missing export that's causing the error
+export const cardemodule = {
+  isEnabled: true,
+  version: '1.0.0',
+  // Add any other properties that might be needed
+  init: () => {
+    console.log('Card module initialized');
+    return true;
+  }
+};

@@ -1,8 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { FaBrain, FaServer, FaGem, FaUsers, FaTools, FaRobot, FaChartLine, FaCoins, FaGift, FaTshirt } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAnimationConfig } from '../../animation/AnimationProvider';
+import memoWithName from '../../../utils/performance/memoWithName';
+import useIntersectionObserver from '../../../hooks/performance/useIntersectionObserver';
 
-const FeatureCard = ({ title, description, icon: Icon }) => (
+// Memoizar el componente FeatureCard
+const FeatureCard = memoWithName(({ title, description, icon: Icon, animationEnabled = true }) => (
   <div className="flex gap-4 p-5 rounded-lg nuvos-card border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300">
     <div className="p-3 rounded-lg bg-purple-500/20 h-fit">
       <Icon className="w-6 h-6 text-purple-400" />
@@ -12,10 +16,15 @@ const FeatureCard = ({ title, description, icon: Icon }) => (
       <p className="text-gray-300">{description}</p>
     </div>
   </div>
-);
+));
 
 const ProductTabs = () => {
   const [activeTab, setActiveTab] = useState('nuv-os');
+  const [ref, isVisible] = useIntersectionObserver({ threshold: 0.1, triggerOnce: true });
+  const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+  
+  // Determinar si las animaciones deben estar habilitadas
+  const animationEnabled = !shouldReduceMotion && !isLowPerformance;
   
   const tabs = useMemo(() => [
     { id: 'nuv-os', label: 'Nuv-OS', icon: FaServer },
@@ -81,45 +90,76 @@ const ProductTabs = () => {
     setActiveTab(tabId);
   }, []);
 
-  const tabContentVariants = {
-    hidden: { 
-      opacity: 0,
-      y: 20,
-      transition: { 
-        duration: 0.3,
-        ease: "easeInOut" 
-      }
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { 
-        duration: 0.4,
-        ease: "easeOut" 
-      }
-    },
-    exit: { 
-      opacity: 0,
-      y: -20,
-      transition: { 
-        duration: 0.3,
-        ease: "easeIn" 
-      }
+  // Simplificar animaciones si se requiere
+  const tabContentVariants = useMemo(() => {
+    if (!animationEnabled) {
+      return {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 },
+        exit: { opacity: 0 }
+      };
     }
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 15 },
-    visible: i => ({
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: i * 0.1,
-        duration: 0.3,
-        ease: "easeOut"
+    
+    return {
+      hidden: { 
+        opacity: 0,
+        y: 20,
+        transition: { 
+          duration: 0.3,
+          ease: "easeInOut" 
+        }
+      },
+      visible: { 
+        opacity: 1, 
+        y: 0,
+        transition: { 
+          duration: 0.4,
+          ease: "easeOut" 
+        }
+      },
+      exit: { 
+        opacity: 0,
+        y: -20,
+        transition: { 
+          duration: 0.3,
+          ease: "easeIn" 
+        }
       }
-    })
-  };
+    };
+  }, [animationEnabled]);
+
+  const cardVariants = useMemo(() => {
+    if (!animationEnabled) {
+      return {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+      };
+    }
+    
+    return {
+      hidden: { opacity: 0, y: 15 },
+      visible: i => ({
+        opacity: 1,
+        y: 0,
+        transition: {
+          delay: i * 0.1,
+          duration: 0.3,
+          ease: "easeOut"
+        }
+      })
+    };
+  }, [animationEnabled]);
+
+  // Simplificar la animación del ícono
+  const iconAnimation = animationEnabled ? { 
+    scale: [1, 1.1, 1],
+    opacity: [1, 0.8, 1],
+    transition: { 
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  } : { scale: 1 };
 
   const renderFeatureCards = useCallback((features) => {
     return features.map((feature, index) => (
@@ -130,13 +170,18 @@ const ProductTabs = () => {
         initial="hidden"
         animate="visible"
       >
-        <FeatureCard {...feature} />
+        <FeatureCard {...feature} animationEnabled={animationEnabled} />
       </motion.div>
     ));
-  }, []);
+  }, [cardVariants, animationEnabled]);
+
+  // Solo renderizar el contenido si es visible en el viewport
+  if (!isVisible) {
+    return <div ref={ref} className="mb-12 min-h-[400px]"></div>;
+  }
 
   return (
-    <div className="mb-12">
+    <div ref={ref} className="mb-12">
       <AnimatePresence mode="wait">
         {activeTab === 'nuv-os' && (
           <motion.div
@@ -149,17 +194,17 @@ const ProductTabs = () => {
           >
             <div>
               <motion.h2 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0 }}
                 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text"
               >
                 Nuv-OS: The Core Intelligence
               </motion.h2>
               <motion.p 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0, delay: animationEnabled ? 0.1 : 0 }}
                 className="text-gray-300 text-lg mb-6 leading-relaxed"
               >
                 Nuv-OS is the central brain of our ecosystem, connecting all capabilities through a decentralized 
@@ -173,23 +218,13 @@ const ProductTabs = () => {
               </motion.div>
             </div>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              initial={animationEnabled ? { opacity: 0, scale: 0.9 } : { opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1, scale: 1 } : { opacity: 1 }}
+              transition={{ duration: animationEnabled ? 0.5 : 0, delay: animationEnabled ? 0.2 : 0 }}
               className="nuvos-card p-8 rounded-2xl border border-purple-500/30 backdrop-blur-sm hidden sm:block"
             >
               <div className="aspect-square rounded-xl overflow-hidden relative bg-gradient-to-br from-purple-900/80 to-pink-900/80 flex items-center justify-center">
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.1, 1],
-                    opacity: [1, 0.8, 1]
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
+                <motion.div animate={iconAnimation}>
                   <FaServer className="w-24 md:w-32 h-24 md:h-32 text-purple-400" />
                 </motion.div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle,_transparent_25%,_#1a002a_100%)]" />
@@ -208,23 +243,13 @@ const ProductTabs = () => {
             className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center"
           >
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              initial={animationEnabled ? { opacity: 0, scale: 0.9 } : { opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1, scale: 1 } : { opacity: 1 }}
+              transition={{ duration: animationEnabled ? 0.5 : 0, delay: animationEnabled ? 0.2 : 0 }}
               className="order-2 lg:order-1 bg-purple-900/20 p-8 rounded-2xl border border-purple-500/30 backdrop-blur-sm hidden sm:block"
             >
               <div className="aspect-square rounded-xl overflow-hidden relative bg-gradient-to-br from-purple-900/80 to-pink-900/80 flex items-center justify-center">
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.1, 1],
-                    opacity: [1, 0.8, 1]
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
+                <motion.div animate={iconAnimation}>
                   <FaBrain className="w-24 md:w-32 h-24 md:h-32 text-purple-400" />
                 </motion.div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle,_transparent_25%,_#1a002a_100%)]" />
@@ -232,17 +257,17 @@ const ProductTabs = () => {
             </motion.div>
             <div className="order-1 lg:order-2">
               <motion.h2 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0 }}
                 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text"
               >
                 Nuv-AI: Your Intelligent Assistant
               </motion.h2>
               <motion.p 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0, delay: animationEnabled ? 0.1 : 0 }}
                 className="text-gray-300 text-lg mb-6 leading-relaxed"
               >
                 Nuv-AI is your personal guide through the Nuvos ecosystem. This advanced AI agent answers your questions, 
@@ -268,20 +293,22 @@ const ProductTabs = () => {
           >
             <div>
               <motion.h2 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0 }}
                 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text"
               >
                 Nuv-NFTs: Elite NFT Collection
               </motion.h2>
               <motion.p 
-                initial={{ opacity: 0 }}
+                initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
+                transition={{ duration: animationEnabled ? 0.3 : 0, delay: animationEnabled ? 0.1 : 0 }}
                 className="text-gray-300 text-lg mb-6 leading-relaxed"
               >
-                Nuv-NFTs es nuestra colección premium de NFTs, creada 100% con arte digital generado por IA. Los poseedores obtienen ventajas exclusivas dentro de Nuvos Cloud, aumentando su potencial de ganancias y desbloqueando recompensas especiales como airdrops, NFTs adicionales, merchandising y mucho más.
+                Nuv-NFTs es nuestra colección premium de NFTs, creada 100% con arte digital generado por IA. 
+                Los poseedores obtienen ventajas exclusivas dentro de Nuvos Cloud, aumentando su potencial de 
+                ganancias y desbloqueando recompensas especiales como airdrops, NFTs adicionales, merchandising y mucho más.
               </motion.p>
               <motion.div 
                 className="grid grid-cols-1 gap-4"
@@ -290,23 +317,13 @@ const ProductTabs = () => {
               </motion.div>
             </div>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              initial={animationEnabled ? { opacity: 0, scale: 0.9 } : { opacity: 1 }}
+              animate={animationEnabled ? { opacity: 1, scale: 1 } : { opacity: 1 }}
+              transition={{ duration: animationEnabled ? 0.5 : 0, delay: animationEnabled ? 0.2 : 0 }}
               className="bg-purple-900/20 p-8 rounded-2xl border border-purple-500/30 backdrop-blur-sm hidden sm:block"
             >
               <div className="aspect-square rounded-xl overflow-hidden relative bg-gradient-to-br from-purple-900/80 to-pink-900/80 flex items-center justify-center">
-                <motion.div
-                  animate={{ 
-                    scale: [1, 1.1, 1],
-                    opacity: [1, 0.8, 1]
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
+                <motion.div animate={iconAnimation}>
                   <FaGem className="w-24 md:w-32 h-24 md:h-32 text-purple-400" />
                 </motion.div>
                 <div className="absolute inset-0 bg-[radial-gradient(circle,_transparent_25%,_#1a002a_100%)]" />
@@ -327,9 +344,9 @@ const ProductTabs = () => {
                 ? 'nuvos-card shadow-lg'
                 : 'bg-purple-900/20 text-gray-300 hover:bg-purple-900/30'
             }`}
-            whileTap={{ scale: 0.95 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            whileTap={animationEnabled ? { scale: 0.95 } : {}}
+            whileHover={animationEnabled ? { scale: 1.05 } : {}}
+            transition={{ type: "spring", stiffness: animationEnabled ? 400 : 0, damping: 17 }}
           >
             <tab.icon className="w-5 h-5" />
             {tab.label}
@@ -340,4 +357,4 @@ const ProductTabs = () => {
   );
 };
 
-export default ProductTabs;
+export default memoWithName(ProductTabs);
