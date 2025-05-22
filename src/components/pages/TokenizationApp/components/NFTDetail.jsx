@@ -7,6 +7,7 @@ import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingOverlay from '../../../ui/LoadingOverlay';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import IPFSImage from '../../../ui/IPFSImage';
 
 // Agregar un simple sistema de caché para evitar llamadas repetidas
 const nftCache = new Map();
@@ -396,14 +397,11 @@ const NFTDetail = () => {
               {/* Lado izquierdo - Imagen */}
               <div>
                 <div className="bg-black/40 rounded-xl overflow-hidden aspect-square shadow-lg border border-purple-500/10">
-                  <img 
+                  <IPFSImage 
                     src={nft.image} 
                     alt={nft.name} 
                     className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/NFT-X1.webp'; // Imagen fallback
-                    }}
+                    placeholderSrc="/NFT-X1.webp"
                   />
                 </div>
                 

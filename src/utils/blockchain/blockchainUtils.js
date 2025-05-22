@@ -250,7 +250,47 @@ const getImageFromMetadata = (metadata) => {
 };
 
 /**
- * Get a CSP-compliant image URL by attempting different sources
+ * Convert IPFS URI to HTTP gateway URL with improved reliability
+ * 
+ * @param {string} uri - IPFS URI (ipfs://...)
+ * @param {string} preferredGateway - Preferred IPFS gateway URL
+ * @returns {string} - HTTP gateway URL
+ */
+export const ipfsToHttp = (uri, preferredGateway) => {
+  if (!uri) return '';
+  
+  // If it's already an HTTP URL, return as is
+  if (uri.startsWith('http')) return uri;
+  
+  // If it's a data URL, return as is
+  if (uri.startsWith('data:')) return uri;
+  
+  // Available gateways in order of preference
+  const gateways = [
+    preferredGateway,
+    'https://nftstorage.link/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://ipfs.io/ipfs/',
+    'https://gateway.ipfs.io/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://ipfs.cf-ipfs.com/ipfs/',
+  ].filter(Boolean); // Remove undefined entries
+  
+  if (uri.startsWith('ipfs://')) {
+    // Use the first gateway in the list (or preferred gateway if provided)
+    return gateways[0] + uri.substring(7);
+  }
+  
+  // For CIDs without protocol prefix
+  if (/^Qm[1-9A-Za-z]{44}/.test(uri) || /^bafy/.test(uri)) {
+    return gateways[0] + uri;
+  }
+  
+  return uri;
+};
+
+/**
+ * Get a CSP and CORS/CORP compliant image URL
  * 
  * @param {string} originalUrl - Original image URL
  * @param {Array<string>} allowedDomains - List of CSP-allowed domains
@@ -259,7 +299,10 @@ const getImageFromMetadata = (metadata) => {
 export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
   'ipfs.io',
   'gateway.pinata.cloud',
-  'cloudflare-ipfs.com'
+  'cloudflare-ipfs.com',
+  'nftstorage.link',
+  'dweb.link',
+  'cf-ipfs.com'
 ]) => {
   if (!originalUrl) return DEFAULT_PLACEHOLDER;
   
@@ -268,34 +311,101 @@ export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
     return originalUrl;
   }
   
-  // If IPFS, use an allowed gateway
-  if (originalUrl.startsWith('ipfs://')) {
-    return ipfsToHttp(originalUrl, 'https://ipfs.io/ipfs/');
+  try {
+    // If IPFS, use the gateway rotation system instead of just ipfs.io
+    if (originalUrl.startsWith('ipfs://')) {
+      return ipfsToHttp(originalUrl, 'https://nftstorage.link/ipfs/');
+    }
+    
+    // If it starts with gateway.pinata.cloud, replace it with an alternative
+    if (originalUrl.includes('gateway.pinata.cloud')) {
+      const ipfsPath = originalUrl.split('/ipfs/')[1];
+      if (ipfsPath) {
+        return `https://nftstorage.link/ipfs/${ipfsPath}`;
+      }
+    }
+    
+    // Check if URL is from an allowed domain
+    const url = new URL(originalUrl);
+    const domain = url.hostname;
+    
+    if (allowedDomains.some(allowed => domain.includes(allowed))) {
+      return originalUrl;
+    }
+    
+    // Try to extract CID if it's another IPFS gateway
+    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-Za-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+    if (pathMatch) {
+      const cid = pathMatch[1];
+      const subpath = pathMatch[2] || '';
+      return `https://nftstorage.link/ipfs/${cid}${subpath}`;
+    }
+    
+    console.warn(`Image URL ${originalUrl} might violate CSP or CORP - using placeholder`);
+    return DEFAULT_PLACEHOLDER;
+  } catch (e) {
+    console.error("Error parsing URL:", e);
+    return DEFAULT_PLACEHOLDER;
   }
-  
-  // Check if URL is from an allowed domain
-  const urlObj = new URL(originalUrl);
-  const domain = urlObj.hostname;
-  
-  if (allowedDomains.some(allowed => domain.includes(allowed))) {
-    return originalUrl;
-  }
-  
-  console.warn(`Image URL ${originalUrl} might violate CSP - using placeholder`);
-  return DEFAULT_PLACEHOLDER;
 };
 
 /**
- * Fetch token metadata from tokenURI with support for various formats
+ * Fetch content from IPFS with gateway fallbacks
+ * 
+ * @param {string} ipfsUri - IPFS URI or CID
+ * @returns {Promise<Response>} - Fetch response
  */
+export const fetchFromIPFSWithFallback = async (ipfsUri) => {
+  if (!ipfsUri) throw new Error('No IPFS URI provided');
+  
+  // Available gateways in order of preference
+  const gateways = [
+    'https://nftstorage.link/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://ipfs.io/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://ipfs.cf-ipfs.com/ipfs/'
+  ];
+  
+  let cid = ipfsUri;
+  if (ipfsUri.startsWith('ipfs://')) {
+    cid = ipfsUri.substring(7);
+  }
+  
+  let lastError = null;
+  
+  // Try each gateway until one works
+  for (const gateway of gateways) {
+    try {
+      const response = await fetch(gateway + cid, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*'
+        },
+        mode: 'cors',
+      });
+      
+      if (response.ok) {
+        return response;
+      }
+    } catch (err) {
+      lastError = err;
+      console.warn(`Gateway ${gateway} failed:`, err.message);
+    }
+  }
+  
+  throw new Error(`All IPFS gateways failed: ${lastError?.message}`);
+};
+
+// Replace the fetchTokenMetadata function to use our new fallback mechanism
 export const fetchTokenMetadata = async (tokenURI) => {
   if (!tokenURI) return {};
   
   try {
-    // Handle IPFS URIs
+    // Handle IPFS URIs with our enhanced fallback system
     if (tokenURI.startsWith('ipfs://')) {
-      const ipfsGateway = 'https://ipfs.io/ipfs/';
-      tokenURI = tokenURI.replace('ipfs://', ipfsGateway);
+      const response = await fetchFromIPFSWithFallback(tokenURI);
+      return await response.json();
     }
     
     // Handle data URIs
@@ -307,6 +417,16 @@ export const fetchTokenMetadata = async (tokenURI) => {
     
     // Handle HTTP URIs
     if (tokenURI.startsWith('http')) {
+      // If it's a Pinata gateway URL, use our fallback method
+      if (tokenURI.includes('gateway.pinata.cloud')) {
+        const ipfsPath = tokenURI.split('/ipfs/')[1];
+        if (ipfsPath) {
+          const response = await fetchFromIPFSWithFallback(ipfsPath);
+          return await response.json();
+        }
+      }
+      
+      // Regular HTTP fetch with timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
       
@@ -1053,21 +1173,6 @@ export const uploadFileToIPFS = async (file, options = {}) => {
     console.error("Error uploading file to IPFS:", error);
     throw error;
   }
-};
-
-/**
- * Convert IPFS URI to HTTP gateway URL
- * 
- * @param {string} uri - IPFS URI (ipfs://...)
- * @param {string} gateway - IPFS gateway URL (default: ipfs.io)
- * @returns {string} - HTTP gateway URL
- */
-export const ipfsToHttp = (uri, gateway = 'https://ipfs.io/ipfs/') => {
-  if (!uri) return '';
-  if (uri.startsWith('ipfs://')) {
-    return gateway + uri.substring(7);
-  }
-  return uri;
 };
 
 /**

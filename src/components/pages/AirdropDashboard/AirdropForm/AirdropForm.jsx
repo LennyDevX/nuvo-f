@@ -4,9 +4,13 @@ import TimeCounter from './TimeCounter';
 import { motion } from 'framer-motion';
 import { FaCoins, FaImages, FaBox, FaPalette, FaTimes } from 'react-icons/fa';
 import { addDoc, Timestamp, collection, query, where, getDocs } from 'firebase/firestore';
+
+// Fix the wrong path - the firebase config is in components/firebase, not in the root firebase folder
 import { airdropsCollection } from '../../../firebase/config';
 import SubmissionSuccess from './SubmissionSuccess';
-import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
+
+// Fix the path to the hook
+import { useAirdropRegistration } from '../../../../hooks/airdrop/useAirdropRegistration';
 
 const airdropTypes = [  
     { id: 'tokens', name: 'Tokens', description: 'Receive NUVO tokens', icon: <FaCoins /> },

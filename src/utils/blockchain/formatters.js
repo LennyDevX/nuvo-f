@@ -4,16 +4,19 @@ import { formatEther } from 'ethers';
  * Formats a balance value with specified decimal precision
  * @param {string|number|bigint} value - The value to format
  * @param {number} [decimals=3] - Number of decimal places to show (default: 3)
+ * @param {boolean} [debug=false] - Whether to enable debug logging
  * @returns {string} Formatted balance
  */
-export const formatBalance = (value, decimals = 3) => {
+export const formatBalance = (value, decimals = 3, debug = false) => {
   if (!value) return '0.000';
   
   try {
     let numValue;
     
-    // Log the input value for debugging
-    console.debug('formatBalance input:', value, typeof value);
+    // Only log if debug mode is enabled
+    if (debug) {
+      console.debug('formatBalance input:', value, typeof value, decimals);
+    }
     
     // If it's already a decimal number
     if (typeof value === 'number' || (typeof value === 'string' && value.includes('.'))) {
