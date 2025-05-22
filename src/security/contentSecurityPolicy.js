@@ -5,6 +5,8 @@ export const cspConfig = {
       "'self'",
       'data:',
       'https://api.dodoex.io',
+      'https://*.nftstorage.link',
+
       'https://polygon-mainnet.g.alchemy.com',
       'wss://polygon-mainnet.g.alchemy.com',
       "https://api.pinata.cloud",
@@ -44,6 +46,7 @@ export const cspConfig = {
       'data:',
       'blob:',
       'https://images.dodoex.io',
+      'https://*.nftstorage.link',
       'https://*.dodoex.io',
       'https://static.okx.com',
       'https://polygonscan.com',

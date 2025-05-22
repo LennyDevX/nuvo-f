@@ -1,11 +1,11 @@
-import { detectDevice } from '../../hooks/mobile/useDeviceDetection';
+import { getDeviceInfo } from '../../hooks/mobile/useDeviceDetection';
 
 /**
  * @deprecated Use useDeviceDetection().isMobile instead
  */
 export const isMobile = () => {
   console.warn("Deprecated: Use useDeviceDetection().isMobile instead");
-  return detectDevice().isMobile;
+  return getDeviceInfo().isMobile;
 };
 
 export const getMobileDeepLinks = () => {
@@ -24,7 +24,7 @@ export const getMobileDeepLinks = () => {
 export const openWalletApp = (wallet = 'metamask') => {
   const deepLinks = getMobileDeepLinks();
   const currentUrl = window.location.href;
-  const device = detectDevice();
+  const device = getDeviceInfo();
   
   if (device.isMobile) {
     if (device.isAndroid) {
@@ -40,15 +40,16 @@ export const openWalletApp = (wallet = 'metamask') => {
  */
 export const isMobileDevice = () => {
   console.warn("Deprecated: Use useDeviceDetection().isMobileDevice() instead");
-  return detectDevice().isMobile;
+  return getDeviceInfo().isMobile;
 };
 
 /**
  * @deprecated Use useDeviceDetection().isLowPerformance instead
  */
 export const isLowPerformanceDevice = () => {
-  console.warn("Deprecated: Use useDeviceDetection().isLowPerformance instead");
-  return detectDevice().isLowPerformance;
+  const deviceInfo = getDeviceInfo();
+  // Don't show warning here to avoid console spam from AnimationProvider
+  return deviceInfo.isLowPerformance || false;
 };
 
 /**
@@ -60,7 +61,7 @@ export const getRecommendedParticleCount = (
   lowPerformance = 80
 ) => {
   console.warn("Deprecated: Use useDeviceDetection().getRecommendedParticleCount() instead");
-  const device = detectDevice();
+  const device = getDeviceInfo();
   
   if (device.isLowPerformance) {
     return lowPerformance;

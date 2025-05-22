@@ -11,9 +11,8 @@ export const AnimationContext = createContext({
 export const useAnimations = () => useContext(AnimationContext);
 
 export const AnimationProvider = ({ children }) => {
-  // Replace deprecated isLowPerformanceDevice with recommended API
-  const deviceDetection = useDeviceDetection();
-  const isLowPerformance = deviceDetection.isLowPerformance;
+  // Get device information using the recommended API
+  const { isLowPerformance } = useDeviceDetection();
   
   // Default to enabling animations unless we detect a low-performance device
   const [animationsEnabled, setAnimationsEnabled] = useState(

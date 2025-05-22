@@ -149,15 +149,36 @@ export const roadmapData = {
   }
 };
 
-// Actualizar las métricas en los datos
+// More efficient metrics calculation
+const calculateMetrics = (item) => {
+  return {
+    userEngagement: item.status === "Completed" ? "✓ Achieved" : "In Progress",
+    devMilestones: item.progress + "%",
+    communityGrowth: item.status === "Completed" ? "Strong" : "Growing"
+  };
+};
+
+// Actualizar las métricas en los datos - optimized version with memoization
+const cachedMetrics = new Map();
+
 Object.keys(roadmapData).forEach(year => {
   Object.keys(roadmapData[year]).forEach(quarter => {
     roadmapData[year][quarter].forEach(item => {
-      item.metrics = [
-        "User Engagement: " + (item.status === "Completed" ? "✓ Achieved" : "In Progress"),
-        "Development Milestones: " + item.progress + "%",
-        "Community Growth: " + (item.status === "Completed" ? "Strong" : "Growing"),
-      ];
+      // Create a unique key for this item
+      const itemKey = `${item.title}-${item.status}-${item.progress}`;
+      
+      // Check if we've already calculated metrics for this combination
+      if (!cachedMetrics.has(itemKey)) {
+        const metrics = calculateMetrics(item);
+        cachedMetrics.set(itemKey, [
+          "User Engagement: " + metrics.userEngagement,
+          "Development Milestones: " + metrics.devMilestones,
+          "Community Growth: " + metrics.communityGrowth,
+        ]);
+      }
+      
+      // Use cached metrics
+      item.metrics = cachedMetrics.get(itemKey);
     });
   });
 });
