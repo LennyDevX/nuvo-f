@@ -3,18 +3,28 @@ import { ethers } from 'ethers';
 import { motion } from 'framer-motion';
 import { FaRedo } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
-import useUserNFTs from '../../../../hooks/useUserNFTs';
+import { useTokenization } from '../../../../context/TokenizationContext';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
 
 const NFTDashboard = () => {
-  // Add React useContext import to fix the error
   const { account } = useContext(WalletContext);
+  const { 
+    nfts, 
+    nftsLoading: loading, 
+    nftsError: error, 
+    refreshNFTs, 
+    updateUserAccount 
+  } = useTokenization();
   
-  // Use the hook to get NFT data
-  const { nfts, loading, error, refreshNFTs } = useUserNFTs(account);
+  // Update TokenizationContext with current user account
+  useEffect(() => {
+    if (account) {
+      updateUserAccount(account);
+    }
+  }, [account, updateUserAccount]);
 
   // State for filters
   const [filters, setFilters] = useState({

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { m } from 'framer-motion';
 import { FaUsers, FaChartLine, FaLayerGroup, FaRocket, FaExchangeAlt, FaCalendarAlt, FaLightbulb, FaCheckCircle, FaTrophy, FaGlobe } from 'react-icons/fa';
 
@@ -54,7 +54,7 @@ const KeyMetrics = () => {
     }
   ], []);
 
-  const getStatusClass = useCallback((status) => {
+  const getStatusClass = useMemo(() => (status) => {
     switch (status) {
       case 'Active': return 'bg-green-900/30 text-green-400 border border-green-500/30';
       case 'Coming Soon': return 'bg-blue-900/30 text-blue-400 border border-blue-500/30';
@@ -145,7 +145,7 @@ const KeyMetrics = () => {
     </div>
   ), []);
 
-  const TokenEconomicsCard = useCallback(() => (
+  const TokenEconomicsCard = useMemo(() => (
     <div className="bg-purple-900/20 rounded-lg p-5 border border-purple-500/20 transition-all hover:border-purple-500/40 hover:bg-purple-900/30">
       <div className="flex items-center mb-3">
         <div className="p-2 bg-purple-500/20 rounded-lg mr-3">
@@ -181,7 +181,7 @@ const KeyMetrics = () => {
     </div>
   ), []);
 
-  const DevelopmentTimelineCard = useCallback(() => (
+  const DevelopmentTimelineCard = useMemo(() => (
     <div className="col-span-1 md:col-span-2 lg:col-span-2 bg-purple-900/20 rounded-lg p-5 border border-purple-500/20 transition-all hover:border-purple-500/40 hover:bg-purple-900/30">
       <div className="flex items-center mb-3">
         <div className="p-2 bg-purple-500/20 rounded-lg mr-3">
@@ -232,7 +232,7 @@ const KeyMetrics = () => {
     </div>
   ), []);
 
-  const AdoptionMetricsCard = useCallback(() => (
+  const AdoptionMetricsCard = useMemo(() => (
     <div className="bg-purple-900/20 rounded-lg p-5 border border-purple-500/20 transition-all hover:border-purple-500/40 hover:bg-purple-900/30">
       <div className="flex items-center mb-3">
         <div className="p-2 bg-purple-500/20 rounded-lg mr-3">
@@ -305,7 +305,7 @@ const KeyMetrics = () => {
     </div>
   ), [ecosystemServices, getStatusClass]);
 
-  const ReleaseScheduleCard = useCallback(() => (
+  const ReleaseScheduleCard = useMemo(() => (
     <div className="bg-purple-900/20 rounded-lg p-5 border border-purple-500/20 transition-all hover:border-purple-500/40 hover:bg-purple-900/30">
       <div className="flex items-center mb-3">
         <div className="p-2 bg-purple-500/20 rounded-lg mr-3">
@@ -362,7 +362,7 @@ const KeyMetrics = () => {
       <div className={`${gridClass} mt-6`}>
         {UtilityGrowthCard}
         {EcosystemServicesCard}
-        <AdoptionMetricsCard />
+        {AdoptionMetricsCard}
         {DevelopmentTimelineCard}
         {TokenEconomicsCard}
         {ReleaseScheduleCard}

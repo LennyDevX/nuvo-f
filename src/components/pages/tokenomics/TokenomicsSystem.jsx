@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { 
+  ResponsiveContainer, PieChart, Pie, Cell, Sector, Tooltip, Legend 
+} from 'recharts';
 import { motion, useReducedMotion } from 'framer-motion';
+import { chartColors } from '../../../utils/chart/chartSetup';
 
 const TokenomicsSystem = () => {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -34,11 +37,11 @@ const TokenomicsSystem = () => {
 
   // Memoize token data to prevent recreation on each render
   const tokenData = useMemo(() => [
-    { name: 'Community Rewards', value: 30, color: '#8B5CF6' },
-    { name: 'Ecosystem Growth', value: 30, color: '#6D28D9' },
-    { name: 'Team & Development', value: 20, color: '#4C1D95' },
-    { name: 'Marketing', value: 10, color: '#7C3AED' },
-    { name: 'Liquidity', value: 10, color: '#5B21B6' },
+    { name: 'Community Rewards', value: 30, color: chartColors.purple.primary },
+    { name: 'Ecosystem Growth', value: 30, color: chartColors.purple.secondary },
+    { name: 'Team & Development', value: 20, color: chartColors.purple.tertiary },
+    { name: 'Marketing', value: 10, color: chartColors.purple.quaternary },
+    { name: 'Liquidity', value: 10, color: chartColors.purple.dark },
   ], []);
 
   // Optimize event handler with useCallback
@@ -59,16 +62,96 @@ const TokenomicsSystem = () => {
     transition: { duration: shouldReduceMotion ? 0.3 : 0.6 }
   }), [shouldReduceMotion]);
 
-  // Memoize mobile-optimized chart
+  // Active shape renderer for interactive pie slices
+  const renderActiveShape = useCallback((props) => {
+    const { 
+      cx, cy, innerRadius, outerRadius, startAngle, endAngle,
+      fill, payload, percent, value
+    } = props;
+  
+    return (
+      <g>
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          opacity={0.95}
+        />
+        <Sector
+          cx={cx}
+          cy={cy}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          innerRadius={outerRadius + 6}
+          outerRadius={outerRadius + 10}
+          fill={fill}
+        />
+        {!isMobile && (
+          <>
+            <text 
+              x={cx} 
+              y={cy - 10} 
+              textAnchor="middle" 
+              fill="#FFFFFF"
+              style={{
+                fontSize: '16px',
+                fontWeight: 'bold'
+              }}
+            >
+              {payload.name}
+            </text>
+            <text 
+              x={cx} 
+              y={cy + 20} 
+              textAnchor="middle" 
+              fill="#FFFFFF"
+              style={{
+                fontSize: '14px'
+              }}
+            >
+              {`${value}% of supply`}
+            </text>
+          </>
+        )}
+      </g>
+    );
+  }, [isMobile]);
+
+  // Custom tooltip
+  const CustomTooltip = useCallback(({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-gray-800 p-2 rounded-lg shadow-lg border border-purple-500/30">
+          <p className="text-white font-medium">{`${data.name}: ${data.value}%`}</p>
+        </div>
+      );
+    }
+    return null;
+  }, []);
+
+  // Memoize pie chart
   const pieChart = useMemo(() => {
-    const chartSize = isMobile ? 250 : 320;
     const innerRadius = isMobile ? 60 : 80;
     const outerRadius = isMobile ? 120 : 160;
     
     return (
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
+          <defs>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
           <Pie
+            activeIndex={activeIndex}
+            activeShape={renderActiveShape}
             data={tokenData}
             cx="50%"
             cy="50%"
@@ -77,37 +160,26 @@ const TokenomicsSystem = () => {
             paddingAngle={5}
             dataKey="value"
             onMouseEnter={onPieEnter}
+            isAnimationActive={!shouldReduceMotion}
+            animationBegin={300}
+            animationDuration={1500}
           >
             {tokenData.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={entry.color}
                 style={{
-                  filter: activeIndex === index ? 'brightness(1.2)' : 'none',
+                  filter: activeIndex === index ? 'url(#glow)' : 'none',
                   cursor: 'pointer',
-                  // Optimize rendering with hardware acceleration
-                  transform: 'translateZ(0)',
-                  willChange: activeIndex === index ? 'filter' : 'auto'
                 }}
               />
             ))}
           </Pie>
-          <Tooltip
-            content={({ payload }) => {
-              if (payload && payload[0]) {
-                return (
-                  <div className="bg-gray-800 p-2 rounded-lg">
-                    <p className="text-white">{`${payload[0].name}: ${payload[0].value}%`}</p>
-                  </div>
-                );
-              }
-              return null;
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
         </PieChart>
       </ResponsiveContainer>
     );
-  }, [tokenData, activeIndex, onPieEnter, isMobile]);
+  }, [tokenData, activeIndex, onPieEnter, isMobile, shouldReduceMotion, renderActiveShape, CustomTooltip]);
 
   // Memoize key points section
   const keyPoints = useMemo(() => (

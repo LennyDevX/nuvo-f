@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaPlus } from 'react-icons/fa';
 import { ethers } from 'ethers';
-import LoadingOverlay from '../../../LoadOverlay/LoadingSpinner';
+import LoadingSpinner from '../../../LoadOverlay/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
+import IPFSImage from '../../../ui/IPFSImage';
 
 const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   // Handle retry action by forwarding to parent component if provided
@@ -20,9 +21,7 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   if (loading) {
     return (
       <div className="h-60 flex items-center justify-center">
-        <LoadingOverlay isLoading={true} message="Loading your NFTs...">
-          <div className="w-full h-full"></div>
-        </LoadingOverlay>
+        <LoadingSpinner size="default" message="Loading your NFTs..." />
       </div>
     );
   }
@@ -48,7 +47,10 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {nfts.map((nft) => (
-        <NFTCard key={nft.tokenId} nft={nft} />
+        <NFTCard 
+          key={nft.id || `${nft.contractAddress}-${nft.tokenId}`} 
+          nft={nft} 
+        />
       ))}
     </div>
   );
@@ -57,13 +59,12 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
 // NFT Card component
 const NFTCard = ({ nft }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
   
-  // Format price nicely
-  const formattedPrice = nft.price && ethers.formatEther ? 
-    parseFloat(ethers.formatEther(nft.price)).toFixed(4) : 
-    "0.0000";
+  // Format price nicely - memoize to avoid unnecessary calculations
+  const formattedPrice = useMemo(() => {
+    if (!nft.price || !ethers.formatEther) return "0.0000";
+    return parseFloat(ethers.formatEther(nft.price)).toFixed(4);
+  }, [nft.price]);
 
   return (
     <motion.div
@@ -73,24 +74,14 @@ const NFTCard = ({ nft }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* NFT Image */}
+      {/* NFT Image - Using IPFSImage component */}
       <div className="aspect-square relative overflow-hidden">
-        {imageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-            <FaSpinner className="text-purple-400 animate-spin" />
-          </div>
-        )}
-        <img 
-          src={nft.image || "/LogoNuvos.webp"} 
-          alt={nft.name} 
-          className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${imageError ? 'hidden' : ''}`}
+        <IPFSImage 
+          src={nft.image}
+          alt={nft.name || "NFT"} 
+          className="w-full h-full object-cover"
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-          onLoad={() => setImageLoading(false)}
-          onError={(e) => {
-            setImageLoading(false);
-            setImageError(true);
-            e.target.src = "/LogoNuvos.webp";
-          }}
+          placeholderSrc="/LogoNuvos.webp"
         />
         
         {/* Sale Status Badge */}

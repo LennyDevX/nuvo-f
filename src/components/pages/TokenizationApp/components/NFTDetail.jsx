@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
@@ -7,8 +7,18 @@ import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingOverlay from '../../../ui/LoadingOverlay';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import IPFSImage from '../../../ui/IPFSImage';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+// Agregar un simple sistema de caché para evitar llamadas repetidas
+const nftCache = new Map();
+// Caché para metadatos
+const metadataCache = new Map();
+
+// Asegurar que tengamos la dirección del contrato, ya sea de las variables de entorno o como fallback hardcoded
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
+
+// Log para depuración
+console.log("TokenizationApp Contract Address:", CONTRACT_ADDRESS);
 
 const NFTDetail = () => {
   const { tokenId } = useParams();
@@ -19,40 +29,135 @@ const NFTDetail = () => {
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  const callCountRef = useRef(0);
+  const fetchingRef = useRef(false);
 
   useEffect(() => {
     const fetchNFTDetails = async () => {
       if (!tokenId) return;
       
+      // Evitar múltiples peticiones simultáneas
+      if (fetchingRef.current) {
+        console.log("Fetch ya en progreso, evitando llamada duplicada");
+        return;
+      }
+      
+      // Verificar caché
+      const cacheKey = `nft-${tokenId}`;
+      if (nftCache.has(cacheKey)) {
+        console.log("Usando datos cacheados para NFT", tokenId);
+        const cachedData = nftCache.get(cacheKey);
+        setNft(cachedData.nft);
+        setLikesCount(cachedData.likesCount);
+        setHasLiked(cachedData.hasLiked);
+        setLoading(false);
+        return;
+      }
+      
+      fetchingRef.current = true;
       setLoading(true);
       setError(null);
       
       try {
-        // Conectar al provider
+        // Validación mejorada con logging
+        console.log("Validando dirección:", CONTRACT_ADDRESS);
+        console.log("Es dirección válida:", ethers.isAddress(CONTRACT_ADDRESS));
+
+        // Formato hexadecimal correcto para dirección Ethereum
+        const formattedAddress = CONTRACT_ADDRESS.trim().toLowerCase();
+        
+        if (!formattedAddress || !ethers.isAddress(formattedAddress)) {
+          console.error("Validación fallida para dirección:", formattedAddress);
+          setError("Dirección de contrato inválida o no configurada.");
+          setLoading(false);
+          fetchingRef.current = false;
+          return;
+        }
+        
+        // Validar tokenId
+        if (isNaN(tokenId) || Number(tokenId) < 0) {
+          setError("ID de token inválido.");
+          setLoading(false);
+          fetchingRef.current = false;
+          return;
+        }
+        
+        console.log("Intentando conectar con dirección:", formattedAddress);
+        
+        // Conectar al provider con retardo para evitar límite de tasa
+        await new Promise(resolve => setTimeout(resolve, 100));
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
-          CONTRACT_ADDRESS,
+          formattedAddress,
           TokenizationAppABI.abi,
           provider
         );
-        
+
         // Obtener URI del token
-        const tokenURI = await contract.tokenURI(tokenId);
+        let tokenURI;
+        try {
+          tokenURI = await contract.tokenURI(tokenId);
+          if (!tokenURI) throw new Error("El contrato no devolvió un tokenURI válido.");
+          console.log("Token URI obtenido:", tokenURI);
+        } catch (err) {
+          console.error("Error al obtener tokenURI:", err);
+          setError("No se encontró el NFT o el contrato no devolvió datos válidos.");
+          setLoading(false);
+          fetchingRef.current = false;
+          return;
+        }
         
         // Obtener metadata desde IPFS
         const metadata = await fetchMetadata(tokenURI);
-        
-        // Obtener detalles del token en el marketplace
-        const tokenDetails = await contract.getListedToken(tokenId);
+        console.log("Metadata:", metadata);
+          // Obtener detalles del token en el marketplace
+        let tokenDetails;
+        try {
+          tokenDetails = await contract.getListedToken(tokenId);
+          console.log("Token details:", tokenDetails);
+        } catch (err) {
+          console.error("Error al obtener detalles del token:", err);
+          setError("No se pudieron obtener los detalles del token en el marketplace.");
+          setLoading(false);
+          fetchingRef.current = false;
+          return;
+        }
         
         // Obtener conteo de likes y si el usuario actual ha dado like
-        const likesCount = await contract.getLikesCount(tokenId);
-        const hasLiked = walletConnected ? await contract.hasUserLiked(tokenId, account) : false;
+        let likesCount = 0;
+        let hasLiked = false;
+        try {
+          // Verificar primero si el contrato tiene estas funciones implementadas
+          if (typeof contract.getLikesCount === 'function') {
+            likesCount = await contract.getLikesCount(tokenId);
+            
+            if (walletConnected && typeof contract.hasUserLiked === 'function') {
+              hasLiked = await contract.hasUserLiked(tokenId, account);
+            }
+          } else {
+            console.log("El contrato no implementa la función getLikesCount");
+          }
+        } catch (err) {
+          console.warn("Error al obtener likes:", err);
+          // Si falla, continuar sin likes y agregar los logs necesarios
+          console.log("Continuando sin información de likes");
+        }
         
         // Obtener dirección del creador/propietario original
-        const owner = await contract.ownerOf(tokenId);
+        let owner = "";
+        try {
+          owner = await contract.ownerOf(tokenId);
+          if (!owner || owner === ethers.ZeroAddress) {
+            owner = "0x0000000000000000000000000000000000000000";
+          }
+        } catch (err) {
+          console.warn("Error al obtener propietario:", err);
+          owner = "0x0000000000000000000000000000000000000000";
+        }
         
-        setNft({
+        console.log("Datos del NFT recuperados con éxito");
+        
+        const nftData = {
           tokenId,
           name: metadata?.name || `NFT #${tokenId}`,
           description: metadata?.description || '',
@@ -64,8 +169,16 @@ const NFTDetail = () => {
           isForSale: tokenDetails[4],
           listedTimestamp: tokenDetails[5].toString(),
           category: tokenDetails[6]
+        };
+        
+        // Guardar en caché
+        nftCache.set(`nft-${tokenId}`, {
+          nft: nftData,
+          likesCount: likesCount.toString(),
+          hasLiked
         });
         
+        setNft(nftData);
         setLikesCount(likesCount.toString());
         setHasLiked(hasLiked);
       } catch (err) {
@@ -73,28 +186,86 @@ const NFTDetail = () => {
         setError(err.message || "Error al cargar los detalles del NFT");
       } finally {
         setLoading(false);
+        fetchingRef.current = false;
       }
     };
     
     fetchNFTDetails();
+    
+    // Limpieza para evitar actualizaciones en componentes desmontados
+    return () => {
+      fetchingRef.current = true; // Evita más llamadas durante desmontaje
+    };
   }, [tokenId, account, walletConnected]);
   
   // Función auxiliar para obtener metadatos desde IPFS
   const fetchMetadata = async (uri) => {
     try {
-      if (!uri || !uri.includes('ipfs')) {
-        return null;
+      if (!uri) {
+        return {
+          name: `NFT #${tokenId}`,
+          description: 'No hay descripción disponible',
+          image: '/NFT-X1.webp',
+          attributes: []
+        };      }
+      
+      // Verificar caché global de metadatos
+      if (metadataCache.has(uri)) {
+        console.log("Usando metadatos en caché para:", uri);
+        return metadataCache.get(uri);
       }
       
-      // Normalizar y convertir la URI de IPFS a HTTP
-      const url = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+      // Manejar diferentes formatos de URI
+      let url = uri;
       
-      const response = await fetch(url);
-      const metadata = await response.json();
-      return metadata;
+      // Normalizar URIs IPFS
+      if (uri.includes('ipfs')) {
+        if (uri.startsWith('ipfs://')) {
+          url = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
+        }
+      }
+      
+      // Control de tiempo para evitar errores de limitación de tasa
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Configurar timeout para la petición
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Error fetching metadata: ${response.statusText}`);
+        }
+        
+        const metadata = await response.json();
+        
+        // Guardar en caché
+        metadataCache.set(uri, metadata);
+        
+        return metadata;
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        console.error("Error en fetch de metadata:", fetchErr);
+        return {
+          name: `NFT #${tokenId}`,
+          description: 'Error al cargar metadatos',
+          image: '/NFT-X1.webp',
+          attributes: []
+        };
+      }
     } catch (err) {
       console.error("Error fetching metadata:", err);
-      return null;
+      return {
+        name: `NFT #${tokenId}`,
+        description: 'Error al cargar metadatos',
+        image: '/NFT-X1.webp',
+        attributes: []
+      };
     }
   };
   
@@ -111,6 +282,12 @@ const NFTDetail = () => {
         signer
       );
       
+      // Verificar si el contrato tiene la función implementada
+      if (typeof contract.toggleLike !== 'function') {
+        console.warn("La función toggleLike no está implementada en el contrato");
+        return;
+      }
+      
       const tx = await contract.toggleLike(tokenId, !hasLiked);
       await tx.wait();
       
@@ -119,6 +296,7 @@ const NFTDetail = () => {
       setLikesCount(prev => !hasLiked ? String(Number(prev) + 1) : String(Math.max(0, Number(prev) - 1)));
     } catch (err) {
       console.error("Error al dar/quitar like:", err);
+      // No mostrar error en la UI, simplemente registrar en consola
     }
   };
   
@@ -219,14 +397,11 @@ const NFTDetail = () => {
               {/* Lado izquierdo - Imagen */}
               <div>
                 <div className="bg-black/40 rounded-xl overflow-hidden aspect-square shadow-lg border border-purple-500/10">
-                  <img 
+                  <IPFSImage 
                     src={nft.image} 
                     alt={nft.name} 
                     className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/NFT-X1.webp'; // Imagen fallback
-                    }}
+                    placeholderSrc="/NFT-X1.webp"
                   />
                 </div>
                 

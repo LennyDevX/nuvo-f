@@ -1,39 +1,142 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaCoins, FaLock, FaExternalLinkAlt, FaArrowUp, FaSpinner } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
 import { ethers } from 'ethers';
 
+// Extract StakingMetricCard as a separate memoized component
+const StakingMetricCard = React.memo(({ title, value, isLoading }) => (
+  <div className="p-4 bg-black/40 rounded-xl">
+    <div className="text-sm text-purple-300 mb-1">{title}</div>
+    <div className="text-3xl font-bold text-white">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-8">
+          <FaSpinner className="animate-spin text-purple-400" />
+        </div>
+      ) : value}
+    </div>
+  </div>
+));
+
+// Add flag to control debug logging
+const DEBUG_MODE = false; // Set to true only when debugging
+
 const StakingSection = ({ account }) => {
   const { state, refreshUserInfo, STAKING_CONSTANTS } = useStaking();
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const firstRenderRef = useRef(true);
+  const refreshTimerRef = useRef(null);
+  const loadingTimeoutRef = useRef(null);
+  const lastLoggedStateRef = useRef(null); // Track last logged state to prevent duplicate logs
   
-  // Get deposit amount - this is the key change to match StakingStatusCard's approach
-  const depositAmount = useMemo(() => {
-    // Calculate total from all deposits
-    if (!state?.userDeposits || state.userDeposits.length === 0) return '0';
+  // Define totalAPY constant
+  const totalAPY = 125;
+  
+  // Optimized debug logging to avoid spam
+  useEffect(() => {
+    if (!DEBUG_MODE) return; // Skip logging if not in debug mode
 
-    // Sum all deposit amounts
-    const total = state.userDeposits.reduce((sum, deposit) => {
-      const amount = parseFloat(deposit.amount) || 0;
-      return sum + amount;
-    }, 0);
+    // Only log when there's a meaningful change
+    const currentStateHash = JSON.stringify({
+      depositsLength: state?.userDeposits?.length,
+      depositAmount: state?.userInfo?.totalStaked,
+      pendingRewards: state?.userInfo?.pendingRewards,
+      isLoading
+    });
     
-    return total.toString();
+    if (lastLoggedStateRef.current !== currentStateHash) {
+      console.log("Staking State Changed:", {
+        userDeposits: state?.userDeposits,
+        stakingStats: state?.stakingStats,
+        userInfo: state?.userInfo,
+        isLoading
+      });
+      lastLoggedStateRef.current = currentStateHash;
+    }
+  }, [state, isLoading]);
+  
+  // Timeout to force exit loading state
+  useEffect(() => {
+    if (isLoading) {
+      loadingTimeoutRef.current = setTimeout(() => {
+        if (DEBUG_MODE) console.log("Force exiting loading state after timeout");
+        setIsLoading(false);
+      }, 5000);
+    }
+    
+    return () => {
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+    };
+  }, [isLoading]);
+  
+  // Cache formatted values to avoid recalculations
+  const formattedValues = useMemo(() => {
+    // Used to store pre-formatted values
+    const cache = {};
+    return cache;
+  }, []);
+  
+  // Memoize deposit amount calculation with improved parsing
+  const depositAmount = useMemo(() => {
+    if (!state?.userDeposits || state.userDeposits.length === 0) return '0';
+    
+    try {
+      // More robust parsing
+      const total = state.userDeposits.reduce((sum, deposit) => {
+        if (!deposit || !deposit.amount) return sum;
+        
+        // Handle different formats (string, bigint, etc)
+        let amount = 0;
+        if (typeof deposit.amount === 'string') {
+          amount = parseFloat(deposit.amount) || 0;
+        } else if (typeof deposit.amount === 'bigint') {
+          amount = Number(ethers.formatEther(deposit.amount.toString()));
+        } else if (typeof deposit.amount === 'number') {
+          amount = deposit.amount;
+        }
+        
+        return sum + amount;
+      }, 0);
+      
+      return total.toString();
+    } catch (error) {
+      console.error("Error calculating deposit amount:", error);
+      return '0';
+    }
   }, [state?.userDeposits]);
   
-  // Get other values from state
-  const pendingRewards = state?.stakingStats?.pendingRewards || state?.userInfo?.pendingRewards || '0';
-  const userDeposits = state?.userDeposits || [];
-
-  // Calculate days staked from the first deposit
-  const calculateDaysStaked = () => {
+  // Memoize other values from state with improved parsing
+  const pendingRewards = useMemo(() => {
+    try {
+      // Try different sources for the value
+      let rewards = state?.stakingStats?.pendingRewards || state?.userInfo?.pendingRewards || '0';
+      
+      // Check if it's a BigInt or needs ethers formatting
+      if (typeof rewards === 'bigint') {
+        return ethers.formatEther(rewards.toString());
+      }
+      
+      return rewards.toString();
+    } catch (error) {
+      console.error("Error parsing pending rewards:", error);
+      return '0';
+    }
+  }, [state?.stakingStats?.pendingRewards, state?.userInfo?.pendingRewards]);
+  
+  // Memoize userDeposits from state
+  const userDeposits = useMemo(() => 
+    state?.userDeposits || [],
+  [state?.userDeposits]);
+  
+  // Create stable calculation functions - FIXED USERDEPOSITS REFERENCE
+  const calculateDaysStaked = useCallback(() => {
+    // Changed to correctly reference the memoized userDeposits
     if (!userDeposits || userDeposits.length === 0) return 0;
     
-    // Sort deposits by timestamp to find the first one
     const sortedDeposits = [...userDeposits].sort((a, b) => a.timestamp - b.timestamp);
     const firstDepositTimestamp = sortedDeposits[0]?.timestamp;
     
@@ -42,87 +145,133 @@ const StakingSection = ({ account }) => {
     const now = Math.floor(Date.now() / 1000);
     const timeStaked = now - firstDepositTimestamp;
     return Math.floor(timeStaked / (24 * 3600));
-  };
+  }, [userDeposits]);  // Using the memoized value properly
   
-  const daysStaked = calculateDaysStaked();
+  const daysStaked = useMemo(() => calculateDaysStaked(), [calculateDaysStaked]);
   
-  // Calculate time bonus based on days staked
-  const calculateTimeBonus = () => {
+  const timeBonus = useMemo(() => {
     if (daysStaked >= 365) return 5;
     if (daysStaked >= 180) return 3;
     if (daysStaked >= 90) return 1;
     return 0;
-  };
-
-  const timeBonus = calculateTimeBonus();
-  const totalAPY = 125; // Fixed at 125% as shown in the dashboard
-
-  // Add debug logging to check data
+  }, [daysStaked]);
+  
+  // Format balance with improved handling and reduced logging
+  const formatBalance = useCallback((value) => {
+    if (!value) return '0.000';
+    
+    // Create a cache key based on value and type
+    const cacheKey = `${value}-${typeof value}`;
+    
+    // Check if we've already formatted this exact value
+    if (formattedValues[cacheKey]) {
+      return formattedValues[cacheKey];
+    }
+    
+    try {
+      // Log only in debug mode
+      if (DEBUG_MODE) {
+        console.log("Formatting balance value:", value, typeof value);
+      }
+      
+      // Handle different formats
+      let parsedValue;
+      if (typeof value === 'string') {
+        parsedValue = parseFloat(value);
+      } else if (typeof value === 'number') {
+        parsedValue = value;
+      } else if (typeof value === 'bigint') {
+        parsedValue = Number(ethers.formatEther(value.toString()));
+      } else {
+        parsedValue = 0;
+      }
+      
+      // Cap at reasonable values to prevent display issues
+      const cappedValue = Math.min(parsedValue || 0, 999999.999);
+      const result = cappedValue.toFixed(3);
+      
+      // Cache the formatted value
+      formattedValues[cacheKey] = result;
+      
+      return result;
+    } catch (error) {
+      if (DEBUG_MODE) {
+        console.error("Error formatting balance:", error, value);
+      }
+      return '0.000';
+    }
+  }, [formattedValues]);
+  
+  // Add cleanup for effects and optimize polling
   useEffect(() => {
-    console.log("StakingSection state data:", {
-      userInfo: state?.userInfo,
-      userDeposits: state?.userDeposits,
-      depositAmount,
-      pendingRewards
-    });
-  }, [state?.userInfo, state?.userDeposits, depositAmount, pendingRewards]);
-
-  // Fetch user staking data when component mounts
-  useEffect(() => {
+    let isMounted = true;
+    
     const fetchStakingData = async () => {
       if (!account) {
-        setIsLoading(false);
+        if (isMounted) setIsLoading(false);
         return;
       }
 
       try {
-        setIsLoading(true);
-        setFetchError(null);
+        if (isMounted) {
+          setIsLoading(true);
+          setFetchError(null);
+        }
         
-        // Directly fetch fresh data from the contract
-        const result = await refreshUserInfo(account);
-        console.log("StakingSection refreshUserInfo result:", result);
+        // Use AbortController for fetch cleanup
+        const controller = new AbortController();
+        const signal = controller.signal;
         
-        // Add a small delay to ensure state updates
-        setTimeout(() => {
-          setIsLoading(false);
-        }, 500);
+        // Race between the actual API call and the timeout
+        const fetchPromise = refreshUserInfo(account, { signal });
+        const timeoutPromise = new Promise(resolve => {
+          const timeoutId = setTimeout(() => {
+            resolve({ timeout: true });
+            clearTimeout(timeoutId);
+          }, 1500);
+        });
+        
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        
+        if (isMounted) {
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 300);
+        }
+        
       } catch (error) {
-        console.error("Error fetching staking data:", error);
-        setFetchError("Failed to load staking data. Please try again.");
-        setIsLoading(false);
+        if (isMounted) {
+          console.error("Error fetching staking data:", error);
+          setFetchError("Failed to load staking data. Please try again.");
+          setIsLoading(false);
+        }
       }
     };
 
-    // Force immediate fetch on mount
     if (firstRenderRef.current) {
       firstRenderRef.current = false;
       fetchStakingData();
     }
     
-    // Refresh data every 30 seconds
-    const intervalId = setInterval(() => {
-      if (account) {
-        refreshUserInfo(account).catch(console.error);
-      }
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, [account, refreshUserInfo]);
-
-  // Format balance to 3 decimal places
-  const formatBalance = (value) => {
-    if (!value) return '0.000';
+    // Use dynamic polling interval based on activity
+    // More active stakes = more frequent updates
+    const pollInterval = userDeposits.length > 0 ? 15000 : 30000;
     
-    try {
-      // Convert to number and format
-      const formattedValue = parseFloat(value).toFixed(3);
-      return formattedValue;
-    } catch (error) {
-      console.error("Error formatting balance:", error);
-      return '0.000';
-    }
-  };
+    refreshTimerRef.current = setInterval(() => {
+      if (account) {
+        refreshUserInfo(account).catch(err => {
+          if (isMounted) console.error(err);
+        });
+      }
+    }, pollInterval);
+
+    return () => {
+      isMounted = false;
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+      }
+    };
+  }, [account, refreshUserInfo, userDeposits.length]);
 
   return (
     <m.div
@@ -141,34 +290,21 @@ const StakingSection = ({ account }) => {
       <div className="mb-6">
         <div className="p-4 bg-gradient-to-br from-purple-900/30 to-black/60 rounded-xl border border-purple-500/20">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-black/40 rounded-xl">
-              <div className="text-sm text-purple-300 mb-1">Total Staked</div>
-              <div className="text-3xl font-bold text-white">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-8">
-                    <FaSpinner className="animate-spin text-purple-400" />
-                  </div>
-                ) : (
-                  `${formatBalance(depositAmount)} POL`
-                )}
-              </div>
-            </div>
-            <div className="p-4 bg-black/40 rounded-xl">
-              <div className="text-sm text-purple-300 mb-1">Earned Rewards</div>
-              <div className="text-3xl font-bold text-green-400">
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-8">
-                    <FaSpinner className="animate-spin text-purple-400" />
-                  </div>
-                ) : (
-                  `${formatBalance(pendingRewards)} POL`
-                )}
-              </div>
-            </div>
-            <div className="p-4 bg-black/40 rounded-xl">
-              <div className="text-sm text-purple-300 mb-1">Current APY</div>
-              <div className="text-3xl font-bold text-white">{totalAPY}%</div>
-            </div>
+            <StakingMetricCard
+              title="Total Staked"
+              value={`${formatBalance(depositAmount)} POL`}
+              isLoading={isLoading && !depositAmount} // Show loading only if no value
+            />
+            <StakingMetricCard
+              title="Earned Rewards"
+              value={`${formatBalance(pendingRewards)} POL`}
+              isLoading={isLoading && !pendingRewards} // Show loading only if no value
+            />
+            <StakingMetricCard
+              title="Current APY"
+              value={`${totalAPY}%`} 
+              isLoading={false}
+            />
           </div>
         </div>
       </div>
@@ -279,4 +415,4 @@ const StakingSection = ({ account }) => {
   );
 };
 
-export default StakingSection;
+export default React.memo(StakingSection);

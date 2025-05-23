@@ -1,53 +1,22 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion as m } from 'framer-motion';
-import { Pie } from 'react-chartjs-2';
-import { chartOptions, revenueStreamsData } from '../../../utils/chartConfig';
-import '../../../utils/chartSetup';
+import { 
+  PieChart, Pie, Cell, ResponsiveContainer, 
+  Legend 
+} from 'recharts';
+import { 
+  revenueStreamsData, 
+  revenueStreamsDetails,
+  pieChartStyle,
+} from '../../../utils/chart/chartConfig';
+import { chartColors, gradientDefs, safePieAnimationConfig } from '../../../utils/chart/chartSetup';
 
 const RevenueStreams = () => {
-  const chartRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Nuevos datos de revenue streams con todos los elementos (incluidos los 2 nuevos)
-  const updatedRevenueStreamsData = useMemo(() => ({
-    labels: [
-      'Diversified Revenue', 
-      'Yield Generation', 
-      'Risk Management', 
-      'Strategic Partnerships',
-      'Long Term Investment',
-      'Strategic BTC Reserve'
-    ],
-    datasets: [
-      {
-        data: [20, 22, 15, 18, 12, 13], // Nueva distribución con %
-        backgroundColor: [
-          'rgba(66, 184, 255, 0.8)',    // Azul celeste
-          'rgba(0, 201, 167, 0.8)',     // Verde turquesa  
-          'rgba(255, 177, 27, 0.8)',    // Ámbar
-          'rgba(111, 76, 255, 0.8)',    // Púrpura vibrante
-          'rgba(232, 65, 121, 0.8)',    // Rosa frambuesa
-          'rgba(255, 84, 174, 0.8)'     // Rosa intenso
-        ],
-        borderColor: [
-          'rgba(66, 184, 255, 1)',
-          'rgba(0, 201, 167, 1)',
-          'rgba(255, 177, 27, 1)',
-          'rgba(111, 76, 255, 1)',
-          'rgba(232, 65, 121, 1)',
-          'rgba(255, 84, 174, 1)'
-        ],
-        hoverBackgroundColor: [
-          'rgba(66, 184, 255, 0.9)',
-          'rgba(0, 201, 167, 0.9)',
-          'rgba(255, 177, 27, 0.9)',
-          'rgba(111, 76, 255, 0.9)',
-          'rgba(232, 65, 121, 0.9)',
-          'rgba(255, 84, 174, 0.9)'
-        ]
-      }
-    ]
-  }), []);
+  // Create a unique ID for this chart's gradient definitions
+  const chartId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
 
   // Check for mobile device
   useEffect(() => {
@@ -68,113 +37,31 @@ const RevenueStreams = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       if (timeoutId) clearTimeout(timeoutId);
-      if (chartRef.current && chartRef.current.chartInstance) {
-        chartRef.current.chartInstance.destroy();
-      }
     };
   }, []);
 
-  // Memoize chart options to prevent recreation
-  const options = useMemo(() => {
-    return {
-      ...chartOptions,
-      plugins: {
-        ...chartOptions.plugins,
-        id: 'revenueStreams',
-        legend: {
-          position: 'bottom',
-          labels: {
-            font: {
-              size: isMobile ? 10 : 12,
-              family: "'Inter', sans-serif"
-            },
-            color: 'rgb(209, 213, 219)',
-            padding: isMobile ? 10 : 15,
-            usePointStyle: true,
-            pointStyle: 'circle',
-            boxWidth: isMobile ? 6 : 10
-          }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          padding: 12,
-          titleFont: {
-            size: isMobile ? 12 : 14,
-            weight: 'bold'
-          },
-          bodyFont: {
-            size: isMobile ? 11 : 13
-          },
-          borderColor: 'rgba(139, 92, 246, 0.3)',
-          borderWidth: 1,
-          callbacks: {
-            label: (context) => {
-              const label = context.label || '';
-              const value = context.formattedValue;
-              return `${label}: ${value}%`;
-            },
-            afterLabel: (context) => {
-              const descriptions = {
-                'Diversified Revenue': 'Multiple income streams',
-                'Yield Generation': 'Sustainable protocol earnings',
-                'Risk Management': 'Security-first approach',
-                'Strategic Partnerships': 'High-value collaborations',
-                'Long Term Investment': 'Value-accruing assets',
-                'Strategic BTC Reserve': 'Bitcoin treasury holdings'
-              };
-              return `  ${descriptions[context.label] || ''}`;
-            }
-          }
-        }
-      },
-      animation: {
-        animateRotate: !isMobile,
-        animateScale: !isMobile,
-        duration: isMobile ? 500 : 1000
-      },
-      hover: {
-        mode: 'nearest',
-        intersect: true
-      },
-      elements: {
-        arc: {
-          borderWidth: 2,
-          borderColor: '#000',
-          hoverBorderColor: '#fff',
-          hoverBorderWidth: 2,
-          hoverOffset: isMobile ? 3 : 5
-        }
-      }
-    };
-  }, [isMobile]);
+  // Get selected category info
+  const selectedCategory = activeIndex !== null ? revenueStreamsData[activeIndex] : null;
+  
+  // Strategy items array
+  const strategyItems = [
+    { color: 'text-blue-400', text: 'Diversified revenue sources' },
+    { color: 'text-green-400', text: 'Sustainable yield generation' },
+    { color: 'text-amber-400', text: 'Risk-managed operations' },
+    { color: 'text-purple-400', text: 'Strategic partnerships' },
+    { color: 'text-pink-500', text: 'Long term investment' },
+    { color: 'text-pink-400', text: 'Strategic BTC Reserve' },
+  ];
 
   // Memoize strategy list for consistent rendering
   const strategyList = useMemo(() => (
     <ul className="grid grid-cols-2 gap-3 text-sm md:text-base text-gray-300">
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-blue-400">•</span>
-        <span>Diversified revenue sources</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-green-400">•</span>
-        <span>Sustainable yield generation</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-amber-400">•</span>
-        <span>Risk-managed operations</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-purple-400">•</span>
-        <span>Strategic partnerships</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-pink-500">•</span>
-        <span>Long term investment</span>
-      </li>
-      <li className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
-        <span className="text-pink-400">•</span>
-        <span>Strategic BTC Reserve</span>
-      </li>
+      {strategyItems.map((item, idx) => (
+        <li key={item.text} className="flex items-center space-x-2 hover:text-purple-300 transition-colors">
+          <span className={item.color}>•</span>
+          <span>{item.text}</span>
+        </li>
+      ))}
     </ul>
   ), []);
 
@@ -185,17 +72,96 @@ const RevenueStreams = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
-      <h2 className="text-xl font-bold text-white mb-4">
-        Revenue Streams
-      </h2>
-      {/* Aumentado el tamaño máximo del gráfico para mayor visibilidad */}
-      <div className="aspect-square max-w-[360px] md:max-w-[400px] mx-auto hover:scale-105 transition-transform duration-300">
-        <Pie 
-          ref={chartRef}
-          data={updatedRevenueStreamsData} 
-          options={options}
-        />
+      <div className="flex flex-col md:flex-row items-center justify-between">
+        <h2 className="text-xl font-bold text-white mb-4">Revenue Streams</h2>
+        
+        {/* Selected category info panel */}
+        {selectedCategory && (
+          <div className="bg-[#1a1333]/50 border-l-2 border-purple-600 pl-3 py-1 mb-4 md:mb-0 w-full md:max-w-[220px] transition-all">
+            <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
+            <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
+            <div className="text-xs text-gray-300 opacity-80 line-clamp-2">
+              {revenueStreamsDetails[selectedCategory.name] || ""}
+            </div>
+          </div>
+        )}
       </div>
+      
+      <div className="aspect-square h-[300px] md:h-[330px] mx-auto">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            {/* Custom gradient definitions */}
+            <defs>
+              {Object.values(gradientDefs(chartId)).map((gradient, gradIdx) => (
+                <linearGradient 
+                  key={gradient.id || `gradient-${gradIdx}`} 
+                  id={gradient.id || `gradient-${gradIdx}`} 
+                  x1={gradient.x1} y1={gradient.y1} 
+                  x2={gradient.x2} y2={gradient.y2}
+                >
+                  {gradient.stops.map((stop, i) => (
+                    <stop 
+                      key={`${gradient.id || gradIdx}-stop-${i}`} 
+                      offset={stop.offset} 
+                      stopColor={stop.color} 
+                      stopOpacity={stop.opacity || 1} 
+                    />
+                  ))}
+                </linearGradient>
+              ))}
+            </defs>
+            <Pie
+              data={revenueStreamsData}
+              cx="50%"
+              cy="50%"
+              {...pieChartStyle}
+              {...safePieAnimationConfig}
+              dataKey="value"
+              onClick={(_, idx) => setActiveIndex(idx === activeIndex ? null : idx)}
+            >
+              {revenueStreamsData.map((entry, index) => (
+                <Cell 
+                  key={`cell-${index}`} 
+                  fill={entry.color}
+                  stroke="rgba(0,0,0,0.2)"
+                  strokeWidth={0.5}
+                  style={{ 
+                    opacity: activeIndex === null || activeIndex === index ? 1 : 0.4,
+                    filter: activeIndex === index ? 'brightness(1.2)' : 'none',
+                    transition: 'all 0.3s',
+                    transform: activeIndex === index ? 'scale(1.05)' : 'scale(1)',
+                    transformOrigin: '50% 50%'
+                  }}
+                />
+              ))}
+            </Pie>
+            {/* Simple legend */}
+            <Legend 
+              layout="horizontal" 
+              verticalAlign="bottom" 
+              align="center"
+              formatter={(value, entry, idx) => (
+                <span
+                  style={{
+                    color: activeIndex === idx ? '#ffffff' : 'rgb(209, 213, 219)',
+                    fontSize: isMobile ? 11 : 13,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    padding: '2px 4px',
+                    borderRadius: '2px',
+                    background: activeIndex === idx ? 'rgba(124, 58, 237, 0.2)' : 'transparent'
+                  }}
+                  onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                >
+                  {value}
+                </span>
+              )}
+              iconSize={isMobile ? 8 : 10}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      
       <div className="mt-4 md:mt-6">
         <h3 className="text-xl font-semibold text-purple-400 mb-2">
           Strategy

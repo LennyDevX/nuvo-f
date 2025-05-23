@@ -1,8 +1,10 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { WalletContext } from '../../../../context/WalletContext';
-import { useAirdropRegistration } from '../../../../hooks/useAirdropRegistration';
 import { ethers } from 'ethers';
 import AirdropABI from '../../../../Abi/Airdrop.json';
+import { useAnimationConfig } from '../../../animation/AnimationProvider';
+import memoWithName from '../../../../utils/performance/memoWithName';
+import { useThrottle, useDebounce } from '../../../../hooks/performance/useEventOptimizers';
 
 const RegistrationForm = ({
     formData,
@@ -20,35 +22,52 @@ const RegistrationForm = ({
     const [registrationStatus, setRegistrationStatus] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
     const [registrationComplete, setRegistrationComplete] = useState(false);
+    const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+    
+    // Crear una función de comprobación de registro con throttle
+    // para evitar llamadas excesivas a la blockchain
+    const checkRegistrationThrottled = useThrottle(async (userAccount) => {
+        if (!userAccount || !walletConnected) return;
+
+        try {
+            const activeProvider = await ensureProvider();
+            const contractForReads = new ethers.Contract(
+                import.meta.env.VITE_AIRDROP_ADDRESS,
+                AirdropABI.abi,
+                activeProvider
+            );
+
+            const eligibilityCheck = await contractForReads.checkUserEligibility(userAccount);
+            const [, hasClaimed] = eligibilityCheck;
+
+            if (hasClaimed) {
+                setRegistrationStatus('You have already registered for this airdrop');
+                setRegistrationComplete(true);
+            }
+        } catch (error) {
+            console.error('Error checking registration:', error);
+        }
+    }, 2000); // Throttle a 2 segundos para evitar sobrecarga
+
+    // Implementar caché local para resultados de consultas
+    const eligibilityCache = useMemo(() => new Map(), []);
 
     useEffect(() => {
-        const checkExistingRegistration = async () => {
-            if (!account || !walletConnected) return;
-
-            try {
-                const activeProvider = await ensureProvider();
-                const contractForReads = new ethers.Contract(
-                    import.meta.env.VITE_AIRDROP_ADDRESS,
-                    AirdropABI.abi,
-                    activeProvider
-                );
-
-                const eligibilityCheck = await contractForReads.checkUserEligibility(account);
-                const [, hasClaimed] = eligibilityCheck;
-
-                if (hasClaimed) {
+        // Verificar si ya tenemos el resultado en caché
+        if (account && walletConnected) {
+            if (eligibilityCache.has(account)) {
+                const cachedResult = eligibilityCache.get(account);
+                if (cachedResult.hasClaimed) {
                     setRegistrationStatus('You have already registered for this airdrop');
                     setRegistrationComplete(true);
                 }
-            } catch (error) {
-                console.error('Error checking registration:', error);
+            } else {
+                checkRegistrationThrottled(account);
             }
-        };
+        }
+    }, [account, walletConnected, checkRegistrationThrottled]);
 
-        checkExistingRegistration();
-    }, [account, walletConnected]);
-
-    const handleRegistration = async (e) => {
+    const handleRegistration = useCallback(async (e) => {
         e.preventDefault();
         if (isRegistering || registrationComplete) return;
 
@@ -75,6 +94,21 @@ const RegistrationForm = ({
 
             setRegistrationStatus('Checking eligibility...');
             
+            // Verificar primero si tenemos la información en caché
+            if (eligibilityCache.has(account)) {
+                const cachedResult = eligibilityCache.get(account);
+                if (cachedResult.hasClaimed) {
+                    setRegistrationStatus('✋ You have already registered for this airdrop');
+                    setRegistrationComplete(true);
+                    return;
+                }
+                
+                if (!cachedResult.hasMinBalance) {
+                    setRegistrationStatus(`❌ Insufficient balance. Need 1 MATIC. Current: ${ethers.formatEther(cachedResult.userBalance)} MATIC`);
+                    return;
+                }
+            }
+            
             const contractForReads = new ethers.Contract(
                 import.meta.env.VITE_AIRDROP_ADDRESS,
                 AirdropABI.abi,
@@ -83,6 +117,9 @@ const RegistrationForm = ({
 
             const eligibilityCheck = await contractForReads.checkUserEligibility(account);
             const [isEligible, hasClaimed, hasMinBalance, userBalance] = eligibilityCheck;
+            
+            // Guardar resultado en caché para futuras consultas
+            eligibilityCache.set(account, { isEligible, hasClaimed, hasMinBalance, userBalance });
             
             if (hasClaimed) {
                 setRegistrationStatus('✋ You have already registered for this airdrop');
@@ -115,6 +152,12 @@ const RegistrationForm = ({
                 setRegistrationStatus('✅ Successfully registered! You can now claim your airdrop.');
                 setRegistrationComplete(true);
                 
+                // Actualizar caché con el nuevo estado
+                if (eligibilityCache.has(account)) {
+                    const cachedData = eligibilityCache.get(account);
+                    eligibilityCache.set(account, { ...cachedData, hasClaimed: true });
+                }
+                
                 const registrationData = {
                     ...formData,
                     wallet: account,
@@ -130,27 +173,28 @@ const RegistrationForm = ({
             console.error('Registration error:', error);
             
             let errorMessage;
-            if (error.message.includes('Maximum participants')) {
+            if (error.message?.includes('Maximum participants')) {
                 errorMessage = '❌ Maximum participants reached for this airdrop.';
-            } else if (error.message.includes('Airdrop ended')) {
+            } else if (error.message?.includes('Airdrop ended')) {
                 errorMessage = '❌ This airdrop has ended.';
-            } else if (error.message.includes('user rejected')) {
+            } else if (error.message?.includes('user rejected')) {
                 errorMessage = '❌ Transaction was rejected. Please try again.';
-            } else if (error.message.includes('UNSUPPORTED_OPERATION')) {
+            } else if (error.message?.includes('UNSUPPORTED_OPERATION')) {
                 errorMessage = '❌ Please ensure your wallet is properly connected.';
-            } else if (error.message.includes('insufficient funds')) {
+            } else if (error.message?.includes('insufficient funds')) {
                 errorMessage = '❌ Insufficient funds for transaction fee.';
             } else {
-                errorMessage = '❌ Failed to register for airdrop: ' + error.message;
+                errorMessage = '❌ Failed to register for airdrop: ' + (error.message || 'Unknown error');
             }
             
             setRegistrationStatus(errorMessage);
         } finally {
             setIsRegistering(false);
         }
-    };
+    }, [account, ensureProvider, formData, handleSubmit, isAlreadyRegistered, registrationComplete, walletConnected, isRegistering]);
 
-    const validateInput = (e) => {
+    // Usar debounce para validación para reducir procesamiento
+    const validateInput = useDebounce((e) => {
         const { name, value } = e.target;
         
         switch (name) {
@@ -171,7 +215,7 @@ const RegistrationForm = ({
                 }
                 break;
         }
-    };
+    }, 300);
 
     if (registrationComplete) {
         return (
@@ -198,25 +242,6 @@ const RegistrationForm = ({
     return (
         <form onSubmit={handleRegistration} className="space-y-6">
             <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-200">
-                    Name
-                </label>
-                <input
-                    type="text"
-                    name="name"
-                    id="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    onKeyDown={validateInput}
-                    maxLength={50}
-                    pattern="[a-zA-Z0-9\s]+"
-                    required
-                    className="mt-1 block w-full rounded-md border-gray-700 bg-gray-900 text-gray-100 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-                />
-            </div>
-
-            <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-200"></label>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-200">
                     Name
                 </label>
@@ -328,4 +353,5 @@ const RegistrationForm = ({
         </form>
     );
 };
-export default RegistrationForm;
+
+export default memoWithName(RegistrationForm);

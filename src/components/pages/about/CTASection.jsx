@@ -1,7 +1,30 @@
 import React from 'react';
 import { m } from 'framer-motion';
+import { useAnimationConfig } from '../../animation/AnimationProvider';
+import memoWithName from '../../../utils/performance/memoWithName';
 
 const CTASection = () => {
+  const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+  
+  // Determine if animations should be disabled
+  const disableAnimations = shouldReduceMotion || isLowPerformance;
+  
+  // Animation variants with reduced motion alternatives
+  const backgroundAnimation = disableAnimations 
+    ? { opacity: 0.3 } // Static state if animations should be disabled
+    : { 
+        opacity: [0.3, 0.5, 0.3],
+        transition: { duration: 5, repeat: Infinity }
+      };
+      
+  const accentAnimation = disableAnimations
+    ? { scale: 1, opacity: 0.2 } // Static state
+    : { 
+        scale: [1, 1.2, 1], 
+        opacity: [0.2, 0.3, 0.2],
+        transition: { duration: 8, repeat: Infinity }
+      };
+
   return (
     <section className="relative py-24 px-4">
       {/* Enhanced background effects */}
@@ -10,24 +33,19 @@ const CTASection = () => {
       {/* Animated accent shapes */}
       <m.div
         className="absolute left-0 bottom-0 w-full h-48 bg-gradient-to-t from-purple-600/10 to-transparent"
-        animate={{ opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 5, repeat: Infinity }}
+        animate={backgroundAnimation}
       ></m.div>
       <m.div
         className="absolute right-1/4 top-1/4 w-64 h-64 rounded-full bg-purple-600/5 blur-3xl"
-        animate={{ 
-          scale: [1, 1.2, 1], 
-          opacity: [0.2, 0.3, 0.2] 
-        }}
-        transition={{ duration: 8, repeat: Infinity }}
+        animate={accentAnimation}
       ></m.div>
 
       <div className="max-w-4xl mx-auto relative z-10 text-center">
         <m.h2 
           className="text-5xl font-bold mb-8"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          initial={disableAnimations ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          whileInView={disableAnimations ? {} : { opacity: 1, y: 0 }}
+          transition={{ duration: disableAnimations ? 0 : 0.8 }}
           viewport={{ once: true }}
         >
           <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
@@ -73,4 +91,5 @@ const CTASection = () => {
   );
 };
 
-export default CTASection;
+// Memoize the component to prevent unnecessary re-renders
+export default memoWithName(CTASection);

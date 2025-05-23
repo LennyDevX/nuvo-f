@@ -1,55 +1,59 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { m } from 'framer-motion';
 import { FaWallet, FaStore, FaKey, FaUserShield } from 'react-icons/fa';
 
+// Move animation variants outside component
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.3
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.6 }
+  }
+};
+
+// Move steps data outside component
+const getSteps = () => [
+  {
+    icon: <FaWallet />,
+    title: "Connect Your Wallet",
+    description: "Link your compatible crypto wallet to our platform securely and easily.",
+    color: "from-violet-600 to-indigo-600"
+  },
+  {
+    icon: <FaStore />,
+    title: "Browse Asset Options",
+    description: "Explore ways to tokenize your physical assets with different utility levels and benefits.",
+    color: "from-indigo-600 to-fuchsia-600"
+  },
+  {
+    icon: <FaKey />,
+    title: "Tokenize & Mint",
+    description: "Transform your physical asset into a digital token with verifiable ownership and utility.",
+    color: "from-fuchsia-600 to-violet-600"
+  },
+  {
+    icon: <FaUserShield />,
+    title: "Bridge Both Worlds",
+    description: "Access the best of both physical and digital realms, unlocking new value and opportunities.",
+    color: "from-violet-600 to-indigo-800"
+  }
+];
+
 const NFTExplainerSection = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-        delayChildren: 0.3
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.6 }
-    }
-  };
-
-  // Steps with enhanced colors for space theme
-  const steps = [
-    {
-      icon: <FaWallet />,
-      title: "Connect Your Wallet",
-      description: "Link your compatible crypto wallet to our platform securely and easily.",
-      color: "from-violet-600 to-indigo-600"
-    },
-    {
-      icon: <FaStore />,
-      title: "Browse Asset Options",
-      description: "Explore ways to tokenize your physical assets with different utility levels and benefits.",
-      color: "from-indigo-600 to-fuchsia-600"
-    },
-    {
-      icon: <FaKey />,
-      title: "Tokenize & Mint",
-      description: "Transform your physical asset into a digital token with verifiable ownership and utility.",
-      color: "from-fuchsia-600 to-violet-600"
-    },
-    {
-      icon: <FaUserShield />,
-      title: "Bridge Both Worlds",
-      description: "Access the best of both physical and digital realms, unlocking new value and opportunities.",
-      color: "from-violet-600 to-indigo-800"
-    }
-  ];
+  // Memoize steps data
+  const steps = useMemo(() => getSteps(), []);
 
   return (
     <div className="py-10 mb-16 relative overflow-visible">
@@ -92,6 +96,8 @@ const NFTExplainerSection = () => {
                 transition: { duration: 0.2 },
                 boxShadow: "0 20px 40px -15px rgba(139, 92, 246, 0.3)" 
               }}
+              // Use will-change for better animation performance
+              style={{ willChange: "transform, box-shadow" }}
             >
               <m.div 
                 className={`nuvos-card p-4 sm:p-6 h-full rounded-xl backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300 border border-violet-700/20`}
@@ -130,4 +136,4 @@ const NFTExplainerSection = () => {
   );
 };
 
-export default NFTExplainerSection;
+export default React.memo(NFTExplainerSection);

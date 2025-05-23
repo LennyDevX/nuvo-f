@@ -5,20 +5,42 @@
     border-radius: 1.5rem;
     box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.15);
     overflow: hidden;
-    padding: 1.5rem;
+    padding: 1.75rem;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     border: 1px solid rgba(139, 92, 246, 0.1);
     will-change: transform, box-shadow;
     transform: translateZ(0);
+    backdrop-filter: blur(10px);
   }
   .nuvos-card:hover {
     border-color: rgba(139, 92, 246, 0.2);
     box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
   }
+  
+  /* Specific style for staking cards to ensure uniform height */
+  .nuvos-card.staking-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Add glass effect for inputs */
+  .nuvos-input {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(100, 116, 139, 0.2);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+  }
+  
+  .nuvos-input:focus {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+  }
+  
   @media (max-width: 767px) {
     .nuvos-card {
-      padding: 1rem;
+      padding: 1.25rem;
       box-shadow: 0 2px 6px -2px rgba(0, 0, 0, 0.1);
     }
     .nuvos-card:hover {

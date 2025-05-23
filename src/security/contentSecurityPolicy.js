@@ -5,16 +5,22 @@ export const cspConfig = {
       "'self'",
       'data:',
       'https://api.dodoex.io',
+      'https://*.nftstorage.link',
+
       'https://polygon-mainnet.g.alchemy.com',
       'wss://polygon-mainnet.g.alchemy.com',
       "https://api.pinata.cloud",
       "https://gateway.pinata.cloud",
       "https://ipfs.io",
       "https://cloudflare-ipfs.com",
+      "https://dweb.link",
       "https://*.ipfs.dweb.link",
       "https://*.ipfs.cf-ipfs.com",
       "https://*.ipfs.nftstorage.link", 
+      "https://nftstorage.link", // Add explicit domain without wildcard
       "https://*.ipfs.w3s.link",
+      "https://w3s.link",
+      "https://ipfs.cf-ipfs.com",
       'https://*.dodoex.io',
       'https://nuvos.app',
       'https://*.nuvos.app',
@@ -38,7 +44,9 @@ export const cspConfig = {
     'img-src': [
       "'self'",
       'data:',
+      'blob:',
       'https://images.dodoex.io',
+      'https://*.nftstorage.link',
       'https://*.dodoex.io',
       'https://static.okx.com',
       'https://polygonscan.com',
@@ -46,13 +54,21 @@ export const cspConfig = {
       'https://gateway.pinata.cloud',
       'https://ipfs.io',
       'https://cloudflare-ipfs.com',
+      'https://dweb.link',
       'https://*.ipfs.dweb.link',
       'https://*.ipfs.cf-ipfs.com',
+      'https://ipfs.cf-ipfs.com',
       'https://*.ipfs.nftstorage.link',
+      'https://nftstorage.link', // Add explicit domain without wildcard
       'https://*.ipfs.w3s.link',
+      'https://w3s.link',
+      'https://gateway.ipfs.io',
       'https://nuvos.app',
       'https://*.nuvos.app',
-      'https://*.vercel.app'
+      'https://*.vercel.app',
+      // Add popular NFT image hosts
+      'https://*.arweave.net',
+      'https://*.infura-ipfs.io'
     ],
     'script-src': [
       "'self'",

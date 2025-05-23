@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, FaImage, FaShoppingCart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
-import useUserNFTs from '../../../../hooks/useUserNFTs';
+import { useTokenization } from '../../../../context/TokenizationContext';
 
-// Lista de imágenes de respaldo en orden de preferencia
+// Move constants outside component to prevent recreation
 const FALLBACK_IMAGES = [
   '/LogoNuvos.webp',
   '/NFT-X1.webp',
@@ -13,38 +13,33 @@ const FALLBACK_IMAGES = [
   '/placeholder-nft.webp'
 ];
 
-// Componente para manejar imágenes de NFT con múltiples respaldos
-const NFTImage = ({ src, alt, className }) => {
+// Extract NFTImage as a memoized component
+const NFTImage = React.memo(({ src, alt, className }) => {
   const [currentSrc, setCurrentSrc] = useState(src);
   const [fallbackIndex, setFallbackIndex] = useState(0);
   const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
-    // Reiniciar el estado cuando cambia la fuente original
+    // Reset state when src changes
     setCurrentSrc(src);
     setFallbackIndex(0);
     setHasError(false);
   }, [src]);
 
-  const handleError = () => {
-    // Si la imagen original falla, intentamos con la primera alternativa
+  // Memoize the error handler to prevent recreation
+  const handleError = useCallback(() => {
     if (currentSrc === src && fallbackIndex < FALLBACK_IMAGES.length) {
-      console.log(`Image failed to load: ${src}. Trying fallback: ${FALLBACK_IMAGES[fallbackIndex]}`);
       setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
       setFallbackIndex(prevIndex => prevIndex + 1);
     } 
-    // Si ya estamos usando una alternativa y falla, probamos con la siguiente
     else if (fallbackIndex < FALLBACK_IMAGES.length) {
-      console.log(`Fallback image failed: ${currentSrc}. Trying next fallback: ${FALLBACK_IMAGES[fallbackIndex]}`);
       setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
       setFallbackIndex(prevIndex => prevIndex + 1);
     } 
-    // Si todas las alternativas fallan, mostramos un icono
     else {
-      console.log(`All fallback images failed for: ${alt}`);
       setHasError(true);
     }
-  };
+  }, [currentSrc, src, fallbackIndex]);
 
   if (hasError) {
     return (
@@ -60,34 +55,77 @@ const NFTImage = ({ src, alt, className }) => {
       alt={alt} 
       className={className}
       onError={handleError}
+      // Add width/height to prevent layout shifts
+      width="100%"
+      height="100%"
+      loading="lazy"
     />
   );
-};
+});
 
-const AccountOverview = ({ account, balance, network, nfts = [] }) => {
+// NFT preview list component
+const NFTPreviewList = React.memo(({ nfts = [], count = 0 }) => (
+  <div className="flex flex-wrap gap-2 mt-3 mb-2">
+    {nfts.slice(0, 3).map((nft, idx) => (
+      <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
+        <NFTImage 
+          src={nft.image} 
+          alt={nft.name || `NFT #${nft.tokenId}`} 
+          className="w-full h-full object-cover"
+        />
+      </div>
+    ))}
+    {count > 3 && (
+      <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center">
+        <span className="text-xs text-purple-300">+{count - 3}</span>
+      </div>
+    )}
+  </div>
+));
+
+const AccountOverview = ({ account, balance, network }) => {
   const [copied, setCopied] = useState(false);
   const { state } = useStaking();
-  const { userDeposits = [] } = state;
+  const { 
+    nfts: userNfts, 
+    nftsLoading, 
+    updateUserAccount 
+  } = useTokenization();
   
-  // Usar el hook directamente para obtener los NFTs reales del usuario
-  const { nfts: userNfts, loading: nftsLoading } = useUserNFTs(account);
+  // Cleanup for context update
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (account && isMounted) {
+      updateUserAccount(account);
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [account, updateUserAccount]);
   
-  // Create a censored version of the wallet address
-  const censoredAddress = account ? 
-    `${account.substring(0, 6)}...${account.substring(account.length - 6)}` : 
-    'Not Connected';
+  // Memoize derived values
+  const censoredAddress = useMemo(() => 
+    account ? `${account.substring(0, 6)}...${account.substring(account.length - 6)}` : 'Not Connected',
+  [account]);
   
-  // Filter out NFTs with errors
-  const actualNfts = userNfts?.filter(nft => !nft.error) || [];
+  const actualNfts = useMemo(() => 
+    userNfts?.filter(nft => !nft.error) || [],
+  [userNfts]);
   
-  // Get the count of real NFTs
-  const nftCount = actualNfts.length;
+  const nftCount = useMemo(() => actualNfts.length, [actualNfts]);
+  const userDeposits = useMemo(() => state?.userDeposits || [], [state?.userDeposits]);
   
-  const copyAddressToClipboard = () => {
-    navigator.clipboard.writeText(account);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  // Stable copy function
+  const copyAddressToClipboard = useCallback(() => {
+    if (navigator.clipboard && account) {
+      navigator.clipboard.writeText(account);
+      setCopied(true);
+      const timerId = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timerId);
+    }
+  }, [account]);
 
   return (
     <m.div
@@ -214,22 +252,9 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
               <p className="text-sm text-gray-300">
                 Tienes <span className="text-purple-400 font-medium">{nftCount}</span> NFTs en tu wallet
               </p>
-              <div className="flex flex-wrap gap-2 mt-3 mb-2">
-                {actualNfts.slice(0, 3).map((nft, idx) => (
-                  <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
-                    <NFTImage 
-                      src={nft.image} 
-                      alt={nft.name || `NFT #${nft.tokenId}`} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
-                {nftCount > 3 && (
-                  <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center">
-                    <span className="text-xs text-purple-300">+{nftCount - 3}</span>
-                  </div>
-                )}
-              </div>
+              
+              <NFTPreviewList nfts={actualNfts} count={nftCount} />
+              
               <Link 
                 to="/nfts"
                 className="inline-block text-sm text-purple-400 hover:text-purple-300 underline mt-2"
@@ -270,4 +295,4 @@ const AccountOverview = ({ account, balance, network, nfts = [] }) => {
   );
 };
 
-export default AccountOverview;
+export default React.memo(AccountOverview);
