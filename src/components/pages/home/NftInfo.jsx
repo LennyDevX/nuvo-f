@@ -1,7 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaGem, FaUnlock, FaChevronRight } from 'react-icons/fa';
-import { fadeIn } from '../../../utils/animationVariants';
+import { fadeIn } from '../../../utils/animations/animationVariants';
 import { useAnimationContext } from '../../animation/AnimationProvider';
 import { Link, useNavigate } from 'react-router-dom';
 

@@ -4,7 +4,7 @@ import { m, useReducedMotion } from 'framer-motion';
 import { FaShieldAlt, FaChartLine, FaCloud } from 'react-icons/fa';
 import StakingCalculator from '../../layout/StakingCalculator';
 import { useAnimationContext } from '../../animation/AnimationProvider';
-import { fadeIn, buttonVariants } from '../../../utils/animationVariants';
+import { fadeIn, buttonVariants } from '../../../utils/animations/animationVariants';
 
 const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();

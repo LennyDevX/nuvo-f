@@ -4,7 +4,7 @@ import { FaCoins, FaPuzzlePiece, FaRocket, FaList } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import AirdropBox from './AirdropBox';
 import WhitelistModal from '../../modals/WhitelistModal';
-import { buttonVariants } from '../../../utils/animationVariants';
+import { buttonVariants } from '../../../utils/animations/animationVariants';
 
 // Simpler animation variants for the box
 const boxAnimationVariants = {

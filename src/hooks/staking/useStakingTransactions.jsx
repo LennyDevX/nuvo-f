@@ -1,115 +1,100 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useStakingContract } from './useStakingContract';
+
+// Timeout constants
+const TX_SUCCESS_TIMEOUT = 2000;
+const TX_FAIL_TIMEOUT = 3000;
 
 export function useStakingTransactions() {
   const { getSignedContract, getSignerAddress, getContractStatus } = useStakingContract();
   const [isPending, setIsPending] = useState(false);
   const [currentTx, setCurrentTx] = useState(null);
+  const [error, setError] = useState(null);
+  const pendingRef = useRef(false);
 
-  // Add a function to reset transaction state
-  const resetTxState = useCallback(() => {
-    setIsPending(false);
-    setCurrentTx(prev => prev ? {...prev, status: 'failed', error: 'Transaction manually reset by user'} : null);
+  // Prevent concurrent transactions
+  const safeSetIsPending = useCallback((val) => {
+    pendingRef.current = val;
+    setIsPending(val);
   }, []);
-  
-  // Add transaction tracking with timeouts
+
+  // Reset transaction state
+  const resetTxState = useCallback(() => {
+    safeSetIsPending(false);
+    setCurrentTx(prev => prev ? { ...prev, status: 'failed', error: 'Transaction manually reset by user' } : null);
+    setError(null);
+  }, [safeSetIsPending]);
+
+  // Transaction tracking with timeouts
   const trackTransaction = useCallback(async (tx, type) => {
+    if (pendingRef.current) return; // Prevent concurrent
     try {
-      if (!tx) {
-        throw new Error("No transaction to track");
-      }
-      
-      // Update to pending status
-      setIsPending(true);
+      if (!tx) throw new Error("No transaction to track");
+      safeSetIsPending(true);
       setCurrentTx({
         type,
         status: 'pending',
         hash: tx.hash || null,
         error: null
       });
-      
-      // Wait for confirmation
       const receipt = await tx.wait();
-      
-      // Update to confirmed status
       setCurrentTx(prev => ({
         ...prev,
         status: 'confirmed',
         hash: receipt.transactionHash
       }));
-      
-      // Allow UI to show success for a moment before clearing
       setTimeout(() => {
-        setIsPending(false);
-      }, 2000);
-      
+        safeSetIsPending(false);
+      }, TX_SUCCESS_TIMEOUT);
       return receipt;
     } catch (error) {
-      console.error(`Transaction failed (${type}):`, error);
-      
-      // Handle user rejections differently
-      const userRejected = error.message?.includes('user rejected');
-      
+      setError(error);
       setCurrentTx(prev => ({
         ...prev,
         status: 'failed',
-        error: userRejected ? 'Transaction rejected by user' : error.message
+        error: error.message?.includes('user rejected') ? 'Transaction rejected by user' : error.message
       }));
-      
-      // Clear pending state after a delay
       setTimeout(() => {
-        setIsPending(false);
-      }, 3000);
-      
+        safeSetIsPending(false);
+      }, TX_FAIL_TIMEOUT);
       throw error;
     }
-  }, []);
+  }, [safeSetIsPending]);
 
+  // Generalized transaction executor with concurrency guard
   const executeTransaction = useCallback(async (transactionFn, options = {}) => {
+    if (pendingRef.current) {
+      return { success: false, error: 'Another transaction is pending' };
+    }
     const txType = options.type || 'transaction';
     const updateData = options.updateData || (() => {});
-    
-    setIsPending(true);
+    safeSetIsPending(true);
+    setError(null);
     setCurrentTx({
       type: txType,
       status: 'preparing',
       hash: null,
       error: null
     });
-    
     try {
-      // Get contract with signer
       const contract = await getSignedContract();
-      
-      // Prepare transaction
-      setCurrentTx(prev => ({ 
-        ...prev, 
+      setCurrentTx(prev => ({
+        ...prev,
         status: 'awaiting_confirmation'
       }));
-      
-      // Execute the transaction function
       const tx = await transactionFn(contract);
-      
-      // Transaction sent
-      setCurrentTx(prev => ({ 
-        ...prev, 
+      setCurrentTx(prev => ({
+        ...prev,
         status: 'pending',
         hash: tx.hash
       }));
-      
       console.log(`${txType} transaction sent:`, tx.hash);
-      
-      // Wait for confirmation
       const receipt = await tx.wait();
-      
-      // Transaction confirmed
-      setIsPending(false);
-      setCurrentTx(prev => ({ 
-        ...prev, 
+      safeSetIsPending(false);
+      setCurrentTx(prev => ({
+        ...prev,
         status: receipt.status === 1 ? 'confirmed' : 'failed'
       }));
-      
-      // After transaction completes, refresh contract status
       const address = await getSignerAddress();
       if (address) {
         await Promise.all([
@@ -117,7 +102,6 @@ export function useStakingTransactions() {
           updateData(address)
         ]);
       }
-      
       return {
         success: receipt.status === 1,
         hash: tx.hash,
@@ -125,13 +109,9 @@ export function useStakingTransactions() {
       };
     } catch (error) {
       console.error(`Error in ${txType}:`, error);
-      
-      // Parse error for more user-friendly message
       let errorMessage = error.message || 'Transaction failed';
-      
-      // Check for common wallet error patterns and simplify the message
-      if (errorMessage.includes('user rejected') || 
-          errorMessage.includes('user denied') || 
+      if (errorMessage.includes('user rejected') ||
+          errorMessage.includes('user denied') ||
           errorMessage.includes('rejected by user') ||
           errorMessage.includes('cancelled by user') ||
           errorMessage.includes('User denied')) {
@@ -145,25 +125,25 @@ export function useStakingTransactions() {
       } else if (errorMessage.includes('intrinsic gas')) {
         errorMessage = 'Gas estimation failed';
       } else if (errorMessage.length > 100) {
-        // Truncate overly long error messages
         errorMessage = errorMessage.substring(0, 100) + '...';
       }
-      
-      setIsPending(false);
-      setCurrentTx(prev => ({ 
-        ...prev, 
+      safeSetIsPending(false);
+      setCurrentTx(prev => ({
+        ...prev,
         status: 'failed',
         error: errorMessage
       }));
-      
+      setError(errorMessage);
       return {
         success: false,
-        error: error
+        error: errorMessage
       };
     }
-  }, [getSignedContract, getSignerAddress, getContractStatus]);
+  }, [getSignedContract, getSignerAddress, getContractStatus, safeSetIsPending]);
 
+  // Transaction functions with concurrency guard
   const deposit = useCallback(async (amount) => {
+    if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
         return await contract.deposit({
@@ -176,6 +156,7 @@ export function useStakingTransactions() {
   }, [executeTransaction]);
 
   const withdrawRewards = useCallback(async () => {
+    if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
         return await contract.withdraw();
@@ -185,6 +166,7 @@ export function useStakingTransactions() {
   }, [executeTransaction]);
 
   const withdrawAll = useCallback(async () => {
+    if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
         return await contract.withdrawAll();
@@ -194,6 +176,7 @@ export function useStakingTransactions() {
   }, [executeTransaction]);
 
   const emergencyWithdraw = useCallback(async () => {
+    if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
         return await contract.emergencyUserWithdraw();
@@ -212,6 +195,7 @@ export function useStakingTransactions() {
     currentTx,
     txHash: currentTx?.hash,
     resetTxState,
-    trackTransaction
+    trackTransaction,
+    error
   };
 }

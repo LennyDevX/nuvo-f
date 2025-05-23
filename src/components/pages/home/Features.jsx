@@ -10,7 +10,7 @@ import {
   FaMobileAlt,
   FaGamepad
 } from 'react-icons/fa';
-import { containerFadeIn } from '../../../utils/animationVariants'; // Removed unused fadeIn
+import { containerFadeIn } from '../../../utils/animations/animationVariants'; // Removed unused fadeIn
 
 const Features = () => {
   const prefersReducedMotion = useReducedMotion();

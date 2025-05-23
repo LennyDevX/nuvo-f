@@ -2,7 +2,7 @@ import React from 'react';
 import { m } from 'framer-motion';
 import NavLink from '../../navigation/NavLink';
 import DodoCarrousel from './DodoCarrousel';
-import { fadeIn } from '../../../utils/animationVariants';
+import { fadeIn } from '../../../utils/animations/animationVariants';
 import { useAnimationContext } from '../../animation/AnimationProvider';
 
 const SwapInfo = () => {

@@ -95,3 +95,37 @@ export const fadeIn = {
     transition: { delay: i * 0.1 }
   })
 };
+
+// Ejemplo: variantes para inputs
+export const inputVariants = {
+  focus: { 
+    scale: 1.01, 
+    boxShadow: '0 0 8px rgba(149, 76, 233, 0.3)',
+    transition: { duration: 0.15 }
+  },
+  idle: { scale: 1, boxShadow: 'none' }
+};
+
+// Ejemplo: variantes para modals
+export const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 40 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    y: 0,
+    transition: { duration: 0.3, type: "spring", stiffness: 200 }
+  },
+  exit: { opacity: 0, scale: 0.95, y: 40, transition: { duration: 0.2 } }
+};
+
+// Export agrupador para facilitar importación
+export const animationVariants = {
+  cardVariants,
+  buttonVariants,
+  shimmerAnimation,
+  containerFadeIn,
+  staggerContainer,
+  fadeIn,
+  inputVariants,
+  modalVariants
+};

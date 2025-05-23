@@ -32,7 +32,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
             <div className="p-4 sm:p-6 sm:p-8"> 
               <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-4">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                  Nuvos Update Beta v3.2
+                  Nuvos Update Beta v3.5
                 </h2>
                 <span className="text-xs px-2 py-0.5 sm:py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex-shrink-0">
                   Major Release
