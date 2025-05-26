@@ -43,7 +43,7 @@ export default function useMintNFT() {
     setError(null);
     setSuccess(false);
     setTxHash(null);
-    
+
     try {
       console.log("Starting NFT minting process");
       
@@ -61,7 +61,7 @@ export default function useMintNFT() {
       let imageUri;
       let metadataUri;
       let useLocalFallback = false;
-      
+
       // Try uploading to IPFS via Pinata
       try {
         // Subir imagen using our enhanced IPFS utility
@@ -83,29 +83,17 @@ export default function useMintNFT() {
         metadataUri = await uploadJsonToIPFS(metadata);
         console.log("Metadata uploaded, URI:", metadataUri);
       } catch (ipfsError) {
-        console.warn("IPFS upload failed, using local fallback:", ipfsError);
-        useLocalFallback = true;
-        
-        // Create data URL as fallback
-        imageUri = await createLocalDataUrl(file);
-        console.log("Created local image URL");
-        
-        // Create metadata with data URL
-        const metadata = {
-          name,
-          description,
-          image: imageUri,
-          attributes: [
-            { trait_type: 'Category', value: category }
-          ]
-        };
-        
-        // Encode metadata as base64
-        const metadataString = JSON.stringify(metadata);
-        metadataUri = `data:application/json;base64,${btoa(metadataString)}`;
-        console.log("Created local metadata");
+        // Si falla el upload, NO permitas mintear, muestra error
+        setError("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
+        throw new Error("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
       }
-      
+
+      // Si por alguna razón no hay metadataUri, no mintees
+      if (!metadataUri || !imageUri) {
+        setError("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
+        throw new Error("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
+      }
+
       // Conectar a wallet
       if (!window.ethereum) throw new Error('Wallet not found');
       console.log("Connecting to wallet");
@@ -117,18 +105,20 @@ export default function useMintNFT() {
       console.log("Creating contract instance with address:", validatedContractAddress);
       const contract = new ethers.Contract(validatedContractAddress, TokenizationAppABI.abi, signer);
       
-      // Convertir el royalty a un formato adecuado para el contrato
-      // Use simple numeric value for royalty
-      let royaltyValue = 0;
+      // Convertir el royalty a uint96 (BigInt)
+      let royaltyValue = 0n;
       try {
-        royaltyValue = 
-          typeof royalty === 'bigint' ? royalty :
-          typeof royalty === 'string' ? parseInt(royalty, 10) :
-          typeof royalty === 'number' ? royalty : 
-          0;
+        if (typeof royalty === 'bigint') {
+          royaltyValue = royalty;
+        } else if (typeof royalty === 'string') {
+          royaltyValue = BigInt(royalty);
+        } else if (typeof royalty === 'number') {
+          royaltyValue = BigInt(royalty);
+        } else {
+          royaltyValue = 0n;
+        }
       } catch (e) {
-        console.warn("Error parsing royalty, using 0:", e);
-        royaltyValue = 0;
+        royaltyValue = 0n;
       }
       
       console.log("Calling contract.createNFT with:", {
@@ -144,12 +134,14 @@ export default function useMintNFT() {
       
       console.log("Using fixed gas limit:", txOptions.gasLimit.toString());
       
-      // Llamar a createNFT con la categoría traducida
+      // Llamar a createNFT con la categoría traducida y royalty como uint96
       const tx = await contract.createNFT(
         metadataUri, 
         translatedCategory, 
         royaltyValue,
-        txOptions
+        {
+          gasLimit: BigInt(3000000)
+        }
       );
       
       setTxHash(tx.hash);
@@ -160,16 +152,15 @@ export default function useMintNFT() {
       
       setSuccess(true);
       
-      // Extract token ID with improved error handling
+      // Extraer tokenId del evento TokenMinted
       let tokenId = null;
       try {
-        // First look for TokenMinted event
         for (const log of receipt.logs) {
           try {
             const parsedLog = contract.interface.parseLog(log);
             if (parsedLog && parsedLog.name === "TokenMinted") {
-              tokenId = parsedLog.args[0].toString();
-              console.log("Found TokenMinted event with token ID:", tokenId);
+              // El tokenId es el primer argumento (uint256 indexed tokenId)
+              tokenId = parsedLog.args.tokenId?.toString() || parsedLog.args[0]?.toString();
               break;
             }
           } catch (e) {
