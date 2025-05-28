@@ -2,13 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaUpload, FaImage } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
+import OptimizedImage from '../../../image/OptimizedImage';
 
 const UploadImageStep = () => {
   const {
     setCurrentStep,
     setImage,
     setImageFile,
-    fileInputRef
+    fileInputRef,
+    image // <-- asegúrate de que image esté disponible en el contexto
   } = useTokenization();
   
   // File upload handling
@@ -40,6 +42,17 @@ const UploadImageStep = () => {
       <div className="bg-black/20 rounded-xl overflow-hidden p-10 border border-purple-500/30 border-dashed">
         <div className="flex flex-col items-center justify-center text-center">
           <FaImage className="text-purple-400 text-5xl mb-4" />
+          {/* Preview selected image */}
+          {image && (
+            <div className="mb-4">
+              <OptimizedImage
+                src={image}
+                alt="Preview"
+                className="max-h-40 rounded-lg border border-purple-500/20"
+                style={{ maxWidth: 200, maxHeight: 160 }}
+              />
+            </div>
+          )}
           <h3 className="text-white text-lg font-medium mb-2">Arrastra y suelta tu archivo aquí</h3>
           <p className="text-gray-400 text-sm mb-4">O haz clic para seleccionar un archivo</p>
           <p className="text-gray-500 text-xs mb-6">PNG, JPG, GIF o WEBP (Max. 10MB)</p>

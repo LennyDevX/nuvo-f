@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { m, useReducedMotion } from 'framer-motion';
 import { FaImage, FaLock, FaExchangeAlt, FaMoneyBillWave } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const TokenizationSection = () => {
   const navigate = useNavigate();
@@ -102,15 +103,21 @@ const TokenizationSection = () => {
                   WebkitBackfaceVisibility: "hidden"
                 }}
               >
-                <img 
-                  src="/GiftBoxNFT.webp" 
-                  alt="NFT Gift Box" 
-                  className="w-full h-full object-contain"
+                <OptimizedImage
+                  src="/GiftBoxNFT.webp"
+                  alt="NFT Gift Box"
+                  priority={false}
+                  quality={85}
+                  className="w-full h-full"
                   style={{
                     filter: useSimpleAnimation 
                       ? 'drop-shadow(0 0 8px rgba(139,92,246,0.5))' 
-                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))'
+                      : 'drop-shadow(0 0 15px rgba(138, 114, 81, 0.89))',
+                    objectFit: 'contain',
+                    background: 'transparent' // <-- fuerza fondo transparente
                   }}
+                  placeholderColor="transparent"
+                  loadingStrategy="lazy"
                 />
               </m.div>
               

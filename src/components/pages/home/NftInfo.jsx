@@ -4,6 +4,7 @@ import { FaGem, FaUnlock, FaChevronRight } from 'react-icons/fa';
 import { fadeIn } from '../../../utils/animations/animationVariants';
 import { useAnimationContext } from '../../animation/AnimationProvider';
 import { Link, useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const RewardDeveloper = () => {
   const { reducedMotion: prefersReducedMotion } = useAnimationContext();
@@ -34,12 +35,11 @@ const RewardDeveloper = () => {
           className="relative pb-2 flex justify-center items-center col-span-1"
         >
           <div className="relative overflow-hidden rounded-xl shadow-xl shadow-purple-500/20 border border-purple-500/30 max-w-[250px] md:max-w-[280px] lg:max-w-[320px] mx-auto">
-            <m.img 
-              src="/NFT-Y1.webp" 
-              alt="NFts" 
+            <OptimizedImage
+              src="/NFT-Y1.webp"
+              alt="NFts"
               className="w-full h-auto object-cover"
-              whileHover={{ scale: 1.03 }}
-              transition={{ duration: 0.3 }}
+              style={{}}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
             <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 text-[10px] md:text-xs text-white">

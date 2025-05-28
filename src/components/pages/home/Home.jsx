@@ -10,7 +10,7 @@ import Header from './Header';
 
 // Lazy load components below the fold with preload capability
 const Features = lazyWithPreload(() => import('./Features'));
-const AirdropInfo = lazyWithPreload(() => import('./WhitelistToken'));
+const WhitelistToken = lazyWithPreload(() => import('./WhitelistToken'));
 const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
@@ -100,9 +100,10 @@ const Home = () => {
                   {loadingStrategy.shouldLoadIntersectionObserverComponents && (
                     <LazyComponentLoader>
                       <RewardDeveloper />
-                      <AirdropInfo />
                       <TokenizationSection />
                       <Features />
+                      <WhitelistToken />
+
                     </LazyComponentLoader>
                   )}
                   <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />

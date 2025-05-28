@@ -2,6 +2,7 @@ import React from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaUser, FaRobot, FaChevronLeft, FaExternalLinkAlt, FaChartLine } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import OptimizedImage from '../../../image/OptimizedImage';
 
 const RightSidebar = ({ 
   isOpen, 
@@ -117,10 +118,12 @@ const RightSidebar = ({
                             transition={{ type: "spring", stiffness: 400, damping: 10 }}
                           >
                             {nft.image ? (
-                              <img 
-                                src={nft.image} 
-                                alt={nft.name} 
+                              <OptimizedImage
+                                src={nft.image}
+                                alt={nft.name}
                                 className="w-full h-full object-cover"
+                                loadingStrategy="lazy"
+                                style={{ width: '100%', height: '100%' }}
                                 onError={(e) => {
                                   e.target.src = "/LogoNuvos.webp";
                                 }}

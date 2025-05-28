@@ -6,13 +6,12 @@ import Navbar from '../../layout/Navbar';
 import SpaceBackground from '../../effects/SpaceBackground';
 import { FaUser, FaExclamationCircle, FaSync } from 'react-icons/fa';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
-import IntegrationList from './IntegrationList';
+import SideBar from './SideBar';
 
 // Lazy load section components for code splitting
 const AccountOverview = lazy(() => import('./sections/AccountOverview'));
 const TokensSection = lazy(() => import('./sections/TokensSection'));
 const NFTsSection = lazy(() => import('./sections/NFTsSection'));
-const TransactionsSection = lazy(() => import('./sections/TransactionsSection'));
 const ActivitySection = lazy(() => import('./sections/ActivitySection'));
 const AIHubSection = lazy(() => import('./sections/AIHubSection'));
 const AirdropsSection = lazy(() => import('./sections/AirdropsSection'));
@@ -299,7 +298,7 @@ const ProfilePage = () => {
                 {/* Integration Navigation */}
                 <div className="mb-2">
                   <h3 className="text-white font-medium mb-3">Your Dashboard</h3>
-                  <IntegrationList 
+                  <SideBar 
                     activeIntegration={activeIntegration} 
                     onSelectIntegration={setActiveIntegration} 
                   />

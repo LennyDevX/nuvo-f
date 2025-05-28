@@ -10,7 +10,7 @@ import {
   FaHistory 
 } from 'react-icons/fa';
 
-const IntegrationList = ({ activeIntegration, onSelectIntegration }) => {
+const SideBar = ({ activeIntegration, onSelectIntegration }) => {
   const integrations = [
     {
       id: 'overview',
@@ -30,12 +30,7 @@ const IntegrationList = ({ activeIntegration, onSelectIntegration }) => {
       icon: <FaCoins className="text-lg" />,
       isBeta: false
     },
-    {
-      id: 'transactions',
-      name: 'Transactions',
-      icon: <FaHistory className="text-lg" />,
-      isBeta: false
-    },
+    
     {
       id: 'ai-hub',
       name: 'AI Hub',
@@ -89,4 +84,4 @@ const IntegrationList = ({ activeIntegration, onSelectIntegration }) => {
   );
 };
 
-export default IntegrationList;
+export default SideBar;

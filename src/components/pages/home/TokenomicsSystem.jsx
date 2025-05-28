@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const TokenomicsSystem = () => {
   const navigate = useNavigate();
@@ -147,15 +148,20 @@ const TokenomicsSystem = () => {
                   WebkitBackfaceVisibility: "hidden"
                 }}
               >
-                <img 
-                  src="/NuvosToken.png" 
-                  alt="Nuvos Token" 
-                  className="w-full h-full object-contain"
+                <OptimizedImage
+                  src="/NuvosToken.png"
+                  alt="Nuvos Token"
+                  priority={true}
+                  quality={90}
+                  className="w-full h-full"
                   style={{
                     filter: useSimpleAnimation 
                       ? 'drop-shadow(0 0 8px rgba(139,92,246,0.5))' 
-                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))'
+                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))',
+                    objectFit: 'contain'
                   }}
+                  placeholderColor="transparent"
+                  loadingStrategy="eager"
                 />
               </motion.div>
               
