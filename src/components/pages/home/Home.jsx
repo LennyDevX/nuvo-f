@@ -89,7 +89,7 @@ const Home = () => {
         
         {/* Only render content when header has loaded */}
         {headerLoaded && (
-          <div className="relative z-10">
+          <div className="relative z-10 overflow-x-hidden">
             <HeroSection />
             
             <Suspense fallback={<LoadingFallback height="200px" />}>
@@ -99,10 +99,12 @@ const Home = () => {
                   {/* Usar intersection observer para carga progresiva */}
                   {loadingStrategy.shouldLoadIntersectionObserverComponents && (
                     <LazyComponentLoader>
+                      {/* Cambia el orden: primero Features y WhitelistToken */}
                       <RewardDeveloper />
                       <TokenizationSection />
-                      <Features />
-                      <WhitelistToken />
+                      <Features showSkeletonIfLoading={false} />
+
+                      <WhitelistToken showSkeletonIfLoading={false} />
 
                     </LazyComponentLoader>
                   )}

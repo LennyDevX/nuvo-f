@@ -14,8 +14,10 @@ export const StakingSection = ({ title, icon, children, className = "" }) => (
 
 export const ValueDisplay = ({ label, value, suffix = "", className = "" }) => (
   <div className={`mb-3 ${className}`}>
-    <div className="text-sm text-slate-400 mb-1">{label}</div>
-    <div className="text-xl font-medium text-white">{value} <span className="text-base text-slate-300">{suffix}</span></div>
+    <div className="text-xs sm:text-sm text-slate-400 mb-1">{label}</div>
+    <div className="text-lg sm:text-xl font-medium text-white">
+      {value} <span className="text-sm sm:text-base text-slate-300">{suffix}</span>
+    </div>
   </div>
 );
 
@@ -24,11 +26,11 @@ export const ProgressBar = ({ value, max, label, className = "", barColor = "bg-
   
   return (
     <div className={`mb-4 ${className}`}>
-      <div className="flex justify-between text-sm mb-1">
+      <div className="flex justify-between text-xs sm:text-sm mb-2">
         <span className="text-slate-400">{label}</span>
         <span className="text-slate-300">{value}/{max}</span>
       </div>
-      <div className="h-2.5 bg-slate-800/70 rounded-full overflow-hidden backdrop-blur-sm">
+      <div className="h-3 sm:h-2.5 bg-slate-800/70 rounded-full overflow-hidden backdrop-blur-sm">
         <div 
           className={`h-full ${barColor} rounded-full transition-all duration-500`} 
           style={{width: `${percentage}%`}}
@@ -39,10 +41,10 @@ export const ProgressBar = ({ value, max, label, className = "", barColor = "bg-
 };
 
 export const ActionButton = ({ onClick, icon, label, isPrimary = false, disabled = false, type = "button", className = "" }) => {
-  const baseClasses = "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200";
+  const baseClasses = "flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-lg font-medium transition-all duration-200 min-h-[48px] sm:min-h-[auto] touch-manipulation";
   const primaryClasses = isPrimary 
-    ? "bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-900/20" 
-    : "bg-slate-800/70 hover:bg-slate-700/90 text-slate-200 border border-slate-700/50";
+    ? "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-md shadow-indigo-900/20" 
+    : "bg-slate-800/70 hover:bg-slate-700/90 active:bg-slate-600/90 text-slate-200 border border-slate-700/50";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "hover:scale-[1.02] active:scale-[0.98]";
   
   return (
@@ -52,8 +54,8 @@ export const ActionButton = ({ onClick, icon, label, isPrimary = false, disabled
       disabled={disabled}
       type={type}
     >
-      {icon}
-      <span>{label}</span>
+      <span className="flex-shrink-0">{icon}</span>
+      <span className="text-sm sm:text-base">{label}</span>
     </button>
   );
 };
@@ -111,9 +113,9 @@ export const TransactionStatus = ({ tx, className = "", onReset = null }) => {
   };
   
   return (
-    <div className={`p-3 border rounded-lg mb-4 flex items-center justify-between ${getStatusColor(tx.status)} ${className}`}>
-      <div className="flex items-center">
-        <div className="flex-shrink-0 mr-3">
+    <div className={`p-3 sm:p-4 border rounded-lg mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-0 sm:justify-between ${getStatusColor(tx.status)} ${className}`}>
+      <div className="flex items-start sm:items-center w-full sm:w-auto">
+        <div className="flex-shrink-0 mr-3 mt-0.5 sm:mt-0">
           {tx.status === 'confirmed' && (
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -131,8 +133,8 @@ export const TransactionStatus = ({ tx, className = "", onReset = null }) => {
             </svg>
           )}
         </div>
-        <div className="flex-grow">
-          <div className="text-sm">
+        <div className="flex-grow min-w-0">
+          <div className="text-sm break-words">
             {getStatusMessage(tx.status, tx.type)}
           </div>
           {tx.hash && (
@@ -140,7 +142,7 @@ export const TransactionStatus = ({ tx, className = "", onReset = null }) => {
               href={`https://polygonscan.com/tx/${tx.hash}`}
               target="_blank"
               rel="noreferrer"
-              className="text-xs hover:underline"
+              className="text-xs hover:underline break-all"
             >
               View on Explorer
             </a>
@@ -148,11 +150,10 @@ export const TransactionStatus = ({ tx, className = "", onReset = null }) => {
         </div>
       </div>
       
-      {/* Add reset button for potentially stuck transactions */}
       {(potentiallyStuck || tx.status === 'failed') && onReset && (
         <button 
           onClick={onReset}
-          className="ml-2 px-2 py-1 text-xs rounded-md bg-slate-700 hover:bg-slate-600 text-white transition-colors"
+          className="w-full sm:w-auto sm:ml-2 px-3 py-2 text-sm rounded-md bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-white transition-colors min-h-[44px] sm:min-h-[auto]"
         >
           Reset
         </button>

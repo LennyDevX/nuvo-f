@@ -307,7 +307,7 @@ const StakingActions = ({
         onReset={resetTransactionState}
       />
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <RewardsPanel 
           formattedRewards={formattedRewards}
           stakingStats={stakingStats}

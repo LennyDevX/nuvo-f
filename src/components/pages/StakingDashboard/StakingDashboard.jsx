@@ -40,64 +40,54 @@ const StakingDashboard = ({ account }) => {
   }, []);
   
   return (
-    <div className="w-full">
-      {/* Top Overview Card */}
-      <StakingOverview 
-        userDeposits={userDeposits} 
-        userInfo={userInfo}
-        stakingStats={stakingStats}
-        statusMessage={statusMessage}
-      />
-      
-      {/* Main 3-column grid for desktop, stacks on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Left Column: Staking Stats */}
+    <div className="container mx-auto px-4 pb-20 md:pb-8">
+      <div className="w-full space-y-4 sm:space-y-6">
+        {/* Top Overview Card */}
+        <StakingOverview 
+          userDeposits={userDeposits} 
+          userInfo={userInfo}
+          stakingStats={stakingStats}
+          statusMessage={statusMessage}
+        />
+        
+        {/* Main grid - single column on mobile, 3 columns on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          {/* Left Column: Staking Stats */}
+          <div className="order-1">
+            <StakingStats
+              userDeposits={userDeposits}
+              maxDeposits={STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER}
+            />
+          </div>
+          
+          {/* Middle Column: Time Bonus */}
+          <div className="order-3 lg:order-2">
+            <TimeBonus userDeposits={userDeposits} />
+          </div>
+          
+          {/* Right Column: Rewards Projection */}
+          <div className="order-2 lg:order-3">
+            <RewardsProjection userDeposits={userDeposits} userInfo={userInfo} />
+          </div>
+        </div>
+        
+        {/* Actions Section - Full Width */}
         <div>
-          <StakingStats
+          <StakingActions
+            account={account}
+            userInfo={userInfo}
+            stakingStats={stakingStats}
             userDeposits={userDeposits}
-            maxDeposits={STAKING_CONSTANTS.MAX_DEPOSITS_PER_USER}
+            isPending={isPending}
+            setIsPending={setIsPending}
+            updateStatus={updateStatus}
+            refreshUserInfo={refreshUserInfo}
+            currentTx={currentTx}
           />
         </div>
         
-        {/* Middle Column: Time Bonus */}
-        <div>
-          <TimeBonus userDeposits={userDeposits} />
-        </div>
+        {/* Contract Info - Positioned naturally below content */}
         
-        {/* Right Column: Rewards Projection */}
-        <div>
-          <RewardsProjection userDeposits={userDeposits} userInfo={userInfo} />
-        </div>
-      </div>
-      
-      {/* Actions Section - Full Width */}
-      <div className="mb-6">
-        <StakingActions
-          account={account}
-          userInfo={userInfo}
-          stakingStats={stakingStats}
-          userDeposits={userDeposits}
-          isPending={isPending}
-          setIsPending={setIsPending}
-          updateStatus={updateStatus}
-          refreshUserInfo={refreshUserInfo}
-          currentTx={currentTx}
-        />
-      </div>
-      
-      {/* Contract Info - Minimal */}
-      <div className="text-center mt-4 text-xs text-slate-400">
-        <div className="inline-flex items-center bg-slate-800/40 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-indigo-900/20">
-          Smart Staking Contract V1.0
-          <a 
-            href="https://polygonscan.com/address/0x54ebebc65bcbcc7693cb83918fcd0115d71046e2" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="ml-2 text-indigo-400 hover:text-indigo-300"
-          >
-            <FaHistory className="inline-block ml-1 h-3 w-3" />
-          </a>
-        </div>
       </div>
     </div>
   );

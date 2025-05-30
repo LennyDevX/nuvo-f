@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NavLink from '../navigation/NavLink';
 import WalletConnect from '../web3/WalletConnect';
@@ -9,10 +9,10 @@ import {
   FaExchangeAlt, 
   FaExternalLinkAlt,
   FaImage,
-  FaRobot,
-  FaCamera,
-  FaComments
+  FaComments,
+  FaBars
 } from 'react-icons/fa';
+import { WalletContext } from '../../context/WalletContext';
 
 // Importa la variable de entorno
 const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
@@ -98,11 +98,11 @@ const Navbar = () => {
 
   // Memoize navigation items to prevent recreation on every render
   const navigationItems = useMemo(() => [
-    { path: '/my-nfts', label: 'Mint NFTs', icon: FaImage },
+    { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
-    { path: '/tokenomics', label: 'Tokenomics', icon: FaChartPie },
-    { path: '/swaptoken', label: 'Swap Token', icon: FaExchangeAlt },
-    { path: '/chat', label: 'Chat AI', icon: FaComments },
+    { path: '/swaptoken', label: 'Swap', icon: FaExchangeAlt },
+    { path: '/tokenomics', label: 'Token', icon: FaChartPie },
+    { path: '/chat', label: 'Chat', icon: FaComments },
   ], []);
 
   // Memoized logo click handler
@@ -110,133 +110,172 @@ const Navbar = () => {
     handleNavigation('/');
   }, [handleNavigation]);
 
+  // Usa el contexto real de la wallet
+  const { account, balance, networkName, connect, disconnect } = useContext(WalletContext);
+
+  // Cerrar el menú cuando se conecta la wallet
+  useEffect(() => {
+    if (account) {
+      setIsOpen(false);
+    }
+  }, [account]);
+
+  // Handlers para los botones
+  const handleViewProfile = () => {
+    handleNavigation('/profile');
+  };
+  const handleDisconnect = () => {
+    disconnect && disconnect();
+    setIsOpen(false);
+  };
+
   return (
-    <nav className="fixed py-3 top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
-        <div className="flex justify-between items-center h-14">
-          {/* Logo - with memoized click handler */}
-          <div onClick={handleLogoClick} className="cursor-pointer">
-            <img 
-              className="h-10 w-auto md:h-12"
-              src="/LogoNuvos.webp" 
-              alt="Nuvo Logo"
-              style={{
-                filter: 'drop-shadow(0 0 0.5rem rgba(139, 92, 246, 0.3))'
-              }}
-            />
-          </div>
-
-          {/* Desktop Menu - Using memoized values */}
-          <div className="hidden md:flex items-center justify-center flex-grow space-x-4">
-            {navigationItems.map(({ path, label, icon: Icon }) => (
-              <NavLink 
-                key={path} 
-                to={path} 
-                prefetchStrategy="intent"
-                className={styles.navLinkClasses}
-                activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
-                style={{ minWidth: `${label.length * 10 + 40}px` }}
+    <>
+      {/* Bottom Navbar - Ensure consistent height */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/95 backdrop-blur-sm border-t border-white/10 navbar-transition md:hidden" style={{ height: '64px' }}>
+        <div className="flex justify-around items-center h-16">
+          {navigationItems.map(({ path, label, icon: Icon }) => {
+            const isActive = location.pathname === path;
+            return (
+              <button
+                key={path}
+                onClick={() => handleNavigation(path)}
+                className={`flex flex-col items-center justify-center flex-1 py-2 transition-all
+                  ${isActive ? 'text-purple-400' : 'text-white/80'}
+                  hover:text-purple-300`}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className={styles.navIconClasses} />
-                {label}
-              </NavLink>
-            ))}
-            
-            {/* Beta Badge in Desktop View */}
-            <div className="flex items-center ml-4">
-              <BetaBadge 
-                pulsate={true} 
-                className="border border-purple-400/30" 
-              />
-            </div>
+                <Icon className="w-6 h-6 mb-0.5" />
+                <span className="text-xs">{label}</span>
+              </button>
+            );
+          })}
+          {/* Botón para abrir el menú bottom sheet */}
+          <button
+            onClick={toggleMenu}
+            className="flex flex-col items-center justify-center flex-1 py-2 text-white/80 hover:text-purple-300 transition-all"
+            aria-label="Más opciones"
+            aria-expanded={isOpen}
+            aria-controls="mobile-bottom-sheet"
+          >
+            <FaBars className="w-6 h-6 mb-0.5" />
+            <span className="text-xs">Más</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Bottom Sheet Menu - Adjust z-index to be lower than chat */}
+      <div
+        id="mobile-bottom-sheet"
+        className={`
+          fixed left-0 right-0 bottom-0 z-[200]
+          transition-transform duration-300 ease-in-out
+          ${isOpen ? 'translate-y-0' : 'translate-y-full'}
+          bg-gradient-to-t from-black/95 to-black/90 backdrop-blur-lg
+          border-t border-purple-500/20 shadow-2xl
+          rounded-t-2xl
+          md:hidden
+        `}
+        style={{ minHeight: '40vh', maxHeight: '80vh' }}
+        tabIndex={isOpen ? 0 : -1}
+      >
+        <div className="flex flex-col px-6 pt-4 pb-8 h-full overflow-y-auto">
+          {/* Drag handle */}
+          <div className="flex justify-center mb-4">
+            <span className="block w-12 h-1.5 rounded-full bg-purple-500/30" />
+          </div>
+          
+          {/* WALLET CONNECT - Usar el mismo componente que funciona en desktop */}
+          <div className="flex justify-center mb-4">
+            <WalletConnect className="navbar-wallet-mobile" showFullUI={true} />
           </div>
 
-          {/* Wallet Connect */}
-          <div className="relative ml-4">
-            <WalletConnect className="navbar-wallet" />
+          {/* Contract Address debajo */}
+          <div className="w-full flex flex-col items-center bg-purple-900/10 rounded-xl border border-purple-500/20 p-4 mb-6">
+            <p className="text-gray-400 text-xs mb-1.5">Staking Contract Address:</p>
+            <a 
+              href={`https://polygonscan.com/address/${contractAddress}`} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              <span className="text-xs font-mono">
+                {formattedContractAddress}
+              </span>
+            </a>
           </div>
-
-          {/* Mobile Controls - with memoized toggle handler */}
-          <div className="md:hidden flex items-center gap-2">
+          
+          {/* BetaBadge separado con espacio */}
+          <div className="flex flex-col items-center mb-8 mt-2">
+            <BetaBadge pulsate={true} className="border border-purple-400/30" />
+          </div>
+          
+          {/* Botones de acción */}
+          <div className="flex justify-center gap-4 mt-auto">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                handleNavigation('/');
+              }}
+              className="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold shadow-lg"
+            >
+              Home
+            </button>
             <button
               onClick={toggleMenu}
-              className={styles.menuToggleClasses}
-              aria-expanded={isOpen}
-              aria-label="Toggle menu"
-              aria-controls="mobile-menu"
+              className="px-6 py-2 rounded-lg bg-purple-600 text-white font-semibold shadow-lg"
             >
-              <div className="w-5 h-4 flex flex-col justify-between">
-                <span className={`block h-0.5 w-5 bg-purple-300 transform transition-transform duration-300 
-                  ${isOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-                <span className={`block h-0.5 w-5 bg-purple-300 transition-opacity duration-300
-                  ${isOpen ? 'opacity-0' : ''}`} />
-                <span className={`block h-0.5 w-5 bg-purple-300 transform transition-transform duration-300
-                  ${isOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
-              </div>
+              Cerrar
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu - Using memoized styles and event handlers */}
-      <div 
-        id="mobile-menu"
-        className={styles.mobileMenuClasses(isOpen)}
-        inert={isOpen ? undefined : ""}
-      >
-        <div className="px-4 py-4 space-y-3 max-h-[calc(100vh-4.25rem)] overflow-y-auto">
-          {/* Navigation Links - with memoized handlers and styles */}
-          <div className="space-y-1.5">
-            {navigationItems.map(({ path, label, icon: Icon }) => {
-              const isActive = location.pathname === path;
-              return (
-                <button
-                  key={path}
-                  onClick={() => handleNavigation(path)}
-                  className={styles.mobileNavButtonClasses(isActive)}
-                  aria-current={isActive ? 'page' : undefined}
-                  tabIndex={isOpen ? 0 : -1}
-                >
-                  <Icon className={styles.mobileNavIconClasses} />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Contract Info y Version Badge */}
-          <div className="space-y-3 pt-2">
-            <div className="p-3 bg-purple-900/10 rounded-xl border border-purple-500/20">
-              <p className="text-gray-400 text-xs mb-1.5">Contract Address:</p>
-              <a 
-                href={`https://polygonscan.com/address/${contractAddress}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
-                tabIndex={isOpen ? 0 : -1}
-              >
-                <FaExternalLinkAlt className="w-3.5 h-3.5" />
-                <span className="text-xs font-mono">
-                  {formattedContractAddress}
-                </span>
-              </a>
+      {/* Desktop Navbar (opcional, solo visible en md+) */}
+      <nav className="hidden md:block fixed top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
+        <div className="max-w-7xl mx-auto px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14">
+            {/* Logo */}
+            <div onClick={handleLogoClick} className="cursor-pointer">
+              <img 
+                className="h-10 w-auto md:h-12"
+                src="/LogoNuvos.webp" 
+                alt="Nuvo Logo"
+                style={{
+                  filter: 'drop-shadow(0 0 0.5rem rgba(139, 92, 246, 0.3))'
+                }}
+              />
             </div>
-
-            {/* Beta Badge in Mobile View */}
-            <div className="flex items-center justify-center p-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-400">Platform Status:</span>
+            {/* Desktop Menu */}
+            <div className="flex items-center justify-center flex-grow space-x-4">
+              {navigationItems.map(({ path, label, icon: Icon }) => (
+                <NavLink 
+                  key={path} 
+                  to={path} 
+                  prefetchStrategy="intent"
+                  className={styles.navLinkClasses}
+                  activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
+                  style={{ minWidth: `${label.length * 10 + 40}px` }}
+                >
+                  <Icon className={styles.navIconClasses} />
+                  {label}
+                </NavLink>
+              ))}
+              <div className="flex items-center ml-4">
                 <BetaBadge 
-                  size="normal" 
-                  pulsate={true}
+                  pulsate={true} 
                   className="border border-purple-400/30" 
                 />
               </div>
             </div>
+            {/* Wallet Connect */}
+            <div className="relative ml-4">
+              <WalletConnect className="navbar-wallet" />
+            </div>
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 };
 

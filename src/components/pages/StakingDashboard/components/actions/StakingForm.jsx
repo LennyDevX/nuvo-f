@@ -88,7 +88,7 @@ const StakingForm = memo(({
         </div>
       </form>
 
-      <div className="text-xs text-slate-400 mt-1 py-2 px-3 bg-slate-800/50 rounded-lg">
+      <div className="text-xs text-slate-400 mt-1 py-2 px-3 bg-slate-800/50 rounded-lg mb-4 md:mb-0">
         <strong className="text-indigo-400">Note:</strong> Staked tokens earn compounding rewards. You can add multiple deposits to your staking portfolio over time.
       </div>
     </div>

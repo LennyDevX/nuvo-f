@@ -106,12 +106,12 @@ const DashboardStaking = () => {
   };
 
   return (
-    <div className="relative bg-nuvo-gradient min-h-screen pt-18 pb-12 flex flex-col items-center">
+    <div className="relative bg-nuvo-gradient min-h-screen pt-16 sm:pt-18 pb-8 sm:pb-12 flex flex-col items-center">
       <SpaceBackground customClass="" />
-      <div className="w-full max-w-[1440px] mx-auto px-4 md:px-8 relative z-10">
+      <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-4 md:px-8 relative z-10">
         <LazyMotion features={domAnimation} strict>
           <m.div
-            className="text-center mb-10"
+            className="text-center mb-6 sm:mb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
@@ -120,7 +120,7 @@ const DashboardStaking = () => {
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="mb-4 overflow-hidden"
+              className="mb-3 sm:mb-4 overflow-hidden"
             >
               {Array.from("Smart Staking").map((char, index) => (
                 <m.span
@@ -128,7 +128,7 @@ const DashboardStaking = () => {
                   custom={index}
                   variants={letterVariants}
                   className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
-                            text-5xl sm:text-6xl md:text-7xl font-bold"
+                            text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold"
                   style={{
                     willChange: "transform, opacity",
                     transform: "translateZ(0)"
@@ -144,15 +144,15 @@ const DashboardStaking = () => {
               transition={{ delay: 0.8, duration: 0.5 }}
               style={{ willChange: "opacity, transform" }}
             >
-              <p className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2">
+              <p className="text-base sm:text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2 px-2">
                 Stake your tokens and earn rewards in our decentralized staking platform
               </p>
-              <p className="text-sm md:text-base text-slate-400/60">
+              <p className="text-sm md:text-base text-slate-400/60 px-2">
                 Manage your staking positions and track your rewards in real-time
               </p>
             </m.div>
           </m.div>
-          <div className="container mx-auto space-y-8">
+          <div className="container mx-auto">
             <AnimatePresence mode="wait">
               {renderDashboardContent()}
             </AnimatePresence>
