@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 const Footer = () => {
   return (
-    <footer className="relative bg-black border-t border-purple-500/60 z-50">
+    <footer className="relative bg-black border-t border-purple-500/60 z-50 pb-safe-area-mobile">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           
@@ -166,6 +166,9 @@ const Footer = () => {
           </p>
         </div>
       </div>
+      
+      {/* Mobile bottom spacing to account for navbar */}
+      <div className="block md:hidden h-4"></div>
     </footer>
   );
 };

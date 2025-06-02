@@ -14,8 +14,8 @@ const KeyMetrics = lazy(() => import('./KeyMetrics')); // Add KeyMetrics compone
 
 // Create loading fallback
 const LoadingFallback = () => (
-  <div className="w-full h-64 flex items-center justify-center bg-gradient-to-b from-purple-700/10 to-black/30 rounded-3xl">
-    <div className="text-purple-400">Loading...</div>
+  <div className="w-full h-32 sm:h-48 flex items-center justify-center bg-gradient-to-b from-purple-700/10 to-black/30 rounded-2xl">
+    <div className="text-purple-400 text-sm">Loading...</div>
   </div>
 );
 
@@ -45,26 +45,26 @@ const TokenomicsDashboard = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full pt-16 pb-6 md:pt-20 relative z-10"
-            key="tokenomics-dashboard-main" // Add unique key here
+            className="w-full pt-12 pb-4 sm:pt-16 md:pt-20 relative z-10"
+            key="tokenomics-dashboard-main"
           >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
               {/* Hero Section */}
-              <div className="mb-16">
+              <div className="mb-6 sm:mb-8 md:mb-12">
                 <Suspense fallback={<LoadingFallback />}>
                   <HeroSection onOpenTokenModal={handleOpenTokenModal} />
                 </Suspense>
               </div>
 
               {/* Supply Tracker */}
-              <div className="mb-8">
+              <div className="mb-4 sm:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
                   <SupplyTracker />
                 </Suspense>
               </div>
               
               {/* Main Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
                   <TokenDistribution />
                 </Suspense>
@@ -74,9 +74,11 @@ const TokenomicsDashboard = () => {
               </div>
 
               {/* Key Metrics */}
-              <Suspense fallback={<LoadingFallback />}>
-                <KeyMetrics />
-              </Suspense>
+              <div className="mb-4 sm:mb-6">
+                <Suspense fallback={<LoadingFallback />}>
+                  <KeyMetrics />
+                </Suspense>
+              </div>
 
               {/* Tokenomics Explanation */}
               <Suspense fallback={<LoadingFallback />}>
@@ -90,7 +92,7 @@ const TokenomicsDashboard = () => {
         <TokenInfoModal 
           isOpen={isTokenModalOpen} 
           onClose={handleCloseTokenModal} 
-          key="token-info-modal" // Add unique key here
+          key="token-info-modal"
         />
       </AnimationProvider>
     </MainLayout>

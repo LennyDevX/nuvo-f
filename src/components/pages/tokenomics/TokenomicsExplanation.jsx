@@ -24,11 +24,11 @@ const TokenomicsExplanation = () => {
 
   // Memoize the card component
   const Card = useMemo(() => ({ title, description }) => (
-    <div className=" p-4">
-      <h3 className="text-lg font-semibold text-purple-400 mb-2">
+    <div className="p-3 sm:p-4 bg-purple-900/20 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition-all">
+      <h3 className="text-base sm:text-lg font-semibold text-purple-400 mb-2">
         {title}
       </h3>
-      <p className="text-gray-300">
+      <p className="text-gray-300 text-sm sm:text-base leading-relaxed">
         {description}
       </p>
     </div>
@@ -36,7 +36,7 @@ const TokenomicsExplanation = () => {
 
   // Memoize the cards grid to prevent re-rendering
   const cardsGrid = useMemo(() => (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
       {cardData.map((card, index) => (
         <Card key={index} title={card.title} description={card.description} />
       ))}
@@ -45,15 +45,15 @@ const TokenomicsExplanation = () => {
 
   return (
     <motion.div
-      className="nuvos-card"
+      className="mx-2 sm:mx-4 nuvos-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
     >
-      <h2 className="text-2xl font-bold text-white mb-6">
+      <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">
         Understanding the Importance of Tokenomics
       </h2>
-      <p className="text-gray-300 mb-6">
+      <p className="text-gray-300 mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
         Tokenomics is the backbone of any blockchain ecosystem. It defines how tokens are distributed, utilized, and sustained over time, ensuring a fair and thriving environment for all participants.
       </p>
       {cardsGrid}

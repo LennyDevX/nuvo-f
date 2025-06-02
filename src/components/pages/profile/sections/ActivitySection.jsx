@@ -169,22 +169,22 @@ const ActivitySection = ({ mintedNFTs = [], transactions = [], account }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="nuvos-card rounded-xl border border-purple-500/30 p-6"
+      className="nuvos-card rounded-xl border border-purple-500/30 p-4 sm:p-6"
     >
       {/* Header with stats */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
           <FaChartLine className="text-purple-400" /> Activity Dashboard
         </h2>
-        <div className="bg-purple-900/20 px-4 py-2 rounded-lg border border-purple-500/20">
-          <span className={`font-medium ${stats.statusColor}`}>
+        <div className="bg-purple-900/20 px-3 sm:px-4 py-2 rounded-lg border border-purple-500/20 self-start">
+          <span className={`font-medium text-sm sm:text-base ${stats.statusColor}`}>
             {stats.statusLevel}
           </span>
         </div>
       </div>
       
-      {/* Activity Stats using memoized components */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Responsive Activity Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <ActivityMetricCard
           icon={<FaCoins className="text-purple-400" />}
           title="Transactions" 
@@ -207,11 +207,11 @@ const ActivitySection = ({ mintedNFTs = [], transactions = [], account }) => {
         />
       </div>
       
-      {/* Recent Activity Feed with optimized rendering */}
-      <div className="bg-black/20 border border-purple-500/20 rounded-xl p-5 mb-6">
-        <h3 className="text-lg font-medium text-white mb-4">Recent Activity</h3>
+      {/* Compact Recent Activity Feed */}
+      <div className="bg-black/20 border border-purple-500/20 rounded-xl p-4 sm:p-5 mb-4 sm:mb-6">
+        <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Recent Activity</h3>
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4 max-h-64 sm:max-h-none overflow-y-auto">
           {recentTransactions.length > 0 ? (
             recentTransactions.map((tx, index) => (
               <ActivityItem 
@@ -221,7 +221,7 @@ const ActivitySection = ({ mintedNFTs = [], transactions = [], account }) => {
               />
             ))
           ) : (
-            <p className="text-gray-400 text-center py-4">No recent activity to display</p>
+            <p className="text-gray-400 text-center py-4 text-sm">No recent activity to display</p>
           )}
           
           {transactions.length > 5 && (
@@ -234,12 +234,12 @@ const ActivitySection = ({ mintedNFTs = [], transactions = [], account }) => {
         </div>
       </div>
       
-      {/* User Badges - only render if badges exist */}
+      {/* Compact User Badges */}
       {earnedBadges.length > 0 && (
-        <div className="bg-black/20 border border-purple-500/20 rounded-xl p-5">
-          <h3 className="text-lg font-medium text-white mb-4">Platform Badges</h3>
+        <div className="bg-black/20 border border-purple-500/20 rounded-xl p-4 sm:p-5">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Platform Badges</h3>
           
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {earnedBadges.map((badge) => (
               <BadgeCard 
                 key={badge.id}

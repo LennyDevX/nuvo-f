@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useStaking } from '../../../context/StakingContext';
-import { FaHistory } from 'react-icons/fa';
+import { FriendlyAlert } from './ui/CommonComponents';
 
 // Import modular components
 import StakingOverview from './components/StakingOverview';
@@ -42,6 +42,16 @@ const StakingDashboard = ({ account }) => {
   return (
     <div className="container mx-auto px-4 pb-20 md:pb-8">
       <div className="w-full space-y-4 sm:space-y-6">
+        {/* Status Message Display */}
+        {statusMessage && (
+          <FriendlyAlert
+            type={statusMessage.type}
+            title={statusMessage.type === 'error' ? 'Transaction Error' : 'Success'}
+            message={statusMessage.text}
+            onClose={() => setStatusMessage(null)}
+          />
+        )}
+        
         {/* Top Overview Card */}
         <StakingOverview 
           userDeposits={userDeposits} 

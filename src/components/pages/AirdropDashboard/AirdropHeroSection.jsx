@@ -49,22 +49,22 @@ const AirdropHeroSection = ({ setActiveTab }) => {
     : { whileHover: { scale: 1.05 }, whileTap: { scale: 0.98 } };
 
   return (
-    <div className="text-center mb-12">
+    <div className="text-center mb-8 lg:mb-12">
       <motion.div 
-        className="mb-4" 
+        className="mb-3 lg:mb-4" 
         {...titleAnimation}
       >
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 drop-shadow-[0_2px_4px_rgba(168,85,247,0.6)]">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-3 lg:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 drop-shadow-[0_2px_4px_rgba(168,85,247,0.6)] leading-tight">
           Join the Future of Finance
         </h1>
       </motion.div>
       
       <motion.div 
-        className="mb-6"
+        className="mb-4 lg:mb-6 px-2 sm:px-4"
         {...paragraphAnimation}
       >
         <p 
-          className="text-xl md:text-2xl text-white max-w-3xl mx-auto"
+          className="text-base sm:text-lg md:text-xl lg:text-2xl text-white max-w-3xl mx-auto leading-relaxed"
           style={{ position: 'relative', zIndex: 10 }}
         >
           Participate in our community airdrop and receive NUVOS tokens to access exclusive features and participate in our Smart Staking program.
@@ -73,33 +73,33 @@ const AirdropHeroSection = ({ setActiveTab }) => {
       
       <motion.div
         {...buttonsAnimation}
-        className="flex flex-wrap justify-center items-center gap-4"
+        className="flex flex-col sm:flex-row justify-center items-center gap-3 lg:gap-4 px-4"
       >
         {/* Wallet display moved to where register button was */}
         {account ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="px-4 py-3 bg-green-900/40 backdrop-blur-sm border border-green-500/50 rounded-lg font-medium text-white flex items-center gap-2 shadow-md"
+            className="w-full sm:w-auto px-4 py-2.5 lg:py-3 bg-green-900/40 backdrop-blur-sm border border-green-500/50 rounded-lg font-medium text-white flex items-center justify-center gap-2 shadow-md"
           >
             <div className="h-2 w-2 rounded-full bg-green-400"></div>
-            <span className="text-green-200">Wallet Connected: {formatAddress(account)}</span>
+            <span className="text-green-200 text-sm lg:text-base">Wallet Connected: {formatAddress(account)}</span>
           </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="px-4 py-3 bg-red-900/40 backdrop-blur-sm border border-red-500/50 rounded-lg font-medium text-white flex items-center gap-2 shadow-md"
+            className="w-full sm:w-auto px-4 py-2.5 lg:py-3 bg-red-900/40 backdrop-blur-sm border border-red-500/50 rounded-lg font-medium text-white flex items-center justify-center gap-2 shadow-md"
           >
             <div className="h-2 w-2 rounded-full bg-red-400"></div>
-            <span className="text-red-200">Wallet Not Connected</span>
+            <span className="text-red-200 text-sm lg:text-base">Wallet Not Connected</span>
           </motion.div>
         )}
         
         <motion.button
           {...buttonHoverProps}
           onClick={handleStakingInfoClick}
-          className="px-6 py-3 bg-black/60 backdrop-blur-sm border border-purple-500/50 rounded-lg font-medium text-white flex items-center gap-2 hover:bg-purple-900/40 transition-colors shadow-md"
+          className="w-full sm:w-auto px-4 lg:px-6 py-2.5 lg:py-3 bg-black/60 backdrop-blur-sm border border-purple-500/50 rounded-lg font-medium text-white flex items-center justify-center gap-2 hover:bg-purple-900/40 transition-colors shadow-md text-sm lg:text-base"
         >
           <FaCoins /> Learn About Staking
         </motion.button>

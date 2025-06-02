@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { useStakingContract } from './useStakingContract';
+import { parseTransactionError, isUserRejection } from '../../utils/errors/errorHandling';
 
 // Timeout constants
 const TX_SUCCESS_TIMEOUT = 2000;
@@ -109,24 +110,31 @@ export function useStakingTransactions() {
       };
     } catch (error) {
       console.error(`Error in ${txType}:`, error);
-      let errorMessage = error.message || 'Transaction failed';
-      if (errorMessage.includes('user rejected') ||
-          errorMessage.includes('user denied') ||
-          errorMessage.includes('rejected by user') ||
-          errorMessage.includes('cancelled by user') ||
-          errorMessage.includes('User denied')) {
-        errorMessage = 'Transaction cancelled';
-      } else if (errorMessage.includes('insufficient funds')) {
-        errorMessage = 'Insufficient funds in your wallet';
-      } else if (errorMessage.toLowerCase().includes('gas')) {
-        errorMessage = 'Network fee issue';
-      } else if (errorMessage.includes('nonce')) {
-        errorMessage = 'Transaction sequence error';
-      } else if (errorMessage.includes('intrinsic gas')) {
-        errorMessage = 'Gas estimation failed';
-      } else if (errorMessage.length > 100) {
-        errorMessage = errorMessage.substring(0, 100) + '...';
+      
+      // Use the enhanced error parsing
+      const parsedError = parseTransactionError(error);
+      let errorMessage = parsedError.message;
+      
+      // Override with more specific messages for each transaction type
+      if (parsedError.status === 'rejected') {
+        switch (txType) {
+          case 'deposit':
+            errorMessage = 'You cancelled the staking transaction. No worries, your tokens are safe!';
+            break;
+          case 'withdraw_rewards':
+            errorMessage = 'You cancelled claiming your rewards. Your rewards are still there waiting for you!';
+            break;
+          case 'withdraw_all':
+            errorMessage = 'You cancelled the withdrawal. Your staked tokens and rewards remain safe.';
+            break;
+          case 'emergency_withdraw':
+            errorMessage = 'You cancelled the emergency withdrawal. Your funds remain staked.';
+            break;
+          default:
+            errorMessage = 'Transaction cancelled. Your funds are safe!';
+        }
       }
+      
       safeSetIsPending(false);
       setCurrentTx(prev => ({
         ...prev,

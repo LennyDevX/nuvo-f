@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ChatInput from './ChatInput';
-import '../styles/ChatInput.css';
-// Import other necessary components
+import '../../../Styles/ChatInput.css';
 
-const ChatContainer = ({ leftSidebarOpen = false, rightSidebarOpen = false }) => {
+const ChatContainer = ({ 
+  leftSidebarOpen = false, 
+  rightSidebarOpen = false,
+  toggleLeftSidebar,
+  toggleRightSidebar,
+  shouldReduceMotion,
+  isLowPerformance
+}) => {
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
@@ -60,7 +66,7 @@ const ChatContainer = ({ leftSidebarOpen = false, rightSidebarOpen = false }) =>
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Our new chat input component */}
+      {/* Chat input component */}
       <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );

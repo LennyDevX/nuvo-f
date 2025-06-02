@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
-import ErrorMessage from "../../LoadOverlay/ErrorMessage";
+import { FriendlyAlert } from "./ui/CommonComponents";
 import { FaCoins } from 'react-icons/fa';
 import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
@@ -31,13 +31,15 @@ const DashboardStaking = () => {
   useEffect(() => {
     if (state.isContractPaused) {
       setError({
-        title: "Staking Paused",
-        message: "The staking contract is currently paused for maintenance."
+        type: 'warning',
+        title: "Maintenance in Progress",
+        message: "We're currently performing some maintenance to improve your experience. Staking will be available again shortly. Thanks for your patience!"
       });
     } else if (state.isMigrated) {
       setError({
-        title: "Contract Migrated",
-        message: "The staking contract has been migrated to a new version."
+        type: 'info',
+        title: "System Update Complete",
+        message: "Great news! We've upgraded our staking system. Please refresh your browser to access the latest features and improvements."
       });
     } else {
       setError(null);
@@ -153,13 +155,22 @@ const DashboardStaking = () => {
             </m.div>
           </m.div>
           <div className="container mx-auto">
+            {error && (
+              <div className="mb-6">
+                <FriendlyAlert
+                  type={error.type}
+                  title={error.title}
+                  message={error.message}
+                  onClose={() => setError(null)}
+                />
+              </div>
+            )}
             <AnimatePresence mode="wait">
               {renderDashboardContent()}
             </AnimatePresence>
           </div>
         </LazyMotion>
       </div>
-      {error && <ErrorMessage error={error} />}
     </div>
   );
 }

@@ -79,11 +79,11 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
                 <div className="bg-gray-800/30 backdrop-blur-md p-5 rounded-lg border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300">
                   <h4 className="font-medium text-white mb-3">Google Gemini</h4>
                   <p className="text-sm text-gray-300 mb-4">
-                    Este chat está potenciado por Google Gemini, un modelo de lenguaje avanzado optimizado para conversaciones y respuestas precisas.
+                    This chat is powered by Google Gemini, an advanced language model optimized for conversations and precise responses.
                   </p>
                   <div className="flex flex-col gap-3 text-xs text-gray-400">
                     <div className="flex justify-between">
-                      <span>Modelo:</span>
+                      <span>Model:</span>
                       <span className="text-purple-300">Gemini Pro</span>
                     </div>
                     <div className="flex justify-between">
@@ -97,20 +97,20 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
               {/* Features */}
               <div>
                 <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
-                  Características
+                  Features
                 </h3>
                 <ul className="space-y-3 text-sm text-gray-300">
                   <li className="flex items-center gap-3 group">
                     <div className="w-2 h-2 bg-purple-400 rounded-full group-hover:scale-125 transition-transform"></div>
-                    <span>Respuestas precisas sobre blockchain</span>
+                    <span>Precise blockchain answers</span>
                   </li>
                   <li className="flex items-center gap-3 group">
                     <div className="w-2 h-2 bg-purple-400 rounded-full group-hover:scale-125 transition-transform"></div>
-                    <span>Información actualizada sobre criptomonedas</span>
+                    <span>Updated cryptocurrency information</span>
                   </li>
                   <li className="flex items-center gap-3 group">
                     <div className="w-2 h-2 bg-purple-400 rounded-full group-hover:scale-125 transition-transform"></div>
-                    <span>Explicaciones sobre NFTs y DeFi</span>
+                    <span>NFT and DeFi explanations</span>
                   </li>
                 </ul>
               </div>

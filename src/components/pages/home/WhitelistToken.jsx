@@ -84,7 +84,7 @@ const WhitelistToken = ({ showSkeletonIfLoading }) => {
       <div className="w-full max-w-4xl flex flex-col md:flex-row gap-0 md:gap-8 items-center justify-center">
         {/* Info Block - Only visible on desktop */}
         <div className="hidden md:flex flex-col justify-center flex-1 h-full">
-          <div className="nuvos-card bg-gradient-to-br from-purple-900/60 to-black/60 border border-purple-700/20 shadow-lg mr-0 md:mr-2 px-8 py-10">
+          <div className="nuvos-card  shadow-lg mr-0 md:mr-2 px-8 py-10">
             <h2 className="text-xl font-bold text-white mb-4">Why Join the NUVO Whitelist?</h2>
             <ul className="list-disc list-inside text-purple-200 text-base space-y-3 mb-4">
               <li>✅ Early access to NUVO token pre-sale</li>
@@ -106,7 +106,6 @@ const WhitelistToken = ({ showSkeletonIfLoading }) => {
             w-full
             max-w-sm
             nuvos-card
-            bg-gradient-to-br from-purple-900/80 to-black/80
             px-3 py-6
             mx-auto
             flex flex-col

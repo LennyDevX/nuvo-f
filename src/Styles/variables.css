@@ -31,6 +31,9 @@
   
   /* iOS safe area support */
   --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  
+  /* Mobile navbar height */
+  --mobile-navbar-height: 64px;
 }
 
 @media (max-width: 768px) {
@@ -45,5 +48,7 @@
     --container-padding: 12px;
     --chat-spacing: 8px;
     --button-size: 36px;
+    /* Add mobile bottom spacing to account for navbar */
+    --mobile-bottom-spacing: calc(var(--mobile-navbar-height) + var(--safe-area-inset-bottom) + 1rem);
   }
 }

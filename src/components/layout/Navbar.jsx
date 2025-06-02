@@ -7,11 +7,19 @@ import {
   FaCoins, 
   FaChartPie, 
   FaExchangeAlt, 
-  FaExternalLinkAlt,
   FaImage,
   FaComments,
-  FaBars
+  FaEllipsisH,
+  FaHome,
+  FaTimes,
+  FaUser,
+  FaWallet,
+  FaSignOutAlt,
+  FaCopy,
+  FaExternalLinkAlt,
+  FaInfoCircle
 } from 'react-icons/fa';
+import { HiMenuAlt3 } from 'react-icons/hi';
 import { WalletContext } from '../../context/WalletContext';
 
 // Importa la variable de entorno
@@ -96,8 +104,9 @@ const Navbar = () => {
     return `${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`;
   }, []);
 
-  // Memoize navigation items to prevent recreation on every render
+  // Updated navigation items with Home button
   const navigationItems = useMemo(() => [
+    { path: '/', label: 'Home', icon: FaHome },
     { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/swaptoken', label: 'Swap', icon: FaExchangeAlt },
@@ -110,132 +119,338 @@ const Navbar = () => {
     handleNavigation('/');
   }, [handleNavigation]);
 
-  // Usa el contexto real de la wallet
-  const { account, balance, networkName, connect, disconnect } = useContext(WalletContext);
+  // Usar el contexto de la wallet con manejo de errores más robusto
+  const walletContext = useContext(WalletContext);
+  
+  // Proporcionar valores por defecto seguros y acceder a métodos directamente
+  const {
+    account = '',
+    balance = '0',
+    network = 'Polygon',
+    walletConnected = false,
+    handleDisconnect,
+    connect = null
+  } = walletContext || {};
 
-  // Cerrar el menú cuando se conecta la wallet
+  // Debug: Verificar el estado del contexto
   useEffect(() => {
-    if (account) {
-      setIsOpen(false);
+    if (!walletContext) {
+      console.warn('WalletContext is not available - component will work with limited functionality');
+    } else {
+      console.log('WalletContext available:', { 
+        walletConnected, 
+        account: !!account, 
+        handleDisconnect: !!handleDisconnect,
+        allMethods: Object.keys(walletContext)
+      });
+    }
+  }, [walletContext, walletConnected, account, handleDisconnect]);
+
+  // Handlers para los botones - Con verificaciones adicionales
+  const handleViewProfile = useCallback(() => {
+    handleNavigation('/profile');
+    setIsOpen(false);
+  }, [handleNavigation]);
+  
+  const handleDisconnectWallet = useCallback(async () => {
+    console.log('Disconnect attempt:', { 
+      handleDisconnect: !!handleDisconnect,
+      walletConnected, 
+      account: !!account 
+    });
+    
+    try {
+      setIsOpen(false); // Cerrar el menú inmediatamente
+      
+      if (handleDisconnect && typeof handleDisconnect === 'function') {
+        console.log('Calling handleDisconnect method...');
+        handleDisconnect();
+        console.log('Disconnect successful');
+      } else {
+        console.error('handleDisconnect method not found in context');
+        throw new Error('Disconnect method not available');
+      }
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+      alert('Error disconnecting wallet. Please try again.');
+    }
+  }, [handleDisconnect, walletConnected, account]);
+
+  // Add missing handler functions
+  const handleCopyAddress = useCallback(async () => {
+    if (!account) return;
+    
+    try {
+      await navigator.clipboard.writeText(account);
+      // You might want to show a toast notification here
+      console.log('Address copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy address:', error);
     }
   }, [account]);
 
-  // Handlers para los botones
-  const handleViewProfile = () => {
-    handleNavigation('/profile');
-  };
-  const handleDisconnect = () => {
-    disconnect && disconnect();
-    setIsOpen(false);
-  };
+  const handleViewOnExplorer = useCallback(() => {
+    if (!account) return;
+    
+    const explorerUrl = `https://polygonscan.com/address/${account}`;
+    window.open(explorerUrl, '_blank', 'noopener,noreferrer');
+  }, [account]);
 
   return (
     <>
-      {/* Bottom Navbar - Ensure consistent height */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/95 backdrop-blur-sm border-t border-white/10 navbar-transition md:hidden" style={{ height: '64px' }}>
-        <div className="flex justify-around items-center h-16">
-          {navigationItems.map(({ path, label, icon: Icon }) => {
+      {/* Mobile Bottom Navigation - Fixed positioning with proper z-index */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/95 backdrop-blur-sm border-t border-white/10 md:hidden safe-area-bottom">
+        <div className="flex justify-between items-center h-16 px-2">
+          {/* Main navigation items - only show first 4 */}
+          {navigationItems.slice(0, 4).map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <button
                 key={path}
                 onClick={() => handleNavigation(path)}
-                className={`flex flex-col items-center justify-center flex-1 py-2 transition-all
-                  ${isActive ? 'text-purple-400' : 'text-white/80'}
-                  hover:text-purple-300`}
+                className={`flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all rounded-lg mx-0.5
+                  ${isActive ? 'text-purple-400 bg-purple-500/10' : 'text-white/80'}
+                  hover:text-purple-300 active:bg-purple-500/20`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className="w-6 h-6 mb-0.5" />
-                <span className="text-xs">{label}</span>
+                <Icon className="w-5 h-5 mb-1" />
+                <span className="text-xs font-medium">{label}</span>
               </button>
             );
           })}
-          {/* Botón para abrir el menú bottom sheet */}
+          
+          {/* Fixed Menu Button with better icon */}
           <button
             onClick={toggleMenu}
-            className="flex flex-col items-center justify-center flex-1 py-2 text-white/80 hover:text-purple-300 transition-all"
+            className={`flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all rounded-lg mx-0.5
+              ${isOpen ? 'text-purple-400 bg-purple-500/20' : 'text-white/80'}
+              hover:text-purple-300 active:bg-purple-500/20`}
             aria-label="Más opciones"
             aria-expanded={isOpen}
             aria-controls="mobile-bottom-sheet"
           >
-            <FaBars className="w-6 h-6 mb-0.5" />
-            <span className="text-xs">Más</span>
+            {isOpen ? (
+              <FaTimes className="w-5 h-5 mb-1" />
+            ) : (
+              <HiMenuAlt3 className="w-5 h-5 mb-1" />
+            )}
+            <span className="text-xs font-medium">Menú</span>
           </button>
         </div>
+        
+        {/* Safe area spacing for devices with home indicator */}
+        <div className="h-safe-area-inset-bottom bg-black/95"></div>
       </nav>
 
-      {/* Bottom Sheet Menu - Adjust z-index to be lower than chat */}
+      {/* Enhanced Bottom Sheet Menu with reorganized wallet section */}
       <div
         id="mobile-bottom-sheet"
         className={`
           fixed left-0 right-0 bottom-0 z-[200]
-          transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-y-0' : 'translate-y-full'}
-          bg-gradient-to-t from-black/95 to-black/90 backdrop-blur-lg
-          border-t border-purple-500/20 shadow-2xl
-          rounded-t-2xl
+          transition-all duration-300 ease-in-out
+          ${isOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
+          bg-gradient-to-t from-black/98 to-black/95 backdrop-blur-xl
+          border-t border-purple-500/30 shadow-2xl
+          rounded-t-3xl
           md:hidden
         `}
-        style={{ minHeight: '40vh', maxHeight: '80vh' }}
+        style={{ 
+          minHeight: '60vh', 
+          maxHeight: '85vh',
+          paddingBottom: 'calc(64px + env(safe-area-inset-bottom, 0px))'
+        }}
         tabIndex={isOpen ? 0 : -1}
       >
-        <div className="flex flex-col px-6 pt-4 pb-8 h-full overflow-y-auto">
-          {/* Drag handle */}
-          <div className="flex justify-center mb-4">
-            <span className="block w-12 h-1.5 rounded-full bg-purple-500/30" />
-          </div>
-          
-          {/* WALLET CONNECT - Usar el mismo componente que funciona en desktop */}
-          <div className="flex justify-center mb-4">
-            <WalletConnect className="navbar-wallet-mobile" showFullUI={true} />
+        <div className="flex flex-col px-6 pt-6 pb-4 h-full overflow-y-auto">
+          {/* Enhanced drag handle */}
+          <div className="flex justify-center mb-6">
+            <span className="block w-16 h-1.5 rounded-full bg-purple-500/40" />
           </div>
 
-          {/* Contract Address debajo */}
-          <div className="w-full flex flex-col items-center bg-purple-900/10 rounded-xl border border-purple-500/20 p-4 mb-6">
-            <p className="text-gray-400 text-xs mb-1.5">Staking Contract Address:</p>
-            <a 
-              href={`https://polygonscan.com/address/${contractAddress}`} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
-            >
-              <span className="text-xs font-mono">
-                {formattedContractAddress}
-              </span>
-            </a>
+          {/* Wallet Section - Con verificaciones adicionales */}
+          {walletConnected && account ? (
+            <div className="mb-6">
+              <h3 className="text-white font-semibold mb-4 text-center flex items-center justify-center gap-2">
+                <FaWallet className="text-purple-400" />
+                Wallet Connected
+              </h3>
+              
+              {/* Account Info Card */}
+              <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl border border-purple-500/30 p-4 mb-4">
+                {/* Account Address */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                      <FaUser className="text-sm text-white" />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-xs">Address</p>
+                      <p className="font-mono text-sm text-white">
+                        {account ? `${account.slice(0, 6)}...${account.slice(-4)}` : 'Not available'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCopyAddress}
+                      disabled={!account}
+                      className="p-2 rounded-lg bg-purple-800/40 hover:bg-purple-700/60 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="Copy address"
+                    >
+                      <FaCopy className="w-3 h-3 text-purple-300" />
+                    </button>
+                    <button
+                      onClick={handleViewOnExplorer}
+                      disabled={!account}
+                      className="p-2 rounded-lg bg-purple-800/40 hover:bg-purple-700/60 transition-colors active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      aria-label="View on explorer"
+                    >
+                      <FaExternalLinkAlt className="w-3 h-3 text-purple-300" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Balance and Network */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-black/40 rounded-lg p-3">
+                    <p className="text-gray-400 text-xs mb-1">Balance</p>
+                    <p className="text-white font-semibold text-sm">
+                      {balance ? parseFloat(balance).toFixed(4) : '0.0000'} MATIC
+                    </p>
+                  </div>
+                  <div className="bg-black/40 rounded-lg p-3">
+                    <p className="text-gray-400 text-xs mb-1">Network</p>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                      <p className="text-green-400 font-semibold text-sm">
+                        {network || 'Polygon'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Wallet Actions */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button
+                  onClick={handleViewProfile}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-purple-600/80 to-purple-700/80 hover:from-purple-600 hover:to-purple-700 transition-all text-white font-medium active:scale-95"
+                >
+                  <FaUser className="w-4 h-4" />
+                  View Profile
+                </button>
+                <button
+                  onClick={handleDisconnectWallet}
+                  disabled={!walletConnected || !account}
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-600 hover:to-red-700 transition-all text-white font-medium active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FaSignOutAlt className="w-4 h-4" />
+                  Disconnect
+                </button>
+              </div>
+            </div>
+          ) : (
+            /* Wallet Connection Section for non-connected state */
+            <div className="mb-6">
+              <h3 className="text-white font-semibold mb-4 text-center flex items-center justify-center gap-2">
+                <FaWallet className="text-purple-400" />
+                Connect Wallet
+              </h3>
+              <div className="bg-purple-900/20 rounded-xl border border-purple-500/30 p-6 mb-4">
+                <div className="text-center mb-6">
+                  <FaInfoCircle className="w-10 h-10 text-purple-400 mx-auto mb-3" />
+                  <p className="text-gray-300 text-sm mb-4">
+                    Connect your wallet to access all features
+                  </p>
+                </div>
+                <div className="flex justify-center">
+                  <WalletConnect 
+                    className="navbar-wallet-mobile w-full max-w-xs" 
+                    showFullUI={true}
+                    onError={(error) => console.error('WalletConnect error:', error)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Additional Navigation Items */}
+          <div className="mb-6">
+            <h3 className="text-white font-semibold mb-4 text-center">Quick Access</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {navigationItems.slice(4).map(({ path, label, icon: Icon }) => {
+                const isActive = location.pathname === path;
+                return (
+                  <button
+                    key={path}
+                    onClick={() => handleNavigation(path)}
+                    className={`flex flex-col items-center justify-center p-4 rounded-xl transition-all
+                      ${isActive 
+                        ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' 
+                        : 'bg-purple-900/10 border-purple-500/20 text-white/80'
+                      }
+                      border hover:bg-purple-500/15 active:bg-purple-500/25`}
+                  >
+                    <Icon className="w-6 h-6 mb-2 text-purple-400" />
+                    <span className="text-sm font-medium">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Contract Info */}
+          <div className="bg-purple-900/20 rounded-xl border border-purple-500/30 p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <FaInfoCircle className="text-purple-400 w-4 h-4" />
+              <h4 className="text-white font-medium text-sm">Contract Info</h4>
+            </div>
+            <div className="space-y-2">
+              <div>
+                <p className="text-gray-400 text-xs">Staking Contract:</p>
+                <a 
+                  href={`https://polygonscan.com/address/${contractAddress}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors text-xs font-mono"
+                >
+                  {formattedContractAddress}
+                  <FaExternalLinkAlt className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
           </div>
           
-          {/* BetaBadge separado con espacio */}
-          <div className="flex flex-col items-center mb-8 mt-2">
+          {/* Beta Badge */}
+          <div className="flex justify-center mb-6">
             <BetaBadge pulsate={true} className="border border-purple-400/30" />
           </div>
           
-          {/* Botones de acción */}
-          <div className="flex justify-center gap-4 mt-auto">
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                handleNavigation('/');
-              }}
-              className="px-6 py-2 rounded-lg bg-purple-500 text-white font-semibold shadow-lg"
-            >
-              Home
-            </button>
+          {/* Close Button - Always visible */}
+          <div className="mt-auto pt-4">
             <button
               onClick={toggleMenu}
-              className="px-6 py-2 rounded-lg bg-purple-600 text-white font-semibold shadow-lg"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all active:scale-95"
             >
-              Cerrar
+              Cerrar Menú
             </button>
           </div>
         </div>
       </div>
 
-      {/* Desktop Navbar (opcional, solo visible en md+) */}
+      {/* Backdrop for bottom sheet */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] md:hidden"
+          onClick={toggleMenu}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Desktop Navbar - Restaurar WalletConnect original */}
       <nav className="hidden md:block fixed top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
         <div className="max-w-7xl mx-auto px-4 lg:px-8">
           <div className="flex justify-between items-center h-14">
-            {/* Logo */}
             <div onClick={handleLogoClick} className="cursor-pointer">
               <img 
                 className="h-10 w-auto md:h-12"
@@ -246,9 +461,8 @@ const Navbar = () => {
                 }}
               />
             </div>
-            {/* Desktop Menu */}
             <div className="flex items-center justify-center flex-grow space-x-4">
-              {navigationItems.map(({ path, label, icon: Icon }) => (
+              {navigationItems.slice(1).map(({ path, label, icon: Icon }) => (
                 <NavLink 
                   key={path} 
                   to={path} 
@@ -268,9 +482,11 @@ const Navbar = () => {
                 />
               </div>
             </div>
-            {/* Wallet Connect */}
             <div className="relative ml-4">
-              <WalletConnect className="navbar-wallet" />
+              <WalletConnect 
+                className="navbar-wallet"
+                onError={(error) => console.error('Desktop WalletConnect error:', error)}
+              />
             </div>
           </div>
         </div>

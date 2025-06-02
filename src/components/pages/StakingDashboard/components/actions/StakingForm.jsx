@@ -2,6 +2,7 @@ import React, { useState, useCallback, memo } from 'react';
 import { ethers } from 'ethers';
 import { FaPlus, FaArrowRight } from 'react-icons/fa';
 import { ActionButton } from '../../ui/CommonComponents';
+import { parseTransactionError } from '../../../../../utils/errors/errorHandling';
 
 // Use memo to prevent unnecessary re-renders
 const StakingForm = memo(({ 
@@ -11,7 +12,7 @@ const StakingForm = memo(({
   fetchingBalance, 
   deposit, 
   updateStatus,
-  getErrorMessageForTransaction 
+  onError
 }) => {
   const [depositAmount, setDepositAmount] = useState("");
 
@@ -22,12 +23,70 @@ const StakingForm = memo(({
     try {
       const amountWei = ethers.parseEther(depositAmount);
       setDepositAmount("");
-      await deposit(amountWei);
+      
+      // Let the deposit function handle the error messages
+      const result = await deposit(amountWei);
+      
+      // The transaction hook will handle success/error status updates
+      if (!result.success && result.error) {
+        updateStatus('error', result.error);
+      }
     } catch (error) {
       console.error("Deposit failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('deposit', error.message));
+      
+      // Only handle errors that weren't already handled by the transaction hook
+      const parsedError = parseTransactionError(error);
+      
+      let errorMessage;
+      if (parsedError.status === 'rejected') {
+        errorMessage = 'You cancelled the staking transaction. No worries, your tokens are safe!';
+      } else if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        errorMessage = 'Not enough MATIC for gas fees. Please add more MATIC to your wallet.';
+      } else {
+        errorMessage = `Unable to complete staking: ${parsedError.message}`;
+      }
+      
+      updateStatus('error', errorMessage);
     }
-  }, [depositAmount, isPending, deposit, updateStatus, getErrorMessageForTransaction]);
+  }, [depositAmount, isPending, deposit, updateStatus]);
+
+  const handleStakeSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    
+    if (isPending || !depositAmount) return;
+    
+    const stakeAmount = parseFloat(depositAmount);
+    if (isNaN(stakeAmount) || stakeAmount <= 0) {
+      updateStatus('error', 'Please enter a valid amount to stake.');
+      return;
+    }
+
+    const walletBalanceNum = parseFloat(walletBalance || '0');
+    if (stakeAmount > walletBalanceNum) {
+      updateStatus('error', `Insufficient balance. You have ${walletBalanceNum.toFixed(4)} ${tokenSymbol} available.`);
+      return;
+    }
+
+    try {
+      await deposit(depositAmount);
+      setDepositAmount('');
+    } catch (error) {
+      console.error("Staking failed:", error);
+      
+      const parsedError = parseTransactionError(error);
+      
+      let errorMessage;
+      if (parsedError.status === 'rejected') {
+        errorMessage = 'You cancelled the staking transaction. No worries, your tokens are safe!';
+      } else if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        errorMessage = 'Not enough MATIC for gas fees. Please add more MATIC to your wallet.';
+      } else {
+        errorMessage = `Unable to complete staking: ${parsedError.message}`;
+      }
+      
+      updateStatus('error', errorMessage);
+    }
+  }, [depositAmount, isPending, walletBalance, tokenSymbol, deposit, updateStatus]);
 
   return (
     <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/30 p-4">
