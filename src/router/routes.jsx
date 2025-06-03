@@ -43,7 +43,7 @@ const AIHub = createLazyComponent(() => import('../components/pages/AIHub/AIHub.
 const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTHome.jsx'));
 const NFTDashboard = createLazyComponent(() => import('../components/pages/TokenizationApp/dashboard/NFTDashboard.jsx'));
 const NFTDetail = createLazyComponent(() => import('../components/pages/TokenizationApp/components/NFTDetail.jsx'));
-const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/steps/TokenizationTool.jsx'));
+const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/MintNFT/TokenizationTool.jsx'));
 const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
 const ChatPage = createLazyComponent(() => import('../components/pages/chat/ChatPage'));
 

@@ -102,17 +102,14 @@ html, body {
     }
   }
   
-  /* Utility classes for mobile safe areas */
+  /* Remove safe area utilities that add extra spacing */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   
+  /* Only add spacing to main content, not footer */
   .pb-safe-area-mobile {
     padding-bottom: calc(var(--mobile-navbar-height, 64px) + env(safe-area-inset-bottom, 16px));
-  }
-  
-  .mb-safe-area-mobile {
-    margin-bottom: calc(var(--mobile-navbar-height, 64px) + env(safe-area-inset-bottom, 16px));
   }
 }
 
@@ -124,9 +121,9 @@ html, body {
     min-height: 100dvh; /* Dynamic viewport height for mobile */
   }
   
-  /* Profile page specific fixes */
+  /* Profile page specific fixes - reduce bottom spacing */
   .profile-content {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     margin-bottom: 0;
   }
   
@@ -171,9 +168,14 @@ html, body {
 
 /* Specific mobile viewport fixes */
 @media screen and (max-width: 768px) {
-  /* Ensure content doesn't get cut off */
-  main, section, .content-area {
-    margin-bottom: calc(100px + env(safe-area-inset-bottom, 0px));
+  /* Ensure content doesn't get cut off but footer sits properly */
+  main:not(:has(footer)), section:not(:has(footer)), .content-area:not(:has(footer)) {
+    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* When footer is present, reduce main content spacing */
+  main:has(footer), section:has(footer), .content-area:has(footer) {
+    margin-bottom: 0;
   }
   
   /* Bottom sheet animation improvements */

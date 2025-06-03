@@ -238,15 +238,15 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     <div className="p-3 md:p-4">
                       <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Total Token Supply</h4>
-                      <p className="text-xl md:text-2xl font-bold text-white">1000 POL</p>
+                      <p className="text-xl md:text-2xl font-bold text-white">21,000,000 NUVO</p>
                     </div>
                     <div className="p-3 md:p-4">
                       <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Airdrop Allocation</h4>
-                      <p className="text-xl md:text-2xl font-bold text-white">100 NUVOS</p>
+                      <p className="text-xl md:text-2xl font-bold text-white">100 NUVO</p>
                     </div>
                     <div className="p-3 md:p-4">
                       <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Per Wallet</h4>
-                      <p className="text-xl md:text-2xl font-bold text-white">10 NUVOS</p>
+                      <p className="text-xl md:text-2xl font-bold text-white">10 NUVO</p>
                     </div>
                   </div>
                   <div className="mt-4 md:mt-6">
@@ -269,7 +269,7 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
-                      <span className="text-gray-300">Minimum wallet balance of 1 MATIC for transaction fees</span>
+                      <span className="text-gray-300">Minimum wallet balance of 1 POL for transaction fees</span>
                     </li>
                   </ul>
                 </div>

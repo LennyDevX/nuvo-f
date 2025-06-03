@@ -80,54 +80,63 @@ const CaptureStep = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <h2 className="text-2xl font-bold bg-nuvo-gradient-text text-center">Capture Your Asset</h2>
-      <p className="text-gray-300 text-center">Take a photo of your physical item or upload an existing image</p>
+      <div className="text-center">
+        <h2 className="text-xl sm:text-2xl font-bold bg-nuvo-gradient-text bg-clip-text text-transparent mb-2">Capture Your Asset</h2>
+        <p className="text-sm sm:text-base text-gray-300 px-4">Take a photo of your physical item or upload an existing image</p>
+      </div>
       
-      <div className="aspect-video bg-black/20 rounded-xl overflow-hidden relative border border-purple-500/30 shadow-lg">
+      {/* Responsive video container - más transparente */}
+      <div className="aspect-video sm:aspect-[4/3] lg:aspect-video bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden relative border border-white/20 shadow-lg">
         <video 
           ref={videoRef} 
           autoPlay 
           playsInline
+          muted
           className="w-full h-full object-cover"
         />
         <canvas ref={canvasRef} className="hidden" />
         
-        {/* Camera overlay with guidelines */}
-        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-500/40 m-4 rounded"></div>
+        {/* Camera overlay with guidelines - responsive margins */}
+        <div className="absolute inset-0 pointer-events-none border-2 border-dashed border-purple-500/40 m-2 sm:m-4 rounded"></div>
         
-        {/* Camera indicators */}
-        <div className="absolute top-3 left-3 flex items-center">
-          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse mr-2"></div>
-          <span className="text-xs text-white/70">LIVE</span>
+        {/* Camera indicators - responsive positioning */}
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex items-center">
+          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-red-500 animate-pulse mr-1 sm:mr-2"></div>
+          <span className="text-[10px] sm:text-xs text-white/70">LIVE</span>
         </div>
       </div>
       
-      <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/20 text-center">
-        <p className="text-sm text-purple-300">
-          <FaExclamationTriangle className="inline-block mr-2" />
-          Position your item in the center of the frame for best results
+      {/* Instructions - más sutil */}
+      <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 text-center">
+        <p className="text-xs sm:text-sm text-purple-300">
+          <FaExclamationTriangle className="inline-block mr-1 sm:mr-2" />
+          <span className="hidden sm:inline">Position your item in the center of the frame for best results</span>
+          <span className="sm:hidden">Center your item in the frame</span>
         </p>
       </div>
       
-      <div className="flex justify-center gap-4">
+      {/* Action buttons - responsive layout */}
+      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4 sm:px-0">
         <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center gap-2 shadow-lg"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center gap-2 shadow-lg touch-manipulation"
           onClick={capturePhoto}
         >
-          <FaCamera /> Take Photo
+          <FaCamera /> 
+          <span className="text-sm sm:text-base">Take Photo</span>
         </motion.button>
         
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center gap-2"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full sm:w-auto px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center justify-center gap-2 touch-manipulation"
           onClick={() => fileInputRef.current?.click()}
         >
-          <FaUpload /> Upload Image
+          <FaUpload /> 
+          <span className="text-sm sm:text-base">Upload Image</span>
           <input 
             type="file" 
             ref={fileInputRef}

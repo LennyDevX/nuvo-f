@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { motion } from 'framer-motion';
-import { FaExclamationTriangle, FaPlus, FaRedo, FaNetworkWired } from 'react-icons/fa';
+import { FaExclamationTriangle, FaRedo, FaNetworkWired, FaWallet } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import { WalletContext } from '../../../../context/WalletContext';
 
-const NFTErrorState = ({ error, onRetry }) => {
+const NFTErrorState = ({ error, onRetry, walletConnected }) => {
+  const { connectWallet } = useContext(WalletContext);
+
   // Determine if this is a network error
   const isNetworkError = error && (
     error.includes('network') || 
@@ -24,57 +27,61 @@ const NFTErrorState = ({ error, onRetry }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-black/20 backdrop-blur-sm p-6 rounded-xl border border-purple-500/30 text-center"
+      className="flex flex-col items-center justify-center py-16 px-4 text-center"
     >
-      <div className="flex flex-col items-center">
-        <div className="w-16 h-16 flex items-center justify-center rounded-full bg-amber-500/20 mb-4">
-          <FaExclamationTriangle className="text-amber-400 text-3xl" />
-        </div>
-        
-        <h3 className="text-xl font-bold text-white mb-2">
-          {isNetworkError ? "Problema de conexión" : 
-           isNoNFTsError ? "No NFTs Found" : 
-           "Error Loading NFTs"}
-        </h3>
-        
-        <p className="text-gray-300 mb-6 max-w-lg">
-          {isNetworkError ? (
-            "No pudimos conectar con la blockchain. Por favor verifica que tu wallet esté conectada a la red correcta (Polygon Network)."
-          ) : isNoNFTsError ? (
-            "Parece que aún no tienes NFTs creados o la conexión a la blockchain falló. Comienza creando tu primer NFT."
-          ) : (
-            error || "Ocurrió un error al cargar tus NFTs. Por favor intenta nuevamente."
-          )}
-        </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4">
-          {isNoNFTsError && (
-            <Link
-              to="/tokenize"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-            >
-              <FaPlus className="mr-2" /> Create my first NFT
-            </Link>
-          )}
-          
-          <button 
-            onClick={onRetry}
-            className="inline-flex items-center px-6 py-3 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg text-white transition-all"
+      <div className="w-16 h-16 flex items-center justify-center rounded-full bg-amber-500/20 mb-6">
+        <FaExclamationTriangle className="text-amber-400 text-3xl" />
+      </div>
+      
+      <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-red-400 via-amber-400 to-yellow-400 bg-clip-text text-transparent">
+        {isNetworkError ? "Connection Problem" : 
+         isNoNFTsError ? "No NFTs Found" : 
+         "Error Loading NFTs"}
+      </h3>
+      
+      <p className="text-gray-300 mb-8 max-w-lg leading-relaxed">
+        {isNetworkError ? (
+          "We couldn't connect to the blockchain. Please verify that your wallet is connected to the correct network (Polygon Network)."
+        ) : isNoNFTsError ? (
+          "It seems you don't have any NFTs created yet or the blockchain connection failed."
+        ) : (
+          error || "An error occurred while loading your NFTs. Please try again."
+        )}
+      </p>
+      
+      <div className="flex flex-col sm:flex-row gap-4">
+        {!walletConnected ? (
+          <motion.button
+            onClick={connectWallet}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
           >
-            <FaRedo className="mr-2" /> Try Again
-          </button>
-          
-          {isNetworkError && (
-            <a
-              href="https://chainlist.org/chain/137"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-all"
-            >
-              <FaNetworkWired className="mr-2" /> Switch to Polygon
-            </a>
-          )}
-        </div>
+            <FaWallet className="mr-2" /> Connect Wallet
+          </motion.button>
+        ) : null}
+        
+        <motion.button 
+          onClick={onRetry}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="inline-flex items-center px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-white font-medium transition-all duration-300"
+        >
+          <FaRedo className="mr-2" /> Try Again
+        </motion.button>
+        
+        {isNetworkError && (
+          <motion.a
+            href="https://chainlist.org/chain/137"
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-white font-medium transition-all duration-300"
+          >
+            <FaNetworkWired className="mr-2" /> Switch to Polygon
+          </motion.a>
+        )}
       </div>
     </motion.div>
   );

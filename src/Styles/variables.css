@@ -48,7 +48,7 @@
     --container-padding: 12px;
     --chat-spacing: 8px;
     --button-size: 36px;
-    /* Add mobile bottom spacing to account for navbar */
-    --mobile-bottom-spacing: calc(var(--mobile-navbar-height) + var(--safe-area-inset-bottom) + 1rem);
+    /* Update mobile bottom spacing to only account for navbar */
+    --mobile-bottom-spacing: calc(var(--mobile-navbar-height) + var(--safe-area-inset-bottom));
   }
 }

@@ -107,7 +107,7 @@ const RewardDeveloper = () => {
             <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium flex items-center gap-2 shadow-lg shadow-purple-900/30 active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="btn-primary btn-base px-6 py-3"
               onClick={() => handleNavigation('/nfts')}
             >
               Explore NFT Collection <FaChevronRight className="text-sm" />

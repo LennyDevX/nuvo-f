@@ -315,7 +315,7 @@ const Navbar = () => {
                   <div className="bg-black/40 rounded-lg p-3">
                     <p className="text-gray-400 text-xs mb-1">Balance</p>
                     <p className="text-white font-semibold text-sm">
-                      {balance ? parseFloat(balance).toFixed(4) : '0.0000'} MATIC
+                      {balance ? parseFloat(balance).toFixed(4) : '0.0000'} POL
                     </p>
                   </div>
                   <div className="bg-black/40 rounded-lg p-3">
