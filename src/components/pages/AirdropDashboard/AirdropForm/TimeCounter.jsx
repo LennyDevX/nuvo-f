@@ -36,9 +36,9 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
   const reduceAnimations = shouldReduceMotion || isLowPerformance;
 
   useEffect(() => {
-    // Actualización de fechas para el próximo airdrop: 17 de abril - 1 de mayo 2025
-    const startDate = new Date('2025-04-17T00:00:00').getTime();
-    const endDate = new Date('2025-05-01T23:59:59').getTime();
+    // Actualización de fechas para el próximo airdrop: 27 de mayo - 6 de junio 2025
+    const startDate = new Date('2025-05-27T00:00:00').getTime();
+    const endDate = new Date('2025-06-06T23:59:59').getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -118,25 +118,25 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
   }, [reduceAnimations]);
 
   return (
-    <div className={`mb-6 ${hideDetailsOnMobile ? 'px-0' : 'px-4 sm:px-6'}`}>
+    <div className={`mb-4 lg:mb-6 ${hideDetailsOnMobile ? 'px-0' : 'px-2 sm:px-4 lg:px-6'}`}>
       <motion.div 
-        className={`text-center mb-6 ${hideDetailsOnMobile ? 'hidden lg:block' : ''}`}
+        className={`text-center mb-4 lg:mb-6 ${hideDetailsOnMobile ? 'hidden lg:block' : ''}`}
         {...animationProps}
       >
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">
+        <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2 leading-tight">
           Next Airdrop Distribution
         </h2>
-        <p className="text-base sm:text-lg text-purple-200/80 max-w-2xl mx-auto mb-2">
+        <p className="text-sm sm:text-base lg:text-lg text-purple-200/80 max-w-2xl mx-auto mb-2 leading-relaxed px-2">
           Join our community airdrop and be part of the next generation of decentralized finance.
         </p>
-        <p className="text-purple-200/60 text-sm">
+        <p className="text-purple-200/60 text-xs sm:text-sm">
           {isExpired 
             ? "Airdrop period has ended" 
             : "Time remaining until tokens are distributed"}
         </p>
       </motion.div>
       
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-md sm:max-w-xl mx-auto">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-4 max-w-sm sm:max-w-md lg:max-w-xl mx-auto">
         <TimeBlock value={displayTime.days} label="Days" />
         <TimeBlock value={displayTime.hours} label="Hours" />
         <TimeBlock value={displayTime.minutes} label="Minutes" />
@@ -144,18 +144,18 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
       </div>
 
       <motion.div 
-        className={`text-center mt-4 ${hideDetailsOnMobile ? 'hidden lg:block' : ''}`}
+        className={`text-center mt-3 lg:mt-4 ${hideDetailsOnMobile ? 'hidden lg:block' : ''}`}
         initial={reduceAnimations ? { opacity: 1 } : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: reduceAnimations ? 0 : 0.3, duration: reduceAnimations ? 0 : 0.5 }}
       >
-        <div className="text-sm font-medium text-purple-200/60">
+        <div className="text-xs sm:text-sm font-medium text-purple-200/60">
           {isExpired 
             ? "The airdrop period has concluded" 
             : "Distribution period"}
         </div>
-        <div className="text-base sm:text-lg font-semibold text-white">
-          April 17, 2025 – May 1, 2025
+        <div className="text-sm sm:text-base lg:text-lg font-semibold text-white">
+          May 27, 2025 – June 6, 2025
         </div>
       </motion.div>
     </div>

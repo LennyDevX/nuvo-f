@@ -33,33 +33,35 @@ const AirdropProcessSteps = () => {
 
   return (
     <motion.section 
-      className="mb-24"
+      className="mb-16 lg:mb-24"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-100px" }}
       variants={{ visible: { transition: { staggerChildren: 0.2 } } }}
     >
-      <div className="text-center mb-12  p-6 rounded-xl shadow-lg border border-purple-500/30">
-        <h2 className="text-3xl md:text-4xl font-bold text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
+      <div className="text-center mb-8 lg:mb-12 p-4 lg:p-6 rounded-xl shadow-lg border border-purple-500/30">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.5)]">
           How It Works
         </h2>
-        
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Mobile: 2x2 grid, Tablet: 2x2, Desktop: 4x1 */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         {processSteps.map((step, index) => (
           <motion.div
             key={index}
             variants={fadeInUp}
-            className="nuvos-card p-6  hover:border-purple-500/70 transition-all duration-300 shadow-lg"
+            className="nuvos-card p-3 md:p-4 lg:p-6 hover:border-purple-500/70 transition-all duration-300 shadow-lg"
           >
-            <div className="h-12 w-12 rounded-full bg-purple-900/70 flex items-center justify-center mb-4 shadow-md">
-              {step.icon}
+            <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-purple-900/70 flex items-center justify-center mb-3 md:mb-4 shadow-md mx-auto lg:mx-0">
+              <div className="text-sm md:text-base lg:text-lg">
+                {step.icon}
+              </div>
             </div>
-            <h3 className="text-xl font-medium text-white mb-2 drop-shadow-sm">
+            <h3 className="text-sm md:text-lg lg:text-xl font-medium text-white mb-2 drop-shadow-sm text-center lg:text-left">
               {index + 1}. {step.title}
             </h3>
-            <p className="text-gray-200">
+            <p className="text-xs md:text-sm lg:text-base text-gray-200 text-center lg:text-left">
               {step.description}
             </p>
           </motion.div>

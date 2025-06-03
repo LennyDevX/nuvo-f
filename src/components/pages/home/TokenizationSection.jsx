@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { m, useReducedMotion } from 'framer-motion';
 import { FaImage, FaLock, FaExchangeAlt, FaMoneyBillWave } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const TokenizationSection = () => {
   const navigate = useNavigate();
@@ -55,11 +56,11 @@ const TokenizationSection = () => {
   };
 
   return (
-    <section className="py-12 md:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <section className="py-8 md:py-20 px-2 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Title for mobile that appears above the grid */}
-        <div className="block md:hidden mb-6 text-center">
-          <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
+        <div className="block md:hidden mb-4 text-center">
+          <h2 className="text-2xl font-bold text-white leading-tight tracking-tight">
             <span className="block">Transform Images</span>
             <span className="gradient-text text-transparent bg-clip-text bg-nuvo-gradient-text">Into Unique NFTs</span>
           </h2>
@@ -102,15 +103,21 @@ const TokenizationSection = () => {
                   WebkitBackfaceVisibility: "hidden"
                 }}
               >
-                <img 
-                  src="/GiftBoxNFT.webp" 
-                  alt="NFT Gift Box" 
-                  className="w-full h-full object-contain"
+                <OptimizedImage
+                  src="/GiftBoxNFT.webp"
+                  alt="NFT Gift Box"
+                  priority={false}
+                  quality={85}
+                  className="w-full h-full"
                   style={{
                     filter: useSimpleAnimation 
                       ? 'drop-shadow(0 0 8px rgba(139,92,246,0.5))' 
-                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))'
+                      : 'drop-shadow(0 0 15px rgba(138, 114, 81, 0.89))',
+                    objectFit: 'contain',
+                    background: 'transparent' // <-- fuerza fondo transparente
                   }}
+                  placeholderColor="transparent"
+                  loadingStrategy="lazy"
                 />
               </m.div>
               
@@ -168,7 +175,7 @@ const TokenizationSection = () => {
               </h2>
             </div>
             
-            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-300 max-w-xl mt-2 md:mt-6 mb-3 md:mb-8">
+            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-200 max-w-xl mt-2 md:mt-6 mb-3 md:mb-8">
               Tokenization converts assets into blockchain tokens, giving you verifiable ownership of your digital creations. 🖼️✨
             </p>
             
@@ -191,7 +198,7 @@ const TokenizationSection = () => {
             
             <m.button
               onClick={handleExploreTokenization}
-              className="px-3 py-2 md:px-6 md:py-4 text-xs md:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
+              className="px-3 py-2 md:px-6 md:py-4 text-xs md:text-base bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
             >

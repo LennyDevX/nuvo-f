@@ -2,79 +2,86 @@ import React from 'react';
 import { m } from 'framer-motion';
 import { FaNetworkWired } from 'react-icons/fa';
 import { SiReact, SiNodedotjs, SiSolidity } from 'react-icons/si';
+import { useAnimationConfig } from '../../animation/AnimationProvider';
 
 const TechnologySection = () => {
+  const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
+  const disableAnimations = shouldReduceMotion || isLowPerformance;
+
   const technologies = [
     {
       name: "Polygon Network",
-      icon: <FaNetworkWired className="text-4xl md:text-5xl mb-4" />,
-      description: "Built on Polygon to ensure fast, secure, and low-cost tokenization of assets with minimal environmental impact."
+      icon: <FaNetworkWired className="text-3xl md:text-4xl mb-3" />,
+      description: "Fast, secure, and low-cost tokenization with minimal environmental impact."
     },
     {
-      name: "Smart Contract Architecture",
-      icon: <SiSolidity className="text-4xl md:text-5xl mb-4" />,
-      description: "Advanced token standards that maintain connection between physical assets and their digital representations."
+      name: "Smart Contracts",
+      icon: <SiSolidity className="text-3xl md:text-4xl mb-3" />,
+      description: "Advanced token standards connecting physical and digital assets."
     },
     {
-      name: "Intuitive Interface",
-      icon: <SiReact className="text-4xl md:text-5xl mb-4" />,
-      description: "User-friendly platform enabling anyone to tokenize assets without technical knowledge of blockchain systems."
+      name: "User Interface",
+      icon: <SiReact className="text-3xl md:text-4xl mb-3" />,
+      description: "Intuitive platform for anyone to tokenize without technical knowledge."
     },
     {
       name: "Scalable Backend",
-      icon: <SiNodedotjs className="text-4xl md:text-5xl mb-4" />,
-      description: "Robust infrastructure supporting millions of tokenized assets with reliable verification mechanisms."
+      icon: <SiNodedotjs className="text-3xl md:text-4xl mb-3" />,
+      description: "Robust infrastructure supporting millions of tokenized assets."
     }
   ];
 
   return (
-    <section className="py-24 md:py-32 relative">
-      {/* Enhanced background - Remove circuit pattern */}
-      <div className="absolute inset-0 bg-transparent"></div>
-      {/* Remove the circuit pattern that causes grid effect */}
+    <section className="py-12 md:py-16 lg:py-20 relative">
+      {/* Transparent background - no additional overlays */}
       
       <div className="container mx-auto px-4 relative z-10">
         <m.div 
-          className="text-center mb-16 md:mb-20"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          className="text-center mb-8 md:mb-12"
+          initial={disableAnimations ? { opacity: 1 } : { opacity: 0, y: 20 }}
+          whileInView={disableAnimations ? {} : { opacity: 1, y: 0 }}
+          transition={{ duration: disableAnimations ? 0 : 0.6 }}
           viewport={{ once: true }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            <span className="bg-nuvo-gradient-text text-transparent bg-clip-text">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6">
+            <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-600 text-transparent bg-clip-text">
               Our Tokenization Technology
             </span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Innovative solutions that create secure, verifiable connections between physical objects and their digital counterparts on the blockchain.
+          <p className="text-base md:text-lg lg:text-xl text-gray-300 max-w-3xl mx-auto">
+            Innovative solutions that create secure, verifiable connections between physical objects and their digital counterparts.
           </p>
         </m.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Mobile-optimized grid: 2x2 on mobile, 4 columns on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
           {technologies.map((tech, index) => (
             <m.div
               key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true, margin: "-50px" }}
-              className="bg-gradient-to-br from-purple-900/40 to-black/60 backdrop-blur-md p-8 rounded-xl border border-purple-500/20 shadow-xl hover:shadow-purple-500/10 text-center group"
-              whileHover={{ 
-                scale: 1.05, 
-                boxShadow: "0 0 25px 0 rgba(168, 85, 247, 0.3)",
-                y: -5
+              initial={disableAnimations ? { opacity: 1 } : { opacity: 0, y: 20 }}
+              whileInView={disableAnimations ? {} : { opacity: 1, y: 0 }}
+              transition={{ duration: disableAnimations ? 0 : 0.4, delay: disableAnimations ? 0 : index * 0.1 }}
+              viewport={{ once: true, margin: "-30px" }}
+              className="backdrop-blur-sm p-4 md:p-6 lg:p-8 rounded-xl border border-purple-500/20 shadow-xl text-center group hover:border-purple-400/40 transition-all duration-300"
+              whileHover={disableAnimations ? {} : { 
+                scale: 1.02, 
+                boxShadow: "0 8px 25px rgba(168, 85, 247, 0.15)",
+                y: -2
               }}
             >
               <m.div 
-                className="flex justify-center text-purple-500 group-hover:text-purple-400"
-                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="flex justify-center text-purple-400 group-hover:text-purple-300 transition-colors"
+                whileHover={disableAnimations ? {} : { scale: 1.05, rotate: 3 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 {tech.icon}
               </m.div>
-              <h3 className="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors duration-300">{tech.name}</h3>
-              <p className="text-gray-300 group-hover:text-gray-200 transition-colors duration-300">{tech.description}</p>
+              <h3 className="text-sm md:text-base lg:text-xl font-bold text-white mb-2 md:mb-3 group-hover:text-purple-200 transition-colors duration-300">
+                {tech.name}
+              </h3>
+              <p className="text-xs md:text-sm lg:text-base text-gray-300 group-hover:text-gray-200 transition-colors duration-300 leading-relaxed">
+                {tech.description}
+              </p>
             </m.div>
           ))}
         </div>

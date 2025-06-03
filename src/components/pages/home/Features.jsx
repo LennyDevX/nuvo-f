@@ -10,9 +10,9 @@ import {
   FaMobileAlt,
   FaGamepad
 } from 'react-icons/fa';
-import { containerFadeIn } from '../../../utils/animationVariants'; // Removed unused fadeIn
+import { containerFadeIn } from '../../../utils/animations/animationVariants'; // Removed unused fadeIn
 
-const Features = () => {
+const Features = ({ showSkeletonIfLoading }) => {
   const prefersReducedMotion = useReducedMotion();
 
   // Memoize the features data array
@@ -109,25 +109,36 @@ const Features = () => {
     }
   ], []); // Empty dependency array ensures this runs only once
   
+  // Skeleton loading (simple placeholder)
+  if (showSkeletonIfLoading) {
+    return (
+      <section className="max-w-7xl mx-auto px-2 py-8 sm:py-20">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 lg:gap-8">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="nuvos-card animate-pulse h-40 bg-gray-800/40 rounded-xl sm:rounded-2xl" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="max-w-7xl mx-auto px-4 py-12 sm:py-20">
+    <section className="max-w-7xl mx-auto px-2 py-8 sm:py-20">
       <m.div
         initial={prefersReducedMotion ? {} : "hidden"}
         whileInView="visible"
         viewport={{ once: true, margin: "-100px" }}
         variants={containerFadeIn}
-        className="text-center mb-10 sm:mb-16"
+        className="text-center mb-8 sm:mb-16"
       >
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 sm:mb-4">
+        <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 sm:mb-4">
           Building the Future of <span className=" text-transparent bg-clip-text bg-nuvo-gradient-text">DeFi</span>
         </h2>
-        <p className="text-gray-300 text-base sm:text-lg max-w-3xl mx-auto px-2 sm:px-4"> {/* Slightly wider max-width */}
+        <p className="text-gray-200 text-sm sm:text-lg max-w-3xl mx-auto px-2 sm:px-4">
           Explore our growing ecosystem of innovative blockchain products and services designed for real utility.
         </p>
       </m.div>
-
-      {/* Updated grid layout: 2 columns on mobile devices */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 lg:gap-8"> 
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 lg:gap-8">
         {featuresData.map((product, index) => (
           <m.div
             key={product.title} 

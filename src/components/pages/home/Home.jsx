@@ -10,7 +10,7 @@ import Header from './Header';
 
 // Lazy load components below the fold with preload capability
 const Features = lazyWithPreload(() => import('./Features'));
-const AirdropInfo = lazyWithPreload(() => import('./WhitelistToken'));
+const WhitelistToken = lazyWithPreload(() => import('./WhitelistToken'));
 const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
@@ -89,7 +89,7 @@ const Home = () => {
         
         {/* Only render content when header has loaded */}
         {headerLoaded && (
-          <div className="relative z-10">
+          <div className="relative z-10 overflow-x-hidden">
             <HeroSection />
             
             <Suspense fallback={<LoadingFallback height="200px" />}>
@@ -99,10 +99,13 @@ const Home = () => {
                   {/* Usar intersection observer para carga progresiva */}
                   {loadingStrategy.shouldLoadIntersectionObserverComponents && (
                     <LazyComponentLoader>
+                      {/* Cambia el orden: primero Features y WhitelistToken */}
                       <RewardDeveloper />
-                      <AirdropInfo />
                       <TokenizationSection />
-                      <Features />
+                      <Features showSkeletonIfLoading={false} />
+
+                      <WhitelistToken showSkeletonIfLoading={false} />
+
                     </LazyComponentLoader>
                   )}
                   <AnnouncementModal isOpen={isModalOpen} closeModal={closeModal} />

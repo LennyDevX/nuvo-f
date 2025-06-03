@@ -108,22 +108,24 @@ const HeroSection = ({ onOpenTokenModal }) => {
 
   return (
     <m.div
-      className="m-4 relative flex flex-col items-center justify-center text-center nuvos-card"
+      className="mx-2 sm:mx-4 relative flex flex-col items-center justify-center text-center nuvos-card"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
       
       {/* Content */}
-      <div className="relative z-10">
-        <div className="flex flex-col md:flex-row items-center justify-between">
-          <m.div variants={itemVariants} className="mb-8 md:w-3/5">
+      <div className="relative z-10 w-full">
+        {/* Main hero content - always horizontal layout */}
+        <div className="flex flex-row items-center justify-between gap-3 sm:gap-6">
+          {/* Text content - takes up more space on mobile */}
+          <m.div variants={itemVariants} className="flex-1 text-left min-w-0">
             {/* Title with letter-by-letter animation */}
             <m.div
               variants={titleContainerVariants}
               initial="hidden"
               animate="visible"
-              className="mb-4 overflow-hidden"
+              className="mb-2 sm:mb-4 overflow-hidden"
             >
               {Array.from("NUVOS Token").map((char, index) => (
                 <m.span
@@ -131,8 +133,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
                   custom={index}
                   variants={letterVariants}
                   className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
-                            text-4xl md:text-5xl lg:text-6xl font-bold"
-                  
+                            text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight"
                 >
                   {char === ' ' ? '\u00A0' : char}
                 </m.span>
@@ -143,7 +144,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
               initial={{ opacity: 0, y: 0, x: 5 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
               transition={{ delay: 0.8, duration: 1 }}
-              className="text-xl md:text-2xl mt-4"
+              className="text-sm sm:text-lg md:text-xl lg:text-2xl mt-1 sm:mt-2 text-gray-200 leading-snug"
             >
               Powering Our Digital Ecosystem Today
             </m.p>
@@ -152,33 +153,34 @@ const HeroSection = ({ onOpenTokenModal }) => {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 1 }}
-              className="max-w-3xl"
+              className="mt-2 sm:mt-4"
             >
-              <p className="text-gray-300 text-lg mb-6">
+              <p className="text-gray-300 text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 leading-relaxed">
                 Experience NUVOS, the active cornerstone of our ecosystem with a fixed supply of 21M tokens.
-                Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.
+                <span className="hidden sm:inline"> Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.</span>
               </p>
             </m.div>
             
-            {/* Botón con animación de fade in simplificada */}
+            {/* Button optimized for mobile */}
             <m.button 
               variants={buttonVariants}
               initial="hidden"
               animate="visible"
               whileHover="hover"
               whileTap="tap"
-              className="text-white px-5 py-3 rounded-full font-semibold transition-all duration-300 
+              className="text-white px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-full 
+                font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base
                 bg-gradient-to-r from-purple-600 to-blue-500 shadow-md hover:shadow-lg
-                relative"
+                relative w-full sm:w-auto"
               onClick={onOpenTokenModal}
             >
               Learn More
             </m.button>
           </m.div>
 
-          {/* Token Image with Rotation Animation */}
+          {/* Token Image - optimized size for mobile */}
           <m.div 
-            className="md:w-2/5 flex justify-center items-center p-4"
+            className="flex-shrink-0 flex justify-center items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 1, delay: 0.8 }}
@@ -191,44 +193,44 @@ const HeroSection = ({ onOpenTokenModal }) => {
               <m.img
                 src="/NuvosToken.png"
                 alt="NUVOS Token"
-                className="w-48 h-48 md:w-64 md:h-64 object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]"
+                className="w-20 h-20 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-64 xl:h-64 
+                  object-contain drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] sm:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]"
                 variants={coinRotateVariants}
                 animate="animate"
                 style={{ 
-                  filter: 'drop-shadow(0 0 10px rgba(139, 92, 246, 0.5))'
+                  filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.5))'
                 }}
               />
             </m.div>
-            
           </m.div>
         </div>
 
-        {/* Feature cards - keep existing structure */}
+        {/* Feature cards - improved mobile layout */}
         <m.div 
           variants={itemVariants}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mt-6 sm:mt-8"
         >
           {[
             {
-              icon: <FaLock className="text-purple-400 text-4xl mb-4" />,
+              icon: <FaLock className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
               title: "Fixed Supply",
               description: "21M tokens maximum supply, no additional minting capability"
             },
             {
-              icon: <FaRocket className="text-purple-400 text-4xl mb-4" />,
+              icon: <FaRocket className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
               title: "Active Utility",
               description: "Currently powering transactions and services across the Nuvos Cloud ecosystem"
             },
             {
-              icon: <FaUsers className="text-purple-400 text-4xl mb-4" />,
+              icon: <FaUsers className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
               title: "Community Governed",
               description: "Token holders participate in governance decisions and ecosystem development"
             }
           ].map((item, index) => (
-            <div key={index} className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center">
+            <div key={index} className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center p-3 sm:p-4 lg:p-6">
               {item.icon}
-              <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
-              <p className="text-gray-400">{item.description}</p>
+              <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">{item.title}</h3>
+              <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">{item.description}</p>
             </div>
           ))}
         </m.div>

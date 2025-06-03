@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect, useContext, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { motion } from 'framer-motion';
-import { FaRedo } from 'react-icons/fa';
+import { FaRedo, FaPlus } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
@@ -187,12 +188,21 @@ const NFTDashboard = () => {
               <p className="text-gray-300">Manage and explore your digital assets</p>
             </div>
             
-            <button 
-              onClick={handleRefreshNFTs} 
-              className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors shadow-md shadow-purple-900/20"
-            >
-              <FaRedo /> Refresh NFTs
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+              <Link 
+                to="/tokenize"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-md text-white font-medium transition-all duration-200 border border-purple-500/20 hover:border-pink-500/30"
+              >
+                <FaPlus className="text-sm" /> Mint NFTs
+              </Link>
+              
+              <button 
+                onClick={handleRefreshNFTs} 
+                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-black/80 hover:bg-black/60 rounded-md text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
+              >
+                <FaRedo className="text-sm" /> Refresh NFTs
+              </button>
+            </div>
           </div>
           
           {/* Stats Overview - Pass true for isMobile on smaller screens */}
@@ -202,7 +212,7 @@ const NFTDashboard = () => {
           <div className="md:hidden">
             <button 
               onClick={toggleMobileFilters}
-              className="w-full py-3 bg-purple-500/20 backdrop-blur-sm text-white rounded-lg flex items-center justify-center border border-purple-500/20 shadow-sm"
+              className="w-full py-3 bg-black/60 backdrop-blur-sm text-white rounded-md flex items-center justify-center border border-purple-500/30 hover:border-pink-400/50 transition-all duration-200 font-medium"
             >
               {showMobileFilters ? "Hide Filters" : "Show Filters"}
             </button>

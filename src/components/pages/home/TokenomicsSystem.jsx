@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const TokenomicsSystem = () => {
   const navigate = useNavigate();
@@ -74,17 +75,16 @@ const TokenomicsSystem = () => {
   }, [useSimpleAnimation]);
 
   return (
-    <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8">
+    <section className="py-8 md:py-16 px-2 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Title for mobile that appears above the grid */}
-        <div className="block md:hidden mb-6 text-center">
-          <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
+        <div className="block md:hidden mb-4 text-center">
+          <h2 className="text-2xl font-bold text-white leading-tight tracking-tight">
             <span className="block">Revolutionary</span>
             <span className="gradient-text text-transparent bg-clip-text bg-nuvo-gradient-text">Tokenomics</span>
           </h2>
         </div>
-      
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:gap-12 items-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-6 lg:gap-12 items-center">
           {/* Left Content - Optimized for mobile */}
           <motion.div
             initial={tokenAnimationProps.initial}
@@ -101,13 +101,12 @@ const TokenomicsSystem = () => {
               </h2>
             </div>
             
-            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-300 max-w-xl mt-2 md:mt-6">
+            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-200 max-w-xl mt-2 md:mt-6">
               Our innovative token distribution creates long-term value with community governance and sustainable growth. 💰
             </p>
-            
             <button
               onClick={handleExploreTokenomics}
-              className="px-3 py-2 md:px-6 md:py-4 text-xs md:text-base mt-4 md:mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg"
+              className="px-3 py-2 md:px-6 md:py-4 text-xs md:text-base mt-4 md:mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-full transition-all duration-300 shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
               Explore Tokenomics
             </button>
@@ -147,15 +146,20 @@ const TokenomicsSystem = () => {
                   WebkitBackfaceVisibility: "hidden"
                 }}
               >
-                <img 
-                  src="/NuvosToken.png" 
-                  alt="Nuvos Token" 
-                  className="w-full h-full object-contain"
+                <OptimizedImage
+                  src="/NuvosToken.png"
+                  alt="Nuvos Token"
+                  priority={true}
+                  quality={90}
+                  className="w-full h-full"
                   style={{
                     filter: useSimpleAnimation 
                       ? 'drop-shadow(0 0 8px rgba(139,92,246,0.5))' 
-                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))'
+                      : 'drop-shadow(0 0 15px rgba(139,92,246,0.5))',
+                    objectFit: 'contain'
                   }}
+                  placeholderColor="transparent"
+                  loadingStrategy="eager"
                 />
               </motion.div>
               

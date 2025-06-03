@@ -169,53 +169,39 @@ const PreviewStep = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
-      <h2 className="text-2xl font-bold bg-nuvo-gradient-text bg-clip-text text-transparent text-center">Review & Mint</h2>
-      <p className="text-gray-300 text-center">Confirm your asset details before creating the NFT</p>
+      <div className="text-center">
+        <h2 className="text-xl sm:text-2xl font-bold bg-nuvo-gradient-text bg-clip-text text-transparent mb-2">Review & Mint</h2>
+        <p className="text-sm sm:text-base text-gray-300">Confirm your asset details before creating the NFT</p>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-4">
-          <div className="aspect-square bg-black/30 rounded-xl overflow-hidden border border-purple-500/30 shadow-lg">
-            {image && (
-              <img 
-                src={image} 
-                alt="Asset Preview" 
-                className="w-full h-full object-contain"
-              />
-            )}
-          </div>
-          <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/20">
-            <p className="text-sm text-purple-300 flex items-start">
-              <FaShieldAlt className="mr-2 mt-0.5 flex-shrink-0" />
-              <span>This image will be permanently stored on IPFS and linked to your NFT on the blockchain.</span>
-            </p>
-          </div>
-        </div>
-        
-        <div className="space-y-4">
-          <div className="nuvos-card bg-black/30 rounded-xl p-6 border border-purple-500/20">
-            <h3 className="text-xl font-bold text-white mb-4">
+      {/* Mobile-first layout: details first on mobile, image below */}
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Details section - first on mobile for accessibility */}
+        <div className="space-y-3 sm:space-y-4 order-1 lg:order-2">
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20">
+            <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4">
               {metadata.name}
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div>
-                <span className="text-gray-400 text-sm">Description:</span>
-                <p className="text-white">{metadata.description}</p>
+                <span className="text-gray-400 text-xs sm:text-sm">Description:</span>
+                <p className="text-white text-sm sm:text-base">{metadata.description}</p>
               </div>
               <div>
-                <span className="text-gray-400 text-sm">Category:</span>
-                <p className="text-white capitalize">{metadata.category}</p>
+                <span className="text-gray-400 text-xs sm:text-sm">Category:</span>
+                <p className="text-white text-sm sm:text-base capitalize">{metadata.category}</p>
               </div>
               {metadata.physicalLocation && (
                 <div>
-                  <span className="text-gray-400 text-sm">Physical Location:</span>
-                  <p className="text-white">{metadata.physicalLocation}</p>
+                  <span className="text-gray-400 text-xs sm:text-sm">Physical Location:</span>
+                  <p className="text-white text-sm sm:text-base">{metadata.physicalLocation}</p>
                 </div>
               )}
               <div>
-                <span className="text-gray-400 text-sm">Owner:</span>
-                <p className="text-white font-mono text-sm">
+                <span className="text-gray-400 text-xs sm:text-sm">Owner:</span>
+                <p className="text-white font-mono text-xs sm:text-sm">
                   {account ? 
                     `${account.slice(0, 6)}...${account.slice(-4)}` : 
                     'Connect wallet'}
@@ -224,17 +210,18 @@ const PreviewStep = () => {
             </div>
           </div>
           
-          <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/20">
-            <p className="text-sm text-purple-300">
+          <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+            <p className="text-xs sm:text-sm text-purple-300">
               By minting this NFT, you're creating a digital representation of your asset that can be traded and verified on the blockchain.
             </p>
           </div>
           
-          <div className="pt-4 flex gap-4">
+          {/* Responsive buttons */}
+          <div className="pt-3 sm:pt-4 flex flex-col sm:flex-row gap-3 sm:gap-4">
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center justify-center gap-2 touch-manipulation"
               onClick={() => setCurrentStep('metadata')}
               disabled={isMinting}
             >
@@ -242,9 +229,9 @@ const PreviewStep = () => {
             </motion.button>
             
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex-1 flex items-center justify-center gap-2 shadow-lg"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center gap-2 shadow-lg touch-manipulation"
               onClick={mintNFT}
               disabled={isMinting || !walletConnected || txStatus === 'success'}
             >
@@ -261,10 +248,30 @@ const PreviewStep = () => {
           </div>
           
           {!walletConnected && (
-            <div className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/30 text-yellow-400">
+            <div className="p-3 sm:p-4 bg-yellow-500/10 backdrop-blur-sm rounded-lg border border-yellow-500/30 text-yellow-400 text-xs sm:text-sm">
               Please connect your wallet to mint this NFT
             </div>
           )}
+        </div>
+        
+        {/* Image section - moved below details on mobile, ajustar altura */}
+        <div className="space-y-3 sm:space-y-4 order-2 lg:order-1">
+          <div className="aspect-square bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/20 shadow-lg max-w-xs mx-auto lg:max-w-none lg:mx-0">
+            {image && (
+              <img 
+                src={image} 
+                alt="Asset Preview" 
+                className="w-full h-full object-contain p-2"
+                style={{ maxHeight: '100%' }}
+              />
+            )}
+          </div>
+          <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
+            <p className="text-xs sm:text-sm text-purple-300 flex items-start">
+              <FaShieldAlt className="mr-2 mt-0.5 flex-shrink-0" />
+              <span>This image will be permanently stored on IPFS and linked to your NFT on the blockchain.</span>
+            </p>
+          </div>
         </div>
       </div>
       
@@ -276,7 +283,7 @@ const PreviewStep = () => {
           message={toastInfo.message}
           details={toastInfo.details}
           hash={toastInfo.hash}
-          duration={toastInfo.type === 'loading' ? 0 : 8000} // Don't auto-close loading toasts
+          duration={toastInfo.type === 'loading' ? 0 : 8000}
           onDismiss={() => setToastInfo(prev => ({ ...prev, show: false }))}
         />
       )}

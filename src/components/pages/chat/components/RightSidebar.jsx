@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaUser, FaRobot, FaChevronLeft, FaExternalLinkAlt, FaChartLine } from 'react-icons/fa';
+import { FaTimes, FaUser, FaRobot, FaExternalLinkAlt, FaChartLine } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import OptimizedImage from '../../../image/OptimizedImage';
 
 const RightSidebar = ({ 
   isOpen, 
@@ -12,7 +13,6 @@ const RightSidebar = ({
   balance,
   nfts,
   nftsLoading,
-  // userDeposits is unused
   depositCount,
   pendingRewards,
   stakingStats
@@ -25,31 +25,43 @@ const RightSidebar = ({
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <m.div
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="w-80 border-l border-purple-500/20 bg-gray-900/40 backdrop-blur-xl hidden md:block overflow-y-auto"
-        >
-          <div className="p-6 pt-8 flex flex-col h-full">
-            <div className="flex-1">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="text-xl font-bold text-white flex items-center gap-3">
-                  <FaUser className="text-purple-400" /> Your Profile
-                </h2>
-                <button 
-                  onClick={toggleSidebar}
-                  className="md:hidden p-2.5 rounded-lg bg-gray-800/40 hover:bg-gray-700/50 backdrop-blur-sm text-gray-400 hover:text-white transition-colors"
-                  aria-label="Close profile panel"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              
+    <>
+      {/* Backdrop - only on mobile */}
+      <AnimatePresence>
+        {isOpen && (
+          <m.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className={`sidebar-backdrop ${isOpen ? 'sidebar-backdrop-visible' : ''} md:hidden`}
+            onClick={toggleSidebar}
+          />
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <m.div
+            className="sidebar-container sidebar-right"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+          >
+            <div className="sidebar-header">
+              <h2 className="sidebar-title">
+                <FaUser className="text-purple-400" /> Your Profile
+              </h2>
+              <button 
+                onClick={toggleSidebar}
+                className="sidebar-close-btn md:hidden"
+                aria-label="Close profile panel"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="sidebar-content">
               {/* User profile section */}
               {walletConnected ? (
                 <div className="bg-gray-800/30 backdrop-blur-md rounded-lg p-5 border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300 mb-6">
@@ -95,6 +107,7 @@ const RightSidebar = ({
                   <p className="text-sm text-gray-400">Connect your wallet to view your profile</p>
                 </div>
               )}             
+              
               {/* NFT section */}
               {walletConnected && (
                 <div className="mb-6">
@@ -117,10 +130,12 @@ const RightSidebar = ({
                             transition={{ type: "spring", stiffness: 400, damping: 10 }}
                           >
                             {nft.image ? (
-                              <img 
-                                src={nft.image} 
-                                alt={nft.name} 
+                              <OptimizedImage
+                                src={nft.image}
+                                alt={nft.name}
                                 className="w-full h-full object-cover"
+                                loadingStrategy="lazy"
+                                style={{ width: '100%', height: '100%' }}
                                 onError={(e) => {
                                   e.target.src = "/LogoNuvos.webp";
                                 }}
@@ -136,7 +151,7 @@ const RightSidebar = ({
                       {nfts.length > 4 && (
                         <div className="text-right">
                           <m.a 
-                            href="/profile" 
+                            href="/my-nfts" 
                             className="text-sm text-purple-400 hover:text-purple-300 transition-colors inline-block"
                             whileHover={{ x: 3 }}
                             transition={{ type: "spring", stiffness: 400, damping: 10 }}
@@ -204,7 +219,7 @@ const RightSidebar = ({
             
             {/* Profile Link Button in Footer */}
             {walletConnected && (
-              <div className="mt-auto pt-6 border-t border-gray-800/30">
+              <div className="sidebar-footer m-6 ">
                 <Link to="/profile">
                   <m.button
                     className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-purple-600/40 hover:bg-purple-600/60 backdrop-blur-sm text-white rounded-lg transition-colors"
@@ -216,24 +231,12 @@ const RightSidebar = ({
                     <FaExternalLinkAlt className="text-xs ml-1" />
                   </m.button>
                 </Link>
-                
               </div>
             )}
-            
-            {/* Mobile Close Button */}
-            <div className="md:hidden text-center mt-6">
-              <button 
-                onClick={toggleSidebar}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gray-800/40 backdrop-blur-sm hover:bg-gray-700/50 text-gray-300 rounded-lg transition-colors"
-              >
-                <FaChevronLeft className="text-xs" /> 
-                <span>Close panel</span>
-              </button>
-            </div>
-          </div>
-        </m.div>
-      )}
-    </AnimatePresence>
+          </m.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

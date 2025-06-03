@@ -6,11 +6,7 @@ import {
   addThrottledTouchListener,
   combineEventListeners
 } from '../../utils/errors/eventHandlers';
-import { 
-  isMobileDevice, 
-  isLowPerformanceDevice,
-  getRecommendedParticleCount  
-} from '../../utils/mobile/MobileUtils';
+import { useDeviceDetection } from '../../hooks/mobile/useDeviceDetection';
 
 const AnimatedAILogo = () => {
   const canvasRef = useRef(null);
@@ -23,6 +19,7 @@ const AnimatedAILogo = () => {
   const rippleTimeoutsRef = useRef([]);
   const interactionPointRef = useRef({ x: null, y: null });
   const perfModeRef = useRef('high');
+  const { isMobile, isLowPerformance, getRecommendedParticleCount } = useDeviceDetection();
   
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -42,15 +39,15 @@ const AnimatedAILogo = () => {
     const centerY = canvas.height / 2;
     
     const detectPerformance = () => {
-      if (isLowPerformanceDevice()) {
+      if (isLowPerformance) {
         perfModeRef.current = 'low';
-        return 80;
-      } else if (isMobileDevice()) {
+        return getRecommendedParticleCount(200, 120, 80);
+      } else if (isMobile) {
         perfModeRef.current = 'medium';
-        return 120;
+        return getRecommendedParticleCount(200, 120, 80);
       } else {
         perfModeRef.current = 'high';
-        return 200;
+        return getRecommendedParticleCount(200, 120, 80);
       }
     };
     
@@ -405,7 +402,7 @@ const AnimatedAILogo = () => {
       cancelAnimationFrame(animationRef.current);
       rippleTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
     };
-  }, [isActive]);
+  }, [isActive, isMobile, isLowPerformance, getRecommendedParticleCount]);
 
   return (
     <div 

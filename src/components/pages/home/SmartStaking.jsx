@@ -4,7 +4,7 @@ import { m, useReducedMotion } from 'framer-motion';
 import { FaShieldAlt, FaChartLine, FaCloud } from 'react-icons/fa';
 import StakingCalculator from '../../layout/StakingCalculator';
 import { useAnimationContext } from '../../animation/AnimationProvider';
-import { fadeIn, buttonVariants } from '../../../utils/animationVariants';
+import { fadeIn, buttonVariants } from '../../../utils/animations/animationVariants';
 
 const HeroSection = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -29,7 +29,9 @@ const HeroSection = () => {
   const shouldAnimate = isMounted && enableAnimations && !prefersReducedMotion && !reducedMotion && !isMobile;
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-20 pb-8 sm:pb-16 lg:pt-28 lg:pb-24">
+    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-6 sm:pt-20 sm:pb-16 lg:pt-28 lg:pb-24
+      md:pt-24 md:pb-8
+      ">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start lg:items-center">
         {/* Left Column - Calculator */}
         <div className="relative mt-8 lg:mt-0 order-2 lg:order-1">
@@ -50,20 +52,20 @@ const HeroSection = () => {
         </div>
 
         {/* Right Column - Content */}
-        <div className="space-y-6 sm:space-y-8 pt-4 sm:pt-6 order-1 lg:order-2">
+        <div className="space-y-6 sm:space-y-8 pt-2 sm:pt-6 order-1 lg:order-2">
           <m.div
             initial={shouldAnimate ? "hidden" : { opacity: 1 }}
             animate="visible"
             variants={fadeIn}
             className="space-y-4"
           >
-            <h1 className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.2] sm:leading-tight tracking-tight">
+            <h1 className="text-2xl xs:text-3xl sm:text-4xl lg:text-6xl font-bold text-white leading-[1.2] sm:leading-tight tracking-tight">
               <span className="block mb-2">Elevate Your</span>
               <span className="gradient-text block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">Investment Strategy</span>
               <span className="block">Through Smart Staking</span>
             </h1>
             
-            <p className="text-base sm:text-lg text-gray-300 max-w-xl mt-6">
+            <p className="text-sm sm:text-lg text-gray-200 max-w-xl mt-4 md:mt-6">
               Experience a revolutionary staking protocol combining automated yield optimization 
               with institutional-grade security.
             </p>
@@ -90,17 +92,16 @@ const HeroSection = () => {
           </div>
 
           {/* CTA Buttons - No animations on mobile */}
-          <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 mt-8 sm:mt-10">
-            {/* Static versions for mobile */}
+          <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 mt-6 sm:mt-10">
             <Link
               to="/staking"
-              className="px-6 sm:px-8 py-3 text-center block bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-colors"
+              className="px-6 sm:px-8 py-3 text-center block bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-colors active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
               Start Staking
             </Link>
             <Link
               to="/about"
-              className="px-6 sm:px-8 py-3 text-center block bg-black/30 border border-purple-500/30 rounded-full text-white font-medium hover:bg-purple-500/10 transition-colors"
+              className="px-6 sm:px-8 py-3 text-center block bg-black/30 border border-purple-500/30 rounded-full text-white font-medium hover:bg-purple-500/10 transition-colors active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
             >
               Learn More
             </Link>

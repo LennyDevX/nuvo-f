@@ -1100,36 +1100,51 @@ export const calculateTimeBonus = (stakingDays, bonusConfig = {
  * @returns {Promise<string>} - IPFS URI (ipfs://...)
  */
 export const uploadJsonToIPFS = async (data, options = {}) => {
-  const PINATA_API_KEY = options.apiKey || import.meta.env.VITE_PINATA_API;
-  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK;
-  
-  if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
-    throw new Error("Pinata API keys required");
-  }
-  
+  const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+  const headers = {
+    'Content-Type': 'application/json',
+    ...getPinataHeaders()
+  };
+
   try {
-    const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-    
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        pinata_api_key: PINATA_API_KEY,
-        pinata_secret_api_key: PINATA_SECRET_KEY
-      },
+      headers,
       body: JSON.stringify(data)
     });
-    
-    if (!response.ok) {
-      throw new Error(`Pinata error: ${response.statusText}`);
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      result = {};
     }
-    
-    const result = await response.json();
+    if (!response.ok) {
+      let pinataMsg = result.error || result.errorDetails || result.message || result.error_message;
+      if (!pinataMsg && typeof result === 'object') {
+        pinataMsg = JSON.stringify(result);
+      }
+      throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
+    }
     return `ipfs://${result.IpfsHash}`;
   } catch (error) {
     console.error("Error uploading to IPFS:", error);
     throw error;
   }
+};
+
+// Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
+const getPinataHeaders = () => {
+  // Unifica los nombres de variables de entorno
+  const apiKey = import.meta.env.VITE_PINATA_API || import.meta.env.VITE_PINATA || '';
+  const secret = import.meta.env.VITE_PINATA_SK || import.meta.env.VITE_PINATA_SK || '';
+  const jwt = import.meta.env.VITE_JWT_SK || '';
+  if (jwt) {
+    return { Authorization: `Bearer ${jwt}` };
+  }
+  return {
+    pinata_api_key: apiKey,
+    pinata_secret_api_key: secret
+  };
 };
 
 /**
@@ -1140,38 +1155,43 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
  * @returns {Promise<string>} - IPFS URI (ipfs://...)
  */
 export const uploadFileToIPFS = async (file, options = {}) => {
-  const PINATA_API_KEY = options.apiKey || import.meta.env.VITE_PINATA_API;
-  const PINATA_SECRET_KEY = options.secretKey || import.meta.env.VITE_PINATA_SK;
-  
-  if (!PINATA_API_KEY || !PINATA_SECRET_KEY) {
-    throw new Error("Pinata API keys required");
+  const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers = getPinataHeaders();
+  let fetchHeaders = {};
+  if (headers.Authorization) {
+    fetchHeaders['Authorization'] = headers.Authorization;
+  } else {
+    fetchHeaders['pinata_api_key'] = headers.pinata_api_key;
+    fetchHeaders['pinata_secret_api_key'] = headers.pinata_secret_api_key;
   }
-  
+
   try {
-    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
-    
-    // Use FormData for file upload
-    const formData = new FormData();
-    formData.append('file', file);
-    
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        pinata_api_key: PINATA_API_KEY,
-        pinata_secret_api_key: PINATA_SECRET_KEY
-      },
-      body: formData
+      body: formData,
+      headers: fetchHeaders
     });
-    
-    if (!response.ok) {
-      throw new Error(`Pinata error: ${response.statusText}`);
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      data = {};
     }
-    
-    const result = await response.json();
-    return `ipfs://${result.IpfsHash}`;
-  } catch (error) {
-    console.error("Error uploading file to IPFS:", error);
-    throw error;
+    if (!response.ok) {
+      // Intenta mostrar el mensaje de error real de Pinata
+      let pinataMsg = data.error || data.errorDetails || data.message || data.error_message;
+      if (!pinataMsg && typeof data === 'object') {
+        pinataMsg = JSON.stringify(data);
+      }
+      throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
+    }
+    return `ipfs://${data.IpfsHash}`;
+  } catch (err) {
+    console.error("Error uploading file to IPFS:", err);
+    throw err;
   }
 };
 

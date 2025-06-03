@@ -1,13 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaPlus } from 'react-icons/fa';
+import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaWallet } from 'react-icons/fa';
 import { ethers } from 'ethers';
+import { WalletContext } from '../../../../context/WalletContext';
 import LoadingSpinner from '../../../LoadOverlay/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
 import IPFSImage from '../../../ui/IPFSImage';
 
 const NFTCollection = ({ nfts, loading, error, onRetry }) => {
+  const { walletConnected, connectWallet } = useContext(WalletContext);
+
   // Handle retry action by forwarding to parent component if provided
   const handleRetry = () => {
     if (typeof onRetry === 'function') {
@@ -27,19 +30,38 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   }
 
   if (error) {
-    return <NFTErrorState error={error} onRetry={handleRetry} />;
+    return <NFTErrorState error={error} onRetry={handleRetry} walletConnected={walletConnected} />;
   }
 
-  if (nfts.length === 0) {
+  // Show connect wallet message when wallet is not connected OR when no NFTs and wallet is connected
+  if (!walletConnected || (walletConnected && nfts.length === 0)) {
     return (
-      <div className="bg-black/30 backdrop-blur-md p-6 rounded-xl border border-purple-500/20 text-center">
-        <p className="text-gray-300 mb-6">You don't have any NFTs in your collection yet</p>
-        <Link
-          to="/tokenize"
-          className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium hover:shadow-lg transition-all"
-        >
-          <FaPlus className="mr-2" /> Create my first NFT
-        </Link>
+      <div className="bg-black/30 backdrop-blur-md p-8 rounded-xl border border-purple-500/20 text-center">
+        {!walletConnected ? (
+          <>
+            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-sm">
+              <FaWallet className="text-blue-400 text-3xl" />
+            </div>
+            <h3 className="text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Connect Your Wallet
+            </h3>
+            <p className="text-gray-300 mb-8 max-w-md mx-auto leading-relaxed">
+              Please connect your wallet to view and manage your NFT collection
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm">
+              <FaTags className="text-purple-400 text-3xl" />
+            </div>
+            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
+              No NFTs Yet
+            </h3>
+            <p className="text-gray-300 mb-8 max-w-md mx-auto leading-relaxed">
+              Your collection is empty. Start building your digital asset portfolio by minting your first NFT.
+            </p>
+          </>
+        )}
       </div>
     );
   }
@@ -126,7 +148,7 @@ const NFTCard = ({ nft }) => {
           
           <Link
             to={`/nft/${nft.tokenId}`}
-            className="mt-2 flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded-lg w-full transition-colors"
+            className="btn-primary btn-sm btn-full mt-2 flex items-center justify-center gap-1"
           >
             <FaExternalLinkAlt className="text-xs" /> View Details
           </Link>

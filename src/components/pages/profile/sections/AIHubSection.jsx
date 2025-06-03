@@ -164,34 +164,33 @@ const AIHubSection = ({ account }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="nuvos-card rounded-xl border border-purple-500/30 p-6"
+      className="nuvos-card rounded-xl border border-purple-500/30 p-4 sm:p-6"
     >
-      <div className="flex items-center gap-4 mb-6">
-        <div className="p-3 bg-purple-500/20 rounded-full">
-          <FaRobot className="text-2xl text-purple-400" />
+      <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="p-2 sm:p-3 bg-purple-500/20 rounded-full">
+          <FaRobot className="text-xl sm:text-2xl text-purple-400" />
         </div>
-        <h2 className="text-2xl font-bold text-white">AI Staking Analyzer</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-white">AI Staking Analyzer</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Analysis Results - now with memoized components */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/30">
-          <h3 className="text-lg font-medium text-white mb-3">Analysis Summary</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        {/* Analysis Results - Optimized for mobile */}
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/30 order-2 xl:order-1">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3">Analysis Summary</h3>
           {analysisLoading ? (
-             <div className="flex flex-col items-center justify-center h-52 text-center">
-               <FaSpinner className="text-3xl text-purple-400/50 mb-3 animate-spin" />
-               <p className="text-gray-400">Running analysis...</p>
+             <div className="flex flex-col items-center justify-center h-40 sm:h-52 text-center">
+               <FaSpinner className="text-2xl sm:text-3xl text-purple-400/50 mb-3 animate-spin" />
+               <p className="text-sm text-gray-400">Running analysis...</p>
              </div>
           ) : analysisResults ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center justify-center mb-3 sm:mb-4">
                 <div className="relative">
-                  {/* Fixed score display */}
-                  <div className="w-28 h-28 rounded-full bg-black/50 border-4 border-gray-800 flex items-center justify-center">
-                    <span className={`text-5xl font-bold ${getScoreInfo(analysisResults.score).color}`}>
+                  <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full bg-black/50 border-4 border-gray-800 flex items-center justify-center">
+                    <span className={`text-3xl sm:text-5xl font-bold ${getScoreInfo(analysisResults.score).color}`}>
                       {analysisResults.score}
                     </span>
-                    <div className="absolute top-1 right-1">
+                    <div className="absolute top-0 right-0 sm:top-1 sm:right-1">
                       {getScoreInfo(analysisResults.score).icon}
                     </div>
                   </div>
@@ -201,10 +200,10 @@ const AIHubSection = ({ account }) => {
                 </div>
               </div>
                
-              <p className="text-purple-300 text-sm text-center">{analysisResults.performanceSummary}</p>
+              <p className="text-purple-300 text-sm text-center px-2">{analysisResults.performanceSummary}</p>
                
-              {/* Display Key Metrics */}
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              {/* Compact metrics grid for mobile */}
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-4">
                 {!analysisLoading && analysisResults && (
                   [
                     { name: 'Effective APY', value: analysisResults.metrics.effectiveAPY },
@@ -212,12 +211,13 @@ const AIHubSection = ({ account }) => {
                     { name: 'Total Earnings', value: `${analysisResults.metrics.totalEarnings} POL` },
                     { name: 'Deposit Slots', value: analysisResults.metrics.depositUtilization }
                   ].map((metric, index) => (
-                    <MetricCard
-                      key={index}
-                      name={metric.name}
-                      value={metric.value}
-                      icon={getMetricIcon(metric.name)}
-                    />
+                    <div key={index} className="bg-black/20 p-2 sm:p-3 rounded border border-purple-500/10 flex items-center gap-2">
+                      {getMetricIcon(metric.name)}
+                      <div>
+                        <div className="text-gray-400 text-xs">{metric.name}</div>
+                        <div className="text-white font-medium text-xs sm:text-sm">{metric.value}</div>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
@@ -228,22 +228,25 @@ const AIHubSection = ({ account }) => {
               <p className="text-gray-400">Run an analysis to see insights</p>
             </div>
           )}
-          <p className="text-xs text-purple-400 mt-4 text-center">
+          <p className="text-xs text-purple-400 mt-3 sm:mt-4 text-center">
             {analysisResults ? 'Analysis complete based on your on-chain staking history.' : 'No recent analysis available'}
           </p>
         </div>
 
-        {/* Recommendations - now with memoized list items */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/30">
-          <h3 className="text-lg font-medium text-white mb-3">AI Recommendations</h3>
+        {/* Recommendations - Mobile optimized */}
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/30 order-1 xl:order-2">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3">AI Recommendations</h3>
            {analysisLoading ? (
-             <div className="flex flex-col items-center justify-center h-52 text-center">
-               <FaSpinner className="text-3xl text-purple-400/50 mb-3 animate-spin" />
+             <div className="flex flex-col items-center justify-center h-40 sm:h-52 text-center">
+               <FaSpinner className="text-2xl sm:text-3xl text-purple-400/50 mb-3 animate-spin" />
              </div>
            ) : analysisResults && analysisResults.recommendations.length > 0 ? (
-            <ul className="space-y-3">
+            <ul className="space-y-2 sm:space-y-3 max-h-48 sm:max-h-none overflow-y-auto">
               {analysisResults.recommendations.map((rec, index) => (
-                 <RecommendationItem key={index} recommendation={rec} />
+                <li key={index} className="bg-black/20 p-3 rounded border border-purple-500/10 flex items-start gap-2">
+                  <FaLightbulb className="text-yellow-400 mt-1 flex-shrink-0 text-sm" />
+                  <span className="text-purple-300 text-sm">{rec}</span>
+                </li>
               ))}
             </ul>
           ) : analysisResults && analysisResults.recommendations.length === 0 ? (
@@ -260,14 +263,14 @@ const AIHubSection = ({ account }) => {
         </div>
       </div>
 
-      {/* Enhanced Analysis Button Section */}
-      <div className="my-8 px-4 py-6 md:py-8 rounded-xl bg-gradient-to-b from-purple-900/10 to-black/10 border border-purple-500/10 text-center relative overflow-hidden">
+      {/* Compact Analysis Button for mobile */}
+      <div className="my-6 sm:my-8 px-3 sm:px-4 py-4 sm:py-6 md:py-8 rounded-xl bg-gradient-to-b from-purple-900/10 to-black/10 border border-purple-500/10 text-center relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent"></div>
         <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-purple-500/10 blur-xl"></div>
         <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-purple-500/10 blur-xl"></div>
         
-        <p className="text-gray-300 mb-5 max-w-lg mx-auto">
+        <p className="text-gray-300 mb-4 sm:mb-5 max-w-lg mx-auto text-sm sm:text-base px-2">
           Our AI will analyze your staking portfolio and provide personalized insights to optimize your returns
         </p>
         
@@ -276,22 +279,22 @@ const AIHubSection = ({ account }) => {
           disabled={analysisLoading}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="px-8 py-4 md:min-w-[240px] bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium transition-all shadow-lg shadow-purple-900/20 hover:shadow-purple-600/30 disabled:opacity-70 disabled:cursor-wait"
+          className="px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto sm:min-w-[240px] bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium transition-all shadow-lg shadow-purple-900/20 hover:shadow-purple-600/30 disabled:opacity-70 disabled:cursor-wait"
         >
           {analysisLoading ? (
-            <span className="flex items-center justify-center gap-3">
-              <FaSpinner className="animate-spin text-lg" />
-              <span>Processing...</span>
+            <span className="flex items-center justify-center gap-2 sm:gap-3">
+              <FaSpinner className="animate-spin text-base sm:text-lg" />
+              <span className="text-sm sm:text-base">Processing...</span>
             </span>
           ) : (
             <span className="flex items-center justify-center gap-2">
-              <FaBrain className="text-lg" />
-              <span>Analyze My Portfolio</span>
+              <FaBrain className="text-base sm:text-lg" />
+              <span className="text-sm sm:text-base">Analyze My Portfolio</span>
             </span>
           )}
         </m.button>
         
-        <p className="text-xs text-purple-400/70 mt-4">
+        <p className="text-xs text-purple-400/70 mt-3 sm:mt-4 px-2">
           {analysisLoading ? 
             "Running advanced analysis algorithms..." : 
             "Advanced neural networks will process your staking history"
@@ -299,25 +302,25 @@ const AIHubSection = ({ account }) => {
         </p>
       </div>
 
-      {/* Premium Features section */}
-      <div className="mt-6 p-4 bg-purple-900/20 border border-purple-500/20 rounded-lg">
-        <h3 className="text-lg font-medium text-white mb-3">Premium AI Features</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-black/30 p-3 rounded-lg border border-purple-500/20 flex items-center gap-3">
-            <div className="bg-purple-900/30 p-2 rounded-full">
-              <FaBrain className="text-purple-400" />
+      {/* Compact Premium Features section */}
+      <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-purple-900/20 border border-purple-500/20 rounded-lg">
+        <h3 className="text-base sm:text-lg font-medium text-white mb-3">Premium AI Features</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          <div className="bg-black/30 p-2 sm:p-3 rounded-lg border border-purple-500/20 flex items-center gap-2 sm:gap-3">
+            <div className="bg-purple-900/30 p-1.5 sm:p-2 rounded-full">
+              <FaBrain className="text-purple-400 text-sm sm:text-base" />
             </div>
             <div>
-              <p className="text-white font-medium">Trading Signals</p>
+              <p className="text-white font-medium text-sm">Trading Signals</p>
               <p className="text-xs text-gray-400">Coming soon</p>
             </div>
           </div>
-          <div className="bg-black/30 p-3 rounded-lg border border-purple-500/20 flex items-center gap-3">
-            <div className="bg-purple-900/30 p-2 rounded-full">
-              <FaChartLine className="text-purple-400" />
+          <div className="bg-black/30 p-2 sm:p-3 rounded-lg border border-purple-500/20 flex items-center gap-2 sm:gap-3">
+            <div className="bg-purple-900/30 p-1.5 sm:p-2 rounded-full">
+              <FaChartLine className="text-purple-400 text-sm sm:text-base" />
             </div>
             <div>
-              <p className="text-white font-medium">Price Predictions</p>
+              <p className="text-white font-medium text-sm">Price Predictions</p>
               <p className="text-xs text-gray-400">Coming soon</p>
             </div>
           </div>

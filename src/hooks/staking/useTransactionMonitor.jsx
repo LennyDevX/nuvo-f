@@ -5,58 +5,74 @@ export const useTransactionMonitor = (currentTx, isPending, onComplete = () => {
   const { forceRefresh, getSignerAddress } = useStaking();
   const transactionTimerRef = useRef(null);
   const txHashChecked = useRef(false);
-  
-  // Función para verificar estado de la transacción en la cadena
-  const verifyTransactionOnChain = useCallback(async (txHash, provider) => {
-    if (!provider || !txHash || txHashChecked.current) return false;
-    
-    try {
-      txHashChecked.current = true;
-      const receipt = await provider.getTransactionReceipt(txHash);
-      return receipt ? { confirmed: true, success: receipt.status === 1 } : null;
-    } catch (error) {
-      console.error("Error verifying transaction:", error);
-      return null;
-    }
-  }, []);
-  
-  // Reset de transacción
-  const resetTransaction = useCallback(async () => {
-    if (!isPending) return;
-    
-    clearTimeout(transactionTimerRef.current);
-    txHashChecked.current = false;
-    
-    // Notificar completado con reset
-    onComplete({ type: 'reset', message: 'Transaction state reset' });
-    
-    // Actualizar datos del usuario
-    const address = await getSignerAddress();
-    if (address) {
-      await forceRefresh(address);
-    }
-  }, [isPending, onComplete, getSignerAddress, forceRefresh]);
-  
-  // Monitoreo de transacción pendiente
+
+  // Verifica el estado de la transacción en la blockchain, solo una vez por ciclo
+  const verifyTransactionOnChain = useCallback(
+    async (txHash, provider) => {
+      if (!provider || !txHash || txHashChecked.current) return false;
+      try {
+        txHashChecked.current = true;
+        const receipt = await provider.getTransactionReceipt(txHash);
+        return receipt ? { confirmed: true, success: receipt.status === 1 } : null;
+      } catch (error) {
+        console.error("Error verifying transaction:", error);
+        return null;
+      }
+    },
+    [] // No depende de nada externo
+  );
+
+  // Permite resetear el estado de la transacción y refrescar datos
+  const resetTransaction = useCallback(
+    async () => {
+      if (!isPending) return;
+      // Limpia el timer si existe
+      if (transactionTimerRef.current) {
+        clearTimeout(transactionTimerRef.current);
+        transactionTimerRef.current = null;
+      }
+      txHashChecked.current = false;
+      onComplete({ type: 'reset', message: 'Transaction state reset' });
+      const address = await getSignerAddress();
+      if (address) {
+        await forceRefresh(address);
+      }
+    },
+    [isPending, onComplete, getSignerAddress, forceRefresh]
+  );
+
+  // Monitorea la transacción pendiente y gestiona el timeout
   useEffect(() => {
-    if (!isPending || !currentTx) {
+    // Limpia cualquier timer previo antes de crear uno nuevo
+    if (transactionTimerRef.current) {
       clearTimeout(transactionTimerRef.current);
+      transactionTimerRef.current = null;
+    }
+
+    if (!isPending || !currentTx) {
+      txHashChecked.current = false; // Permite reintentos si cambia la tx
       return;
     }
-    
-    // Si la transacción está pendiente por más de 2 min, ofrecer reset
+
+    // Crea un nuevo timer de 2 minutos
     transactionTimerRef.current = setTimeout(() => {
       console.log("Transaction may be stuck, signaling for reset option");
-      onComplete({ 
-        type: 'timeout', 
+      onComplete({
+        type: 'timeout',
         message: 'Transaction taking longer than expected',
         canReset: true
       });
     }, 120000);
-    
-    return () => clearTimeout(transactionTimerRef.current);
+
+    // Limpieza estricta del timer al desmontar o cambiar dependencias
+    return () => {
+      if (transactionTimerRef.current) {
+        clearTimeout(transactionTimerRef.current);
+        transactionTimerRef.current = null;
+      }
+    };
   }, [isPending, currentTx, onComplete]);
-  
+
   return {
     resetTransaction,
     verifyTransactionOnChain

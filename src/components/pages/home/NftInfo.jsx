@@ -1,9 +1,10 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaGem, FaUnlock, FaChevronRight } from 'react-icons/fa';
-import { fadeIn } from '../../../utils/animationVariants';
+import { fadeIn } from '../../../utils/animations/animationVariants';
 import { useAnimationContext } from '../../animation/AnimationProvider';
 import { Link, useNavigate } from 'react-router-dom';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const RewardDeveloper = () => {
   const { reducedMotion: prefersReducedMotion } = useAnimationContext();
@@ -15,10 +16,10 @@ const RewardDeveloper = () => {
   };
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-18 pb-8 sm:pb-16 lg:py-24">
+    <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-18 pb-6 sm:pb-16 lg:py-24">
       {/* Title for mobile that appears above the grid */}
-      <div className="block md:hidden mb-6 text-center">
-        <h2 className="text-3xl font-bold text-white leading-tight tracking-tight">
+      <div className="block md:hidden mb-4 text-center">
+        <h2 className="text-2xl font-bold text-white leading-tight tracking-tight">
           <span className="block">Elevate Your Profile</span>
           <span className="gradient-text text-transparent bg-clip-text bg-nuvo-gradient-text">With NFTs</span>
         </h2>
@@ -34,12 +35,11 @@ const RewardDeveloper = () => {
           className="relative pb-2 flex justify-center items-center col-span-1"
         >
           <div className="relative overflow-hidden rounded-xl shadow-xl shadow-purple-500/20 border border-purple-500/30 max-w-[250px] md:max-w-[280px] lg:max-w-[320px] mx-auto">
-            <m.img 
-              src="/NFT-Y1.webp" 
-              alt="NFts" 
+            <OptimizedImage
+              src="/NFT-Y1.webp"
+              alt="NFts"
               className="w-full h-auto object-cover"
-              whileHover={{ scale: 1.03 }}
-              transition={{ duration: 0.3 }}
+              style={{}}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
             <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-sm rounded-lg border border-purple-500/30 text-[10px] md:text-xs text-white">
@@ -66,7 +66,7 @@ const RewardDeveloper = () => {
               </h1>
             </div>
             
-            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-300 max-w-xl mt-2 md:mt-6">
+            <p className="text-xs xs:text-sm sm:text-base md:text-lg text-gray-200 max-w-xl mt-2 md:mt-6">
               Collect exclusive NFTs that unlock real-world privileges and unique opportunities in our ecosystem. 🌐🔑
             </p>
           </m.div>
@@ -107,7 +107,7 @@ const RewardDeveloper = () => {
             <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.98 }}
-              className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium flex items-center gap-2 shadow-lg shadow-purple-900/30"
+              className="btn-primary btn-base px-6 py-3"
               onClick={() => handleNavigation('/nfts')}
             >
               Explore NFT Collection <FaChevronRight className="text-sm" />

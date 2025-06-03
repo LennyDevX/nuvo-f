@@ -166,10 +166,10 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
   }
 
   return (
-    <section ref={ref} id="info-section" className="mb-24 scroll-mt-24">
+    <section ref={ref} id="info-section" className="mb-16 lg:mb-24 scroll-mt-24">
       <div className="nuvos-card rounded-2xl border border-purple-500/20 overflow-hidden shadow-lg">
         
-        <div className="flex gap-2 p-4 border-b border-purple-500/20 overflow-x-auto">
+        <div className="flex gap-2 p-3 md:p-4 border-b border-purple-500/20 overflow-x-auto">
           {tabs.map(tab => (
             <Tab 
               key={tab.id}
@@ -182,25 +182,25 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
           ))}
         </div>
         
-        <div className="p-6 md:p-8">
+        <div className="p-4 md:p-6 lg:p-8">
           {currentActiveTab === 'about' && (
             <motion.div {...motionProps}>
-              <h2 className="text-3xl font-bold mb-6 text-white text-center  ">NUVOS Airdrop Program</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-white text-center">NUVOS Airdrop Program</h2>
               
-              <div className="space-y-6">
-                <div className=" rounded-xl p-6 ">
-                  <h3 className="text-xl font-medium text-white mb-4">About NUVO Tokens</h3>
-                  <p className="text-gray-300 mb-4">
+              <div className="space-y-4 md:space-y-6">
+                <div className="rounded-xl p-4 md:p-6">
+                  <h3 className="text-lg md:text-xl font-medium text-white mb-3 md:mb-4">About NUVO Tokens</h3>
+                  <p className="text-gray-300 mb-3 md:mb-4 text-sm md:text-base leading-relaxed">
                     NUVO is the utility and governance token of the Nuvos ecosystem. It enables holders to participate in platform decisions, access premium features, and earn rewards through staking.
                   </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mt-4 md:mt-6">
                     <div className="flex items-start gap-3">
                       <div className="mt-1 text-purple-400">
                         <FaCheckCircle />
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">Governance Voting</h4>
-                        <p className="text-sm text-gray-400">Vote on key platform decisions and feature implementations</p>
+                        <h4 className="text-white font-medium text-sm md:text-base">Governance Voting</h4>
+                        <p className="text-xs md:text-sm text-gray-400">Vote on key platform decisions and feature implementations</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -208,8 +208,8 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                         <FaCheckCircle />
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">Staking Rewards</h4>
-                        <p className="text-sm text-gray-400">Stake tokens to earn high APY returns</p>
+                        <h4 className="text-white font-medium text-sm md:text-base">Staking Rewards</h4>
+                        <p className="text-xs md:text-sm text-gray-400">Stake tokens to earn high APY returns</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -217,8 +217,8 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                         <FaCheckCircle />
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">Fee Discounts</h4>
-                        <p className="text-sm text-gray-400">Enjoy reduced fees on platform transactions</p>
+                        <h4 className="text-white font-medium text-sm md:text-base">Fee Discounts</h4>
+                        <p className="text-xs md:text-sm text-gray-400">Enjoy reduced fees on platform transactions</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -226,38 +226,38 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                         <FaCheckCircle />
                       </div>
                       <div>
-                        <h4 className="text-white font-medium">Premium Access</h4>
-                        <p className="text-sm text-gray-400">Unlock exclusive platform features and benefits</p>
+                        <h4 className="text-white font-medium text-sm md:text-base">Premium Access</h4>
+                        <p className="text-xs md:text-sm text-gray-400">Unlock exclusive platform features and benefits</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="  p-6 ">
-                  <h3 className="text-xl font-medium text-white mb-4">Airdrop Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    <div className="p-4 ">
-                      <h4 className="text-purple-400 font-medium mb-1">Total Token Supply</h4>
-                      <p className="text-2xl font-bold text-white">1000 POL</p>
+                <div className="p-4 md:p-6">
+                  <h3 className="text-lg md:text-xl font-medium text-white mb-3 md:mb-4">Airdrop Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                    <div className="p-3 md:p-4">
+                      <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Total Token Supply</h4>
+                      <p className="text-xl md:text-2xl font-bold text-white">21,000,000 NUVO</p>
                     </div>
-                    <div className="p-4 ">
-                      <h4 className="text-purple-400 font-medium mb-1">Airdrop Allocation</h4>
-                      <p className="text-2xl font-bold text-white">100 NUVOS</p>
+                    <div className="p-3 md:p-4">
+                      <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Airdrop Allocation</h4>
+                      <p className="text-xl md:text-2xl font-bold text-white">100 NUVO</p>
                     </div>
-                    <div className="p-4 ">
-                      <h4 className="text-purple-400 font-medium mb-1">Per Wallet</h4>
-                      <p className="text-2xl font-bold text-white">10 NUVOS</p>
+                    <div className="p-3 md:p-4">
+                      <h4 className="text-purple-400 font-medium mb-1 text-sm md:text-base">Per Wallet</h4>
+                      <p className="text-xl md:text-2xl font-bold text-white">10 NUVO</p>
                     </div>
                   </div>
-                  <div className="mt-6">
-                    <p className="text-gray-300">
+                  <div className="mt-4 md:mt-6">
+                    <p className="text-gray-300 text-sm md:text-base leading-relaxed">
                       The NUVOS airdrop is designed to distribute tokens to early supporters and community members. Each eligible wallet will receive 10 NUVO tokens, which can be staked immediately to start earning rewards at up to 125% APY.
                     </p>
                   </div>
                 </div>
 
-                <div className=" p-6">
-                  <h3 className="text-xl font-medium text-white mb-4">Eligibility Requirements</h3>
+                <div className="p-4 md:p-6">
+                  <h3 className="text-lg md:text-xl font-medium text-white mb-3 md:mb-4">Eligibility Requirements</h3>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
@@ -269,7 +269,7 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500"></span>
-                      <span className="text-gray-300">Minimum wallet balance of 1 MATIC for transaction fees</span>
+                      <span className="text-gray-300">Minimum wallet balance of 1 POL for transaction fees</span>
                     </li>
                   </ul>
                 </div>
@@ -282,7 +282,7 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
               <h2 className="text-3xl font-bold mb-6 text-white text-center">Smart Staking Program</h2>
               
               <div className="space-y-6">
-                <div className="  p-6">
+                <div className="p-6">
                   <h3 className="text-xl font-medium text-white mb-4">What is Smart Staking?</h3>
                   <p className="text-gray-300 mb-4">
                     Smart Staking is Nuvos' innovative staking program that allows NUVOS token holders to earn high yields on their holdings. By locking your tokens in the staking contract, you contribute to the security and decentralization of the network while earning rewards.

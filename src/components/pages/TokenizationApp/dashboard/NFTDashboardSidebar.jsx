@@ -96,7 +96,7 @@ const NFTDashboardSidebar = ({
             </div>
             <div className="bg-black/30 p-2 rounded">
               <p className="text-gray-400">Total Value</p>
-              <p className="text-white font-medium">{totalValue} MATIC</p>
+              <p className="text-white font-medium">{totalValue} POL</p>
             </div>
             <div className="bg-black/30 p-2 rounded">
               <p className="text-gray-400">Categories</p>

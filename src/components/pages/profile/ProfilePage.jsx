@@ -5,14 +5,14 @@ import { useStaking } from '../../../context/StakingContext';
 import Navbar from '../../layout/Navbar';
 import SpaceBackground from '../../effects/SpaceBackground';
 import { FaUser, FaExclamationCircle, FaSync } from 'react-icons/fa';
+import { HiMenuAlt3 } from 'react-icons/hi';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
-import IntegrationList from './IntegrationList';
+import SideBar from './SideBar';
 
 // Lazy load section components for code splitting
 const AccountOverview = lazy(() => import('./sections/AccountOverview'));
 const TokensSection = lazy(() => import('./sections/TokensSection'));
 const NFTsSection = lazy(() => import('./sections/NFTsSection'));
-const TransactionsSection = lazy(() => import('./sections/TransactionsSection'));
 const ActivitySection = lazy(() => import('./sections/ActivitySection'));
 const AIHubSection = lazy(() => import('./sections/AIHubSection'));
 const AirdropsSection = lazy(() => import('./sections/AirdropsSection'));
@@ -40,6 +40,10 @@ const ProfilePage = () => {
   const [activeIntegration, setActiveIntegration] = useState('overview');
   const [mintedNFTs, setMintedNFTs] = useState([]);
   const [tokenBalances, setTokenBalances] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const loadingTimeoutRef = useRef(null);
 
   // Calculate deposit amount from staking state
@@ -169,6 +173,30 @@ const ProfilePage = () => {
     return () => clearTimeout(timer);
   }, [isLoading, walletConnected]);
 
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(false);
+      }
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close nav when section changes
+  useEffect(() => {
+    setIsNavExpanded(false);
+  }, [activeIntegration]);
+
+  // Close profile menu when section changes
+  useEffect(() => {
+    setIsProfileMenuOpen(false);
+  }, [activeIntegration]);
+
   // Show not connected state with improved styling
   if (!walletConnected) {
     return (
@@ -237,77 +265,80 @@ const ProfilePage = () => {
     );
   }
 
-  // Render profile content with Suspense for code splitting
+  // Render profile content with responsive layout
   return (
     <div className="min-h-screen bg-nuvo-gradient relative">
       <SpaceBackground customClass="" />
       <Navbar />
       
-      <div className="pt-24 pb-16 px-4 relative z-10">
+      {/* Main Content with proper mobile spacing - Remove extra mobile header spacing */}
+      <div className="pt-20 sm:pt-24 px-3 sm:px-4 relative z-10 pb-32 md:pb-8">
         <div className="max-w-7xl mx-auto">
-          {/* Title content */}
+          {/* Compact Title for mobile */}
           <m.div
-            className="text-center mb-10"
+            className="text-center mb-6 sm:mb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6 }}
           >
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text mb-6">
+            <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text mb-2 sm:mb-6">
               Nuvos Dashboard
             </h1>
-            <p className="text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto px-4">
               Manage your account, assets, and activity in the Nuvos ecosystem
             </p>
-          </m.div>
+          </m.div
+          >
           
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Left Sidebar */}
-            <div className="lg:col-span-1">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Desktop Sidebar - Hidden on mobile */}
+            <div className="lg:col-span-1 hidden lg:block">
               <m.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
-                className="nuvos-card rounded-xl border border-purple-500/30 p-6"
+                className="nuvos-card rounded-xl border border-purple-500/30 p-4 sm:p-6 sticky top-24"
               >
                 {/* Account Profile Section */}
-                <div className="text-center mb-6">
-                  <div className="w-24 h-24 mx-auto bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mb-4 transform transition-transform hover:scale-105">
-                    <FaUser className="text-4xl text-white" />
+                <div className="text-center mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mb-3 sm:mb-4 transform transition-transform hover:scale-105">
+                    <FaUser className="text-2xl sm:text-4xl text-white" />
                   </div>
-                  <div className="bg-black/30 py-2 px-4 rounded-lg border border-purple-500/20 inline-block">
-                    <p className="font-mono text-sm text-purple-200">
+                  <div className="bg-black/30 py-2 px-3 sm:px-4 rounded-lg border border-purple-500/20 inline-block">
+                    <p className="font-mono text-xs sm:text-sm text-purple-200">
                       {`${account.slice(0, 6)}...${account.slice(-4)}`}
                     </p>
                   </div>
                 </div>
 
                 {/* Network Info */}
-                <div className="bg-black/30 p-4 rounded-xl border border-purple-500/20 mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-purple-300">Network</span>
+                <div className="bg-black/30 p-3 sm:p-4 rounded-xl border border-purple-500/20 mb-4 sm:mb-6">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <span className="text-xs sm:text-sm text-purple-300">Network</span>
                     <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                      <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+                      <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full mr-1"></span>
                       {network}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-300">Balance</span>
-                    <span className="text-white font-medium">{parseFloat(balance).toFixed(4)} MATIC</span>
+                    <span className="text-xs sm:text-sm text-purple-300">Balance</span>
+                    <span className="text-white font-medium text-xs sm:text-sm">{parseFloat(balance).toFixed(4)} MATIC</span>
                   </div>
                 </div>
 
-                {/* Integration Navigation */}
+                {/* Desktop Navigation */}
                 <div className="mb-2">
-                  <h3 className="text-white font-medium mb-3">Your Dashboard</h3>
-                  <IntegrationList 
+                  <h3 className="text-white font-medium mb-3 text-sm sm:text-base">Your Dashboard</h3>
+                  <SideBar 
                     activeIntegration={activeIntegration} 
-                    onSelectIntegration={setActiveIntegration} 
+                    onSelectIntegration={setActiveIntegration}
+                    isMobile={false}
                   />
                 </div>
               </m.div>
             </div>
 
-            {/* Right Content Area - Dynamic Section Rendering with Suspense */}
+            {/* Main Content Area - Full width on mobile */}
             <m.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -324,7 +355,7 @@ const ProfilePage = () => {
                     case 'staking':
                       return <StakingSection account={account} depositAmount={depositAmount} />;
                     case 'transactions':
-                      return <TransactionsSection />;
+                      return <ActivitySection mintedNFTs={mintedNFTs} transactions={transactions} account={account} />;
                     case 'ai-hub':
                       return <AIHubSection account={account} />;
                     case 'airdrops':
@@ -340,8 +371,108 @@ const ProfilePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Fixed Bottom Profile Navigation for Mobile - Above main navbar */}
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 z-[60]">
+        {/* Expandable Profile Sections Menu */}
+        <div 
+          className={`
+            bg-black/98 backdrop-blur-xl border-t border-purple-500/30 
+            transition-all duration-300 ease-out transform
+            ${isProfileMenuOpen 
+              ? 'translate-y-0 opacity-100 max-h-80' 
+              : 'translate-y-full opacity-0 max-h-0'
+            }
+            overflow-hidden shadow-2xl
+          `}
+        >
+          <div className="px-4 py-4 max-h-72 overflow-y-auto">
+            {/* Section Title */}
+            <div className="text-center mb-4">
+              <h3 className="text-white font-semibold text-lg">Profile Sections</h3>
+              <p className="text-gray-400 text-sm">Navigate to different areas</p>
+            </div>
+            
+            {/* Profile Navigation Grid */}
+            <SideBar 
+              activeIntegration={activeIntegration} 
+              onSelectIntegration={(section) => {
+                setActiveIntegration(section);
+                setIsProfileMenuOpen(false);
+              }}
+              isMobile={true}
+              isCompact={false}
+            />
+          </div>
+        </div>
+
+        {/* Profile Navigation Control Bar - Always visible */}
+        <div className="bg-black/95 backdrop-blur-xl border-t border-purple-500/30 px-4 py-3 shadow-lg">
+          <div className="flex items-center justify-between">
+            {/* Current Profile Section Info */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <FaUser className="text-base text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-white font-semibold text-sm truncate">Profile Dashboard</p>
+                <p className="text-purple-300 text-xs font-medium">{getSectionLabel(activeIntegration)}</p>
+              </div>
+            </div>
+
+            {/* Network Status Badge */}
+            <div className="bg-green-500/20 text-green-400 px-3 py-1.5 rounded-full text-xs font-medium flex items-center flex-shrink-0 mr-3">
+              <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+              {network}
+            </div>
+
+            {/* Profile Menu Toggle Button */}
+            <button
+              onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+              className={`
+                p-3 rounded-xl transition-all duration-200 flex-shrink-0 min-w-[48px]
+                ${isProfileMenuOpen 
+                  ? 'bg-purple-600 text-white shadow-lg scale-105' 
+                  : 'bg-purple-900/50 text-purple-300 hover:bg-purple-800/70'
+                }
+                border border-purple-500/30 active:scale-95
+              `}
+              aria-label={isProfileMenuOpen ? 'Close profile menu' : 'Open profile menu'}
+            >
+              <HiMenuAlt3 
+                className={`w-5 h-5 transition-transform duration-200 ${
+                  isProfileMenuOpen ? 'rotate-180' : ''
+                }`} 
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Backdrop when profile menu is expanded */}
+      {isProfileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 z-[50] lg:hidden"
+          onClick={() => setIsProfileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
+};
+
+// Helper function for section labels
+const getSectionLabel = (section) => {
+  const labels = {
+    'overview': 'Overview',
+    'nfts': 'NFTs',
+    'staking': 'Staking',
+    'transactions': 'Activity',
+    'ai-hub': 'AI Hub',
+    'airdrops': 'Airdrops',
+    'game': 'Game'
+  };
+  return labels[section] || 'Dashboard';
 };
 
 export default React.memo(ProfilePage);

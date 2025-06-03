@@ -56,6 +56,12 @@ const AirdropDashboard = () => {
           <Suspense fallback={<LoadingPlaceholder height="250px" />}>
             <AirdropHeroSection setActiveTab={setActiveTab} />
           </Suspense>
+
+          {/* Sección de Registro - Carga diferida */}
+          <LazySection 
+            component={AirdropRegistrationSection}
+            height="450px" 
+          />
           
           {/* Pestañas de Información - Carga diferida */}
           <LazySection 
@@ -71,11 +77,7 @@ const AirdropDashboard = () => {
             height="350px" 
           />
           
-          {/* Sección de Registro - Carga diferida */}
-          <LazySection 
-            component={AirdropRegistrationSection}
-            height="450px" 
-          />
+          
         </div>
       </div>
     </AnimationProvider>

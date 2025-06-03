@@ -14,41 +14,47 @@ import EmergencyControls from './actions/EmergencyControls';
 
 // Import our enhanced logging utilities
 import { blockchainLogger, balanceLogger, LogCategory } from '../../../../utils/blockchain/blockchainLogger';
+import { parseTransactionError } from '../../../../utils/errors/errorHandling';
 
 // Move helper function outside component to prevent recreation on each render
-const getErrorMessageForTransaction = (txType, errorMessage) => {
-  const userRejectedPatterns = [
-    'user rejected',
-    'user denied',
-    'user cancelled',
-    'rejected by user',
-    'transaction was rejected',
-    'cancelled by user'
-  ];
-
-  const isUserRejection = userRejectedPatterns.some(pattern =>
-    errorMessage?.toLowerCase().includes(pattern)
-  );
-
-  if (isUserRejection) {
-    return "You cancelled the transaction. No changes were made to your account.";
+const getErrorMessageForTransaction = (txType, error) => {
+  // Use the enhanced error parser
+  const parsedError = parseTransactionError(error);
+  
+  // If it's a user rejection, return a friendly message
+  if (parsedError.status === 'rejected') {
+    switch (txType) {
+      case 'deposit':
+        return 'You cancelled the staking transaction. No worries, your tokens are safe!';
+      case 'withdraw_rewards':
+        return 'You cancelled claiming your rewards. Your rewards are still there waiting for you!';
+      case 'withdraw_all':
+        return 'You cancelled the withdrawal. Your staked tokens and rewards remain safe.';
+      case 'emergency_withdraw':
+        return 'You cancelled the emergency withdrawal. Your funds remain staked.';
+      default:
+        return 'Transaction cancelled. Your funds are safe!';
+    }
   }
-
-  if (errorMessage?.toLowerCase().includes('gas')) {
-    return "There was an issue with the network fees. Please try again with a higher gas limit or later when the network is less congested.";
-  }
-
+  
+  // For other errors, provide context-specific messages
   switch (txType) {
     case 'deposit':
-      return "We couldn't complete your staking transaction. Please check your wallet balance and try again.";
+      return parsedError.code === 'INSUFFICIENT_FUNDS' 
+        ? 'Not enough MATIC to complete your staking transaction. Please add more MATIC to your wallet.'
+        : `Unable to complete staking: ${parsedError.message}`;
     case 'withdraw_rewards':
-      return "We couldn't claim your rewards. Please check your connection and try again later.";
+      return parsedError.code === 'INSUFFICIENT_FUNDS'
+        ? 'Not enough MATIC for gas fees to claim rewards. Please add more MATIC to your wallet.'
+        : `Unable to claim rewards: ${parsedError.message}`;
     case 'withdraw_all':
-      return "We couldn't process your withdrawal. Please try again later.";
+      return parsedError.code === 'INSUFFICIENT_FUNDS'
+        ? 'Not enough MATIC for gas fees to withdraw. Please add more MATIC to your wallet.'
+        : `Unable to process withdrawal: ${parsedError.message}`;
     case 'emergency_withdraw':
-      return "The emergency withdrawal couldn't be completed. Please contact support if this persists.";
+      return `Emergency withdrawal failed: ${parsedError.message}`;
     default:
-      return "Something went wrong with your transaction. Please try again.";
+      return parsedError.message;
   }
 };
 
@@ -241,7 +247,8 @@ const StakingActions = ({
       const action = successMessages[currentTx.type] || 'Transaction successful!';
       updateStatus('success', action);
     } else if (currentTx.status === 'failed') {
-      const errorMsg = getErrorMessageForTransaction(currentTx.type, currentTx.error);
+      // The error should already be properly formatted from the transaction hook
+      const errorMsg = currentTx.error || getErrorMessageForTransaction(currentTx.type, 'Transaction failed');
       updateStatus('error', errorMsg);
       
       setTimeout(() => {
@@ -258,7 +265,7 @@ const StakingActions = ({
       await withdrawRewards();
     } catch (error) {
       console.error("Withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('withdraw_rewards', error.message));
+      updateStatus('error', getErrorMessageForTransaction('withdraw_rewards', error));
     }
   }, [account, isPending, withdrawRewards, updateStatus]);
 
@@ -269,7 +276,7 @@ const StakingActions = ({
       await withdrawAll();
     } catch (error) {
       console.error("Full withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('withdraw_all', error.message));
+      updateStatus('error', getErrorMessageForTransaction('withdraw_all', error));
     }
   }, [account, isPending, withdrawAll, updateStatus]);
 
@@ -286,7 +293,7 @@ const StakingActions = ({
       await emergencyWithdraw();
     } catch (error) {
       console.error("Emergency withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('emergency_withdraw', error.message));
+      updateStatus('error', getErrorMessageForTransaction('emergency_withdraw', error));
     }
   }, [account, isPending, isContractPaused, emergencyWithdraw, updateStatus]);
 
@@ -307,7 +314,7 @@ const StakingActions = ({
         onReset={resetTransactionState}
       />
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <RewardsPanel 
           formattedRewards={formattedRewards}
           stakingStats={stakingStats}
@@ -326,7 +333,10 @@ const StakingActions = ({
           fetchingBalance={fetchingBalance}
           deposit={deposit}
           updateStatus={updateStatus}
-          getErrorMessageForTransaction={getErrorMessageForTransaction}
+          onError={(error, txType) => {
+            const errorMsg = getErrorMessageForTransaction(txType, error);
+            updateStatus('error', errorMsg);
+          }}
         />
 
         <EmergencyControls 

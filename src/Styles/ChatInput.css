@@ -1,0 +1,88 @@
+.chat-input-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 16px;
+  background-color: var(--bg-color);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.chat-input-form {
+  display: flex;
+  align-items: center;
+  background-color: var(--input-bg, rgba(255, 255, 255, 0.1));
+  border-radius: 24px;
+  padding: 8px 16px;
+  gap: 10px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.chat-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 8px;
+  font-size: 16px;
+  color: var(--text-color);
+  min-height: 24px;
+  resize: none;
+  outline: none;
+  width: 100%;
+}
+
+.chat-input::placeholder {
+  color: var(--placeholder-color, rgba(255, 255, 255, 0.5));
+}
+
+.send-button {
+  background: none;
+  border: none;
+  color: var(--accent-color, #8A2BE2);
+  cursor: pointer;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.send-button:hover {
+  background-color: rgba(138, 43, 226, 0.1);
+}
+
+/* Mobile responsiveness fixes */
+@media screen and (max-width: 768px) {
+  .chat-input-container {
+    padding: 8px;
+    /* Ensure it's visible above everything */
+    z-index: 9999;
+  }
+  
+  .chat-input-form {
+    padding: 6px 12px;
+  }
+  
+  .chat-input {
+    padding: 8px 6px;
+    /* Fix for iOS not showing inputs correctly */
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  /* Fix for bottom navigation overlapping the input on mobile */
+  body {
+    padding-bottom: 70px;
+  }
+}
+
+/* Fix for iOS keyboard issues */
+@supports (-webkit-touch-callout: none) {
+  .chat-input-container {
+    /* Prevent iOS keyboard from pushing the view */
+    position: sticky;
+  }
+}

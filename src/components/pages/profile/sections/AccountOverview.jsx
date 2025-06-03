@@ -132,32 +132,32 @@ const AccountOverview = ({ account, balance, network }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="nuvos-card rounded-xl border border-purple-500/30 p-6"
+      className="nuvos-card rounded-xl border border-purple-500/30 p-4 sm:p-6"
     >
-      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+      <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
         <FaUser className="text-purple-400" /> Account Overview
       </h2>
 
       {/* Account Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Wallet Address Card */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-white mb-4">Wallet Address</h3>
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Wallet Address</h3>
           
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-purple-900/30 p-3 rounded-lg">
-              <FaWallet className="text-purple-400" />
+          <div className="flex items-center gap-2 mb-3 sm:mb-4">
+            <div className="bg-purple-900/30 p-2 sm:p-3 rounded-lg">
+              <FaWallet className="text-purple-400 text-sm sm:text-base" />
             </div>
-            <div>
-              <div className="font-mono text-sm text-gray-300 break-all">{censoredAddress}</div>
+            <div className="min-w-0 flex-1">
+              <div className="font-mono text-xs sm:text-sm text-gray-300 break-all">{censoredAddress}</div>
               <div className="text-xs text-gray-400 mt-1">{network} Network</div>
             </div>
           </div>
           
-          <div className="flex mt-4 gap-2">
+          <div className="flex flex-col sm:flex-row mt-3 sm:mt-4 gap-2">
             <button
               onClick={copyAddressToClipboard}
-              className="flex items-center gap-1 text-sm bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 py-1 px-3 rounded-lg transition-colors"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 py-2 px-3 rounded-lg transition-colors"
             >
               {copied ? <FaCheckCircle /> : <FaCopy />} 
               {copied ? "Copied!" : "Copy Address"}
@@ -166,33 +166,33 @@ const AccountOverview = ({ account, balance, network }) => {
               href={`https://polygonscan.com/address/${account}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 py-1 px-3 rounded-lg transition-colors"
+              className="flex items-center justify-center gap-1 text-xs sm:text-sm bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 py-2 px-3 rounded-lg transition-colors"
             >
               <FaExternalLinkAlt /> View on Explorer
             </a>
           </div>
         </div>
         
-        {/* Account Stats - Now with real-time NFT data */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-white mb-4">Account Stats</h3>
+        {/* Account Stats */}
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Account Stats</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-300">MATIC Balance</span>
-              <span className="text-white font-medium">{parseFloat(balance).toFixed(6)} MATIC</span>
+              <span className="text-gray-300 text-sm">MATIC Balance</span>
+              <span className="text-white font-medium text-sm">{parseFloat(balance).toFixed(6)} MATIC</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-300">Active Staking Deposits</span>
-              <span className="text-white">{userDeposits.length || 0}</span>
+              <span className="text-gray-300 text-sm">Active Staking Deposits</span>
+              <span className="text-white text-sm">{userDeposits.length || 0}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-300">NUVOS NFTs</span>
-              <span className="text-white">
+              <span className="text-gray-300 text-sm">NUVOS NFTs</span>
+              <span className="text-white text-sm">
                 {nftsLoading ? (
-                  <span className="text-xs text-gray-400">Cargando...</span>
+                  <span className="text-xs text-gray-400">Loading...</span>
                 ) : (
                   <span className="text-purple-400 font-medium">{nftCount}</span>
                 )}
@@ -203,10 +203,10 @@ const AccountOverview = ({ account, balance, network }) => {
       </div>
       
       {/* Portfolio Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Staking Summary */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3 flex items-center gap-2">
             <FaCoins className="text-purple-400" />
             Staking Summary
           </h3>
@@ -230,7 +230,7 @@ const AccountOverview = ({ account, balance, network }) => {
               </p>
               <Link 
                 to="/staking"
-                className="inline-block px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm mt-2"
+                className="inline-block px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm mt-2 w-full sm:w-auto text-center"
               >
                 Start Staking Now
               </Link>
@@ -238,19 +238,19 @@ const AccountOverview = ({ account, balance, network }) => {
           )}
         </div>
         
-        {/* NFT Summary - Enhanced with loading state and accurate count */}
-        <div className="bg-black/30 p-5 rounded-xl border border-purple-500/20">
-          <h3 className="text-lg font-medium text-white mb-3 flex items-center gap-2">
+        {/* NFT Summary */}
+        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+          <h3 className="text-base sm:text-lg font-medium text-white mb-3 flex items-center gap-2">
             <FaImage className="text-purple-400" />
             NFT Collection
           </h3>
           
           {nftsLoading ? (
-            <p className="text-sm text-gray-300">Cargando tus NFTs...</p>
+            <p className="text-sm text-gray-300">Loading your NFTs...</p>
           ) : actualNfts.length > 0 ? (
             <div className="space-y-2">
               <p className="text-sm text-gray-300">
-                Tienes <span className="text-purple-400 font-medium">{nftCount}</span> NFTs en tu wallet
+                You have <span className="text-purple-400 font-medium">{nftCount}</span> NFTs in your wallet
               </p>
               
               <NFTPreviewList nfts={actualNfts} count={nftCount} />
@@ -259,38 +259,27 @@ const AccountOverview = ({ account, balance, network }) => {
                 to="/nfts"
                 className="inline-block text-sm text-purple-400 hover:text-purple-300 underline mt-2"
               >
-                Ver tu colección de NFTs
+                View your NFT collection
               </Link>
             </div>
           ) : (
             <div className="space-y-2">
               <p className="text-sm text-gray-300">
-                Tu colección de NFTs NUVOS está vacía.
+                Your NUVOS NFT collection is empty.
               </p>
               <Link 
                 to="/nfts"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm mt-2"
+                className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm mt-2 w-full sm:w-auto"
               >
-                <FaShoppingCart /> Comprar NFTs
+                <FaShoppingCart /> Buy NFTs
               </Link>
             </div>
           )}
         </div>
       </div>
       
-      {/* User Guide */}
-      <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 p-5 rounded-xl border border-purple-500/20">
-        <h3 className="text-lg font-medium text-white mb-2">Your NUVOS Dashboard</h3>
-        <p className="text-gray-300 text-sm mb-3">
-          Use the navigation on the left to explore your portfolio:
-        </p>
-        <ul className="space-y-2 text-sm text-gray-300">
-          <li>• <span className="text-purple-300">Tokens</span> - View your token balances and holdings</li>
-          <li>• <span className="text-purple-300">NFTs</span> - Browse your NFT collection</li>
-          <li>• <span className="text-purple-300">Staking</span> - Manage your staking positions</li>
-          <li>• <span className="text-purple-300">Transactions</span> - See your transaction history</li>
-        </ul>
-      </div>
+      {/* Compact User Guide */}
+      
     </m.div>
   );
 };

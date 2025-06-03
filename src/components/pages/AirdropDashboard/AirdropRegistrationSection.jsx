@@ -56,7 +56,7 @@ const AirdropRegistrationSection = () => {
     <section 
       ref={sectionRef} 
       id="registration-form" 
-      className="scroll-mt-8"
+      className="scroll-mt-8 mb-8 lg:mb-16"
     >
       <motion.div 
         ref={ref}
@@ -65,7 +65,7 @@ const AirdropRegistrationSection = () => {
         animate={isVisible ? "visible" : "hidden"}
         variants={fadeInUp}
       >
-        <div className="p-6 md:p-8">
+        <div className="p-4 md:p-6 lg:p-8">
           <div className="lg:flex lg:gap-8 lg:items-start">
             {/* Lado izquierdo: TimeCounter y título */}
             <div className={`lg:w-1/2 ${isFormOpen ? 'lg:block hidden' : 'block'}`}>
@@ -93,19 +93,19 @@ const AirdropRegistrationSection = () => {
                     initial={reduceAnimations ? { opacity: 0 } : { opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="text-center m-8 lg:mt-4"
+                    className="text-center p-4 md:p-6 lg:p-8 lg:mt-4"
                     transition={{ duration: reduceAnimations ? 0.2 : 0.3 }}
                   >
-                    <h2 className="text-3xl font-bold text-white mb-4">Register for Airdrop</h2>
-                    <p className="text-gray-300 max-w-2xl mx-auto">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4">Register for Airdrop</h2>
+                    <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
                       Complete the form below to register for the NUVOS airdrop. Make sure your wallet is connected to receive your tokens.
                     </p>
-                    <div className="mt-8">
+                    <div className="mt-6 md:mt-8">
                       <motion.button
                         whileHover={reduceAnimations ? {} : { scale: 1.05 }}
                         whileTap={reduceAnimations ? {} : { scale: 0.98 }}
                         onClick={() => setIsFormOpen(true)}
-                        className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium text-white flex items-center gap-2 mx-auto shadow-lg shadow-purple-900/30"
+                        className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium text-white flex items-center justify-center gap-2 mx-auto shadow-lg shadow-purple-900/30 text-sm md:text-base"
                       >
                         <FaGift /> Open Registration Form
                       </motion.button>
