@@ -7,7 +7,6 @@ const NFTCallToAction = lazy(() => import('./NFTCallToAction'));
 import AnimationProvider from '../../animation/AnimationProvider';
 import SpaceBackground from '../../effects/SpaceBackground';
 // Lazy load modal since it's conditionally rendered
-const WhitelistModal = lazy(() => import('../../modals/WhitelistModal'));
 
 // Loading fallback component
 const LoadingFallback = () => (
@@ -33,11 +32,8 @@ const NFTHome = () => {
             </Suspense>
           </m.div>
         </div>
-        {isModalOpen && (
-          <Suspense fallback={<LoadingFallback />}>
-            <WhitelistModal onClose={() => setIsModalOpen(false)} />
-          </Suspense>
-        )}
+        
+        
       </div>
     </AnimationProvider>
   );
