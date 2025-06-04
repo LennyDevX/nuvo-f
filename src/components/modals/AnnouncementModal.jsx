@@ -32,7 +32,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
             <div className="p-4 sm:p-6 sm:p-8"> 
               <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-4">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                  Nuvos Update Beta v3.5
+                  Nuvos Update Beta v4.0
                 </h2>
                 <span className="text-xs px-2 py-0.5 sm:py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex-shrink-0">
                   Major Release
@@ -51,20 +51,20 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                   <div className="bg-purple-500/10 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-500/20">
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">⚡</span>
-                        <span><span className="font-bold">Gemini AI Integration:</span> New chat interface with intelligent AI assistant for better user support.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📱</span>
+                        <span><span className="font-bold">New Mobile Design:</span> Complete mobile interface redesign with enhanced user experience and intuitive navigation.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔍</span>
-                        <span><span className="font-bold">New Smart Contract:</span> new intelligent contract to create NFTs based on images.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🖥️</span>
+                        <span><span className="font-bold">Desktop Improvements:</span> Enhanced desktop interface with better visual hierarchy and streamlined workflows.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🎨</span>
-                        <span><span className="font-bold">NFT Creation Tool:</span> Users can now mint custom NFTs based on their own images with seamless integration.</span>
+                        <span><span className="font-bold">NFT Dashboard:</span> Better desgin NFT management interface with improved functionality and visual appeal.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛠️</span>
-                        <span><span className="font-bold">Code Refactoring:</span>  Minor codebase improvements for better maintenance and future scalability.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">💰</span>
+                        <span><span className="font-bold">Staking Dashboard:</span> Enhanced staking interface with real-time analytics and improved user controls.</span>
                       </li>
                     </ul>
                   </div>
@@ -81,26 +81,26 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Additional Features
+                    Technical Enhancements
                   </h3>
                   
                   <div className="bg-purple-500/10 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-500/20">
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📱</span>
-                        <span><span className="font-bold">Bug Fixes:</span> Resolved critical issues across multiple platform modules for smoother operation.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">⚡</span>
+                        <span><span className="font-bold">Performance Optimization:</span> Significant improvements in loading speeds and overall application responsiveness.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔷</span>
-                        <span><span className="font-bold">Performance Optimization:</span> Improved loading speeds and reduced resource consumption across the platform.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛡️</span>
+                        <span><span className="font-bold">Security & Bug Fixes:</span> Resolved critical security vulnerabilities and fixed major bugs across all modules.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🧭</span>
-                        <span><span className="font-bold">Enhanced Security:</span> Implemented better protection measures for user data and transaction safety.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔧</span>
+                        <span><span className="font-bold">Code Modularization:</span> Internal codebase restructured for improved maintainability and future development.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📊</span>
-                        <span><span className="font-bold">UI Refinements:</span> Subtle design improvements for better visual hierarchy and user experience.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📚</span>
+                        <span><span className="font-bold">Library Updates:</span> All dependencies updated to latest stable versions for enhanced security and performance.</span>
                       </li>
                     </ul>
                   </div>
