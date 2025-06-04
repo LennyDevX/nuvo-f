@@ -1,94 +1,14 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { FaPaperPlane, FaUser, FaBars, FaUserCircle } from 'react-icons/fa';
-import { lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
 import { useDebounce } from '../../hooks/performance/useEventOptimizers';
 import AnimatedAILogo from '../effects/AnimatedAILogo';
 
-// Import remark-gfm normally
-import remarkGfm from 'remark-gfm';
+// Import modular components
+import ChatMessages from './components/ChatMessages';
+import WelcomeScreen from './components/WelcomeScreen';
+import ChatInputArea from './components/ChatInputArea';
 
-// Lazy load ReactMarkdown
-const ReactMarkdown = lazy(() => import('react-markdown'));
-
-// Simple text message component
-const UserMessage = memoWithName(({ message }) => (
-  <div className="message message-user">
-    <div className="message-content message-content-user">
-      <p style={{ margin: 0, padding: 0 }}>{message.text}</p>
-    </div>
-    <div className="message-avatar user-avatar">
-      <FaUser size={14} />
-    </div>
-  </div>
-));
-
-// AI message with markdown support
-const BotMessage = memoWithName(({ message, isThinking = false }) => (
-  <div className="message message-ai">
-    <div className="message-avatar ai-avatar">
-      <AnimatedAILogo reduced={true} isThinking={isThinking} />
-    </div>
-    <div className="message-content message-content-ai">
-      <Suspense fallback={<p style={{ margin: 0 }}>{message.text}</p>}>
-        <div className="markdown-content">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.text}
-          </ReactMarkdown>
-        </div>
-      </Suspense>
-    </div>
-  </div>
-));
-
-// Loading indicator component with thinking state
-const TypingIndicator = () => (
-  <div className="message message-ai">
-    <div className="message-avatar ai-avatar">
-      <AnimatedAILogo reduced={true} isThinking={true} />
-    </div>
-    <div className="message-content message-content-ai typing-indicator">
-      <div className="typing-dot"></div>
-      <div className="typing-dot"></div>
-      <div className="typing-dot"></div>
-    </div>
-  </div>
-);
-
-// Empty state welcome component
-const WelcomeScreen = ({ onSuggestionClick }) => {
-  const suggestions = [
-    "What is blockchain?",
-    "Explain NFTs", 
-    "How does staking work?",
-    "Tell me about DeFi"
-  ];
-
-  return (
-    <div className="welcome-container">
-      <div className="welcome-logo">
-        <AnimatedAILogo isThinking={false} isResponding={false} />
-      </div>
-      <h1 className="welcome-title">Nuvos AI Assistant</h1>
-      <p className="welcome-subtitle">
-        Ask me anything about blockchain, crypto, NFTs or the Nuvos ecosystem.
-      </p>
-      <div className="suggestions-container">
-        {suggestions.map((suggestion, index) => (
-          <button 
-            key={index}
-            className="suggestion-chip"
-            onClick={() => onSuggestionClick(suggestion)}
-          >
-            {suggestion}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Main chat component
 const GeminiChat = ({ 
   shouldReduceMotion = false, 
   isLowPerformance = false,
@@ -101,10 +21,7 @@ const GeminiChat = ({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
   const [error, setError] = useState(null);
-  const chatContainerRef = useRef(null);
   
   // Cache for responses
   const responseCache = useRef(new Map());
@@ -123,8 +40,7 @@ const GeminiChat = ({
         }
       } finally {
         if (isMounted) {
-          // Shorter loading time for improved UX
-          setTimeout(() => setIsInitializing(false), 600);
+          setTimeout(() => setIsInitializing(false), 400);
         }
       }
     };
@@ -133,27 +49,6 @@ const GeminiChat = ({
     
     return () => { isMounted = false; };
   }, []);
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      if (messages.length === 1) {
-        // First message needs special handling to ensure visibility
-        setTimeout(() => {
-          messagesEndRef.current.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'end' });
-        }, 100);
-      } else {
-        messagesEndRef.current.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth' });
-      }
-    }
-  }, [messages, isLoading, shouldReduceMotion]);
-
-  // Focus input after initialization
-  useEffect(() => {
-    if (!isInitializing && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isInitializing]);
 
   // Format messages for API
   const formatMessagesForAPI = useCallback(() => {
@@ -235,131 +130,95 @@ const GeminiChat = ({
   // Handle message submission
   const handleSendMessage = useCallback((e) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
 
     const userMessage = { text: input.trim(), sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     
     sendMessageDebounced(userMessage);
-  }, [input, sendMessageDebounced]);
+  }, [input, isLoading, sendMessageDebounced]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion) => {
     setInput(suggestion);
-    inputRef.current?.focus();
   }, []);
 
-  // Handle input height adjustment with mobile considerations
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
-    
-    // Reset height first to get accurate scrollHeight
-    e.target.style.height = '44px'; // Use a fixed minimum height
-    
-    // Set new height based on content (with max height limit)
-    const newHeight = Math.min(e.target.scrollHeight, 100);
-    e.target.style.height = `${newHeight}px`;
-    
-    // Scroll the message container when input grows
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-  
-  // Handle key press (Enter to send, Shift+Enter for new line)
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
-    }
-  };
+  // New conversation handler
+  const handleNewConversation = useCallback(() => {
+    setMessages([]);
+    setError(null);
+  }, []);
 
   return (
-    <div className={`chat-layout ${messages.length === 0 ? 'empty-chat' : ''}`}>
-      <div 
-        className="messages-container" 
-        id="chat-messages"
-        ref={chatContainerRef}
-      >
-        {isInitializing ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="typing-indicator">
-              <div className="typing-dot"></div>
-              <div className="typing-dot"></div>
-              <div className="typing-dot"></div>
+    <div className="flex flex-col h-full bg-gray-900">
+      {/* Header - only visible on mobile */}
+      <div className="md:hidden flex items-center justify-between p-4 border-b border-purple-500/20 bg-gray-900">
+        <button
+          onClick={toggleLeftSidebar}
+          className="p-2.5 rounded-lg hover:bg-gray-800 transition-colors border border-purple-500/30"
+          aria-label="Toggle menu"
+        >
+          <FaBars className="w-5 h-5 text-purple-400" />
+        </button>
+        
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-white">
+            Nuvos AI
+          </h1>
+          {messages.length > 0 && (
+            <button
+              onClick={handleNewConversation}
+              className="p-2.5 rounded-lg hover:bg-gray-800 transition-colors border border-purple-500/30"
+              aria-label="New conversation"
+            >
+              <FaPlus className="w-4 h-4 text-purple-400" />
+            </button>
+          )}
+        </div>
+        
+        <button
+          onClick={toggleRightSidebar}
+          className="p-2.5 rounded-lg hover:bg-gray-800 transition-colors border border-purple-500/30"
+          aria-label="Toggle profile"
+        >
+          <FaUserCircle className="w-5 h-5 text-purple-400" />
+        </button>
+      </div>
+
+      {/* Main Content Area */}
+      {isInitializing ? (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2">
+              <AnimatedAILogo size="sm" isThinking={true} />
             </div>
+            <p className="text-gray-400 text-sm">Initializing...</p>
           </div>
-        ) : messages.length === 0 ? (
-          <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
-        ) : (
-          <>
-            {messages.map((message, index) => (
-              <div key={index} className={`message-wrapper ${index === 0 ? 'first-message' : ''}`}>
-                {message.sender === 'user' ? (
-                  <UserMessage message={message} />
-                ) : (
-                  <BotMessage message={message} />
-                )}
-              </div>
-            ))}
-            
-            {isLoading && <TypingIndicator />}
-            
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </>
-        )}
-      </div>
-      
-      <div className="bottom-nav-container">
-        <form onSubmit={handleSendMessage} className="chat-input-area">
-          <button
-            type="button"
-            onClick={toggleLeftSidebar}
-            className={`sidebar-toggle-btn ${leftSidebarOpen ? 'active' : ''}`}
-            aria-label="Toggle tools menu"
-          >
-            <FaBars size={20} />
-          </button>
-          
-          <div className="input-wrapper">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyPress}
-              placeholder="Message Nuvos AI..."
-              className="chat-input"
-              rows={1}
-              disabled={isLoading || isInitializing}
-            />
-          </div>
-          
-          <button
-            type="submit"
-            className="send-button"
-            disabled={!input.trim() || isLoading || isInitializing}
-            aria-label="Send message"
-          >
-            <FaPaperPlane size={16} />
-          </button>
-          
-          <button
-            type="button"
-            onClick={toggleRightSidebar}
-            className={`sidebar-toggle-btn ${rightSidebarOpen ? 'active' : ''}`}
-            aria-label="Toggle profile menu"
-          >
-            <FaUserCircle size={20} />
-          </button>
-        </form>
-      </div>
+        </div>
+      ) : messages.length === 0 ? (
+        <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
+      ) : (
+        <ChatMessages 
+          messages={messages}
+          isLoading={isLoading}
+          error={error}
+          shouldReduceMotion={shouldReduceMotion}
+        />
+      )}
+
+      {/* Input Area */}
+      <ChatInputArea
+        input={input}
+        setInput={setInput}
+        onSendMessage={handleSendMessage}
+        isLoading={isLoading}
+        isInitializing={isInitializing}
+        toggleLeftSidebar={toggleLeftSidebar}
+        toggleRightSidebar={toggleRightSidebar}
+        leftSidebarOpen={leftSidebarOpen}
+        rightSidebarOpen={rightSidebarOpen}
+      />
     </div>
   );
 };

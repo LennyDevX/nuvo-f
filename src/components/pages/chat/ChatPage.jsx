@@ -123,11 +123,12 @@ const ChatPage = () => {
 
   return (
     <>
-      {/* Full screen background */}
-      <div className="fixed inset-0 z-0 bg-gray-900">
+      {/* Full screen background - reduced opacity for better readability */}
+      <div className="fixed inset-0 z-0 bg-white dark:bg-gray-900">
         <SpaceBackground 
           starDensity={isLowPerformance ? "minimal" : "low"} 
           animationDisabled={shouldReduceMotion || isLowPerformance}
+          opacity={0.3}
         />
       </div>
       
@@ -138,14 +139,14 @@ const ChatPage = () => {
         </Suspense>
       )}
       
-      {/* Contenedor principal - now without top buttons */}
+      {/* Main container - no padding top needed for mobile-first design */}
       <div 
         ref={containerRef} 
-        className="fixed inset-0 pt-[var(--header-height)] z-10"
+        className="fixed inset-0 z-10 md:pt-[var(--header-height)]"
       >
         {isContainerVisible && (
-          <div className="w-full h-full flex overflow-hidden">
-            {/* Sidebars and main content, without old sidebar toggle buttons */}
+          <div className="w-full h-full flex overflow-hidden bg-white dark:bg-gray-900">
+            {/* Sidebars */}
             <Suspense fallback={<ComponentLoader className="w-72 h-full" />}>
               <LeftSidebar 
                 isOpen={leftSidebarOpen} 

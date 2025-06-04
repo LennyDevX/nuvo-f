@@ -1,956 +1,345 @@
-/* Minimalist Chat Interface - Completely Redesigned */
+/* Modern ChatGPT-style Chat Interface */
 
-/* Base layout - Fix for desktop */
+/* CSS Variables */
 :root {
   --header-height: 56px;
-  --bottom-nav-height: 64px;
-  --chat-input-height: 70px; /* Increased for better visibility */
-  --safe-area-bottom: env(safe-area-inset-bottom, 16px);
+  --mobile-navbar-height: 64px;
+  --chat-input-height: auto;
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Global chat container */
 .chat-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ensure full height on desktop */
+  height: 100vh;
   width: 100%;
   position: relative;
-  overflow: hidden;
+  background: rgb(17, 24, 39);
 }
 
-/* Messages container - Fixed for desktop visibility */
+/* Messages container improvements */
 .messages-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px;
-  padding-top: 30px; /* Increased top padding to push messages down */
-  padding-bottom: calc(var(--chat-input-height) + 40px); /* More bottom space */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  min-height: 0; /* Allow flex shrinking */
-  max-height: calc(100vh - var(--header-height) - var(--chat-input-height)); /* Limit height */
-  display: flex;
-  flex-direction: column;
+  padding-bottom: 120px; /* More space for input area */
 }
 
-/* Force proper message spacing on first message */
-.messages-container > div:first-child {
-  margin-top: auto; /* Push first message to bottom of available space */
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .chat-layout {
+    height: calc(100vh - var(--mobile-navbar-height));
+    margin-bottom: var(--mobile-navbar-height);
+  }
+  
+  /* Adjust messages container for mobile - more space for fixed input */
+  .messages-container {
+    padding-bottom: 160px; /* Extra space for fixed input */
+  }
+  
+  /* Ensure chat input is always visible on mobile */
+  .chat-input-mobile-container {
+    position: fixed;
+    bottom: 64px; /* Above mobile navbar */
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: rgba(31, 41, 55, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    padding: 12px 16px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Better touch targets on mobile */
+  .mobile-sidebar-toggle {
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Prevent mobile navbar from covering input */
+  .mobile-safe-bottom {
+    padding-bottom: calc(64px + 16px); /* Navbar height + input area */
+  }
 }
 
-/* Message bubbles - Better positioning and spacing */
-.message {
-  display: flex;
-  margin-bottom: 20px; /* More space between messages */
-  max-width: 100%;
-  align-items: flex-end;
-  padding: 0 5px; /* Add horizontal padding */
-  position: relative; /* Ensure proper positioning context */
+/* Desktop optimizations */
+@media (min-width: 769px) {
+  /* Desktop input area styling with perfect alignment */
+  .desktop-input-container {
+    padding: 16px 24px;
+    background: rgba(31, 41, 55, 0.98);
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Desktop sidebar buttons - Exact same height as input */
+  .desktop-sidebar-btn {
+    width: 48px;
+    height: 48px; /* Match input height exactly */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    border: 2px solid rgba(139, 92, 246, 0.4);
+    background: rgba(55, 65, 81, 0.8);
+    backdrop-filter: blur(8px);
+    flex-shrink: 0;
+  }
+  
+  /* Desktop input container alignment */
+  .desktop-input-flex {
+    display: flex;
+    align-items: center; /* Perfect center alignment */
+    gap: 12px;
+  }
+  
+  .desktop-sidebar-btn:hover {
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(55, 65, 81, 1);
+    transform: translateY(-1px);
+  }
+  
+  .desktop-sidebar-btn.active {
+    background: rgb(139, 92, 246);
+    border-color: rgb(139, 92, 246);
+    color: white;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+  }
 }
 
-.message-user {
-  justify-content: flex-end;
-  margin-left: 20%; /* More space on user messages */
-  margin-top: 24px; /* Extra space above user messages for better visibility */
-}
-
-.message-ai {
-  justify-content: flex-start;
-  margin-right: 20%;
-  margin-top: 16px; /* Space above AI messages */
-}
-
-.message-content {
-  padding: 16px 20px;
-  border-radius: 18px;
-  max-width: 80%; /* Wider messages */
-  word-wrap: break-word;
-  word-break: break-word;
-  line-height: 1.5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Add subtle shadow for better visibility */
-}
-
-.message-content-user {
-  background-color: rgba(79, 70, 229, 0.7); /* Slightly more opaque */
-  border-top-right-radius: 6px;
+/* Input field improvements */
+.chat-input-field {
+  background: rgba(55, 65, 81, 0.95);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  padding-right: 56px; /* Space for send button */
   color: white;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); /* Add subtle shadow */
-}
-
-.message-content-ai {
-  background-color: rgba(31, 41, 55, 0.8); /* More opaque for better readability */
-  backdrop-filter: blur(10px);
-  border-top-left-radius: 6px;
-  color: #f3f4f6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Add subtle shadow */
-}
-
-.message-avatar {
-  width: 36px; /* Slightly larger avatars */
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2); /* Add shadow to avatars */
-}
-
-.user-avatar {
-  background-color: rgba(79, 70, 229, 0.9);
-  margin-left: 12px; /* Increased margin */
-  order: 2; /* Ensure avatar is on the right for user messages */
-}
-
-.ai-avatar {
-  background-color: rgba(139, 92, 246, 0.9);
-  margin-right: 12px; /* Increased margin */
-}
-
-/* Fixed input area at bottom */
-.chat-input-area {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  padding: 16px 20px; /* Increased padding for desktop */
-  background-color: rgba(17, 24, 39, 0.98);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(107, 114, 128, 0.3);
-  min-height: var(--chat-input-height);
-  padding-bottom: calc(var(--safe-area-bottom) + 12px);
-  z-index: 410; /* Even higher to ensure visibility */
-}
-
-.chat-input-area {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px; /* Increased padding for desktop */
-  gap: 12px; /* Increased gap */
-  max-width: 100%;
-  min-height: var(--chat-input-height);
-}
-
-/* Input wrapper to allow input to expand */
-.input-wrapper {
-  flex: 1;
-  min-width: 0; /* Allow the container to shrink */
-  position: relative;
-}
-
-.chat-input {
-  width: 100%;
-  background-color: rgba(31, 41, 55, 0.8); /* More opaque */
-  border: 2px solid rgba(107, 114, 128, 0.4); /* Thicker border */
-  border-radius: 24px; /* More rounded */
-  color: white;
-  padding: 16px 20px; /* Increased padding */
-  resize: none;
-  min-height: 48px; /* Increased minimum height */
-  max-height: 120px;
-  outline: none;
-  font-size: 16px;
-  font-family: inherit;
-  line-height: 1.4;
   transition: all 0.2s ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.chat-input:focus {
-  border-color: rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3); /* More prominent focus */
-  background-color: rgba(31, 41, 55, 0.9);
+.chat-input-field:focus {
+  border-color: rgb(139, 92, 246);
+  background: rgba(55, 65, 81, 1);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-.chat-input::placeholder {
+.chat-input-field::placeholder {
   color: rgba(156, 163, 175, 0.7);
 }
 
-/* Sidebar toggle buttons - Enhanced */
-.sidebar-toggle-btn {
-  width: 44px; /* Slightly larger */
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(31, 41, 55, 0.8);
-  color: rgba(209, 213, 219, 0.8);
-  border: 2px solid rgba(107, 114, 128, 0.4);
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.sidebar-toggle-btn:hover {
-  background-color: rgba(31, 41, 55, 0.9);
-  border-color: rgba(139, 92, 246, 0.6);
-  color: rgba(209, 213, 219, 1);
-}
-
-.sidebar-toggle-btn:active {
-  transform: scale(0.95);
-}
-
-.sidebar-toggle-btn.active {
-  background-color: rgba(139, 92, 246, 0.6);
-  color: white;
-  border-color: rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-}
-
+/* Send button improvements */
 .send-button {
-  background-color: rgba(139, 92, 246, 0.9);
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: rgb(139, 92, 246);
+  border: none;
   color: white;
-  width: 44px; /* Match other buttons */
-  height: 44px;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  border: 2px solid rgba(139, 92, 246, 0.9);
   transition: all 0.2s ease;
-  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
 }
 
 .send-button:hover:not(:disabled) {
-  background-color: rgba(139, 92, 246, 1);
-  transform: scale(1.05);
-}
-
-.send-button:active:not(:disabled) {
-  transform: scale(0.95);
+  background: rgb(124, 58, 237);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
 }
 
 .send-button:disabled {
-  opacity: 0.5;
+  background: rgba(107, 114, 128, 0.6);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* Sidebar toggle buttons */
-.sidebar-toggle-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(31, 41, 55, 0.7);
-  color: rgba(209, 213, 219, 0.7);
-  border: 1px solid rgba(107, 114, 128, 0.3);
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.sidebar-toggle-btn:active {
-  transform: scale(0.95);
-}
-
-.sidebar-toggle-btn.active {
-  background-color: rgba(139, 92, 246, 0.7);
-  color: white;
-  border-color: rgba(139, 92, 246, 0.9);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Bottom navigation container */
-.bottom-nav-container {
-  position: fixed;
-  bottom: 0; /* At the very bottom on desktop */
-  left: 0;
-  right: 0;
-  z-index: 400;
-  background-color: rgba(17, 24, 39, 0.98);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(107, 114, 128, 0.3);
-  padding-bottom: calc(var(--safe-area-bottom));
-  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Ensure proper input area positioning */
-.chat-input-area {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px; /* Increased padding for desktop */
-  gap: 12px; /* Increased gap */
-  max-width: 100%;
-  min-height: var(--chat-input-height);
-  position: relative;
-  z-index: 410; /* Even higher to ensure visibility */
-}
-
-/* Fix sidebar container to account for both navbars */
-.sidebar-container {
-  position: fixed;
-  top: 0;
-  height: calc(100% - var(--chat-input-height)); /* Only subtract chat input height on desktop */
-  width: 85%;
-  max-width: 320px;
-  background-color: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(12px);
-  z-index: 300; /* Lower than chat input but higher than main navbar */
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-}
-
-/* Adjust messages container padding */
-.messages-container {
-  padding-bottom: calc(var(--chat-input-height) + var(--bottom-nav-height) + 20px);
-}
-
-/* Welcome screen */
-.welcome-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  padding: 32px; /* Increased padding */
-  text-align: center;
-}
-
-.welcome-logo {
-  width: 80px; /* Slightly larger */
-  height: 80px;
-  margin-bottom: 32px;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(79, 70, 229, 0.8));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.welcome-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-  margin-bottom: 8px;
-  background: linear-gradient(to right, #a78bfa, #818cf8);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.welcome-subtitle {
-  font-size: 16px;
-  color: #d1d5db;
-  max-width: 300px;
-  margin-bottom: 24px;
-}
-
-.suggestions-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
-  gap: 12px;
-  width: 100%;
-  max-width: 600px; /* Increased max-width */
-}
-
-.suggestion-chip {
-  background-color: rgba(31, 41, 55, 0.7);
-  border: 1px solid rgba(107, 114, 128, 0.4);
-  padding: 16px 20px; /* Increased padding */
-  border-radius: 16px;
-  color: #e5e7eb;
-  text-align: left;
-  font-size: 15px; /* Slightly larger font */
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.suggestion-chip:hover {
-  background-color: rgba(31, 41, 55, 0.8);
-  border-color: rgba(139, 92, 246, 0.5);
-  transform: translateY(-2px);
-}
-
-/* Typing indicator */
-.typing-indicator {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-}
-
-.typing-dot {
-  width: 8px;
-  height: 8px;
-  background-color: rgba(209, 213, 219, 0.7);
-  border-radius: 50%;
-  margin: 0 2px;
-  animation: typing-animation 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: 0s; }
-.typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes typing-animation {
-  0%, 60%, 100% { transform: translateY(0); }
-  30% { transform: translateY(-6px); }
-}
-
-/* Error message */
-.error-message {
-  background-color: rgba(220, 38, 38, 0.2);
-  border-left: 3px solid #ef4444;
-  color: #fca5a5;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-/* Markdown content styling */
-.markdown-content {
-  word-break: break-word;
-}
-
-.markdown-content code {
-  background-color: rgba(31, 41, 55, 0.6);
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 0.9em;
-}
-
-.markdown-content pre {
-  background-color: rgba(17, 24, 39, 0.8);
-  padding: 12px;
-  border-radius: 8px;
-  overflow-x: auto;
-  margin: 8px 0;
-}
-
-.markdown-content ul, .markdown-content ol {
-  margin-left: 20px;
-}
-
-.markdown-content a {
-  color: #a78bfa;
-  text-decoration: underline;
-}
-
-/* Menu button positioning for mobile */
-.sidebar-toggle-button {
-  position: fixed;
-  top: calc(var(--header-height) + 8px);
-  z-index: 40;
-  background-color: rgba(31, 41, 55, 0.7);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.left-toggle {
-  left: 16px;
-}
-
-.right-toggle {
-  right: 16px;
-}
-
-/* Enhanced sidebar styling */
-.sidebar-container {
-  position: fixed;
-  top: 0;
-  height: calc(100% - var(--chat-input-height)); /* Only subtract chat input height on desktop */
-  width: 85%;
-  max-width: 320px;
-  background-color: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(12px);
-  z-index: 200;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease-in-out;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar-left {
-  left: 0;
-  transform: translateX(-100%);
-  border-right: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-.sidebar-right {
-  right: 0;
-  transform: translateX(100%);
-  border-left: 1px solid rgba(139, 92, 246, 0.2);
-}
-
-.sidebar-open-left {
-  transform: translateX(0);
-}
-
-.sidebar-open-right {
-  transform: translateX(0);
-}
-
-/* Sidebar content area with proper scrolling */
-.sidebar-content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px;
-  padding-bottom: calc(var(--chat-input-height) + 16px);
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.5) rgba(31, 41, 55, 0.3);
-}
-
-.sidebar-content::-webkit-scrollbar {
-  width: 4px;
-}
-
-.sidebar-content::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.3);
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-  background-color: rgba(139, 92, 246, 0.5);
-  border-radius: 6px;
-}
-
-/* Sidebar header with close button */
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
-  position: sticky;
-  top: 0;
-  background-color: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(12px);
-  z-index: 1;
-}
-
-.sidebar-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.sidebar-close-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(31, 41, 55, 0.7);
-  color: rgba(209, 213, 219, 0.7);
-  border: 1px solid rgba(107, 114, 128, 0.3);
-  transition: all 0.2s ease;
-}
-
-.sidebar-close-btn:active {
-  transform: scale(0.95);
-  background-color: rgba(139, 92, 246, 0.3);
-}
-
-/* Sidebar footer area */
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(139, 92, 246, 0.2);
-  background-color: rgba(17, 24, 39, 0.95);
-}
-
-/* Overlay backdrop when sidebar is open - MOBILE ONLY */
-.sidebar-backdrop {
-  position: fixed;
-  top: var(--header-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 150;
-  backdrop-filter: blur(2px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-  /* Hide by default on desktop */
-  display: none;
-}
-
-.sidebar-backdrop-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Enhanced sidebar styling - Desktop optimized */
-.sidebar-container {
-  position: fixed;
-  top: 0;
-  height: calc(100% - var(--chat-input-height));
-  width: 85%;
-  max-width: 320px;
-  background-color: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(12px);
-  z-index: 300;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease-in-out;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-}
-
-/* Desktop-specific sidebar adjustments */
-@media (min-width: 768px) {
-  /* Hide backdrop completely on desktop */
-  .sidebar-backdrop {
-    display: none !important;
-  }
-  
-  /* Desktop sidebar styling */
-  .sidebar-container {
-    top: var(--header-height);
-    height: calc(100% - var(--header-height) - var(--chat-input-height));
-    width: 320px; /* Fixed width on desktop */
-    background-color: rgba(17, 24, 39, 0.98);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
-  }
-  
-  /* Desktop left sidebar */
-  .sidebar-left {
-    left: 0;
-    border-right: 1px solid rgba(139, 92, 246, 0.3);
-    border-left: none;
-  }
-  
-  /* Desktop right sidebar */
-  .sidebar-right {
-    right: 0;
-    border-left: 1px solid rgba(139, 92, 246, 0.3);
-    border-right: none;
-  }
-  
-  /* Desktop sidebar content */
-  .sidebar-content {
-    padding: 20px;
-    padding-bottom: 30px;
-  }
-  
-  /* Desktop sidebar header */
-  .sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.3);
-  }
-  
-  /* Desktop sidebar footer */
-  .sidebar-footer {
-    padding: 20px;
-    border-top: 1px solid rgba(139, 92, 246, 0.3);
-  }
-  
-  /* Hide close button on desktop if desired */
-  .sidebar-close-btn {
-    display: none;
-  }
-  
-  /* Or style it differently for desktop */
-  /*
-  .sidebar-close-btn {
-    width: 32px;
-    height: 32px;
-    background-color: rgba(31, 41, 55, 0.8);
-    border: 1px solid rgba(139, 92, 246, 0.4);
-  }
-  */
-}
-
-/* Mobile-specific overrides */
-@media (max-width: 767px) {
-  /* Show backdrop only on mobile */
-  .sidebar-backdrop {
-    display: block;
-    top: 0;
-    bottom: calc(var(--chat-input-height) + var(--bottom-nav-height));
-  }
-  
-  /* Mobile sidebar styling */
-  .sidebar-container {
-    width: 85%;
-    max-width: 320px;
-    height: calc(100% - var(--bottom-nav-height) - var(--chat-input-height) - 10px);
-    padding-top: var(--header-height);
-    background-color: rgba(17, 24, 39, 0.95);
-    backdrop-filter: blur(12px);
-  }
-  
-  /* Mobile sidebar content adjustments */
-  .sidebar-content {
-    padding: 16px;
-    padding-bottom: 50px;
-  }
-  
-  /* Show close button on mobile */
-  .sidebar-close-btn {
-    display: flex;
-  }
-}
-
-/* Chat layout adjustments for desktop sidebars */
-@media (min-width: 768px) {
-  /* When left sidebar is open on desktop */
-  .chat-layout.sidebar-left-open {
-    margin-left: 320px;
-    transition: margin-left 0.3s ease-in-out;
-  }
-  
-  /* When right sidebar is open on desktop */
-  .chat-layout.sidebar-right-open {
-    margin-right: 320px;
-    transition: margin-right 0.3s ease-in-out;
-  }
-  
-  /* Adjust bottom nav container when sidebars are open */
-  .bottom-nav-container.sidebar-left-open {
-    left: 320px;
-    transition: left 0.3s ease-in-out;
-  }
-  
-  .bottom-nav-container.sidebar-right-open {
-    right: 320px;
-    transition: right 0.3s ease-in-out;
-  }
-}
-
-/* Ensure proper z-index layering on desktop */
-@media (min-width: 768px) {
-  .sidebar-container {
-    z-index: 250; /* Lower than chat input but visible */
-  }
-  
-  .bottom-nav-container {
-    z-index: 400; /* Always on top */
-  }
-  
-  .chat-input-area {
-    z-index: 410;
-  }
-}
-
-/* Fix iOS specific issues */
-@supports (-webkit-touch-callout: none) {
-  .bottom-nav-container {
-    bottom: 0;
-    padding-bottom: calc(var(--safe-area-bottom) + var(--bottom-nav-height));
-  }
-  
-  .messages-container {
-    padding-bottom: calc(var(--chat-input-height) + var(--bottom-nav-height) + var(--safe-area-bottom) + 20px);
-  }
-  
-  .sidebar-container {
-    padding-bottom: calc(var(--chat-input-height) + var(--bottom-nav-height) + var(--safe-area-bottom));
-  }
-}
-
-/* Additional fixes for navigation at the bottom of viewport */
-html, body, #root {
-  height: 100%;
-  height: -webkit-fill-available;
-}
-
-.chat-layout {
-  padding-bottom: calc(var(--chat-input-height) + var(--bottom-nav-height));
-}
-
-/* Fix button visibility and interactions */
-.sidebar-toggle-btn, .send-button {
-  position: relative;
-  z-index: 310;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-}
-
-/* Ensure the active state is more visible */
-.sidebar-toggle-btn.active {
-  background-color: rgba(139, 92, 246, 0.6);
-  color: white;
-  border-color: rgba(139, 92, 246, 0.8);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-}
-
-/* Ensure input is visible and properly positioned */
-.chat-input {
-  position: relative;
-  z-index: 415;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.3);
-}
-
-/* Mobile-specific overrides */
-@media (max-width: 767px) {
-  :root {
-    --chat-input-height: 70px;
-    --bottom-nav-height: 64px;
-  }
-  
-  .bottom-nav-container {
-    bottom: var(--bottom-nav-height);
-    z-index: 500;
-    background-color: rgba(17, 24, 39, 0.99);
-    backdrop-filter: blur(15px);
-  }
-  
-  .messages-container {
-    padding: 16px;
-    padding-bottom: calc(var(--chat-input-height) + var(--bottom-nav-height) + 30px);
-  }
-  
-  .message-content {
-    max-width: 80%; /* Wider on mobile */
-    padding: 14px 18px;
-    font-size: 15px;
-  }
-  
-  .chat-input-area {
-    padding: 14px 16px;
-  }
-  
-  .chat-input {
-    padding: 14px 18px;
-    min-height: 44px;
-  }
-  
-  .sidebar-toggle-btn,
-  .send-button {
-    width: 42px;
-    height: 42px;
-  }
-}
-
-/* Additional fixes for very small screens */
-@media (max-width: 360px) {
-  .sidebar-toggle-btn,
-  .send-button {
-    width: 38px;
-    height: 38px;
-  }
-  
-  .chat-input-area {
-    padding: 12px;
-    gap: 8px;
-  }
-  
-  .message-content {
-    padding: 12px 16px;
-  }
-}
-
-/* Messages container - Fix spacing for better visibility */
-.messages-container {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px;
-  padding-top: 30px; /* Increased top padding to push messages down */
-  padding-bottom: calc(var(--chat-input-height) + 40px); /* More bottom space */
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  min-height: 0; /* Allow flex shrinking */
-  max-height: calc(100vh - var(--header-height) - var(--chat-input-height)); /* Limit height */
-  display: flex;
-  flex-direction: column;
-}
-
-/* Force proper message spacing on first message */
-.messages-container > div:first-child {
-  margin-top: auto; /* Push first message to bottom of available space */
-}
-
-/* Message bubbles - Better positioning and spacing */
-.message {
-  display: flex;
-  margin-bottom: 20px; /* More space between messages */
-  max-width: 100%;
-  align-items: flex-end;
-  padding: 0 5px; /* Add horizontal padding */
-  position: relative; /* Ensure proper positioning context */
-}
-
+/* Message bubbles improvements */
 .message-user {
   justify-content: flex-end;
-  margin-left: 20%; /* More space on user messages */
-  margin-top: 24px; /* Extra space above user messages for better visibility */
+  margin-bottom: 16px;
 }
 
 .message-ai {
   justify-content: flex-start;
-  margin-right: 20%;
-  margin-top: 16px; /* Space above AI messages */
+  margin-bottom: 16px;
 }
 
-.message-content {
-  padding: 16px 20px;
+.message-content-user {
+  background: rgb(139, 92, 246);
+  color: white;
   border-radius: 18px;
-  max-width: 80%; /* Wider messages */
-  word-wrap: break-word;
-  word-break: break-word;
-  line-height: 1.5;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Add subtle shadow for better visibility */
+  border-top-right-radius: 4px;
+  padding: 12px 16px;
+  max-width: 80%;
+  box-shadow: 0 2px 12px rgba(139, 92, 246, 0.25);
 }
 
-/* Ensure proper spacing for welcome screen */
-.welcome-container {
-  margin-top: auto; /* Push to bottom of container */
-  margin-bottom: 20px; /* Add space above input */
-  padding-top: 20px; /* Extra space at top */
+.message-content-ai {
+  background: rgba(31, 41, 55, 0.9);
+  color: rgb(243, 244, 246);
+  border-radius: 18px;
+  border-top-left-radius: 4px;
+  padding: 12px 16px;
+  max-width: 80%;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Desktop specific improvements */
-@media (min-width: 768px) {
-  .messages-container {
-    padding: 30px; /* More padding on desktop */
-    padding-top: 40px; /* Extra top padding on desktop */
-    padding-bottom: calc(var(--chat-input-height) + 50px); /* More bottom space on desktop */
-  }
+/* Avatar styling */
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
 
-  .message {
-    margin-bottom: 24px; /* More space between messages on desktop */
-  }
+.user-avatar {
+  background: rgb(139, 92, 246);
+  color: white;
+}
 
-  .message-user {
-    margin-top: 32px; /* Even more space above user messages on desktop */
-  }
+.ai-avatar {
+  background: linear-gradient(135deg, rgb(139, 92, 246), rgb(219, 39, 119));
+  color: white;
+}
 
-  .message-content {
-    max-width: 70%; /* Slightly narrower on desktop for better readability */
-  }
+/* Prose styling for markdown content */
+.prose {
+  max-width: none;
+  line-height: 1.6;
+}
 
-  /* Ensure chat-layout takes proper height on desktop */
-  .chat-layout {
-    height: calc(100vh - var(--header-height)); /* Full height minus header */
-    max-height: 100vh; /* Limit maximum height */
+.prose p {
+  margin: 0 0 1em 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose code {
+  background-color: rgba(139, 92, 246, 0.1);
+  color: rgb(196, 181, 253);
+  padding: 0.125em 0.25em;
+  border-radius: 0.25em;
+  font-size: 0.875em;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.prose pre {
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin: 1em 0;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.prose pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  color: rgb(243, 244, 246);
+}
+
+/* Scrollbar styling */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(139, 92, 246, 0.5);
+}
+
+/* Animation for typing indicator */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
   }
 }
 
-/* Ensure first messages are visible with scrollbar position */
-.chat-layout:not(.empty-chat) .messages-container {
-  padding-top: 100px; /* Large initial padding to ensure visibility */
+.animate-bounce {
+  animation: bounce 1.4s infinite ease-in-out both;
 }
 
-/* Fix for Flex layout to ensure messages are visible */
-.messages-container > div {
-  flex-shrink: 0; /* Prevent messages from shrinking */
+/* Focus states for better accessibility */
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgb(139, 92, 246);
+  outline-offset: 2px;
 }
 
-/* Add specific styling for the first message in conversation */
-.messages-container > div:first-of-type .message {
-  margin-top: 60px; /* Extra space for first message */
+/* Better text selection */
+::selection {
+  background-color: rgba(139, 92, 246, 0.2);
+}
+
+/* Safe area for notched devices */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .chat-layout {
+      padding-bottom: max(var(--mobile-navbar-height), calc(var(--mobile-navbar-height) + var(--safe-area-bottom)));
+    }
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce {
+    animation: none;
+  }
+  
+  button {
+    transition: none;
+  }
+  
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .prose code,
+  .prose pre {
+    border: 1px solid currentColor;
+  }
+  
+  button {
+    border: 2px solid currentColor;
+  }
 }
