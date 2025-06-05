@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaUser, FaRobot, FaExternalLinkAlt, FaChartLine, FaCoins, FaExclamationTriangle, FaEye } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
@@ -96,6 +96,69 @@ const RightSidebar = ({
       setNftError(null);
     }
   }, [nftsLoading, nfts]);
+  
+  // Performance and accessibility detection
+  const shouldReduceMotion = useMemo(() => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+  
+  const isLowPerformance = useMemo(() => {
+    // Detect low performance devices
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+    const isLowEndDevice = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
+    const hasLimitedMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    
+    return isSlowConnection || isLowEndDevice || hasLimitedMemory;
+  }, []);
+  
+  // Optimized animation configuration
+  const getAnimationConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.2, ease: "easeOut" }
+      };
+    }
+    
+    return {
+      initial: { y: "100%", x: 0, opacity: 0.8 },
+      animate: { y: 0, x: 0, opacity: 1 },
+      exit: { y: "100%", x: 0, opacity: 0 },
+      transition: { 
+        type: 'spring', 
+        damping: isLowPerformance ? 40 : 30, 
+        stiffness: isLowPerformance ? 200 : 300,
+        mass: 0.8,
+        opacity: { duration: 0.2 }
+      }
+    };
+  }, [shouldReduceMotion, isLowPerformance]);
+  
+  // Optimized NFT hover animations
+  const getNftHoverConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        whileHover: { opacity: 0.9 },
+        transition: { duration: 0.15 }
+      };
+    }
+    
+    return {
+      whileHover: { 
+        scale: isLowPerformance ? 1.02 : 1.05, 
+        y: isLowPerformance ? -1 : -2,
+        rotateY: isLowPerformance ? 0 : 2
+      },
+      transition: { 
+        type: "spring", 
+        stiffness: isLowPerformance ? 300 : 400, 
+        damping: isLowPerformance ? 15 : 10 
+      }
+    };
+  }, [shouldReduceMotion, isLowPerformance]);
 
   return (
     <>
@@ -106,6 +169,7 @@ const RightSidebar = ({
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.1 : 0.3 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] md:hidden"
             onClick={toggleSidebar}
             aria-hidden="true"
@@ -128,15 +192,7 @@ const RightSidebar = ({
               flex flex-col
               md:shadow-2xl md:shadow-purple-900/30
             "
-            initial={{ y: "100%", x: 0 }}
-            animate={{ y: 0, x: 0 }}
-            exit={{ y: "100%", x: 0 }}
-            transition={{ 
-              type: 'spring', 
-              damping: 30, 
-              stiffness: 300,
-              mass: 0.8
-            }}
+            {...getAnimationConfig}
             role="dialog"
             aria-modal="true"
             aria-labelledby="right-sidebar-title"
@@ -271,8 +327,7 @@ const RightSidebar = ({
                                 <m.div 
                                   key={`nft-${idx}-${nft.tokenId || idx}`}
                                   className="relative aspect-square rounded-xl overflow-hidden bg-gray-800 border border-purple-500/30 cursor-pointer group"
-                                  whileHover={{ scale: 1.05, y: -2 }}
-                                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                                  {...getNftHoverConfig}
                                   onMouseEnter={() => setHoveredNftIndex(idx)}
                                   onMouseLeave={() => setHoveredNftIndex(null)}
                                   onClick={() => handleNftClick(nft)}
@@ -306,13 +361,22 @@ const RightSidebar = ({
                                     </div>
                                   )}
                                   
-                                  {/* Hover overlay with view details button */}
-                                  <div className={`
-                                    absolute inset-0 bg-black/70 backdrop-blur-sm 
-                                    flex flex-col items-center justify-center
-                                    transition-opacity duration-300
-                                    ${hoveredNftIndex === idx ? 'opacity-100' : 'opacity-0'}
-                                  `}>
+                                  {/* Optimized hover overlay */}
+                                  <m.div 
+                                    className={`
+                                      absolute inset-0 bg-black/70 backdrop-blur-sm 
+                                      flex flex-col items-center justify-center
+                                      ${hoveredNftIndex === idx ? 'opacity-100' : 'opacity-0'}
+                                    `}
+                                    animate={{ 
+                                      opacity: hoveredNftIndex === idx ? 1 : 0,
+                                      scale: hoveredNftIndex === idx ? 1 : 0.95
+                                    }}
+                                    transition={{ 
+                                      duration: shouldReduceMotion ? 0.1 : 0.3,
+                                      ease: "easeOut"
+                                    }}
+                                  >
                                     <div className="text-center px-2">
                                       <h4 className="text-white font-semibold text-xs md:text-sm mb-2 truncate">
                                         {nft.name || `NFT #${nft.tokenId || idx + 1}`}
@@ -326,8 +390,13 @@ const RightSidebar = ({
                                           transition-colors duration-200
                                           shadow-lg hover:shadow-purple-500/30
                                         "
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{ 
+                                          scale: shouldReduceMotion ? 1 : (isLowPerformance ? 1.02 : 1.05) 
+                                        }}
+                                        whileTap={{ 
+                                          scale: shouldReduceMotion ? 1 : 0.95 
+                                        }}
+                                        transition={{ duration: 0.15 }}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleNftClick(nft);
@@ -337,7 +406,7 @@ const RightSidebar = ({
                                         View Details
                                       </m.button>
                                     </div>
-                                  </div>
+                                  </m.div>
                                 </m.div>
                               ))}
                             </div>

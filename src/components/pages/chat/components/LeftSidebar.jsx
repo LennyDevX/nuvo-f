@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaPuzzlePiece, FaCode, FaRobot } from 'react-icons/fa';
 
@@ -6,6 +6,63 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
   const focusTrapRef = useRef(null);
   const firstFocusableRef = useRef(null);
   const lastFocusableRef = useRef(null);
+
+  // Performance and accessibility optimizations
+  const shouldReduceMotion = useMemo(() => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  const isLowPerformance = useMemo(() => {
+    // Check for low-end devices
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const hasSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+    const hasLowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const hasSlowCPU = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
+    
+    return hasSlowConnection || hasLowMemory || hasSlowCPU || shouldReduceMotion;
+  }, [shouldReduceMotion]);
+
+  // Optimized animation configurations
+  const getBackdropAnimationConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.15 }
+      };
+    }
+
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+      transition: { duration: 0.3 }
+    };
+  }, [shouldReduceMotion]);
+
+  const getSidebarAnimationConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.2 }
+      };
+    }
+
+    return {
+      initial: { y: "100%", x: 0 },
+      animate: { y: 0, x: 0 },
+      exit: { y: "100%", x: 0 },
+      transition: { 
+        type: 'spring', 
+        damping: isLowPerformance ? 40 : 30, 
+        stiffness: isLowPerformance ? 200 : 300,
+        mass: isLowPerformance ? 1.2 : 0.8
+      }
+    };
+  }, [shouldReduceMotion, isLowPerformance]);
 
   // Focus management for accessibility
   useEffect(() => {
@@ -47,12 +104,10 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
       <AnimatePresence>
         {isOpen && (
           <m.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] md:hidden"
             onClick={toggleSidebar}
             aria-hidden="true"
+            {...getBackdropAnimationConfig}
           />
         )}
       </AnimatePresence>
@@ -72,28 +127,11 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
               flex flex-col
               md:shadow-2xl md:shadow-purple-900/30
             "
-            initial={{ 
-              y: "100%",
-              x: 0 
-            }}
-            animate={{ 
-              y: 0,
-              x: 0 
-            }}
-            exit={{ 
-              y: "100%",
-              x: 0 
-            }}
-            transition={{ 
-              type: 'spring', 
-              damping: 30, 
-              stiffness: 300,
-              mass: 0.8
-            }}
             role="dialog"
             aria-modal="true"
             aria-labelledby="left-sidebar-title"
             aria-describedby="left-sidebar-description"
+            {...getSidebarAnimationConfig}
           >
             {/* Mobile drag indicator */}
             <div className="md:hidden flex justify-center pt-4 pb-3 flex-shrink-0">

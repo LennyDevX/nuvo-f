@@ -2,6 +2,7 @@
 let totalRequests = 0;
 let totalErrors = 0;
 let totalTokens = 0;
+let tokenCount = 0;
 
 export const getMetrics = () => ({
   totalRequests,
@@ -9,21 +10,28 @@ export const getMetrics = () => ({
   totalTokens
 });
 
-export const incrementTokenCount = (amount) => {
-  totalTokens += amount;
-};
+export function incrementTokenCount(count) {
+  tokenCount += count;
+}
+
+export function getTokenCount() {
+  return tokenCount;
+}
 
 export const incrementErrorCount = () => {
   totalErrors++;
 };
 
-export default function loggerMiddleware(req, res, next) {
+export default function logger(req, res, next) {
   const start = Date.now();
-  totalRequests++;
+  const { method, url } = req;
   
+  console.log(`[${new Date().toISOString()}] ${method} ${url} - START`);
+  
+  // Interceptar el final de la respuesta
   res.on('finish', () => {
-    const ms = Date.now() - start;
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl} - ${res.statusCode} - ${ms}ms`);
+    const duration = Date.now() - start;
+    console.log(`[${new Date().toISOString()}] ${method} ${url} - ${res.statusCode} (${duration}ms)`);
   });
   
   next();

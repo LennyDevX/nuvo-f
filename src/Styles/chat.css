@@ -6,6 +6,9 @@
   --mobile-navbar-height: 64px;
   --chat-input-height: auto;
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --vh: 1vh;
+  --keyboard-height: 0px;
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Global chat container */
@@ -59,6 +62,11 @@
   /* Prevent mobile navbar from covering input */
   .mobile-safe-bottom {
     padding-bottom: calc(64px + 16px); /* Navbar height + input area */
+  }
+  
+  /* Mobile input with safe area support */
+  .chat-input-mobile {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 }
 
@@ -314,6 +322,18 @@ input:focus-visible {
     .chat-layout {
       padding-bottom: max(var(--mobile-navbar-height), calc(var(--mobile-navbar-height) + var(--safe-area-bottom)));
     }
+    
+    /* Mejoras para iPhone con notch */
+    .chat-input-mobile {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* Optimización para teclados virtuales */
+@media screen and (max-height: 500px) {
+  .chat-messages {
+    height: calc(var(--vh, 1vh) * 100 - 200px);
   }
 }
 

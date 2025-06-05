@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
 import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
 import { useDebounce } from '../../hooks/performance/useEventOptimizers';
@@ -41,6 +41,64 @@ const loadConversationsFromStorage = () => {
   }
 };
 
+const chatReducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_USER_MESSAGE':
+      return {
+        ...state,
+        messages: [...state.messages, action.payload],
+        isLoading: true,
+        error: null
+      };
+    case 'START_STREAMING':
+      return {
+        ...state,
+        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true }]
+      };
+    case 'UPDATE_STREAM':
+      const updatedMessages = [...state.messages];
+      const lastIndex = updatedMessages.length - 1;
+      if (updatedMessages[lastIndex]?.isStreaming) {
+        updatedMessages[lastIndex] = {
+          ...updatedMessages[lastIndex],
+          text: action.payload
+        };
+      }
+      return { ...state, messages: updatedMessages };
+    case 'FINISH_STREAM':
+      return {
+        ...state,
+        isLoading: false,
+        messages: state.messages.map((msg, idx) => 
+          idx === state.messages.length - 1 
+            ? { ...msg, isStreaming: false }
+            : msg
+        )
+      };
+    case 'SET_ERROR':
+      return { ...state, error: action.payload, isLoading: false };
+    case 'RESET_CONVERSATION':
+      return { ...state, messages: [], error: null, isLoading: false, conversationId: null };
+    case 'LOAD_CONVERSATION':
+      return { 
+        ...state, 
+        messages: action.payload.messages, 
+        conversationId: action.payload.id, 
+        error: null 
+      };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    case 'REMOVE_FAILED_MESSAGE':
+      return {
+        ...state,
+        messages: state.messages.filter((_, index) => index !== action.payload),
+        isLoading: false
+      };
+    default:
+      return state;
+  }
+};
+
 const GeminiChat = ({ 
   shouldReduceMotion = false, 
   isLowPerformance = false,
@@ -49,26 +107,29 @@ const GeminiChat = ({
   leftSidebarOpen = false,
   rightSidebarOpen = false
 }) => {
-  const [messages, setMessages] = useState([]);
+  const [state, dispatch] = useReducer(chatReducer, {
+    messages: [],
+    isLoading: false,
+    error: null,
+    conversationId: null
+  });
+  
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [error, setError] = useState(null);
-  const [conversationId, setConversationId] = useState(null);
   
   // Cache for responses
   const responseCache = useRef(new Map());
 
   // Auto-save conversation when messages change
   useEffect(() => {
-    if (messages.length > 0) {
+    if (state.messages.length > 0) {
       const timeoutId = setTimeout(() => {
-        saveConversationToStorage(messages);
+        saveConversationToStorage(state.messages);
       }, 1000); // Debounce saves
       
       return () => clearTimeout(timeoutId);
     }
-  }, [messages]);
+  }, [state.messages]);
 
   // Check API connection on mount
   useEffect(() => {
@@ -80,7 +141,7 @@ const GeminiChat = ({
         await fetch(apiUrl);
       } catch (error) {
         if (isMounted) {
-          setError("Unable to connect to AI service. Please try again later.");
+          dispatch({ type: 'SET_ERROR', payload: "Unable to connect to AI service. Please try again later." });
         }
       } finally {
         if (isMounted) {
@@ -96,24 +157,21 @@ const GeminiChat = ({
 
   // Format messages for API
   const formatMessagesForAPI = useCallback(() => {
-    return messages.map(msg => ({
+    return state.messages.map(msg => ({
       role: msg.sender === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }]
     }));
-  }, [messages]);
+  }, [state.messages]);
 
   // Process streaming response with optimistic updates
   const processStreamResponse = useCallback(async (reader, userMessage) => {
     const decoder = new TextDecoder();
     let fullResponse = '';
-    let tempMessageIndex = -1;
+    let lastUpdate = 0;
+    const UPDATE_THROTTLE = isLowPerformance ? 200 : 100;
     
-    // Add temporary message for optimistic update
-    setMessages(prev => {
-      const newMessages = [...prev, { text: '', sender: 'bot', isStreaming: true }];
-      tempMessageIndex = newMessages.length - 1;
-      return newMessages;
-    });
+    // Start streaming
+    dispatch({ type: 'START_STREAMING' });
     
     try {
       while (true) {
@@ -123,59 +181,40 @@ const GeminiChat = ({
         const chunk = decoder.decode(value);
         fullResponse += chunk;
         
-        // Update streaming message
-        setMessages(prev => {
-          const updated = [...prev];
-          if (updated[tempMessageIndex]) {
-            updated[tempMessageIndex] = { 
-              text: fullResponse, 
-              sender: 'bot', 
-              isStreaming: true 
-            };
-          }
-          return updated;
-        });
+        // Throttle updates para mejor performance
+        const now = Date.now();
+        if (now - lastUpdate >= UPDATE_THROTTLE) {
+          dispatch({ type: 'UPDATE_STREAM', payload: fullResponse });
+          lastUpdate = now;
+        }
       }
       
       // Finalize message
-      setMessages(prev => {
-        const updated = [...prev];
-        if (updated[tempMessageIndex]) {
-          updated[tempMessageIndex] = { 
-            text: fullResponse, 
-            sender: 'bot', 
-            isStreaming: false 
-          };
-        }
-        return updated;
-      });
+      dispatch({ type: 'FINISH_STREAM' });
       
       // Cache the response
       responseCache.current.set(userMessage.text, fullResponse);
       
     } catch (error) {
       console.error('Error processing stream:', error);
-      setError("Error processing response. Please try again.");
+      dispatch({ type: 'SET_ERROR', payload: "Error processing response. Please try again." });
       
       // Remove failed streaming message
-      setMessages(prev => prev.filter((_, index) => index !== tempMessageIndex));
+      dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
     }
-  }, []);
+  }, [isLowPerformance, state.messages.length]);
 
   // Send message function with debounce and optimistic updates
   const sendMessageDebounced = useDebounce(async (userMessage) => {
     const cacheKey = userMessage.text;
     
-    setIsLoading(true);
-    setError(null);
+    dispatch({ type: 'SET_LOADING', payload: true });
 
     // Check cache for existing response
     if (responseCache.current.has(cacheKey)) {
-      setMessages(prev => [
-        ...prev,
-        { text: responseCache.current.get(cacheKey), sender: 'bot' }
-      ]);
-      setIsLoading(false);
+      dispatch({ type: 'START_STREAMING' });
+      dispatch({ type: 'UPDATE_STREAM', payload: responseCache.current.get(cacheKey) });
+      dispatch({ type: 'FINISH_STREAM' });
       return;
     }
 
@@ -205,23 +244,21 @@ const GeminiChat = ({
       }
     } catch (error) {
       console.error('Error:', error);
-      setError(`Error: ${error.message}. Please try again.`);
-    } finally {
-      setIsLoading(false);
+      dispatch({ type: 'SET_ERROR', payload: `Error: ${error.message}. Please try again.` });
     }
   }, 300);
 
   // Handle message submission
   const handleSendMessage = useCallback((e) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || state.isLoading) return;
 
     const userMessage = { text: input.trim(), sender: 'user' };
-    setMessages(prev => [...prev, userMessage]);
+    dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
     setInput('');
     
     sendMessageDebounced(userMessage);
-  }, [input, isLoading, sendMessageDebounced]);
+  }, [input, state.isLoading, sendMessageDebounced]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion) => {
@@ -231,21 +268,17 @@ const GeminiChat = ({
   // New conversation handler with persistence
   const handleNewConversation = useCallback(() => {
     // Save current conversation if it has messages
-    if (messages.length > 0) {
-      saveConversationToStorage(messages);
+    if (state.messages.length > 0) {
+      saveConversationToStorage(state.messages);
     }
     
-    setMessages([]);
-    setError(null);
-    setConversationId(null);
+    dispatch({ type: 'RESET_CONVERSATION' });
     setInput('');
-  }, [messages]);
+  }, [state.messages]);
 
   // Load conversation from storage
   const handleLoadConversation = useCallback((conversation) => {
-    setMessages(conversation.messages);
-    setConversationId(conversation.id);
-    setError(null);
+    dispatch({ type: 'LOAD_CONVERSATION', payload: conversation });
   }, []);
 
   // Smart keyboard shortcuts
@@ -296,7 +329,7 @@ const GeminiChat = ({
           <h1 className="text-lg font-semibold text-white">
             Nuvos AI
           </h1>
-          {messages.length > 0 && (
+          {state.messages.length > 0 && (
             <button
               onClick={handleNewConversation}
               className="
@@ -350,13 +383,13 @@ const GeminiChat = ({
             <p className="text-gray-400 text-sm">Initializing...</p>
           </div>
         </div>
-      ) : messages.length === 0 ? (
+      ) : state.messages.length === 0 ? (
         <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
       ) : (
         <ChatMessages 
-          messages={messages}
-          isLoading={isLoading}
-          error={error}
+          messages={state.messages}
+          isLoading={state.isLoading}
+          error={state.error}
           shouldReduceMotion={shouldReduceMotion}
         />
       )}
@@ -366,13 +399,14 @@ const GeminiChat = ({
         input={input}
         setInput={setInput}
         onSendMessage={handleSendMessage}
-        isLoading={isLoading}
+        isLoading={state.isLoading}
         isInitializing={isInitializing}
         toggleLeftSidebar={toggleLeftSidebar}
         toggleRightSidebar={toggleRightSidebar}
         leftSidebarOpen={leftSidebarOpen}
         rightSidebarOpen={rightSidebarOpen}
-        hasMessages={messages.length > 0}
+        onNewConversation={handleNewConversation}
+        hasMessages={state.messages.length > 0}
       />
     </div>
   );

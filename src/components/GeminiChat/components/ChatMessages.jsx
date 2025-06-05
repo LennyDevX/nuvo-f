@@ -2,53 +2,74 @@ import React, { memo, useRef, useEffect, useMemo, useState, useCallback } from '
 import { FaUser } from 'react-icons/fa';
 import { lazy, Suspense } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import AnimatedAILogo from '../../effects/AnimatedAILogo';
 import remarkGfm from 'remark-gfm';
 
-// Lazy load ReactMarkdown
+// Lazy load components
 const ReactMarkdown = lazy(() => import('react-markdown'));
+const AnimatedAILogo = lazy(() => import('../../effects/AnimatedAILogo'));
 
 // Virtual list item component
 const MessageItem = memo(({ index, style, data }) => {
   const { messages, shouldReduceMotion } = data;
   const message = messages[index];
   const isUser = message.sender === 'user';
+  const [isVisible, setIsVisible] = useState(false);
+  const messageRef = useRef(null);
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    
+    if (messageRef.current) observer.observe(messageRef.current);
+    return () => observer.disconnect();
+  }, []);
   
   return (
-    <div style={style} className="px-4 md:px-6">
-      <div className={`flex w-full mb-6 ${isUser ? 'justify-end' : ''}`}>
-        <div className={`flex max-w-[85%] md:max-w-[70%] gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-          {isUser ? (
-            <>
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-lg border border-purple-500/20">
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
-              </div>
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/80 via-pink-500/80 to-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
-                  <FaUser size={14} className="text-white/90" />
+    <div ref={messageRef} style={style} className="px-4 md:px-6">
+      {isVisible ? (
+        <div className={`flex w-full mb-6 ${isUser ? 'justify-end' : ''}`}>
+          <div className={`flex max-w-[85%] md:max-w-[70%] gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+            {isUser ? (
+              <>
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-lg border border-purple-500/20">
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                 </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
-                  <AnimatedAILogo reduced={true} isThinking={message.isStreaming} size="xs" />
-                </div>
-              </div>
-              <div className="bg-gray-800/95 backdrop-blur-sm text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-lg border border-purple-500/20">
-                <Suspense fallback={<p className="text-sm leading-relaxed text-gray-100">{message.text}</p>}>
-                  <div className="prose prose-sm prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                      {message.text}
-                    </ReactMarkdown>
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/80 via-pink-500/80 to-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
+                    <FaUser size={14} className="text-white/90" />
                   </div>
-                </Suspense>
-              </div>
-            </>
-          )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
+                    <Suspense fallback={<div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse" />}>
+                      <AnimatedAILogo reduced={true} isThinking={message.isStreaming} size="xs" />
+                    </Suspense>
+                  </div>
+                </div>
+                <div className="bg-gray-800/95 backdrop-blur-sm text-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 shadow-lg border border-purple-500/20">
+                  <Suspense fallback={<p className="text-sm leading-relaxed text-gray-100">{message.text}</p>}>
+                    <div className="prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.text}
+                      </ReactMarkdown>
+                    </div>
+                  </Suspense>
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      ) : (
+        // Placeholder to maintain layout while content loads
+        <div className="flex w-full mb-6" style={{ minHeight: '60px' }}>
+          <div className="w-full bg-gray-800/20 rounded-2xl animate-pulse"></div>
+        </div>
+      )}
     </div>
   );
 });
@@ -59,7 +80,9 @@ const TypingIndicator = memo(() => (
     <div className="flex max-w-[85%] md:max-w-[70%] gap-3">
       <div className="flex-shrink-0 mt-1">
         <div className="w-10 h-10 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
-          <AnimatedAILogo reduced={true} isThinking={true} size="xs" />
+          <Suspense fallback={<div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse" />}>
+            <AnimatedAILogo reduced={true} isThinking={true} size="xs" />
+          </Suspense>
         </div>
       </div>
       <div className="bg-gray-800/95 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 border border-purple-500/20 shadow-lg">
@@ -93,7 +116,23 @@ const ChatMessages = ({
   const listRef = useRef(null);
   const [containerHeight, setContainerHeight] = useState(400);
   const [isAtBottom, setIsAtBottom] = useState(true);
-  const renderStartTime = useRef(Date.now());
+
+  // Dynamic viewport support
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+    
+    return () => {
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+    };
+  }, []);
   
   // Calculate item height based on content
   const getItemSize = useCallback((index) => {
@@ -156,7 +195,7 @@ const ChatMessages = ({
 
   if (useVirtualScrolling) {
     return (
-      <div ref={containerRef} className="flex-1 overflow-hidden px-0 md:px-0 bg-gray-900">
+      <div ref={containerRef} className="flex-1 overflow-hidden px-0 md:px-0 bg-gray-900" style={{ height: 'calc(var(--vh, 1vh) * 100 - 200px)' }}>
         <div className="max-w-4xl mx-auto h-full relative">
           <List
             ref={listRef}
@@ -212,7 +251,7 @@ const ChatMessages = ({
 
   // Standard scrolling for smaller lists
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto px-0 bg-gray-900 pb-4 md:pb-0">
+    <div ref={containerRef} className="flex-1 overflow-y-auto px-0 bg-gray-900 pb-4 md:pb-0" style={{ height: 'calc(var(--vh, 1vh) * 100 - 200px)' }}>
       <div className="max-w-4xl mx-auto py-4">
         {messages.map((message, index) => (
           <MessageItem

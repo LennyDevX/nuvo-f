@@ -32,6 +32,49 @@ async function withTimeoutAndRetry(fn, { timeoutMs = 30000, maxRetries = 2, back
   }
 }
 
+// Sistema de caché mejorado con TTL
+class ResponseCache {
+  constructor(maxSize = 100, ttlMs = 300000) { // 5 minutos TTL
+    this.cache = new Map();
+    this.maxSize = maxSize;
+    this.ttlMs = ttlMs;
+  }
+  
+  generateKey(contents, model, params) {
+    return JSON.stringify({ contents, model, params });
+  }
+  
+  get(key) {
+    const item = this.cache.get(key);
+    if (!item) return null;
+    
+    if (Date.now() - item.timestamp > this.ttlMs) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  }
+  
+  set(key, value) {
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
+    
+    this.cache.set(key, {
+      value,
+      timestamp: Date.now()
+    });
+  }
+  
+  clear() {
+    this.cache.clear();
+  }
+}
+
+const responseCache = new ResponseCache();
+
 /**
  * Procesa una solicitud a la API de Gemini
  * @param {Object|String} contents - Contenido del prompt o historial de mensajes
@@ -48,12 +91,34 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
     throw new Error('Se requiere un prompt o historial de mensajes');
   }
   
+  // Verificar caché
+  const cacheKey = responseCache.generateKey(contents, model, params);
+  const cachedResponse = responseCache.get(cacheKey);
+  
+  if (cachedResponse) {
+    console.log('Respuesta obtenida desde caché');
+    return cachedResponse;
+  }
+  
+  // Configuración de generación mejorada
+  const generationConfig = {
+    temperature: params.temperature || 0.7,
+    topK: params.topK || 40,
+    topP: params.topP || 0.95,
+    maxOutputTokens: params.maxOutputTokens || 2048,
+    responseMimeType: 'text/plain',
+  };
+  
   // Llama al modelo Gemini con timeout y reintentos
   const response = await withTimeoutAndRetry(() => ai.models.generateContent({
     model,
     contents,
+    generationConfig,
     ...params
   }), { timeoutMs: 35000, maxRetries: 2, backoffMs: 2500 });
+  
+  // Guardar en caché
+  responseCache.set(cacheKey, response);
   
   // Conteo de tokens (si el SDK lo permite)
   if (response.usage && response.usage.totalTokens) {
@@ -61,6 +126,11 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
   }
   
   return response;
+}
+
+// Función para limpiar caché manualmente
+export function clearCache() {
+  responseCache.clear();
 }
 
 /**
