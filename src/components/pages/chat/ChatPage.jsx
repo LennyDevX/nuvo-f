@@ -29,9 +29,13 @@ const ChatPage = () => {
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { account, walletConnected, balance, network } = useContext(WalletContext);
+  
+  // Destructure WalletContext properly to prevent re-renders
+  const walletContextValue = useContext(WalletContext);
+  const { account, walletConnected, balance, network } = walletContextValue || {};
+  
   const { state: stakingState, refreshUserInfo } = useStaking();
-  const { nfts, nftsLoading, updateUserAccount } = useTokenization();
+  const { nfts, nftsLoading, updateUserAccount, error: nftError } = useTokenization();
   const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
   
   const [containerRef, isContainerVisible] = useIntersectionObserver({
@@ -39,20 +43,44 @@ const ChatPage = () => {
     triggerOnce: true
   });
   
-  // Update user account when account changes
+  // Debug NFT loading
   useEffect(() => {
-    if (account) {
+    if (walletConnected && account) {
+      console.log('ChatPage NFT Debug:', {
+        account,
+        nfts,
+        nftsLoading,
+        nftError,
+        nftsLength: nfts?.length
+      });
+    }
+  }, [account, walletConnected, nfts, nftsLoading, nftError]);
+  
+  // Update user account when account changes - with proper dependency array
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (account && walletConnected && updateUserAccount && isMounted) {
+      console.log('Updating user account:', account);
       updateUserAccount(account);
     }
-  }, [account, updateUserAccount]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [account, walletConnected, updateUserAccount]);
   
-  // Fetch staking info when account changes
+  // Fetch staking info when account changes - with proper cleanup
   useEffect(() => {
     let isMounted = true;
     
     const fetchStakingInfo = async () => {
-      if (walletConnected && account && isMounted) {
-        await refreshUserInfo(account);
+      if (walletConnected && account && refreshUserInfo && isMounted) {
+        try {
+          await refreshUserInfo(account);
+        } catch (error) {
+          console.error('Error fetching staking info:', error);
+        }
       }
     };
     
@@ -65,7 +93,6 @@ const ChatPage = () => {
   
   // Handle window resize for responsive sidebar behavior
   const handleResize = useThrottle(() => {
-    // Auto-close sidebars on mobile
     if (window.innerWidth < 768) {
       setLeftSidebarOpen(false);
       setRightSidebarOpen(false);
@@ -89,7 +116,7 @@ const ChatPage = () => {
     return () => clearTimeout(timer);
   }, [isLowPerformance]);
 
-  // Sidebar toggle functions
+  // Sidebar toggle functions - stable references
   const toggleLeftSidebar = useCallback(() => {
     setLeftSidebarOpen(prev => !prev);
     setRightSidebarOpen(false);
@@ -100,7 +127,7 @@ const ChatPage = () => {
     setLeftSidebarOpen(false);
   }, []);
 
-  // Process staking data
+  // Process staking data - memoized with stable dependencies
   const stakingData = useMemo(() => {
     const userDeposits = stakingState?.userDeposits || [];
     const depositCount = Array.isArray(userDeposits) ? userDeposits.length : 0;
@@ -113,17 +140,31 @@ const ChatPage = () => {
       pendingRewards,
       stakingStats
     };
-  }, [stakingState]);
+  }, [stakingState?.userDeposits, stakingState?.stakingStats]);
 
-  // Performance props to pass to children
+  // Performance props to pass to children - stable reference
   const performanceProps = useMemo(() => ({
     shouldReduceMotion,
     isLowPerformance
   }), [shouldReduceMotion, isLowPerformance]);
 
+  // Wallet props - stable reference
+  const walletProps = useMemo(() => ({
+    walletConnected: Boolean(walletConnected),
+    account: account || null,
+    network: network || null,
+    balance: balance || '0'
+  }), [walletConnected, account, network, balance]);
+
+  // NFT props - stable reference
+  const nftProps = useMemo(() => ({
+    nfts: nfts || [],
+    nftsLoading: Boolean(nftsLoading)
+  }), [nfts, nftsLoading]);
+
   return (
     <>
-      {/* Full screen background - reduced opacity for better readability */}
+      {/* Full screen background */}
       <div className="fixed inset-0 z-0 bg-white dark:bg-gray-900">
         <SpaceBackground 
           starDensity={isLowPerformance ? "minimal" : "low"} 
@@ -139,7 +180,7 @@ const ChatPage = () => {
         </Suspense>
       )}
       
-      {/* Main container - no padding top needed for mobile-first design */}
+      {/* Main container */}
       <div 
         ref={containerRef} 
         className="fixed inset-0 z-10 md:pt-[var(--header-height)]"
@@ -169,12 +210,8 @@ const ChatPage = () => {
               <RightSidebar 
                 isOpen={rightSidebarOpen}
                 toggleSidebar={toggleRightSidebar}
-                walletConnected={walletConnected}
-                account={account}
-                network={network}
-                balance={balance}
-                nfts={nfts}
-                nftsLoading={nftsLoading}
+                {...walletProps}
+                {...nftProps}
                 {...stakingData}
                 {...performanceProps}
               />

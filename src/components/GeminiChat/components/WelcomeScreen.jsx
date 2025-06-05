@@ -12,7 +12,7 @@ const WelcomeScreen = ({ onSuggestionClick }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 py-8">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg border border-white/20">
           <AnimatedAILogo size="md" />
         </div>
         <h1 className="text-2xl md:text-3xl font-semibold text-white mb-2">
@@ -28,7 +28,7 @@ const WelcomeScreen = ({ onSuggestionClick }) => {
           <button
             key={index}
             onClick={() => onSuggestionClick(suggestion)}
-            className="p-4 text-left bg-gray-800 border border-purple-500/30 rounded-xl hover:border-purple-500/50 hover:bg-gray-700 transition-all shadow-lg"
+            className="p-4 text-left bg-gray-800/90 backdrop-blur-sm border border-purple-500/30 rounded-xl hover:border-purple-500/50 hover:bg-gray-700/90 transition-all shadow-lg"
           >
             <span className="text-white text-sm font-medium">
               {suggestion}

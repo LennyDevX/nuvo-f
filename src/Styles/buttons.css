@@ -1,0 +1,589 @@
+/* Nuvos Custom Button System */
+
+/* Base button styles */
+.btn-nuvo-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 2.5rem;
+  touch-action: manipulation;
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-nuvo-base:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5);
+}
+
+.btn-nuvo-base:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Primary Button - Tu gradiente característico */
+.bg-nuvo-gradient-button {
+  background: linear-gradient(135deg, #f87171 0%, #7c3aed 100%);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.bg-nuvo-gradient-button:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #6d28d9 100%);
+  border-color: rgba(139, 92, 246, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.bg-nuvo-gradient-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+/* Secondary Button */
+.btn-nuvo-secondary {
+  background: rgba(55, 65, 81, 0.8);
+  border: 2px solid rgba(139, 92, 246, 0.4);
+  color: rgba(139, 92, 246, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-nuvo-secondary:hover {
+  background: rgba(55, 65, 81, 1);
+  border-color: rgba(139, 92, 246, 0.6);
+  color: white;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.2);
+}
+
+.btn-nuvo-secondary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Success Button */
+.btn-nuvo-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-nuvo-success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-color: rgba(16, 185, 129, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.btn-nuvo-success:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Error/Danger Button */
+.btn-nuvo-error {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.btn-nuvo-error:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: rgba(239, 68, 68, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.btn-nuvo-error:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Warning Button */
+.btn-nuvo-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.btn-nuvo-warning:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  border-color: rgba(245, 158, 11, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.btn-nuvo-warning:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Info Button */
+.btn-nuvo-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-nuvo-info:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: rgba(59, 130, 246, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-nuvo-info:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Ghost Button */
+.btn-nuvo-ghost {
+  background: transparent;
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  color: rgba(139, 92, 246, 1);
+  box-shadow: none;
+}
+
+.btn-nuvo-ghost:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.6);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.btn-nuvo-ghost:active {
+  background: rgba(139, 92, 246, 0.2);
+}
+
+/* Outline Button */
+.btn-nuvo-outline {
+  background: rgba(31, 41, 55, 0.5);
+  border: 2px solid rgba(139, 92, 246, 0.6);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.btn-nuvo-outline:hover {
+  background: rgba(139, 92, 246, 0.8);
+  border-color: rgba(139, 92, 246, 0.8);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3);
+}
+
+.btn-nuvo-outline:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Glass Effect Button */
+.btn-nuvo-glass {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.btn-nuvo-glass:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(139, 92, 246, 0.2);
+}
+
+.btn-nuvo-glass:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Chat-specific button variants */
+.btn-nuvo-chat-primary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border: 2px solid rgba(139, 92, 246, 0.5);
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-nuvo-chat-primary:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border-color: rgba(139, 92, 246, 0.7);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.btn-nuvo-chat-secondary {
+  background: rgba(31, 41, 55, 0.8);
+  border: 2px solid rgba(139, 92, 246, 0.3);
+  color: rgba(139, 92, 246, 1);
+  backdrop-filter: blur(10px);
+}
+
+.btn-nuvo-chat-secondary:hover {
+  background: rgba(55, 65, 81, 0.9);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: white;
+}
+
+/* Sidebar header close button */
+.btn-nuvo-close {
+  background: rgba(55, 65, 81, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  color: rgba(156, 163, 175, 1);
+  backdrop-filter: blur(8px);
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.5rem;
+}
+
+.btn-nuvo-close:hover {
+  background: rgba(75, 85, 99, 0.9);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Minimalist close button for sidebars */
+.btn-nuvo-close-minimal {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(55, 65, 81, 0.8);
+  border: 1px solid rgba(75, 85, 99, 0.5);
+  color: rgba(156, 163, 175, 1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-nuvo-close-minimal:hover {
+  background: rgba(75, 85, 99, 0.9);
+  border-color: rgba(107, 114, 128, 0.7);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-nuvo-close-minimal:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-nuvo-close-minimal:focus {
+  outline: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Remove focus states that persist */
+.btn-nuvo-close-minimal:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Enhanced animation for close icon */
+.btn-nuvo-close-minimal .close-icon {
+  transition: transform 0.2s ease-out;
+}
+
+.btn-nuvo-close-minimal:hover .close-icon {
+  transform: scale(1.1) rotate(90deg);
+}
+
+/* Ensure no persistent focus styling */
+.btn-nuvo-close-minimal:not(:hover):not(:active) {
+  border-color: rgba(75, 85, 99, 0.5) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Mobile optimizations for close buttons */
+@media (max-width: 767px) {
+  .btn-nuvo-close-minimal {
+    width: 2.75rem;
+    height: 2.75rem;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .btn-nuvo-close-minimal {
+    border-width: 2px;
+    border-color: rgba(107, 114, 128, 0.8);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn-nuvo-close-minimal,
+  .btn-nuvo-close-minimal .close-icon {
+    transition: none;
+  }
+  
+  .btn-nuvo-close-minimal:hover {
+    transform: none;
+  }
+  
+  .btn-nuvo-close-minimal:hover .close-icon {
+    transform: none;
+  }
+}
+
+/* Consistent hover states for all chat buttons */
+.btn-nuvo-base:hover {
+  backdrop-filter: blur(12px);
+}
+
+/* Professional spacing for chat interface */
+.btn-nuvo-chat-spacing {
+  margin: 0.25rem;
+}
+
+/* Enhanced focus states for better accessibility */
+.btn-nuvo-base:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.4);
+}
+
+/* Consistent transition timing for all buttons */
+.btn-nuvo-base {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobile-optimized button sizes for chat */
+@media (max-width: 767px) {
+  .btn-nuvo-chat-mobile {
+    min-height: 3rem;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn-nuvo-icon-mobile {
+    min-width: 3rem;
+    min-height: 3rem;
+    padding: 0.875rem;
+  }
+}
+
+/* Enhanced loading states for async operations */
+.btn-nuvo-loading-enhanced {
+  position: relative;
+  color: transparent !important;
+  cursor: wait;
+}
+
+.btn-nuvo-loading-enhanced::after {
+  content: '';
+  position: absolute;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  color: white;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Professional gradient collection for consistency */
+.btn-nuvo-gradient-purple {
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: white;
+}
+
+.btn-nuvo-gradient-purple:hover {
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  border-color: rgba(139, 92, 246, 0.7);
+}
+
+/* Consistent shadow system */
+.btn-nuvo-shadow-sm {
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+.btn-nuvo-shadow-md {
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-nuvo-shadow-lg {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+/* Size Variants */
+.btn-nuvo-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  min-height: 2rem;
+  border-radius: 0.5rem;
+}
+
+.btn-nuvo-lg {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  min-height: 3rem;
+  border-radius: 1rem;
+}
+
+.btn-nuvo-xl {
+  padding: 1.25rem 2.5rem;
+  font-size: 1.125rem;
+  min-height: 3.5rem;
+  border-radius: 1.25rem;
+}
+
+/* Icon-only buttons */
+.btn-nuvo-icon {
+  padding: 0.75rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.btn-nuvo-icon-sm {
+  padding: 0.5rem;
+  min-width: 2rem;
+  min-height: 2rem;
+}
+
+.btn-nuvo-icon-lg {
+  padding: 1rem;
+  min-width: 3rem;
+  min-height: 3rem;
+}
+
+/* Special Effects */
+.btn-nuvo-glow {
+  position: relative;
+}
+
+.btn-nuvo-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #f87171, #7c3aed, #10b981, #f59e0b);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-nuvo-glow:hover::before {
+  opacity: 0.7;
+  animation: rotate-border 2s linear infinite;
+}
+
+@keyframes rotate-border {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Pulse effect */
+.btn-nuvo-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* Loading state */
+.btn-nuvo-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.btn-nuvo-loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  color: white;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .btn-nuvo-base {
+    padding: 0.875rem 1.25rem;
+    min-height: 2.75rem;
+    font-size: 0.875rem;
+  }
+  
+  .btn-nuvo-sm {
+    padding: 0.625rem 1rem;
+    min-height: 2.25rem;
+  }
+  
+  .btn-nuvo-lg {
+    padding: 1.125rem 1.75rem;
+    min-height: 3.25rem;
+  }
+  
+  /* Better touch feedback on mobile */
+  .btn-nuvo-base:active {
+    transform: scale(0.95);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-nuvo-base {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .btn-nuvo-base,
+  .btn-nuvo-glow::before,
+  .btn-nuvo-pulse {
+    animation: none;
+    transition: none;
+  }
+  
+  .btn-nuvo-base:hover {
+    transform: none;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .btn-nuvo-glass {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}

@@ -4,7 +4,7 @@ import { RouterProvider } from 'react-router-dom';
 import { router } from '../router/config';
 import ErrorBoundary from './ui/ErrorBoundary';
 import LoadingSpinner from './LoadOverlay/LoadingSpinner';
-import '../Styles/index.css'; // Fixed: Import CSS file directly without named export
+import '../Styles/index.css';
 
 /**
  * Main App component using React Router's data router with native prefetching
