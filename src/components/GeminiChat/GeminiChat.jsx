@@ -121,7 +121,7 @@ const GeminiChat = ({
         
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-white">
-            Nuvos AI
+            NUVOS <span className="text-purple-400">AI</span>
           </h1>
           {state.messages.length > 0 && (
             <button

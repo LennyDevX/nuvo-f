@@ -75,13 +75,6 @@ const ChatContainer = memo(({
         leftSidebarOpen={Boolean(leftSidebarOpen)}
         rightSidebarOpen={Boolean(rightSidebarOpen)}
       />
-      
-      {/* Performance indicator for development */}
-      {process.env.NODE_ENV === 'development' && metrics && (
-        <div className="fixed bottom-2 right-2 bg-black/80 text-white text-xs p-2 rounded z-[9999] pointer-events-none">
-          Renders: {metrics.renders} | Avg: {metrics.avgRenderTime}ms
-        </div>
-      )}
     </div>
   );
 }, (prevProps, nextProps) => {
