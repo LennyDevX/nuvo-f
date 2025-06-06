@@ -1,4 +1,10 @@
-import { processGeminiRequest, processFunctionCallingRequest, clearCache as clearGeminiCache } from '../services/gemini-service.js';
+import { 
+  processGeminiRequest, 
+  processGeminiStreamRequest,
+  createOptimizedGeminiStream,
+  processFunctionCallingRequest, 
+  clearCache as clearGeminiCache 
+} from '../services/gemini-service.js';
 import { streamText } from '../utils/stream-utils.js';
 import { getMetrics } from '../middlewares/logger.js';
 
@@ -106,6 +112,97 @@ export async function generateContent(req, res, next) {
       maxOutputTokens: maxTokens || (isComplexQuery ? 3000 : 2048),
       topP: isComplexQuery ? 0.9 : 0.95 // Más conservador para consultas complejas
     };
+
+    // Streaming nativo mejorado
+    if (stream) {
+      try {
+        // Headers optimizados para streaming
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('Transfer-Encoding', 'chunked');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no'); // Nginx
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        
+        // CORS para streaming
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+        
+        // Detectar características del cliente
+        const userAgent = req.headers['user-agent'] || '';
+        const isMobile = /Mobile|Android|iPhone/.test(userAgent);
+        const connectionType = req.headers['connection-type'] || 'unknown';
+        
+        // Configuración adaptativa
+        const streamConfig = {
+          enableCompression: !isMobile, // Menos compresión en móviles
+          bufferSize: isMobile ? 512 : 1024,
+          flushInterval: isMobile ? 30 : 50
+        };
+        
+        // Obtener stream nativo de Gemini
+        const geminiStream = await processGeminiStreamRequest(contents, model, params);
+        
+        // Crear stream optimizado
+        const optimizedStream = createOptimizedGeminiStream(geminiStream, streamConfig);
+        
+        // Pipe el stream al response
+        const reader = optimizedStream.getReader();
+        
+        const pump = async () => {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              
+              if (done) {
+                res.end();
+                break;
+              }
+              
+              // Verificar si el cliente sigue conectado
+              if (res.destroyed || res.writableEnded) {
+                reader.cancel();
+                break;
+              }
+              
+              // Escribir chunk con manejo de backpressure
+              if (!res.write(value)) {
+                await new Promise((resolve) => {
+                  res.once('drain', resolve);
+                  res.once('error', resolve);
+                  res.once('close', resolve);
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error in streaming pump:', error);
+            if (!res.destroyed) {
+              res.status(500).end('Stream error');
+            }
+          }
+        };
+        
+        // Manejar desconexión del cliente
+        req.on('close', () => {
+          reader.cancel().catch(console.error);
+        });
+        
+        req.on('aborted', () => {
+          reader.cancel().catch(console.error);
+        });
+        
+        return pump();
+        
+      } catch (streamError) {
+        console.error('Stream setup error:', streamError);
+        if (!res.headersSent) {
+          return res.status(500).json({ 
+            error: 'Failed to initialize stream',
+            message: streamError.message 
+          });
+        }
+      }
+    }
 
     const response = await processGeminiRequest(contents, model, params);
 

@@ -190,56 +190,96 @@ const GeminiChat = ({
     }));
   }, [state.messages]);
 
-  // Optimized streaming with adaptive throttling and smooth updates
-  const processStreamResponse = useCallback(async (reader, userMessage) => {
-    const decoder = new TextDecoder();
-    let fullResponse = '';
-    let lastUpdate = 0;
-    let frameId = null;
+  // Streaming optimizado con Web Streams API nativa
+  const processStreamResponse = useCallback(async (response, userMessage) => {
+    if (!response.body) {
+      throw new Error('No stream available');
+    }
     
-    // Adaptive throttling based on performance and content length
-    const getThrottleDelay = (contentLength, isLowPerf) => {
-      if (isLowPerf) return Math.min(300, 100 + contentLength / 20);
-      return Math.min(150, 50 + contentLength / 50);
+    // Usar ReadableStream nativo del navegador
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8', { stream: true });
+    
+    let fullResponse = '';
+    let accumulatedChunk = '';
+    let frameId = null;
+    let lastUpdate = Date.now();
+    
+    // Configuración adaptativa basada en rendimiento
+    const getUpdateThrottle = () => {
+      const now = performance.now();
+      const frameBudget = 16.67; // 60fps
+      
+      if (isLowPerformance) {
+        return Math.max(100, frameBudget * 3); // Más conservador
+      }
+      
+      return Math.max(32, frameBudget); // Más fluido
     };
     
-    // Start streaming
-    dispatch({ type: 'START_STREAMING' });
-    
-    // Smooth update function using RAF
-    const smoothUpdate = (content) => {
-      if (frameId) cancelAnimationFrame(frameId);
+    // Buffer inteligente para updates suaves
+    const smartUpdate = (content) => {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
       
       frameId = requestAnimationFrame(() => {
         dispatch({ type: 'UPDATE_STREAM', payload: content });
       });
     };
     
+    // Inicializar streaming
+    dispatch({ type: 'START_STREAMING' });
+    
     try {
       while (true) {
         const { value, done } = await reader.read();
+        
         if (done) break;
         
-        const chunk = decoder.decode(value);
-        fullResponse += chunk;
+        // Decodificar chunk
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedChunk += chunk;
         
-        // Adaptive throttling to prevent visual jumps
+        // Procesar chunk completo cuando sea apropiado
+        const lines = accumulatedChunk.split('\n');
+        
+        // Mantener la última línea incompleta en el buffer
+        accumulatedChunk = lines.pop() || '';
+        
+        // Procesar líneas completas
+        for (const line of lines) {
+          if (line.trim()) {
+            fullResponse += line + '\n';
+          }
+        }
+        
+        // Update throttling inteligente
         const now = Date.now();
-        const throttleDelay = getThrottleDelay(fullResponse.length, isLowPerformance);
+        const throttleDelay = getUpdateThrottle();
         
-        if (now - lastUpdate >= throttleDelay) {
-          smoothUpdate(fullResponse);
+        if (now - lastUpdate >= throttleDelay || 
+            chunk.includes('.') || 
+            chunk.includes('\n') ||
+            fullResponse.length % 100 === 0) { // Update cada 100 caracteres
+          
+          smartUpdate(fullResponse + accumulatedChunk);
           lastUpdate = now;
         }
       }
       
-      // Final update to ensure complete content
+      // Procesar cualquier contenido restante
+      if (accumulatedChunk.trim()) {
+        fullResponse += accumulatedChunk;
+      }
+      
+      // Update final
       if (frameId) cancelAnimationFrame(frameId);
       dispatch({ type: 'UPDATE_STREAM', payload: fullResponse });
       dispatch({ type: 'FINISH_STREAM' });
       
-      // Cache the response with size limit
-      if (fullResponse.length < 10000) { // Only cache reasonable sized responses
+      // Cache con gestión inteligente usando responseCache local
+      if (fullResponse.length > 10 && fullResponse.length < 15000) {
         responseCache.current.set(userMessage.text, fullResponse);
         
         // Limit cache size
@@ -251,91 +291,37 @@ const GeminiChat = ({
       
     } catch (error) {
       if (frameId) cancelAnimationFrame(frameId);
-      console.error('Error processing stream:', error);
-      dispatch({ type: 'SET_ERROR', payload: "Error processing response. Please try again." });
-      dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
-    }
-  }, [isLowPerformance, state.messages.length]);
-
-  // Optimized conversation save with better scheduling
-  useEffect(() => {
-    if (state.messages.length > 0) {
-      // Use a more sophisticated debouncing strategy
-      const saveConversation = () => saveConversationToStorage(state.messages);
       
-      // Immediate save for important milestones
-      if (state.messages.length === 1 || state.messages.length % 10 === 0) {
-        saveConversation();
-      } else {
-        // Debounced save for regular updates
-        const timeoutId = setTimeout(saveConversation, 3000);
-        return () => clearTimeout(timeoutId);
+      // Manejar errores de conexión vs errores de contenido
+      if (error.name === 'AbortError') {
+        console.log('Stream cancelled by user');
+        return;
+      }
+      
+      console.error('Error processing stream:', error);
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: "Connection interrupted. Please try again." 
+      });
+      dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
+    } finally {
+      // Cleanup
+      try {
+        reader.releaseLock();
+      } catch (e) {
+        // Reader ya fue liberado
       }
     }
-  }, [state.messages]);
+  }, [isLowPerformance, state.messages.length, dispatch]);
 
-  // Enhanced cache management with LRU-like behavior
-  const managedResponseCache = useMemo(() => {
-    const cache = new Map();
-    const maxSize = 100;
-    const maxAge = 30 * 60 * 1000; // 30 minutes
-    
-    return {
-      get: (key) => {
-        const item = cache.get(key);
-        if (!item) return null;
-        
-        // Check expiration
-        if (Date.now() - item.timestamp > maxAge) {
-          cache.delete(key);
-          return null;
-        }
-        
-        // Move to end (LRU)
-        cache.delete(key);
-        cache.set(key, item);
-        return item.value;
-      },
-      
-      set: (key, value) => {
-        // Remove oldest if at capacity
-        if (cache.size >= maxSize) {
-          const firstKey = cache.keys().next().value;
-          cache.delete(firstKey);
-        }
-        
-        cache.set(key, {
-          value,
-          timestamp: Date.now()
-        });
-      },
-      
-      has: (key) => {
-        const item = cache.get(key);
-        if (!item) return false;
-        
-        if (Date.now() - item.timestamp > maxAge) {
-          cache.delete(key);
-          return false;
-        }
-        return true;
-      },
-      
-      clear: () => cache.clear(),
-      size: () => cache.size
-    };
-  }, []);
-
-  // Replace responseCache.current with managedResponseCache
+  // Envío mejorado con manejo de AbortController
   const sendMessageDebounced = useCallback(
     debounce(async (userMessage) => {
       const cacheKey = userMessage.text;
       
-      dispatch({ type: 'SET_LOADING', payload: true });
-
-      // Check managed cache for existing response
-      if (managedResponseCache.has(cacheKey)) {
-        const cachedResponse = managedResponseCache.get(cacheKey);
+      // Check local cache first
+      if (responseCache.current.has(cacheKey)) {
+        const cachedResponse = responseCache.current.get(cacheKey);
         dispatch({ type: 'START_STREAMING' });
         
         // Simulate progressive loading for cached content
@@ -355,6 +341,17 @@ const GeminiChat = ({
         dispatch({ type: 'FINISH_STREAM' });
         return;
       }
+      
+      dispatch({ type: 'SET_LOADING', payload: true });
+
+      // AbortController para cancelación
+      const abortController = new AbortController();
+      
+      // Limpiar cualquier request anterior
+      if (window.currentGeminiRequest) {
+        window.currentGeminiRequest.abort();
+      }
+      window.currentGeminiRequest = abortController;
 
       try {
         const apiUrl = '/server/gemini';
@@ -365,27 +362,45 @@ const GeminiChat = ({
         
         const response = await fetch(apiUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'text/plain',
+            'Cache-Control': 'no-cache'
+          },
           body: JSON.stringify({ 
             messages: formattedMessages,
-            stream: true 
+            stream: true,
+            temperature: 0.7,
+            maxTokens: 3000
           }),
+          signal: abortController.signal // Para cancelación
         });
         
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
+          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
         }
         
-        if (response.body) {
-          const reader = response.body.getReader();
-          await processStreamResponse(reader, userMessage);
-        }
+        await processStreamResponse(response, userMessage);
+        
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Request cancelled');
+          return;
+        }
+        
         console.error('Error:', error);
-        dispatch({ type: 'SET_ERROR', payload: `Error: ${error.message}. Please try again.` });
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: `Error: ${error.message}. Please try again.` 
+        });
+      } finally {
+        // Cleanup
+        if (window.currentGeminiRequest === abortController) {
+          window.currentGeminiRequest = null;
+        }
       }
     }, 300),
-    [formatMessagesForAPI, processStreamResponse, managedResponseCache, shouldReduceMotion]
+    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion]
   );
 
   // Handle message submission
