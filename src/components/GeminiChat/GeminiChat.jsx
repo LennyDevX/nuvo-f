@@ -1,127 +1,14 @@
-import React, { useState, useEffect, useCallback, useRef, useReducer, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
-import { debounce } from '../../utils/debounce';
 import AnimatedAILogo from '../effects/AnimatedAILogo';
 
-// Import modular components
+// Import modular components and core functionality
 import ChatMessages from './components/ChatMessages';
 import WelcomeScreen from './components/WelcomeScreen';
 import ChatInputArea from './components/ChatInputArea';
-
-// Optimized conversation persistence utilities with Web Workers
-const STORAGE_KEY = 'nuvos_chat_conversations';
-const MAX_STORED_CONVERSATIONS = 10;
-
-// Optimized save with better error handling and performance
-const saveConversationToStorage = debounce((messages) => {
-  if (messages.length === 0) return;
-  
-  // Use requestIdleCallback for better performance
-  const saveOperation = () => {
-    try {
-      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-      const newConversation = {
-        id: Date.now(),
-        timestamp: Date.now(),
-        messages: messages.slice(), // Create shallow copy
-        preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
-      };
-      
-      const updated = [newConversation, ...stored.slice(0, MAX_STORED_CONVERSATIONS - 1)];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.warn('Failed to save conversation:', error);
-      // Fallback: try to save just the essential data
-      try {
-        const minimalData = {
-          id: Date.now(),
-          timestamp: Date.now(),
-          messageCount: messages.length,
-          preview: messages[0]?.text?.substring(0, 50) || 'Conversation'
-        };
-        localStorage.setItem(`${STORAGE_KEY}_minimal`, JSON.stringify(minimalData));
-      } catch (fallbackError) {
-        console.error('Critical storage error:', fallbackError);
-      }
-    }
-  };
-
-  // Use requestIdleCallback if available, otherwise setTimeout
-  if (window.requestIdleCallback) {
-    window.requestIdleCallback(saveOperation, { timeout: 2000 });
-  } else {
-    setTimeout(saveOperation, 100);
-  }
-}, 2000); // Increased debounce time
-
-// Conversation persistence utilities
-const loadConversationsFromStorage = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch (error) {
-    console.warn('Failed to load conversations:', error);
-    return [];
-  }
-};
-
-const chatReducer = (state, action) => {
-  switch (action.type) {
-    case 'ADD_USER_MESSAGE':
-      return {
-        ...state,
-        messages: [...state.messages, action.payload],
-        isLoading: true,
-        error: null
-      };
-    case 'START_STREAMING':
-      return {
-        ...state,
-        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true }]
-      };
-    case 'UPDATE_STREAM':
-      const updatedMessages = [...state.messages];
-      const lastIndex = updatedMessages.length - 1;
-      if (updatedMessages[lastIndex]?.isStreaming) {
-        updatedMessages[lastIndex] = {
-          ...updatedMessages[lastIndex],
-          text: action.payload
-        };
-      }
-      return { ...state, messages: updatedMessages };
-    case 'FINISH_STREAM':
-      return {
-        ...state,
-        isLoading: false,
-        messages: state.messages.map((msg, idx) => 
-          idx === state.messages.length - 1 
-            ? { ...msg, isStreaming: false }
-            : msg
-        )
-      };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload, isLoading: false };
-    case 'RESET_CONVERSATION':
-      return { ...state, messages: [], error: null, isLoading: false, conversationId: null };
-    case 'LOAD_CONVERSATION':
-      return { 
-        ...state, 
-        messages: action.payload.messages, 
-        conversationId: action.payload.id, 
-        error: null 
-      };
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'REMOVE_FAILED_MESSAGE':
-      return {
-        ...state,
-        messages: state.messages.filter((_, index) => index !== action.payload),
-        isLoading: false
-      };
-    default:
-      return state;
-  }
-};
+import { useChatState } from '../../hooks/chat/useChatState';
+import { conversationManager } from './core/conversationManager';
 
 const GeminiChat = ({ 
   shouldReduceMotion = false, 
@@ -131,28 +18,25 @@ const GeminiChat = ({
   leftSidebarOpen = false,
   rightSidebarOpen = false
 }) => {
-  const [state, dispatch] = useReducer(chatReducer, {
-    messages: [],
-    isLoading: false,
-    error: null,
-    conversationId: null
-  });
-  
   const [input, setInput] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
-  
-  // Cache for responses
-  const responseCache = useRef(new Map());
-
-  // Add messageEndRef
   const messageEndRef = useRef(null);
+
+  // Use the modularized chat state hook
+  const {
+    state,
+    handleSendMessage: handleSendMessageCore,
+    handleNewConversation: handleNewConversationCore,
+    handleLoadConversation,
+    checkApiConnection
+  } = useChatState({ shouldReduceMotion, isLowPerformance });
 
   // Auto-save conversation when messages change
   useEffect(() => {
     if (state.messages.length > 0) {
       const timeoutId = setTimeout(() => {
-        saveConversationToStorage(state.messages);
-      }, 1000); // Debounce saves
+        conversationManager.saveConversationToStorage(state.messages);
+      }, 1000);
       
       return () => clearTimeout(timeoutId);
     }
@@ -162,291 +46,48 @@ const GeminiChat = ({
   useEffect(() => {
     let isMounted = true;
     
-    const checkApiConnection = async () => {
-      try {
-        const apiUrl = '/server/hello';
-        await fetch(apiUrl);
-      } catch (error) {
-        if (isMounted) {
-          dispatch({ type: 'SET_ERROR', payload: "Unable to connect to AI service. Please try again later." });
-        }
-      } finally {
-        if (isMounted) {
-          setTimeout(() => setIsInitializing(false), 400);
-        }
+    const initializeChat = async () => {
+      await checkApiConnection();
+      
+      if (isMounted) {
+        setTimeout(() => setIsInitializing(false), 400);
       }
     };
     
-    checkApiConnection();
+    initializeChat();
     
     return () => { isMounted = false; };
-  }, []);
+  }, [checkApiConnection]);
 
-  // Format messages for API
-  const formatMessagesForAPI = useCallback(() => {
-    return state.messages.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
-  }, [state.messages]);
-
-  // Streaming optimizado con Web Streams API nativa
-  const processStreamResponse = useCallback(async (response, userMessage) => {
-    if (!response.body) {
-      throw new Error('No stream available');
-    }
-    
-    // Usar ReadableStream nativo del navegador
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder('utf-8', { stream: true });
-    
-    let fullResponse = '';
-    let accumulatedChunk = '';
-    let frameId = null;
-    let lastUpdate = Date.now();
-    
-    // Configuración adaptativa basada en rendimiento
-    const getUpdateThrottle = () => {
-      const now = performance.now();
-      const frameBudget = 16.67; // 60fps
-      
-      if (isLowPerformance) {
-        return Math.max(100, frameBudget * 3); // Más conservador
-      }
-      
-      return Math.max(32, frameBudget); // Más fluido
-    };
-    
-    // Buffer inteligente para updates suaves
-    const smartUpdate = (content) => {
-      if (frameId) {
-        cancelAnimationFrame(frameId);
-      }
-      
-      frameId = requestAnimationFrame(() => {
-        dispatch({ type: 'UPDATE_STREAM', payload: content });
-      });
-    };
-    
-    // Inicializar streaming
-    dispatch({ type: 'START_STREAMING' });
-    
-    try {
-      while (true) {
-        const { value, done } = await reader.read();
-        
-        if (done) break;
-        
-        // Decodificar chunk
-        const chunk = decoder.decode(value, { stream: true });
-        accumulatedChunk += chunk;
-        
-        // Procesar chunk completo cuando sea apropiado
-        const lines = accumulatedChunk.split('\n');
-        
-        // Mantener la última línea incompleta en el buffer
-        accumulatedChunk = lines.pop() || '';
-        
-        // Procesar líneas completas
-        for (const line of lines) {
-          if (line.trim()) {
-            fullResponse += line + '\n';
-          }
-        }
-        
-        // Update throttling inteligente
-        const now = Date.now();
-        const throttleDelay = getUpdateThrottle();
-        
-        if (now - lastUpdate >= throttleDelay || 
-            chunk.includes('.') || 
-            chunk.includes('\n') ||
-            fullResponse.length % 100 === 0) { // Update cada 100 caracteres
-          
-          smartUpdate(fullResponse + accumulatedChunk);
-          lastUpdate = now;
-        }
-      }
-      
-      // Procesar cualquier contenido restante
-      if (accumulatedChunk.trim()) {
-        fullResponse += accumulatedChunk;
-      }
-      
-      // Update final
-      if (frameId) cancelAnimationFrame(frameId);
-      dispatch({ type: 'UPDATE_STREAM', payload: fullResponse });
-      dispatch({ type: 'FINISH_STREAM' });
-      
-      // Cache con gestión inteligente usando responseCache local
-      if (fullResponse.length > 10 && fullResponse.length < 15000) {
-        responseCache.current.set(userMessage.text, fullResponse);
-        
-        // Limit cache size
-        if (responseCache.current.size > 50) {
-          const firstKey = responseCache.current.keys().next().value;
-          responseCache.current.delete(firstKey);
-        }
-      }
-      
-    } catch (error) {
-      if (frameId) cancelAnimationFrame(frameId);
-      
-      // Manejar errores de conexión vs errores de contenido
-      if (error.name === 'AbortError') {
-        console.log('Stream cancelled by user');
-        return;
-      }
-      
-      console.error('Error processing stream:', error);
-      dispatch({ 
-        type: 'SET_ERROR', 
-        payload: "Connection interrupted. Please try again." 
-      });
-      dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
-    } finally {
-      // Cleanup
-      try {
-        reader.releaseLock();
-      } catch (e) {
-        // Reader ya fue liberado
-      }
-    }
-  }, [isLowPerformance, state.messages.length, dispatch]);
-
-  // Envío mejorado con manejo de AbortController
-  const sendMessageDebounced = useCallback(
-    debounce(async (userMessage) => {
-      const cacheKey = userMessage.text;
-      
-      // Check local cache first
-      if (responseCache.current.has(cacheKey)) {
-        const cachedResponse = responseCache.current.get(cacheKey);
-        dispatch({ type: 'START_STREAMING' });
-        
-        // Simulate progressive loading for cached content
-        const words = cachedResponse.split(' ');
-        let currentText = '';
-        
-        for (let i = 0; i < words.length; i += 3) {
-          currentText += words.slice(i, i + 3).join(' ') + ' ';
-          dispatch({ type: 'UPDATE_STREAM', payload: currentText.trim() });
-          
-          // Small delay for visual feedback
-          if (!shouldReduceMotion) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-        }
-        
-        dispatch({ type: 'FINISH_STREAM' });
-        return;
-      }
-      
-      dispatch({ type: 'SET_LOADING', payload: true });
-
-      // AbortController para cancelación
-      const abortController = new AbortController();
-      
-      // Limpiar cualquier request anterior
-      if (window.currentGeminiRequest) {
-        window.currentGeminiRequest.abort();
-      }
-      window.currentGeminiRequest = abortController;
-
-      try {
-        const apiUrl = '/server/gemini';
-        const formattedMessages = [...formatMessagesForAPI(), {
-          role: 'user',
-          parts: [{ text: userMessage.text }]
-        }];
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'text/plain',
-            'Cache-Control': 'no-cache'
-          },
-          body: JSON.stringify({ 
-            messages: formattedMessages,
-            stream: true,
-            temperature: 0.7,
-            maxTokens: 3000
-          }),
-          signal: abortController.signal // Para cancelación
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
-        }
-        
-        await processStreamResponse(response, userMessage);
-        
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Request cancelled');
-          return;
-        }
-        
-        console.error('Error:', error);
-        dispatch({ 
-          type: 'SET_ERROR', 
-          payload: `Error: ${error.message}. Please try again.` 
-        });
-      } finally {
-        // Cleanup
-        if (window.currentGeminiRequest === abortController) {
-          window.currentGeminiRequest = null;
-        }
-      }
-    }, 300),
-    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion]
-  );
-
-  // Handle message submission
+  // Wrapper handlers that include input management
   const handleSendMessage = useCallback((e) => {
-    e.preventDefault();
-    if (!input.trim() || state.isLoading) return;
+    handleSendMessageCore(e, input, setInput);
+  }, [handleSendMessageCore, input]);
 
-    const userMessage = { text: input.trim(), sender: 'user' };
-    dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
-    setInput('');
+  const handleNewConversation = useCallback(() => {
+    // Save current conversation if it has messages
+    if (state.messages.length > 0) {
+      conversationManager.saveConversationToStorage(state.messages);
+    }
     
-    sendMessageDebounced(userMessage);
-  }, [input, state.isLoading, sendMessageDebounced]);
+    handleNewConversationCore();
+    setInput('');
+  }, [state.messages, handleNewConversationCore]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion) => {
     setInput(suggestion);
   }, []);
 
-  // New conversation handler with persistence
-  const handleNewConversation = useCallback(() => {
-    // Save current conversation if it has messages
-    if (state.messages.length > 0) {
-      saveConversationToStorage(state.messages);
-    }
-    
-    dispatch({ type: 'RESET_CONVERSATION' });
-    setInput('');
-  }, [state.messages]);
-
-  // Load conversation from storage
-  const handleLoadConversation = useCallback((conversation) => {
-    dispatch({ type: 'LOAD_CONVERSATION', payload: conversation });
-  }, []);
-
   // Smart keyboard shortcuts
   useEffect(() => {
     const handleKeyboard = (e) => {
-      // Global shortcuts
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
         e.preventDefault();
         handleNewConversation();
       }
       
       if (e.key === 'Escape') {
-        // Close sidebars on escape
         if (leftSidebarOpen) toggleLeftSidebar();
         if (rightSidebarOpen) toggleRightSidebar();
       }
@@ -458,9 +99,8 @@ const GeminiChat = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-900">
-      {/* Header - only visible on mobile */}
+      {/* Mobile Header */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-purple-500/20 bg-gray-900/95 backdrop-blur-md">
-        {/* Left Menu Button */}
         <button
           onClick={toggleLeftSidebar}
           className={`
@@ -479,7 +119,6 @@ const GeminiChat = ({
           <FaBars className="w-5 h-5" />
         </button>
         
-        {/* Center Area with Title and New Chat Button */}
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-white">
             Nuvos AI
@@ -508,7 +147,6 @@ const GeminiChat = ({
           )}
         </div>
         
-        {/* Right Profile Button */}
         <button
           onClick={toggleRightSidebar}
           className={`

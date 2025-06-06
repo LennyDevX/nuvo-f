@@ -1,4 +1,4 @@
-import ai, { DEFAULT_MODEL, defaultFunctionDeclaration } from '../config/ai-config.js';
+import ai, { DEFAULT_MODEL, defaultFunctionDeclaration, getSafeModel, getModelInfo } from '../config/ai-config.js';
 import { incrementTokenCount } from '../middlewares/logger.js';
 import env from '../config/environment.js';
 
@@ -91,8 +91,12 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
     throw new Error('Se requiere un prompt o historial de mensajes');
   }
   
+  // Validate and get safe model
+  const safeModel = getSafeModel(model);
+  const modelInfo = getModelInfo(safeModel);
+  
   // Verificar caché
-  const cacheKey = responseCache.generateKey(contents, model, params);
+  const cacheKey = responseCache.generateKey(contents, safeModel, params);
   const cachedResponse = responseCache.get(cacheKey);
   
   if (cachedResponse) {
@@ -100,32 +104,58 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
     return cachedResponse;
   }
   
-  // Configuración de generación mejorada
+  // Configuración de generación adaptada al modelo
+  const maxTokens = Math.min(
+    params.maxOutputTokens || 2048,
+    modelInfo?.maxTokens || 2048
+  );
+  
   const generationConfig = {
     temperature: params.temperature || 0.7,
     topK: params.topK || 40,
     topP: params.topP || 0.95,
-    maxOutputTokens: params.maxOutputTokens || 2048,
+    maxOutputTokens: maxTokens,
     responseMimeType: 'text/plain',
   };
   
-  // Llama al modelo Gemini con timeout y reintentos
-  const response = await withTimeoutAndRetry(() => ai.models.generateContent({
-    model,
-    contents,
-    generationConfig,
-    ...params
-  }), { timeoutMs: 35000, maxRetries: 2, backoffMs: 2500 });
-  
-  // Guardar en caché
-  responseCache.set(cacheKey, response);
-  
-  // Conteo de tokens (si el SDK lo permite)
-  if (response.usage && response.usage.totalTokens) {
-    incrementTokenCount(response.usage.totalTokens);
+  try {
+    // Llama al modelo Gemini con timeout y reintentos
+    const response = await withTimeoutAndRetry(() => ai.models.generateContent({
+      model: safeModel,
+      contents,
+      generationConfig,
+      ...params
+    }), { timeoutMs: 35000, maxRetries: 2, backoffMs: 2500 });
+    
+    // Guardar en caché solo si la respuesta es válida
+    if (response && response.text) {
+      responseCache.set(cacheKey, response);
+    }
+    
+    // Conteo de tokens (si el SDK lo permite)
+    if (response.usage && response.usage.totalTokens) {
+      incrementTokenCount(response.usage.totalTokens);
+    }
+    
+    return response;
+  } catch (error) {
+    // Handle specific Gemini 2.5 errors
+    if (error.message?.includes('model not found') || error.message?.includes('Invalid model')) {
+      console.warn(`Model ${safeModel} failed, trying default model`);
+      
+      // Retry with default model
+      const fallbackResponse = await withTimeoutAndRetry(() => ai.models.generateContent({
+        model: DEFAULT_MODEL,
+        contents,
+        generationConfig,
+        ...params
+      }), { timeoutMs: 35000, maxRetries: 1, backoffMs: 2500 });
+      
+      return fallbackResponse;
+    }
+    
+    throw error;
   }
-  
-  return response;
 }
 
 // Función para limpiar caché manualmente
@@ -212,27 +242,64 @@ export async function processGeminiStreamRequest(contents, model = DEFAULT_MODEL
     throw new Error('Se requiere un prompt o historial de mensajes');
   }
   
+  // Validate and get safe model
+  const safeModel = getSafeModel(model);
+  const modelInfo = getModelInfo(safeModel);
+  
+  // Check if model supports streaming
+  if (modelInfo && !modelInfo.supportsStreaming) {
+    console.warn(`Model ${safeModel} may not support streaming, using fallback`);
+  }
+  
   // Configuración optimizada para streaming
+  const maxTokens = Math.min(
+    params.maxOutputTokens || 2048,
+    modelInfo?.maxTokens || 2048
+  );
+  
   const generationConfig = {
     temperature: params.temperature || 0.7,
     topK: params.topK || 40,
     topP: params.topP || 0.95,
-    maxOutputTokens: params.maxOutputTokens || 2048,
+    maxOutputTokens: maxTokens,
     responseMimeType: 'text/plain',
   };
   
-  // Usar el método generateContentStream del SDK
-  const response = await withTimeoutAndRetry(() => 
-    ai.models.generateContentStream({
-      model,
-      contents,
-      generationConfig,
-      ...params
-    }), 
-    { timeoutMs: 45000, maxRetries: 2, backoffMs: 3000 }
-  );
-  
-  return response;
+  try {
+    // Usar el método generateContentStream del SDK
+    const response = await withTimeoutAndRetry(() => 
+      ai.models.generateContentStream({
+        model: safeModel,
+        contents,
+        generationConfig,
+        ...params
+      }), 
+      { timeoutMs: 45000, maxRetries: 2, backoffMs: 3000 }
+    );
+    
+    return response;
+  } catch (error) {
+    // Handle streaming errors for new models
+    if (error.message?.includes('streaming not supported') || 
+        error.message?.includes('model not found')) {
+      console.warn(`Streaming failed for ${safeModel}, trying default model`);
+      
+      // Retry with default model
+      const fallbackResponse = await withTimeoutAndRetry(() => 
+        ai.models.generateContentStream({
+          model: DEFAULT_MODEL,
+          contents,
+          generationConfig,
+          ...params
+        }), 
+        { timeoutMs: 45000, maxRetries: 1, backoffMs: 3000 }
+      );
+      
+      return fallbackResponse;
+    }
+    
+    throw error;
+  }
 }
 
 /**

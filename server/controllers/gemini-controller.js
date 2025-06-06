@@ -315,11 +315,36 @@ export function clearCache(req, res) {
 export function getAvailableModels(req, res) {
   res.json({
     models: [
-      'gemini-2.0-flash',
-      'gemini-1.5-pro',
-      'gemini-1.5-flash'
+      {
+        name: 'gemini-2.0-flash',
+        displayName: 'Gemini 2.0 Flash',
+        isDefault: false, // ← Cambiar a false
+        isStable: true,
+        description: 'Latest stable model with fast performance'
+      },
+      {
+        name: 'gemini-1.5-pro', 
+        displayName: 'Gemini 1.5 Pro',
+        isStable: true,
+        description: 'High-quality responses with large context window'
+      },
+      {
+        name: 'gemini-1.5-flash',
+        displayName: 'Gemini 1.5 Flash', 
+        isStable: true,
+        description: 'Fast and efficient for most tasks'
+      },
+      {
+        name: 'gemini-2.5-flash-preview-04-17',
+        displayName: 'Gemini 2.5 Flash (Preview)',
+        isDefault: true, // ← Cambiar a true
+        isStable: false,
+        isPreview: true,
+        description: 'Experimental model - may be unstable'
+      }
     ],
-    default: 'gemini-2.0-flash'
+    default: 'gemini-2.5-flash-preview-04-17', // ← Ya está correcto
+    note: 'Preview models may experience issues and automatically fallback to stable models'
   });
 }
 

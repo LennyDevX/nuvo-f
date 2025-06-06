@@ -4,7 +4,62 @@ import env from './environment.js';
 // Configuración para la API de Gemini
 const ai = new GoogleGenAI({ apiKey: env.geminiApiKey });
 
-export const DEFAULT_MODEL = 'gemini-2.0-flash';
+// Fix: Remove extra quote from model name
+export const DEFAULT_MODEL = 'gemini-2.5-flash-preview-04-17'; // Keep working model as default
+
+// Available models with compatibility info
+export const AVAILABLE_MODELS = {
+  'gemini-2.0-flash': {
+    name: 'gemini-2.0-flash',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 8192
+  },
+  'gemini-1.5-pro': {
+    name: 'gemini-1.5-pro', 
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 2048000
+  },
+  'gemini-1.5-flash': {
+    name: 'gemini-1.5-flash',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 1048576
+  },
+  'gemini-2.5-flash-preview-04-17': {
+    name: 'gemini-2.5-flash-preview-04-17',
+    isStable: false,
+    supportsStreaming: true,
+    maxTokens: 8192,
+    isPreview: true
+  }
+};
+
+// Function to validate and get model info
+export function getModelInfo(modelName) {
+  return AVAILABLE_MODELS[modelName] || null;
+}
+
+// Function to get safe model (fallback to working model)
+export function getSafeModel(requestedModel) {
+  const modelInfo = getModelInfo(requestedModel);
+  
+  // If model exists and is stable, use it
+  if (modelInfo && modelInfo.isStable) {
+    return requestedModel;
+  }
+  
+  // If it's a preview model, warn but allow
+  if (modelInfo && modelInfo.isPreview) {
+    console.warn(`Using preview model: ${requestedModel}. This may be unstable.`);
+    return requestedModel;
+  }
+  
+  // Fallback to default working model
+  console.warn(`Model ${requestedModel} not found or unstable. Falling back to ${DEFAULT_MODEL}`);
+  return DEFAULT_MODEL;
+}
 
 export const defaultFunctionDeclaration = {
   name: 'controlLight',
