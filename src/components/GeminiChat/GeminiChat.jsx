@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef, useReducer } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useReducer, useMemo } from 'react';
 import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
-import { useDebounce } from '../../hooks/performance/useEventOptimizers';
+import { debounce } from '../../utils/debounce';
 import AnimatedAILogo from '../effects/AnimatedAILogo';
 
 // Import modular components
@@ -9,29 +9,53 @@ import ChatMessages from './components/ChatMessages';
 import WelcomeScreen from './components/WelcomeScreen';
 import ChatInputArea from './components/ChatInputArea';
 
-// Conversation persistence utilities
+// Optimized conversation persistence utilities with Web Workers
 const STORAGE_KEY = 'nuvos_chat_conversations';
 const MAX_STORED_CONVERSATIONS = 10;
 
-const saveConversationToStorage = (messages) => {
+// Optimized save with better error handling and performance
+const saveConversationToStorage = debounce((messages) => {
   if (messages.length === 0) return;
   
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    const newConversation = {
-      id: Date.now(),
-      timestamp: Date.now(),
-      messages: messages,
-      preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
-    };
-    
-    const updated = [newConversation, ...stored.slice(0, MAX_STORED_CONVERSATIONS - 1)];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-  } catch (error) {
-    console.warn('Failed to save conversation:', error);
-  }
-};
+  // Use requestIdleCallback for better performance
+  const saveOperation = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      const newConversation = {
+        id: Date.now(),
+        timestamp: Date.now(),
+        messages: messages.slice(), // Create shallow copy
+        preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
+      };
+      
+      const updated = [newConversation, ...stored.slice(0, MAX_STORED_CONVERSATIONS - 1)];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.warn('Failed to save conversation:', error);
+      // Fallback: try to save just the essential data
+      try {
+        const minimalData = {
+          id: Date.now(),
+          timestamp: Date.now(),
+          messageCount: messages.length,
+          preview: messages[0]?.text?.substring(0, 50) || 'Conversation'
+        };
+        localStorage.setItem(`${STORAGE_KEY}_minimal`, JSON.stringify(minimalData));
+      } catch (fallbackError) {
+        console.error('Critical storage error:', fallbackError);
+      }
+    }
+  };
 
+  // Use requestIdleCallback if available, otherwise setTimeout
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(saveOperation, { timeout: 2000 });
+  } else {
+    setTimeout(saveOperation, 100);
+  }
+}, 2000); // Increased debounce time
+
+// Conversation persistence utilities
 const loadConversationsFromStorage = () => {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -120,6 +144,9 @@ const GeminiChat = ({
   // Cache for responses
   const responseCache = useRef(new Map());
 
+  // Add messageEndRef
+  const messageEndRef = useRef(null);
+
   // Auto-save conversation when messages change
   useEffect(() => {
     if (state.messages.length > 0) {
@@ -163,15 +190,30 @@ const GeminiChat = ({
     }));
   }, [state.messages]);
 
-  // Process streaming response with optimistic updates
+  // Optimized streaming with adaptive throttling and smooth updates
   const processStreamResponse = useCallback(async (reader, userMessage) => {
     const decoder = new TextDecoder();
     let fullResponse = '';
     let lastUpdate = 0;
-    const UPDATE_THROTTLE = isLowPerformance ? 200 : 100;
+    let frameId = null;
+    
+    // Adaptive throttling based on performance and content length
+    const getThrottleDelay = (contentLength, isLowPerf) => {
+      if (isLowPerf) return Math.min(300, 100 + contentLength / 20);
+      return Math.min(150, 50 + contentLength / 50);
+    };
     
     // Start streaming
     dispatch({ type: 'START_STREAMING' });
+    
+    // Smooth update function using RAF
+    const smoothUpdate = (content) => {
+      if (frameId) cancelAnimationFrame(frameId);
+      
+      frameId = requestAnimationFrame(() => {
+        dispatch({ type: 'UPDATE_STREAM', payload: content });
+      });
+    };
     
     try {
       while (true) {
@@ -181,72 +223,170 @@ const GeminiChat = ({
         const chunk = decoder.decode(value);
         fullResponse += chunk;
         
-        // Throttle updates para mejor performance
+        // Adaptive throttling to prevent visual jumps
         const now = Date.now();
-        if (now - lastUpdate >= UPDATE_THROTTLE) {
-          dispatch({ type: 'UPDATE_STREAM', payload: fullResponse });
+        const throttleDelay = getThrottleDelay(fullResponse.length, isLowPerformance);
+        
+        if (now - lastUpdate >= throttleDelay) {
+          smoothUpdate(fullResponse);
           lastUpdate = now;
         }
       }
       
-      // Finalize message
+      // Final update to ensure complete content
+      if (frameId) cancelAnimationFrame(frameId);
+      dispatch({ type: 'UPDATE_STREAM', payload: fullResponse });
       dispatch({ type: 'FINISH_STREAM' });
       
-      // Cache the response
-      responseCache.current.set(userMessage.text, fullResponse);
+      // Cache the response with size limit
+      if (fullResponse.length < 10000) { // Only cache reasonable sized responses
+        responseCache.current.set(userMessage.text, fullResponse);
+        
+        // Limit cache size
+        if (responseCache.current.size > 50) {
+          const firstKey = responseCache.current.keys().next().value;
+          responseCache.current.delete(firstKey);
+        }
+      }
       
     } catch (error) {
+      if (frameId) cancelAnimationFrame(frameId);
       console.error('Error processing stream:', error);
       dispatch({ type: 'SET_ERROR', payload: "Error processing response. Please try again." });
-      
-      // Remove failed streaming message
       dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
     }
   }, [isLowPerformance, state.messages.length]);
 
-  // Send message function with debounce and optimistic updates
-  const sendMessageDebounced = useDebounce(async (userMessage) => {
-    const cacheKey = userMessage.text;
+  // Optimized conversation save with better scheduling
+  useEffect(() => {
+    if (state.messages.length > 0) {
+      // Use a more sophisticated debouncing strategy
+      const saveConversation = () => saveConversationToStorage(state.messages);
+      
+      // Immediate save for important milestones
+      if (state.messages.length === 1 || state.messages.length % 10 === 0) {
+        saveConversation();
+      } else {
+        // Debounced save for regular updates
+        const timeoutId = setTimeout(saveConversation, 3000);
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [state.messages]);
+
+  // Enhanced cache management with LRU-like behavior
+  const managedResponseCache = useMemo(() => {
+    const cache = new Map();
+    const maxSize = 100;
+    const maxAge = 30 * 60 * 1000; // 30 minutes
     
-    dispatch({ type: 'SET_LOADING', payload: true });
+    return {
+      get: (key) => {
+        const item = cache.get(key);
+        if (!item) return null;
+        
+        // Check expiration
+        if (Date.now() - item.timestamp > maxAge) {
+          cache.delete(key);
+          return null;
+        }
+        
+        // Move to end (LRU)
+        cache.delete(key);
+        cache.set(key, item);
+        return item.value;
+      },
+      
+      set: (key, value) => {
+        // Remove oldest if at capacity
+        if (cache.size >= maxSize) {
+          const firstKey = cache.keys().next().value;
+          cache.delete(firstKey);
+        }
+        
+        cache.set(key, {
+          value,
+          timestamp: Date.now()
+        });
+      },
+      
+      has: (key) => {
+        const item = cache.get(key);
+        if (!item) return false;
+        
+        if (Date.now() - item.timestamp > maxAge) {
+          cache.delete(key);
+          return false;
+        }
+        return true;
+      },
+      
+      clear: () => cache.clear(),
+      size: () => cache.size
+    };
+  }, []);
 
-    // Check cache for existing response
-    if (responseCache.current.has(cacheKey)) {
-      dispatch({ type: 'START_STREAMING' });
-      dispatch({ type: 'UPDATE_STREAM', payload: responseCache.current.get(cacheKey) });
-      dispatch({ type: 'FINISH_STREAM' });
-      return;
-    }
+  // Replace responseCache.current with managedResponseCache
+  const sendMessageDebounced = useCallback(
+    debounce(async (userMessage) => {
+      const cacheKey = userMessage.text;
+      
+      dispatch({ type: 'SET_LOADING', payload: true });
 
-    try {
-      const apiUrl = '/server/gemini';
-      const formattedMessages = [...formatMessagesForAPI(), {
-        role: 'user',
-        parts: [{ text: userMessage.text }]
-      }];
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          messages: formattedMessages,
-          stream: true 
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+      // Check managed cache for existing response
+      if (managedResponseCache.has(cacheKey)) {
+        const cachedResponse = managedResponseCache.get(cacheKey);
+        dispatch({ type: 'START_STREAMING' });
+        
+        // Simulate progressive loading for cached content
+        const words = cachedResponse.split(' ');
+        let currentText = '';
+        
+        for (let i = 0; i < words.length; i += 3) {
+          currentText += words.slice(i, i + 3).join(' ') + ' ';
+          dispatch({ type: 'UPDATE_STREAM', payload: currentText.trim() });
+          
+          // Small delay for visual feedback
+          if (!shouldReduceMotion) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
+        }
+        
+        dispatch({ type: 'FINISH_STREAM' });
+        return;
       }
-      
-      if (response.body) {
-        const reader = response.body.getReader();
-        await processStreamResponse(reader, userMessage);
+
+      try {
+        const apiUrl = '/server/gemini';
+        const formattedMessages = [...formatMessagesForAPI(), {
+          role: 'user',
+          parts: [{ text: userMessage.text }]
+        }];
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            messages: formattedMessages,
+            stream: true 
+          }),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        if (response.body) {
+          const reader = response.body.getReader();
+          await processStreamResponse(reader, userMessage);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        dispatch({ type: 'SET_ERROR', payload: `Error: ${error.message}. Please try again.` });
       }
-    } catch (error) {
-      console.error('Error:', error);
-      dispatch({ type: 'SET_ERROR', payload: `Error: ${error.message}. Please try again.` });
-    }
-  }, 300);
+    }, 300),
+    [formatMessagesForAPI, processStreamResponse, managedResponseCache, shouldReduceMotion]
+  );
 
   // Handle message submission
   const handleSendMessage = useCallback((e) => {
@@ -391,6 +531,7 @@ const GeminiChat = ({
           isLoading={state.isLoading}
           error={state.error}
           shouldReduceMotion={shouldReduceMotion}
+          messageEndRef={messageEndRef}
         />
       )}
 

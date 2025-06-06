@@ -50,7 +50,6 @@
   line-height: 1.4;
   
   /* iOS specific fixes */
-  -webkit-appearance: none;
   -webkit-user-select: text;
   user-select: text;
   -webkit-font-smoothing: antialiased;
