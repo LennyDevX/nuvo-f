@@ -64,7 +64,7 @@ const Navbar = () => {
   // Memoize style classes to prevent recreating strings on every render
   const styles = useMemo(() => ({
     navLinkClasses: `
-      relative px-4 py-2 text-sm font-medium
+      relative px-6 py-3 text-sm font-medium
       text-white rounded-lg
       transition-all duration-300
       bg-opacity-0 hover:bg-opacity-10
@@ -74,9 +74,10 @@ const Navbar = () => {
       hover:text-purple-400
       backdrop-blur-sm
       no-underline hover:no-underline
-      flex items-center gap-2
+      flex items-center gap-3
       box-border
       before:absolute before:inset-0 before:rounded-lg
+      min-w-[120px] justify-center
     `,
     navIconClasses: "w-4 h-4 text-purple-400/80",
     mobileNavIconClasses: "w-5 h-5 text-purple-400/80",
@@ -449,9 +450,9 @@ const Navbar = () => {
 
       {/* Desktop Navbar - Restaurar WalletConnect original */}
       <nav className="hidden md:block fixed top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
-        <div className="max-w-7xl mx-auto px-4 lg:px-8">
-          <div className="flex justify-between items-center h-14">
-            <div onClick={handleLogoClick} className="cursor-pointer">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12">
+          <div className="flex justify-between items-center h-16">
+            <div onClick={handleLogoClick} className="cursor-pointer flex-shrink-0 mr-8">
               <img 
                 className="h-10 w-auto md:h-12"
                 src="/LogoNuvos.webp" 
@@ -461,7 +462,7 @@ const Navbar = () => {
                 }}
               />
             </div>
-            <div className="flex items-center justify-center flex-grow space-x-4">
+            <div className="flex items-center justify-center flex-grow space-x-6">
               {navigationItems.slice(1).map(({ path, label, icon: Icon }) => (
                 <NavLink 
                   key={path} 
@@ -469,20 +470,19 @@ const Navbar = () => {
                   prefetchStrategy="intent"
                   className={styles.navLinkClasses}
                   activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
-                  style={{ minWidth: `${label.length * 10 + 40}px` }}
                 >
                   <Icon className={styles.navIconClasses} />
                   {label}
                 </NavLink>
               ))}
-              <div className="flex items-center ml-4">
+              <div className="flex items-center ml-6">
                 <BetaBadge 
                   pulsate={true} 
                   className="border border-purple-400/30" 
                 />
               </div>
             </div>
-            <div className="relative ml-4">
+            <div className="relative ml-8 flex-shrink-0">
               <WalletConnect 
                 className="navbar-wallet"
                 onError={(error) => console.error('Desktop WalletConnect error:', error)}
