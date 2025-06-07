@@ -8,7 +8,7 @@ Below is the revised version with all text in English and with subtle improvemen
 
 ---
 
-## 🚀 Current Status: Beta v3.0
+## 🚀 Current Status: Beta v4.0
 
 - **Weekly Updates:** Ongoing improvements to continually optimize the platform.
 - **Beta Program Through Q4 2026:** The beta phase will continue until the first quarter of 2027.
@@ -31,6 +31,20 @@ Below is the revised version with all text in English and with subtle improvemen
 - **Nuvos NFTs:** A collection of digital art offering unique utilities and exceptional benefits.
 - **Create Your Own Ecosystem:** Evolve your NFTs and empower them with diverse functionalities to unlock a new level of web3 experience.
 - **Tokenize the Real World:** Develop NFTs based on tangible assets and leverage the advantages of blockchain technology.
+
+### Nuvos AI Chat Preview
+
+- ✨ **Experience the Power of AI in the Nuvos Ecosystem!** ✨
+
+We’ve integrated the **Google GenAI SDK** to harness the most advanced **Gemini 2.5 Pro & Flash** models, bringing you **unique innovations** that make our assistant fully **customizable** within Nuvos Cloud. 🤖💡
+
+* 🎨 **Tailor Your AI:** Adjust the assistant’s persona, tone, and expertise modules to match your needs—whether you’re managing NFTs, optimizing Smart Staking, or exploring tokenization.
+* 🚀 **Cutting‑Edge Reasoning:** Leverage deep semantic understanding and fast, adaptive streaming for real‑time insights and recommendations.
+* 🔧 **Seamless Integration:** Our AI connects directly with Nuvos Cloud services, delivering personalized analytics, smart alerts, and 24/7 support right where you need it.
+* 🌐 **Scalable & Secure:** Built on Google’s robust infrastructure, you get enterprise‑grade performance, data privacy, and automatic updates as Gemini evolves.
+
+Join us and transform your workflow with an AI that adapts to you—only in **Nuvos Cloud**. 💜
+ **
 
 ### AI Hub
 
