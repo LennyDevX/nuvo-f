@@ -205,7 +205,7 @@ const NuvosAI = () => {
         <div className="flex flex-col gap-3">
           <button
             onClick={handleNavigateToChat}
-            className="px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium shadow-lg text-sm flex items-center justify-center gap-2"
+            className="btn-nuvo-base bg-nuvo-gradient-button btn-nuvo-sm flex items-center justify-center gap-2"
           >
             <FaComments className="w-3 h-3" />
             Start Chat
@@ -214,7 +214,7 @@ const NuvosAI = () => {
           
           <button
             onClick={handleNavigateToAI}
-            className="px-4 py-3 border-2 border-purple-500/50 rounded-lg text-purple-300 font-medium text-sm flex items-center justify-center gap-2"
+            className="btn-nuvo-base btn-nuvo-secondary btn-nuvo-sm flex items-center justify-center gap-2"
           >
             <FaBrain className="w-3 h-3" />
             Explore AI Hub
@@ -273,7 +273,7 @@ const NuvosAI = () => {
             <m.button
               {...buttonHoverProps}
               onClick={handleNavigateToChat}
-              className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl text-white font-semibold shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300 flex items-center justify-center gap-2"
+              className="btn-nuvo-base bg-nuvo-gradient-button btn-nuvo-lg flex items-center justify-center gap-2"
             >
               <FaComments className="w-4 h-4" />
               Start Chat
@@ -283,7 +283,7 @@ const NuvosAI = () => {
             <m.button
               {...buttonHoverProps}
               onClick={handleNavigateToAI}
-              className="px-8 py-4 border-2 border-purple-500/50 rounded-xl text-purple-300 font-medium hover:border-purple-400 hover:text-purple-200 transition-all duration-300 flex items-center justify-center gap-2"
+              className="btn-nuvo-base btn-nuvo-outline btn-nuvo-lg flex items-center justify-center gap-2"
             >
               <FaBrain className="w-4 h-4" />
               Explore AI Hub
