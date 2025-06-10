@@ -114,7 +114,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                 
                 <m.button
                   onClick={closeModal}
-                  className="w-full md:w-auto md:px-6 py-2 sm:py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-blue-500 
+                  className="w-full md:w-auto md:px-6 py-2 sm:py-2.5 btn-nuvo-base btn-nuvo-outline
                           text-white font-medium text-xs sm:text-sm hover:from-purple-600 hover:to-blue-600 
                           transition-all duration-300 shadow-lg hover:shadow-purple-500/25"
                   whileHover={{ scale: 1.04 }}

@@ -195,10 +195,13 @@ const ChatMessages = ({
   return (
     <div 
       ref={containerRef}
-      className="flex-1 overflow-y-auto px-0 bg-gray-900 pb-4 md:pb-0 relative"
+      className="flex-1 overflow-y-auto px-0 bg-gray-900 relative"
       style={{ 
-        height: 'calc(var(--vh, 1vh) * 100 - 200px)',
-        scrollBehavior: shouldReduceMotion ? 'auto' : 'smooth'
+        height: 'calc(100vh - 140px)',
+        maxHeight: 'calc(100vh - 140px)',
+        scrollBehavior: shouldReduceMotion ? 'auto' : 'smooth',
+        // Better mobile spacing - more room for input
+        paddingBottom: window.innerWidth < 768 ? '140px' : '20px'
       }}
       onScroll={handleScroll}
     >
@@ -215,22 +218,21 @@ const ChatMessages = ({
         {isLoading && <TypingIndicator />}
         {error && <ErrorMessage error={error} />}
         
-        {/* Mobile spacing for input */}
-        <div className="md:hidden h-32"></div>
+        {/* Extra spacing for mobile to ensure content is not hidden */}
+        <div className="h-12 md:h-6"></div>
         
         {/* Scroll anchor */}
         <div ref={messageEndRef} style={{ height: '1px' }} />
       </div>
       
-      {/* Fixed scroll to bottom button - correctly positioned for mobile and desktop */}
+      {/* Scroll to bottom button - Adjusted positioning for mobile */}
       {!isAtBottom && messages.length > 3 && (
         <button
           onClick={() => scrollToBottom(true)}
           className="
             fixed z-50
-            bottom-[calc(env(safe-area-inset-bottom,0px)+150px)] right-5
-            md:top-auto md:top-50 
-            md:bottom-[calc(env(safe-area-inset-bottom,0px)+6rem)] md:right-6
+            bottom-[140px] right-5
+            md:bottom-[6rem] md:right-6
             w-11 h-11 md:w-12 md:h-12
             bg-gradient-to-br from-purple-600/95 via-purple-700/95 to-purple-800/95
             hover:from-purple-700 hover:via-purple-800 hover:to-purple-900

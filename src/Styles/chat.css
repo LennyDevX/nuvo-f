@@ -35,7 +35,7 @@
   
   /* Adjust messages container for mobile - more space for fixed input */
   .messages-container {
-    padding-bottom: 160px; /* Extra space for fixed input */
+    padding-bottom: 180px; /* More space for fixed input */
   }
   
   /* Ensure chat input is always visible on mobile */
@@ -44,12 +44,20 @@
     bottom: 64px; /* Above mobile navbar */
     left: 0;
     right: 0;
-    z-index: 90;
+    z-index: 100; /* Higher z-index */
     background: rgba(31, 41, 55, 0.98);
     backdrop-filter: blur(20px);
     border-top: 1px solid rgba(139, 92, 246, 0.2);
     padding: 12px 16px;
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease-out;
+  }
+  
+  /* When keyboard is open, move input to visible area */
+  .chat-input-mobile-container.keyboard-open {
+    bottom: 0;
+    transform: translateY(0);
+    z-index: 200; /* Even higher when keyboard is open */
   }
   
   /* Better touch targets on mobile */
@@ -59,14 +67,20 @@
     touch-action: manipulation;
   }
   
-  /* Prevent mobile navbar from covering input */
-  .mobile-safe-bottom {
-    padding-bottom: calc(64px + 16px); /* Navbar height + input area */
-  }
-  
   /* Mobile input with safe area support */
   .chat-input-mobile {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  /* Fix viewport issues on mobile */
+  .mobile-viewport-fix {
+    height: calc(var(--vh, 1vh) * 100);
+    overflow: hidden;
+  }
+  
+  /* Ensure input stays visible when keyboard opens */
+  .mobile-keyboard-adjust {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 }
 

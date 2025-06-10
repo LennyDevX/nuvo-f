@@ -7,9 +7,11 @@ import { WalletContext } from '../../../../context/WalletContext';
 import LoadingSpinner from '../../../LoadOverlay/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
 import IPFSImage from '../../../ui/IPFSImage';
+import NFTDetailModal from '../../profile/sections/NFTDetailModal';
 
 const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   const { walletConnected, connectWallet } = useContext(WalletContext);
+  const [selectedNFT, setSelectedNFT] = useState(null);
 
   // Handle retry action by forwarding to parent component if provided
   const handleRetry = () => {
@@ -20,6 +22,22 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
       window.location.reload();
     }
   };
+  // Handle NFT click to open modal
+  const handleNFTClick = (nft) => {
+    console.log('NFT clicked:', nft);
+    setSelectedNFT(nft);
+  };
+
+  // Handle modal close
+  const handleCloseModal = () => {
+    console.log('Closing modal');
+    setSelectedNFT(null);
+  };
+
+  // Debug log for selectedNFT state
+  useEffect(() => {
+    console.log('selectedNFT state changed:', selectedNFT);
+  }, [selectedNFT]);
 
   if (loading) {
     return (
@@ -65,22 +83,39 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
       </div>
     );
   }
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
       {nfts.map((nft) => (
         <NFTCard 
           key={nft.id || `${nft.contractAddress}-${nft.tokenId}`} 
           nft={nft} 
+          onClick={() => handleNFTClick(nft)}
         />
       ))}
+        {/* NFT Detail Modal */}
+      {selectedNFT && (
+        <>
+          {console.log('Rendering modal for NFT:', selectedNFT)}
+          <NFTDetailModal
+            selectedNFT={selectedNFT}
+            onClose={handleCloseModal}
+            contractAddress={selectedNFT.contractAddress}
+          />
+        </>
+      )}
     </div>
   );
 };
 
 // NFT Card component
-const NFTCard = ({ nft }) => {
+const NFTCard = ({ nft, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
+  
+  // Debug log
+  const handleClick = () => {
+    console.log('NFTCard clicked, calling onClick with:', nft);
+    onClick();
+  };
   
   // Format price nicely - memoize to avoid unnecessary calculations
   const formattedPrice = useMemo(() => {
@@ -90,11 +125,12 @@ const NFTCard = ({ nft }) => {
 
   return (
     <motion.div
-      className="relative bg-gradient-to-b from-purple-900/40 to-black/60 backdrop-blur-sm rounded-xl overflow-hidden border border-purple-500/20 hover:border-purple-500/50 transition-all"
+      className="relative bg-gradient-to-b from-purple-900/40 to-black/60 backdrop-blur-sm rounded-xl overflow-hidden border border-purple-500/20 hover:border-purple-500/50 transition-all cursor-pointer"
       whileHover={{ scale: 1.03, y: -5 }}
       transition={{ duration: 0.2 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleClick}
     >
       {/* NFT Image - Using IPFSImage component */}
       <div className="aspect-square relative overflow-hidden">
@@ -136,8 +172,7 @@ const NFTCard = ({ nft }) => {
             <span>{formattedPrice}</span>
           </div>
         </div>
-        
-        {/* Hover Details - Shown on touch for mobile */}
+          {/* Hover Details - Shown on touch for mobile */}
         <div 
           className={`absolute inset-0 bg-black/70 backdrop-blur-sm flex flex-col justify-center items-center p-4 text-center transition-opacity duration-300 ${
             isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -146,12 +181,15 @@ const NFTCard = ({ nft }) => {
           <h3 className="text-white font-bold mb-1">{nft.name}</h3>
           <p className="text-gray-300 text-xs mb-3 line-clamp-3">{nft.description}</p>
           
-          <Link
-            to={`/nft/${nft.tokenId}`}
+          <button
             className="btn-primary btn-sm btn-full mt-2 flex items-center justify-center gap-1"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
           >
             <FaExternalLinkAlt className="text-xs" /> View Details
-          </Link>
+          </button>
         </div>
       </div>
     </motion.div>

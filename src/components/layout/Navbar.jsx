@@ -422,20 +422,31 @@ const Navbar = () => {
             </div>
           </div>
           
-          {/* Beta Badge */}
-          <div className="flex justify-center mb-6">
+          {/* Beta Badge and Close Button - Centered together */}
+          <div className="flex items-center justify-center gap-3 mb-6">
             <BetaBadge pulsate={true} className="border border-purple-400/30" />
-          </div>
-          
-          {/* Close Button - Always visible */}
-          <div className="mt-auto pt-4">
+            
+            {/* Close Button */}
             <button
               onClick={toggleMenu}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all active:scale-95"
+              className="
+                flex items-center justify-center
+                w-8 h-8 rounded-full
+                bg-purple-900/40 hover:bg-purple-800/60
+                border border-purple-500/40 hover:border-purple-400/60
+                text-purple-300 hover:text-white
+                transition-all duration-200 ease-out
+                hover:scale-105 active:scale-95
+                focus:outline-none focus:ring-2 focus:ring-purple-400/60 focus:ring-offset-1 focus:ring-offset-gray-900
+                flex-shrink-0
+              "
+              aria-label="Cerrar menú"
+              title="Cerrar menú"
             >
-              Cerrar Menú
+              <FaTimes className="w-3 h-3" />
             </button>
           </div>
+          
         </div>
       </div>
 

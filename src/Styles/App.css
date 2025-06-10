@@ -90,7 +90,23 @@ html, body {
   
   .messages-container {
     padding: 10px;
-    padding-bottom: calc(80px + var(--mobile-navbar-height, 64px));
+    padding-bottom: calc(140px + var(--mobile-navbar-height, 64px));
+  }
+  
+  /* Enhanced mobile keyboard handling */
+  .mobile-keyboard-open {
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .mobile-input-visible {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: rgba(31, 41, 55, 0.98);
+    backdrop-filter: blur(20px);
   }
   
   /* Fix for notched phones */
@@ -100,16 +116,23 @@ html, body {
       padding-right: max(16px, env(safe-area-inset-right));
       padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
+    
+    .mobile-input-visible {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
   }
   
-  /* Remove safe area utilities that add extra spacing */
-  .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* Viewport height management for mobile */
+  .mobile-vh-fix {
+    height: calc(var(--vh, 1vh) * 100);
+    height: -webkit-fill-available;
   }
   
-  /* Only add spacing to main content, not footer */
-  .pb-safe-area-mobile {
-    padding-bottom: calc(var(--mobile-navbar-height, 64px) + env(safe-area-inset-bottom, 16px));
+  /* Input focus improvements */
+  .input-focused {
+    position: fixed !important;
+    bottom: 0 !important;
+    z-index: 300 !important;
   }
 }
 

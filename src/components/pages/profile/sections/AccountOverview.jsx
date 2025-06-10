@@ -132,7 +132,7 @@ const AccountOverview = ({ account, balance, network }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="nuvos-card rounded-xl border border-purple-500/30 p-4 sm:p-6"
+      className="nuvos-card  p-4 sm:p-6"
     >
       <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center gap-2">
         <FaUser className="text-purple-400" /> Account Overview
@@ -141,7 +141,7 @@ const AccountOverview = ({ account, balance, network }) => {
       {/* Account Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Wallet Address Card */}
-        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+        <div className="nuvos-card p-4 sm:p-5 ">
           <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Wallet Address</h3>
           
           <div className="flex items-center gap-2 mb-3 sm:mb-4">
@@ -174,27 +174,27 @@ const AccountOverview = ({ account, balance, network }) => {
         </div>
         
         {/* Account Stats */}
-        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+        <div className=" nuvos-card p-4 sm:p-5 ">
           <h3 className="text-base sm:text-lg font-medium text-white mb-3 sm:mb-4">Account Stats</h3>
           
           <div className="space-y-3 sm:space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-300 text-sm">MATIC Balance</span>
-              <span className="text-white font-medium text-sm">{parseFloat(balance).toFixed(6)} MATIC</span>
+              <span className=" text-sm">MATIC Balance</span>
+              <span className=" font-medium text-sm">{parseFloat(balance).toFixed(6)} MATIC</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-300 text-sm">Active Staking Deposits</span>
-              <span className="text-white text-sm">{userDeposits.length || 0}</span>
+              <span className=" text-sm">Active Staking Deposits</span>
+              <span className="text-sm">{userDeposits.length || 0}</span>
             </div>
             
             <div className="flex justify-between items-center">
-              <span className="text-gray-300 text-sm">NUVOS NFTs</span>
-              <span className="text-white text-sm">
+              <span className="text-sm">NUVOS NFTs</span>
+              <span className=" text-sm">
                 {nftsLoading ? (
                   <span className="text-xs text-gray-400">Loading...</span>
                 ) : (
-                  <span className="text-purple-400 font-medium">{nftCount}</span>
+                  <span className="text-gray-400 font-medium">{nftCount}</span>
                 )}
               </span>
             </div>
@@ -205,7 +205,7 @@ const AccountOverview = ({ account, balance, network }) => {
       {/* Portfolio Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Staking Summary */}
-        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+        <div className="nuvos-card p-4 sm:p-5">
           <h3 className="text-base sm:text-lg font-medium text-white mb-3 flex items-center gap-2">
             <FaCoins className="text-purple-400" />
             Staking Summary
@@ -239,7 +239,7 @@ const AccountOverview = ({ account, balance, network }) => {
         </div>
         
         {/* NFT Summary */}
-        <div className="bg-black/30 p-4 sm:p-5 rounded-xl border border-purple-500/20">
+        <div className="nuvos-card p-4 sm:p-5">
           <h3 className="text-base sm:text-lg font-medium text-white mb-3 flex items-center gap-2">
             <FaImage className="text-purple-400" />
             NFT Collection

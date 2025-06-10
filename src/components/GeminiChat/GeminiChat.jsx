@@ -103,16 +103,7 @@ const GeminiChat = ({
       <div className="md:hidden flex items-center justify-between p-4 border-b border-purple-500/20 bg-gray-900/95 backdrop-blur-md">
         <button
           onClick={toggleLeftSidebar}
-          className={`
-            w-12 h-12 rounded-xl transition-all duration-200 ease-out
-            border-2 shadow-lg flex items-center justify-center
-            touch-manipulation
-            focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
-            ${leftSidebarOpen
-              ? 'bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 border-purple-500 text-white shadow-purple-500/30'
-              : 'bg-gray-800/80 hover:bg-gray-700 border-purple-500/30 hover:border-purple-500/50 text-purple-400 hover:text-purple-300 shadow-lg hover:shadow-purple-500/20'
-            }
-          `}
+          className={`btn-nuvo-base btn-nuvo-sm ${leftSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
           aria-label="Toggle AI tools menu"
           aria-expanded={leftSidebarOpen}
         >
@@ -126,20 +117,7 @@ const GeminiChat = ({
           {state.messages.length > 0 && (
             <button
               onClick={handleNewConversation}
-              className="
-                w-10 h-10 rounded-xl
-                bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 
-                hover:from-purple-700 hover:via-pink-700 hover:to-purple-800
-                active:from-purple-800 active:via-pink-800 active:to-purple-900
-                border-2 border-purple-500/50 hover:border-purple-400/70
-                text-white
-                transition-all duration-200 ease-out
-                flex items-center justify-center
-                shadow-lg hover:shadow-purple-500/30
-                hover:scale-105 active:scale-95
-                touch-manipulation
-                focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-gray-900
-              "
+              className="btn-nuvo-base btn-nuvo-chat-primary btn-nuvo-sm"
               aria-label="Start new conversation"
             >
               <FaPlus className="w-4 h-4" />
@@ -149,16 +127,7 @@ const GeminiChat = ({
         
         <button
           onClick={toggleRightSidebar}
-          className={`
-            w-12 h-12 rounded-xl transition-all duration-200 ease-out
-            border-2 shadow-lg flex items-center justify-center
-            touch-manipulation
-            focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
-            ${rightSidebarOpen
-              ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 border-purple-500 text-white shadow-purple-500/30'
-              : 'bg-gray-800/80 hover:bg-gray-700 border-purple-500/30 hover:border-purple-500/50 text-purple-400 hover:text-purple-300 shadow-lg hover:shadow-purple-500/20'
-            }
-          `}
+          className={`btn-nuvo-base btn-nuvo-sm ${rightSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
           aria-label="Toggle profile menu"
           aria-expanded={rightSidebarOpen}
         >

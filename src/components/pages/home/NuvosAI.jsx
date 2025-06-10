@@ -214,7 +214,7 @@ const NuvosAI = () => {
           
           <button
             onClick={handleNavigateToAI}
-            className="btn-nuvo-base btn-nuvo-secondary btn-nuvo-sm flex items-center justify-center gap-2"
+            className="btn-nuvo-base btn-nuvo-outline btn-nuvo-sm flex items-center justify-center gap-2"
           >
             <FaBrain className="w-3 h-3" />
             Explore AI Hub
