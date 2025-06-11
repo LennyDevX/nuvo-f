@@ -10,7 +10,6 @@ const RevenueStreams = lazy(() => import('./RevenueStreams'));
 const HeroSection = lazy(() => import("./HeroSection"));
 const SupplyTracker = lazy(() => import('./SupplyTracker'));
 const TokenomicsExplanation = lazy(() => import('./TokenomicsExplanation'));
-const KeyMetrics = lazy(() => import('./KeyMetrics')); // Add KeyMetrics component
 
 // Create loading fallback
 const LoadingFallback = () => (
@@ -45,26 +44,26 @@ const TokenomicsDashboard = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="w-full pt-12 pb-4 sm:pt-16 md:pt-20 relative z-10"
+            className="w-full pt-8 sm:pt-12 lg:pt-16 pb-4 relative z-10"
             key="tokenomics-dashboard-main"
           >
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
               {/* Hero Section */}
-              <div className="mb-6 sm:mb-8 md:mb-12">
+              <div className="mb-4 sm:mb-6 lg:mb-8">
                 <Suspense fallback={<LoadingFallback />}>
                   <HeroSection onOpenTokenModal={handleOpenTokenModal} />
                 </Suspense>
               </div>
 
               {/* Supply Tracker */}
-              <div className="mb-4 sm:mb-6">
+              <div className="mb-3 sm:mb-4 lg:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
                   <SupplyTracker />
                 </Suspense>
               </div>
               
               {/* Main Grid */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-3 sm:mb-4 lg:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
                   <TokenDistribution />
                 </Suspense>
@@ -73,12 +72,7 @@ const TokenomicsDashboard = () => {
                 </Suspense>
               </div>
 
-              {/* Key Metrics */}
-              <div className="mb-4 sm:mb-6">
-                <Suspense fallback={<LoadingFallback />}>
-                  <KeyMetrics />
-                </Suspense>
-              </div>
+              
 
               {/* Tokenomics Explanation */}
               <Suspense fallback={<LoadingFallback />}>

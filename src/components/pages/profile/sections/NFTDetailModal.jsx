@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion as m } from 'framer-motion';
-import { FaImage, FaExternalLinkAlt, FaTimes } from 'react-icons/fa';
+import { FaImage, FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 
@@ -160,22 +160,10 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                 )}
                 
                 {/* Mobile: Compact action buttons */}
-                <div className="grid grid-cols-2 gap-2">
-                  {contractAddress && (
-                    <a
-                      href={`https://opensea.io/assets/matic/${contractAddress}/${selectedNFT.tokenId}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 bg-purple-600 hover:bg-purple-700 text-white transition-colors rounded px-2 py-2 font-medium text-xs"
-                    >
-                      <FaExternalLinkAlt className="text-xs" /> 
-                      OpenSea
-                    </a>
-                  )}
-                  
+                <div className="w-full">
                   <Link
                     to={`/nft/${selectedNFT.tokenId}`}
-                    className="flex items-center justify-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-colors rounded px-2 py-2 font-medium text-xs"
+                    className="flex items-center justify-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-colors rounded px-2 py-2 font-medium text-xs w-full"
                     onClick={onClose}
                   >
                     <FaImage className="text-xs" /> 
@@ -249,22 +237,10 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                   )}
                   
                   {/* Action Buttons */}
-                  <div className="grid grid-cols-2 gap-3">
-                    {contractAddress && (
-                      <a
-                        href={`https://opensea.io/assets/matic/${contractAddress}/${selectedNFT.tokenId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white transition-colors rounded-lg px-4 py-3 font-medium"
-                      >
-                        <FaExternalLinkAlt /> 
-                        Ver en OpenSea
-                      </a>
-                    )}
-                    
+                  <div className="w-full">
                     <Link
                       to={`/nft/${selectedNFT.tokenId}`}
-                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-colors rounded-lg px-4 py-3 font-medium"
+                      className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-colors rounded-lg px-4 py-3 font-medium w-full"
                       onClick={onClose}
                     >
                       <FaImage /> 

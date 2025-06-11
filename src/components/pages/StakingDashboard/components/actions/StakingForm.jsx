@@ -131,7 +131,7 @@ const StakingForm = memo(({
               label="Stake"
               isPrimary={true}
               disabled={isPending || !depositAmount || parseFloat(depositAmount) < 5}
-              className="whitespace-nowrap"
+              className="whitespace-nowrap btn-nuvo-base bg-nuvo-gradient-button flex-shrink-0"
             />
           </div>
 

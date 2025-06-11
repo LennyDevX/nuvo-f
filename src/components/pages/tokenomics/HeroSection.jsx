@@ -116,10 +116,36 @@ const HeroSection = ({ onOpenTokenModal }) => {
       
       {/* Content */}
       <div className="relative z-10 w-full">
-        {/* Main hero content - always horizontal layout */}
-        <div className="flex flex-row items-center justify-between gap-3 sm:gap-6">
-          {/* Text content - takes up more space on mobile */}
-          <m.div variants={itemVariants} className="flex-1 text-left min-w-0">
+        {/* Main hero content - optimized mobile layout */}
+        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 sm:gap-6">
+          {/* Token Image - moved to top on mobile */}
+          <m.div 
+            className="flex-shrink-0 flex justify-center items-center order-1 sm:order-2"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <m.div
+              className="relative"
+              variants={coinFloatVariants}
+              animate="animate"
+            >
+              <m.img
+                src="/NuvosToken.png"
+                alt="NUVOS Token"
+                className="w-24 h-24 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-64 xl:h-64 
+                  object-contain drop-shadow-[0_0_12px_rgba(139,92,246,0.7)]"
+                variants={coinRotateVariants}
+                animate="animate"
+                style={{ 
+                  filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.6))'
+                }}
+              />
+            </m.div>
+          </m.div>
+
+          {/* Text content - centered on mobile */}
+          <m.div variants={itemVariants} className="flex-1 text-center sm:text-left min-w-0 order-2 sm:order-1">
             {/* Title with letter-by-letter animation */}
             <m.div
               variants={titleContainerVariants}
@@ -133,7 +159,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
                   custom={index}
                   variants={letterVariants}
                   className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
-                            text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight"
+                            text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold leading-tight"
                 >
                   {char === ' ' ? '\u00A0' : char}
                 </m.span>
@@ -143,8 +169,8 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.p 
               initial={{ opacity: 0, y: 0, x: 5 }}
               animate={{ opacity: 1, y: 0, x: 0 }}
-              transition={{ delay: 0.8, duration: 1 }}
-              className="text-sm sm:text-lg md:text-xl lg:text-2xl mt-1 sm:mt-2 text-gray-200 leading-snug"
+              transition={{ delay: 0.8, duration: 0.8 }}
+              className="text-sm sm:text-base md:text-lg lg:text-xl mt-1 sm:mt-2 text-gray-200 leading-snug"
             >
               Powering Our Digital Ecosystem Today
             </m.p>
@@ -152,10 +178,10 @@ const HeroSection = ({ onOpenTokenModal }) => {
             <m.div 
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1, duration: 1 }}
+              transition={{ delay: 1, duration: 0.8 }}
               className="mt-2 sm:mt-4"
             >
-              <p className="text-gray-300 text-xs sm:text-sm md:text-base lg:text-lg mb-3 sm:mb-4 md:mb-6 leading-relaxed">
+              <p className="text-gray-300 text-xs sm:text-sm md:text-base leading-relaxed mb-3 sm:mb-4 px-2 sm:px-0">
                 Experience NUVOS, the active cornerstone of our ecosystem with a fixed supply of 21M tokens.
                 <span className="hidden sm:inline"> Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.</span>
               </p>
@@ -168,70 +194,49 @@ const HeroSection = ({ onOpenTokenModal }) => {
               animate="visible"
               whileHover="hover"
               whileTap="tap"
-              className="text-white px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 md:py-3 rounded-full 
-                font-semibold transition-all duration-300 text-xs sm:text-sm md:text-base
-                bg-gradient-to-r from-purple-600 to-blue-500 shadow-md hover:shadow-lg
-                relative w-full sm:w-auto"
+              className="text-white px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base
+                font-semibold transition-all duration-300 btn-nuvo-base bg-nuvo-gradient-button 
+                shadow-md hover:shadow-lg w-full sm:w-auto max-w-xs mx-auto sm:mx-0 block"
               onClick={onOpenTokenModal}
             >
               Learn More
             </m.button>
           </m.div>
-
-          {/* Token Image - optimized size for mobile */}
-          <m.div 
-            className="flex-shrink-0 flex justify-center items-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-          >
-            <m.div
-              className="relative"
-              variants={coinFloatVariants}
-              animate="animate"
-            >
-              <m.img
-                src="/NuvosToken.png"
-                alt="NUVOS Token"
-                className="w-20 h-20 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-64 xl:h-64 
-                  object-contain drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] sm:drop-shadow-[0_0_15px_rgba(139,92,246,0.6)]"
-                variants={coinRotateVariants}
-                animate="animate"
-                style={{ 
-                  filter: 'drop-shadow(0 0 6px rgba(139, 92, 246, 0.5))'
-                }}
-              />
-            </m.div>
-          </m.div>
         </div>
 
-        {/* Feature cards - improved mobile layout */}
+        {/* Feature cards - improved mobile layout with 1 column on very small screens */}
         <m.div 
           variants={itemVariants}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mt-6 sm:mt-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6 lg:mt-8"
         >
           {[
             {
-              icon: <FaLock className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
+              icon: <FaLock className="text-purple-400 text-xl sm:text-2xl lg:text-3xl mb-2 sm:mb-3" />,
               title: "Fixed Supply",
               description: "21M tokens maximum supply, no additional minting capability"
             },
             {
-              icon: <FaRocket className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
+              icon: <FaRocket className="text-purple-400 text-xl sm:text-2xl lg:text-3xl mb-2 sm:mb-3" />,
               title: "Active Utility",
               description: "Currently powering transactions and services across the Nuvos Cloud ecosystem"
             },
             {
-              icon: <FaUsers className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3 lg:mb-4" />,
+              icon: <FaUsers className="text-purple-400 text-xl sm:text-2xl lg:text-3xl mb-2 sm:mb-3" />,
               title: "Community Governed",
               description: "Token holders participate in governance decisions and ecosystem development"
             }
           ].map((item, index) => (
-            <div key={index} className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center p-3 sm:p-4 lg:p-6">
+            <m.div 
+              key={index} 
+              className="card-purple-gradient card-purple-wrapper flex flex-col items-center text-center p-3 sm:p-4 lg:p-5
+                         hover:scale-[1.02] transition-transform duration-300"
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.2 }}
+            >
               {item.icon}
               <h3 className="text-white font-semibold text-sm sm:text-base lg:text-lg mb-1 sm:mb-2">{item.title}</h3>
               <p className="text-gray-400 text-xs sm:text-sm leading-relaxed">{item.description}</p>
-            </div>
+            </m.div>
           ))}
         </m.div>
       </div>
