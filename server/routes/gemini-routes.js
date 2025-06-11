@@ -20,4 +20,13 @@ router.post('/', geminiController.generateContent);
 router.get('/', geminiController.generateContentGet);
 router.post('/function-calling', geminiController.functionCalling);
 
+// Endpoints de análisis expandidos
+router.post('/analyze', geminiController.analyzeText);
+router.post('/compare', geminiController.compareTexts); // Nueva función
+
+// Endpoints existentes
+router.delete('/cache', geminiController.clearCache);
+router.get('/models', geminiController.getAvailableModels);
+router.get('/stats', geminiController.getUsageStats);
+
 export default router;

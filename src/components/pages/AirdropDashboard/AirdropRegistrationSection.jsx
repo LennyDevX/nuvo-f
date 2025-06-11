@@ -105,7 +105,7 @@ const AirdropRegistrationSection = () => {
                         whileHover={reduceAnimations ? {} : { scale: 1.05 }}
                         whileTap={reduceAnimations ? {} : { scale: 0.98 }}
                         onClick={() => setIsFormOpen(true)}
-                        className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg font-medium text-white flex items-center justify-center gap-2 mx-auto shadow-lg shadow-purple-900/30 text-sm md:text-base"
+                        className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 btn-nuvo-base bg-nuvo-gradient-button font-medium text-white flex items-center justify-center gap-2 mx-auto shadow-lg shadow-purple-900/30 text-sm md:text-base"
                       >
                         <FaGift /> Open Registration Form
                       </motion.button>

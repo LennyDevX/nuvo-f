@@ -40,7 +40,7 @@ const RewardsPanel = ({
           label="Claim Rewards"
           isPrimary={hasRewards}
           disabled={isPending || !hasRewards}
-          className="flex-1"
+          className="flex-1 btn-nuvo-base bg-nuvo-gradient-button" 
         />
 
         <ActionButton
@@ -49,7 +49,7 @@ const RewardsPanel = ({
           label="Withdraw All"
           isPrimary={false}
           disabled={isPending || totalStaked <= 0}
-          className="flex-1"
+          className="flex-1 btn-nuvo-base btn-nuvo-outline"
         />
       </div>
 

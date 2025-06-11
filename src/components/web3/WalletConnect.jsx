@@ -288,7 +288,7 @@ const WalletConnect = ({ className }) => {
         <div className="relative" ref={dropdownRef}>
           <button 
             onClick={() => setShowWalletOptions(!showWalletOptions)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/60 border border-purple-500/30 hover:bg-purple-900/20"
+            className="flex items-center gap-2 px-4 py-2 btn-nuvo-base btn-nuvo-outline"
           >
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <img 
@@ -363,11 +363,9 @@ const WalletConnect = ({ className }) => {
         onClick={connectWallet}
         disabled={isLoading}
         className={`
-          px-4 py-2 rounded-lg
-          bg-purple-900/20 hover:bg-purple-800/30
-          border border-purple-500/30
+          btn-nuvo-base btn-nuvo-outline
+          flex items-center gap-2 px-4 py-2
           transition-all duration-300
-          flex items-center gap-2
           ${isLoading ? 'opacity-50 cursor-wait' : ''}
         `}
       >

@@ -32,7 +32,7 @@ const TokenInfoModal = ({ isOpen, onClose }) => {
         <div className="absolute inset-0" onClick={onClose}></div>
         
         <motion.div 
-          className="bg-gray-900 border border-purple-500/30 rounded-xl w-full max-w-4xl my-8 relative"
+          className="nuvos-card glass-effect bg-gray-900 border border-purple-500/30 rounded-xl w-full max-w-4xl my-8 relative flex flex-col"
           variants={modalVariants}
           initial="hidden"
           animate="visible"
@@ -40,7 +40,7 @@ const TokenInfoModal = ({ isOpen, onClose }) => {
           style={{ maxHeight: 'calc(100vh - 4rem)' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="sticky top-0 bg-gray-900 border-b border-purple-500/30 px-6 py-4 flex justify-between items-center z-10">
+          <div className="sticky top-0 nuvos-card px-6 py-4 flex justify-between items-center z-10 flex-shrink-0">
             <h2 className="text-2xl font-bold gradient-text">NUVOS Token Ecosystem</h2>
             <button 
               onClick={onClose}
@@ -51,7 +51,7 @@ const TokenInfoModal = ({ isOpen, onClose }) => {
             </button>
           </div>
           
-          <div className="px-6 py-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
+          <div className="px-6 py-4 overflow-y-auto flex-1">
             {/* Benefits Section */}
             <div className="mb-8">
               <div className="flex items-center mb-4">
@@ -97,7 +97,7 @@ const TokenInfoModal = ({ isOpen, onClose }) => {
             </div>
             
             {/* Upcoming Updates Section */}
-            <div className="mb-4">
+            <div className="mb-6">
               <div className="flex items-center mb-4">
                 <FaTools className="text-purple-400 text-xl mr-3" />
                 <h3 className="text-xl font-semibold text-white">Upcoming Updates</h3>
@@ -128,15 +128,6 @@ const TokenInfoModal = ({ isOpen, onClose }) => {
                 </ul>
               </div>
             </div>
-          </div>
-          
-          <div className="border-t border-purple-500/30 px-6 py-4 flex justify-end sticky bottom-0 bg-gray-900">
-            <button 
-              onClick={onClose}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg font-medium transition-colors"
-            >
-              Close
-            </button>
           </div>
         </motion.div>
       </div>

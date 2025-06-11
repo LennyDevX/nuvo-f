@@ -99,7 +99,7 @@ const AirdropHeroSection = ({ setActiveTab }) => {
         <motion.button
           {...buttonHoverProps}
           onClick={handleStakingInfoClick}
-          className="w-full sm:w-auto px-4 lg:px-6 py-2.5 lg:py-3 bg-black/60 backdrop-blur-sm border border-purple-500/50 rounded-lg font-medium text-white flex items-center justify-center gap-2 hover:bg-purple-900/40 transition-colors shadow-md text-sm lg:text-base"
+          className="w-full sm:w-auto px-4 lg:px-6 py-2.5 lg:py-3 btn-nuvo-base btn-nuvo-outline font-medium text-white flex items-center justify-center gap-2 hover:bg-purple-900/40 transition-colors shadow-md text-sm lg:text-base"
         >
           <FaCoins /> Learn About Staking
         </motion.button>

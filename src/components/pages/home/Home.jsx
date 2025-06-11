@@ -15,6 +15,7 @@ const RewardDeveloper = lazyWithPreload(() => import('./NftInfo'));
 const AnnouncementModal = lazyWithPreload(() => import('../../modals/AnnouncementModal'));
 const TokenomicsSystem = lazyWithPreload(() => import('./TokenomicsSystem'));
 const TokenizationSection = lazyWithPreload(() => import('./TokenizationSection'));
+const NuvosAI = lazyWithPreload(() => import('./NuvosAI'));
 
 // Crear un hook personalizado para detección de dispositivos móviles
 import { useDeviceDetection } from '../../../hooks/mobile/useDeviceDetection';
@@ -99,10 +100,10 @@ const Home = () => {
                   {/* Usar intersection observer para carga progresiva */}
                   {loadingStrategy.shouldLoadIntersectionObserverComponents && (
                     <LazyComponentLoader>
-                      {/* Cambia el orden: primero Features y WhitelistToken */}
                       <RewardDeveloper />
                       <TokenizationSection />
                       <Features showSkeletonIfLoading={false} />
+                      <NuvosAI showSkeletonIfLoading={false} />
 
                       <WhitelistToken showSkeletonIfLoading={false} />
 

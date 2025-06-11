@@ -36,9 +36,9 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
   const reduceAnimations = shouldReduceMotion || isLowPerformance;
 
   useEffect(() => {
-    // Actualización de fechas para el próximo airdrop: 27 de mayo - 6 de junio 2025
-    const startDate = new Date('2025-05-27T00:00:00').getTime();
-    const endDate = new Date('2025-06-06T23:59:59').getTime();
+    // Actualización de fechas para el próximo airdrop: 20 de junio - 31 de junio 2025
+    const startDate = new Date('2025-06-20T00:00:00').getTime();
+    const endDate = new Date('2025-06-31T23:59:59').getTime();
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -132,7 +132,7 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
         <p className="text-purple-200/60 text-xs sm:text-sm">
           {isExpired 
             ? "Airdrop period has ended" 
-            : "Time remaining until tokens are distributed"}
+            : "Time remaining until Airdrop starts:"}
         </p>
       </motion.div>
       
@@ -155,7 +155,7 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
             : "Distribution period"}
         </div>
         <div className="text-sm sm:text-base lg:text-lg font-semibold text-white">
-          May 27, 2025 – June 6, 2025
+          June 20, 2025 – June 31, 2025
         </div>
       </motion.div>
     </div>

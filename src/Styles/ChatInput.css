@@ -1,88 +1,328 @@
+/* Import custom button styles */
+@import '../Styles/buttons.css';
+
 .chat-input-container {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 10px 16px;
-  background-color: var(--bg-color);
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  background: rgba(17, 24, 39, 0.95);
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
   z-index: 1000;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  
+  /* iOS specific fixes */
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .chat-input-form {
   display: flex;
   align-items: center;
-  background-color: var(--input-bg, rgba(255, 255, 255, 0.1));
+  background: rgba(31, 41, 55, 0.8);
+  border: 2px solid rgba(139, 92, 246, 0.3);
   border-radius: 24px;
-  padding: 8px 16px;
-  gap: 10px;
+  padding: 10px 16px;
+  gap: 12px;
   max-width: 800px;
   margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+  backdrop-filter: blur(10px);
+  
+  /* Performance optimizations */
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .chat-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 10px 8px;
+  padding: 12px 8px;
   font-size: 16px;
-  color: var(--text-color);
-  min-height: 24px;
+  color: white;
+  min-height: 28px;
   resize: none;
   outline: none;
   width: 100%;
+  line-height: 1.4;
+  
+  /* iOS specific fixes */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Prevent zoom on iOS */
+  font-size: max(16px, 1rem);
+  
+  /* Better touch handling */
+  touch-action: manipulation;
 }
 
-.chat-input::placeholder {
-  color: var(--placeholder-color, rgba(255, 255, 255, 0.5));
-}
-
+/* Apply custom button class to send button */
 .send-button {
-  background: none;
-  border: none;
-  color: var(--accent-color, #8A2BE2);
-  cursor: pointer;
-  padding: 8px;
-  display: flex;
+  /* Use custom button base + icon variant */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0.75rem;
+  font-weight: 500;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  border: 2px solid rgba(139, 92, 246, 0.4);
+  background: rgba(55, 65, 81, 0.8);
+  color: rgba(139, 92, 246, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
 }
 
 .send-button:hover {
-  background-color: rgba(138, 43, 226, 0.1);
+  background: rgba(139, 92, 246, 0.8);
+  border-color: rgba(139, 92, 246, 0.6);
+  color: white;
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
-/* Mobile responsiveness fixes */
+.send-button:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+.send-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5), 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.send-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  background: rgba(55, 65, 81, 0.5);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+/* Mobile responsiveness with iOS fixes */
 @media screen and (max-width: 768px) {
   .chat-input-container {
-    padding: 8px;
-    /* Ensure it's visible above everything */
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 16px));
     z-index: 9999;
+    bottom: 64px;
+    background: rgba(17, 24, 39, 0.98);
+    
+    /* iOS viewport height fix */
+    bottom: max(64px, calc(64px + env(safe-area-inset-bottom, 0px)));
+    
+    /* Prevent content shift */
+    position: fixed;
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
   }
   
   .chat-input-form {
-    padding: 6px 12px;
+    padding: 8px 14px;
+    gap: 10px;
+    border-width: 1px;
+    box-shadow: 0 -2px 20px rgba(139, 92, 246, 0.25);
+    
+    /* Better performance on mobile */
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
   .chat-input {
-    padding: 8px 6px;
-    /* Fix for iOS not showing inputs correctly */
+    padding: 14px 8px;
+    font-size: max(16px, 1rem); /* Prevent zoom on iOS */
     -webkit-appearance: none;
     appearance: none;
+    border-radius: 0;
+    
+    /* iOS keyboard handling */
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+    
+    /* Prevent elastic scrolling */
+    overscroll-behavior: contain;
   }
   
-  /* Fix for bottom navigation overlapping the input on mobile */
+  .send-button {
+    padding: 12px;
+    min-width: 48px;
+    min-height: 48px;
+    -webkit-tap-highlight-color: rgba(139, 92, 246, 0.2);
+    
+    /* Better touch feedback */
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  
+  /* iOS keyboard viewport adjustment */
   body {
-    padding-bottom: 70px;
+    padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* iOS specific input handling */
+  .chat-input:focus {
+    /* Prevent viewport zoom on focus */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
 }
 
-/* Fix for iOS keyboard issues */
+/* Enhanced accessibility and performance */
+@media (prefers-reduced-motion: reduce) {
+  .send-button {
+    transition: none;
+  }
+  
+  .send-button:hover,
+  .send-button:active {
+    transform: none;
+  }
+  
+  .chat-input-form {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .chat-input-form {
+    border-width: 3px;
+  }
+  
+  .send-button {
+    border-width: 3px;
+  }
+}
+
+/* Loading state for send button */
+.send-button.loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.send-button.loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  color: white;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* iOS specific fixes */
 @supports (-webkit-touch-callout: none) {
   .chat-input-container {
-    /* Prevent iOS keyboard from pushing the view */
-    position: sticky;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    
+    /* Fix for iOS safe area */
+    padding-bottom: calc(12px + constant(safe-area-inset-bottom));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  
+  @media screen and (max-width: 768px) {
+    .chat-input {
+      -webkit-user-select: text;
+      user-select: text;
+      -webkit-touch-callout: default;
+      
+      /* Prevent keyboard from pushing content */
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* iOS viewport units fix */
+    .chat-input-container {
+      bottom: calc(64px + constant(safe-area-inset-bottom));
+      bottom: calc(64px + env(safe-area-inset-bottom));
+      
+      /* Handle dynamic viewport on iOS */
+      min-height: calc(72px + env(safe-area-inset-bottom));
+    }
+    
+    /* Smooth keyboard transitions on iOS */
+    .chat-input-form {
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+}
+
+/* Enhanced touch feedback for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .send-button:active {
+    background: rgba(139, 92, 246, 0.9);
+    transform: scale(0.95);
+  }
+  
+  .chat-input-form:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 6px 24px rgba(139, 92, 246, 0.25);
+  }
+}
+
+/* Performance optimizations */
+.chat-input-container,
+.chat-input-form,
+.chat-input,
+.send-button {
+  /* GPU acceleration */
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  /* Optimize repaints */
+  contain: layout style paint;
+}
+
+/* Haptic feedback styles (visual feedback for haptic actions) */
+.send-button:active,
+.features-button:active {
+  animation: haptic-pulse 0.1s ease-out;
+}
+
+@keyframes haptic-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* High performance mode styles */
+@media (prefers-reduced-motion: no-preference) {
+  .chat-input-form {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .send-button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Battery saving mode */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

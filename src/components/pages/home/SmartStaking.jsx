@@ -74,7 +74,7 @@ const HeroSection = () => {
           {/* The stats section */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 mt-8">
             {[
-              { value: "125%", label: "APY", icon: <FaChartLine /> },
+              { value: "87%", label: "APY", icon: <FaChartLine /> },
               { value: "100%", label: "Transparent", icon: <FaShieldAlt /> },
               { value: "Token ERC20", label: "Powered By Polygon Network", icon: <FaCloud /> }
             ].map((stat, index) => (
@@ -91,17 +91,17 @@ const HeroSection = () => {
             ))}
           </div>
 
-          {/* CTA Buttons - No animations on mobile */}
+          {/* CTA Buttons - Updated with custom CSS classes */}
           <div className="flex flex-col xs:flex-row gap-3 sm:gap-4 mt-6 sm:mt-10">
             <Link
               to="/staking"
-              className="px-6 sm:px-8 py-3 text-center block bg-gradient-to-r from-purple-600 to-pink-600 rounded-full text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-colors active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="btn-nuvo-base bg-nuvo-gradient-button btn-nuvo-lg text-center"
             >
               Start Staking
             </Link>
             <Link
               to="/about"
-              className="px-6 sm:px-8 py-3 text-center block bg-black/30 border border-purple-500/30 rounded-full text-white font-medium hover:bg-purple-500/10 transition-colors active:scale-95 focus:outline-none focus:ring-2 focus:ring-purple-400"
+              className="btn-nuvo-base btn-nuvo-outline btn-nuvo-lg text-center text-white"
             >
               Learn More
             </Link>

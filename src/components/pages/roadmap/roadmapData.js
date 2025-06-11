@@ -94,16 +94,16 @@ export const roadmapData = {
       {
         title: "Integration & Expansion",
         icon: "🎨",
-        status: "Planned",
-        progress: 25,
+        status: "in-progress",
+        progress: 70,
         phase: "Innovation Phase",
         items: [
-          { text: "Launch the Nuvos-Dashboard", status: "in-progress", date: "Apr 2026" },
-          { text: "Develop NFT system for digital products", status: "in-progress", date: "Apr 2025" },
-          { text: "Implement enhanced UI/UX designs for mobile", status: "pending", date: "May 2025" },
-          { text: "Implement chatbot with Gemini AI", status: "in-progress", date: "May 2025" },
-          { text: "Integrate components with NFTs utility", status: "pending", date: "Jun 2025" },
-          { text: "Implement AI-Hub for advanced features", status: "pending", date: "Jun 2025" },
+          { text: "Launch the Nuvos-Dashboard", status: "completed", date: "Apr 2025" },
+          { text: "Develop NFT system for digital products", status: "completed", date: "Apr 2025" },
+          { text: "Implement enhanced UI/UX designs for mobile", status: "completed", date: "May 2025" },
+          { text: "Implement chatbot with Gemini AI", status: "completed", date: "May 2025" },
+          { text: "Marketplace NFTs preview", status: "in-progress", date: "Jun 2025" },
+          { text: "Implement AI-Hub for advanced features", status: "in-progress", date: "Jun 2025" },
           
         ]
       }
@@ -120,8 +120,8 @@ export const roadmapData = {
           { text: "Prepare marketing strategies", status: "pending", date: "Aug 2025" },
           { text: "Ai-Hub update ", status: "pending", date: "Sep 2025" },
           { text: "AI-Hub integration with NFTs", status: "pending", date: "Sep 2025" },
-          { text: "Launch the Preview AI-Hub", status: "pending", date: "Sep 2025" },
-          { text: "Implement/update new tokenomics", status: "pending", date: "Sep 2025" }
+          { text: "Nuvos AI Chat update", status: "pending", date: "Sep 2025" },
+          { text: "Tokenomics update", status: "pending", date: "Sep 2025" }
         ]
       }
     ],
@@ -133,13 +133,13 @@ export const roadmapData = {
         progress: 0,
         phase: "Growth Phase",
         items: [
-          { text: "Optimize code, clean all bugs ", status: "pending", date: "Oct 2025" },
+          { text: "Launch the Tokenomics 1.0 ", status: "pending", date: "Oct 2025" },
           { text: "Optimize platform after token launch", status: "pending", date: "Oct 2025" },
           { text: "Implement further tokenomics revisions", status: "pending", date: "Nov 2025" },
-          { text: "Explore the NFTs-AI utility", status: "pending", date: "Nov 2025" },
+          { text: "Explore the use cases NFTs-AI utility", status: "pending", date: "Nov 2025" },
           { text: "Prepare Smart Staking 2.0 for the next phase", status: "pending", date: "Dec 2025" },
-          { text: "NuvOS 1.0 for better perfomance, security and utility", status: "pending", date: "Dec 2025" },
-          { text: "Launch the Tokemomics 1.0", status: "pending", date: "Dec 2025" }
+          { text: "NuVin 1.0 ", status: "pending", date: "Dec 2025" },
+          { text: "Optimize code, clean all bugs", status: "pending", date: "Dec 2025" }
 
 
 

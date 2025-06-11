@@ -266,7 +266,7 @@ const Header = ({ openUpdatesModal }) => {
                   boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)"
                 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-500 text-white font-medium rounded-lg shadow-lg hover:shadow-purple-500/25 transition-all flex items-center"
+                className="btn-nuvo-base bg-nuvo-gradient-button btn-nuvo-lg flex items-center"
               >
                 <RiRocketLine className="mr-2 text-lg" />
                 <span>Get Started</span>
@@ -278,7 +278,7 @@ const Header = ({ openUpdatesModal }) => {
                   backgroundColor: "rgba(139, 92, 246, 0.15)"
                 }}
                 whileTap={{ scale: 0.98 }}
-                className="px-8 py-4 bg-transparent border border-purple-500 text-purple-400 font-medium rounded-lg hover:bg-purple-500/10 transition-all flex items-center"
+                className="btn-nuvo-base btn-nuvo-outline btn-nuvo-lg flex items-center"
               >
                 <span>Last Updates</span>
                 <svg

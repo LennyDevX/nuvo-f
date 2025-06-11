@@ -191,14 +191,14 @@ const NFTDashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
               <Link 
                 to="/tokenize"
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-md text-white font-medium transition-all duration-200 border border-purple-500/20 hover:border-pink-500/30"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base bg-nuvo-gradient-button text-white font-medium transition-all duration-200 border border-purple-500/20 hover:border-pink-500/30"
               >
                 <FaPlus className="text-sm" /> Mint NFTs
               </Link>
               
               <button 
                 onClick={handleRefreshNFTs} 
-                className="flex items-center justify-center gap-2 px-6 py-2.5 bg-black/80 hover:bg-black/60 rounded-md text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
               >
                 <FaRedo className="text-sm" /> Refresh NFTs
               </button>
@@ -212,7 +212,7 @@ const NFTDashboard = () => {
           <div className="md:hidden">
             <button 
               onClick={toggleMobileFilters}
-              className="w-full py-3 bg-black/60 backdrop-blur-sm text-white rounded-md flex items-center justify-center border border-purple-500/30 hover:border-pink-400/50 transition-all duration-200 font-medium"
+              className="w-full py-3 btn-nuvo-base btn-nuvo-outline flex items-center justify-center border border-purple-500/30 hover:border-pink-400/50 transition-all duration-200 font-medium"
             >
               {showMobileFilters ? "Hide Filters" : "Show Filters"}
             </button>
@@ -236,7 +236,7 @@ const NFTDashboard = () => {
             </div>
             
             {/* NFT Collection */}
-            <div className="flex-1 bg-black/20 backdrop-blur-md p-4 rounded-xl border border-purple-500/20">
+            <div className="flex-1 nuvos-card  backdrop-blur-md p-4 ">
               <NFTCollection 
                 nfts={filteredNFTs}
                 loading={loading}

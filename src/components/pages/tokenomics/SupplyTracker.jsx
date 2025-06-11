@@ -89,10 +89,10 @@ const SupplyTracker = () => {
     }
   }), [formattedPercentage, isMobile]);
 
-  // Memoize the grid layout based on mobile status
+  // Memoize the grid layout based on mobile status - improved for better mobile experience
   const gridClassName = useMemo(() => 
-    `grid grid-cols-1 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-4'} gap-4`,
-    [isMobile]
+    `grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4`,
+    []
   );
 
   // Memoize skeleton component for reuse
@@ -100,22 +100,23 @@ const SupplyTracker = () => {
     <div className="h-4 bg-purple-600/30 rounded animate-pulse w-3/4"></div>
   ), []);
 
-  // Memoized progress bar component
+  // Memoized progress bar component with smoother animations
   const ProgressBar = useMemo(() => (
-    <div className="mt-6" style={{ height: '40px' }}>
-      <div className="flex justify-between text-sm mb-1">
+    <div className="mt-4 sm:mt-6">
+      <div className="flex justify-between text-xs sm:text-sm mb-2">
         <span className="text-gray-400">Supply Distribution</span>
         {!isLoading && (
-          <span className="text-gray-400">{formattedPercentage}% Circulating</span>
+          <span className="text-purple-300 font-medium">{formattedPercentage}% Circulating</span>
         )}
       </div>
       
-      <div className="h-4 bg-gray-800/50 rounded-full overflow-hidden">
+      <div className="h-3 sm:h-4 bg-gray-800/50 rounded-full overflow-hidden border border-purple-500/20">
         {isLoading ? (
           <div className="h-full bg-gradient-to-r from-purple-900/50 to-purple-600/50 rounded-full animate-pulse"></div>
         ) : (
           <m.div 
-            className="h-full bg-gradient-to-r from-purple-600 to-indigo-500 rounded-full"
+            className="h-full bg-gradient-to-r from-purple-500 via-purple-400 to-indigo-400 rounded-full
+                       shadow-inner shadow-purple-500/30"
             variants={progressAnimationVariants}
             initial="initial"
             animate="animate"
@@ -128,36 +129,38 @@ const SupplyTracker = () => {
   return (
     <m.div 
       className="nuvos-card"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{ minHeight: '180px' }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      style={{ minHeight: '200px' }}
     >
       {/* Component Header */}
-      <div className="flex items-center mb-4">
-        <div className="p-2 bg-purple-900/30 rounded-lg mr-3">
-          <FaCoins className="text-purple-400 text-xl" />
+      <div className="flex items-center mb-3 sm:mb-4">
+        <div className="p-2 bg-purple-900/30 rounded-lg mr-3 flex-shrink-0">
+          <FaCoins className="text-purple-400 text-lg sm:text-xl" />
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-white">NUVOS Token Supply</h2>
-          <p className="text-gray-400 text-sm">Fixed cap of 21M tokens</p>
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-white">NUVOS Token Supply</h2>
+          <p className="text-gray-400 text-xs sm:text-sm">Fixed cap of 21M tokens</p>
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Main Content - improved mobile grid */}
       <div className={gridClassName}>
         {/* Total Supply */}
         <div 
-          className="bg-purple-900/20 p-4 rounded-lg border border-purple-500/20 flex flex-col justify-between"
-          style={{ minHeight: '90px' }}
+          className="bg-gradient-to-br from-purple-900/25 to-purple-800/15 p-3 sm:p-4 rounded-lg 
+                     border border-purple-500/20 hover:border-purple-400/40 transition-all
+                     flex flex-col justify-between"
+          style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-sm">Total Supply</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Total Supply</div>
           {isLoading ? (
-            <div className="mt-2 h-7">
+            <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
-            <div className="text-xl font-bold mt-2 max-w-md">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-white leading-tight">
               {supplyData.totalSupply || '0'}
             </div>
           )}
@@ -165,16 +168,18 @@ const SupplyTracker = () => {
 
         {/* Circulating Supply */}
         <div 
-          className="bg-purple-900/20 p-4 rounded-lg border border-purple-500/20 flex flex-col justify-between"
-          style={{ minHeight: '90px' }}
+          className="bg-gradient-to-br from-green-900/25 to-green-800/15 p-3 sm:p-4 rounded-lg 
+                     border border-green-500/20 hover:border-green-400/40 transition-all
+                     flex flex-col justify-between"
+          style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-sm">Circulating</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Circulating</div>
           {isLoading ? (
-            <div className="mt-2 h-7">
+            <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
-            <div className="text-xl font-bold mt-2 text-green-400">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-green-400 leading-tight">
               {supplyData.circulatingSupply || '0'}
             </div>
           )}
@@ -182,16 +187,18 @@ const SupplyTracker = () => {
 
         {/* Percent Circulating */}
         <div 
-          className="bg-purple-900/20 p-4 rounded-lg border border-purple-500/20 flex flex-col justify-between"
-          style={{ minHeight: '90px' }}
+          className="bg-gradient-to-br from-blue-900/25 to-blue-800/15 p-3 sm:p-4 rounded-lg 
+                     border border-blue-500/20 hover:border-blue-400/40 transition-all
+                     flex flex-col justify-between"
+          style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-sm">% Circulating</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">% Circulating</div>
           {isLoading ? (
-            <div className="mt-2 h-7">
+            <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
-            <div className="text-xl font-bold mt-2 text-blue-400">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-blue-400 leading-tight">
               {formattedPercentage}%
             </div>
           )}
@@ -199,16 +206,18 @@ const SupplyTracker = () => {
 
         {/* Remaining Supply */}
         <div 
-          className="bg-purple-900/20 p-4 rounded-lg border border-purple-500/20 flex flex-col justify-between"
-          style={{ minHeight: '90px' }}
+          className="bg-gradient-to-br from-purple-900/25 to-pink-900/15 p-3 sm:p-4 rounded-lg 
+                     border border-purple-500/20 hover:border-purple-400/40 transition-all
+                     flex flex-col justify-between"
+          style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-sm">Remaining</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Remaining</div>
           {isLoading ? (
-            <div className="mt-2 h-7">
+            <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
-            <div className="text-xl font-bold mt-2 text-purple-400">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-purple-400 leading-tight">
               {supplyData.remainingSupply || '0'}
             </div>
           )}

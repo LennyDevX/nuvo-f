@@ -210,18 +210,7 @@ const WhitelistToken = ({ showSkeletonIfLoading }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting || !walletConnected}
-                  className="
-                    w-full py-3 mt-1
-                    rounded-xl
-                    bg-gradient-to-r from-purple-600 to-pink-600
-                    text-white font-semibold text-base tracking-wide
-                    shadow-md hover:shadow-lg
-                    hover:from-purple-700 hover:to-pink-700
-                    transition-all duration-200
-                    disabled:opacity-60 disabled:cursor-not-allowed
-                    active:scale-95
-                    focus:outline-none focus:ring-2 focus:ring-purple-400
-                  "
+                  className="btn-nuvo-base bg-nuvo-gradient-button btn-nuvo-lg w-full"
                 >
                   {isSubmitting
                     ? 'Submitting...'
