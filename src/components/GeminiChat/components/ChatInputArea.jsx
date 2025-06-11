@@ -312,7 +312,7 @@ const ChatInputArea = ({
                   focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
                   ${leftSidebarOpen 
                     ? 'bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 border-purple-500 text-white shadow-purple-500/30 scale-105' 
-                    : 'bg-gray-700/80 border-purple-500/40 text-purple-400 hover:border-purple-500/60 hover:bg-gray-700 hover:scale-105'
+                    : 'bg-gray-500/30 border-purple-500/40 text-purple-400 hover:border-purple-500/60 hover:bg-gray-700 hover:scale-105'
                   }
                 `}
                 aria-label="Toggle AI tools menu"
@@ -336,8 +336,8 @@ const ChatInputArea = ({
                   placeholder="Message"
                   className={`
                     w-full resize-none rounded-xl 
-                    border-2 border-purple-500/30 
-                    bg-gray-700/95 backdrop-blur-sm 
+                    border-2 border-purple-800/20 
+                    bg-gray-500/20 backdrop-blur-sm 
                     text-white placeholder-gray-400 
                     focus:border-purple-500 focus:outline-none 
                     focus:ring-2 focus:ring-purple-500/20 
@@ -376,8 +376,8 @@ const ChatInputArea = ({
                     className="
                       flex items-center justify-center 
                       w-12 h-12 md:w-10 md:h-10 rounded-xl
-                      bg-gray-600/80 hover:bg-gray-600 text-gray-300 hover:text-white
-                      border-2 border-purple-500/30 hover:border-purple-500/50
+                      bg-gray-500/30 hover:bg-gray-600 text-gray-300 hover:text-white
+                      border-2 border-purple-800/20 hover:border-purple-500/50
                       transition-all duration-200 ease-out
                       shadow-lg hover:shadow-xl hover:scale-105 active:scale-95
                       touch-manipulation
@@ -393,7 +393,7 @@ const ChatInputArea = ({
                   {showFeaturesMenu && (
                     <div className={`
                       absolute bottom-full mb-3
-                      bg-gray-800/95 backdrop-blur-md border border-purple-500/20 rounded-xl shadow-2xl
+                      bg-gray-800/95 backdrop-blur-md border border-purprle-500/20 rounded-xl shadow-2xl
                       overflow-hidden z-50
                       ${isMobile 
                         ? 'right-0 w-80 max-w-[95vw]' 
@@ -458,7 +458,7 @@ const ChatInputArea = ({
                     touch-manipulation
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
                     ${!input.trim() || isLoading || isInitializing
-                      ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
+                      ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
                       : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 hover:scale-105 active:scale-95 border-2 border-purple-500/50 hover:border-purple-400/70'
                     }
                   `}
@@ -479,17 +479,17 @@ const ChatInputArea = ({
                 className={`
                   hidden md:flex items-center justify-center
                   w-12 h-12 rounded-xl transition-all duration-200 ease-out
-                  border-2 shadow-lg flex-shrink-0
+                  border-2 shadow-lg flex-shrink-0 
                   focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
                   ${rightSidebarOpen 
                     ? 'bg-gradient-to-br from-purple-600 via-pink-600 to-red-600 border-purple-500 text-white shadow-purple-500/30 scale-105' 
-                    : 'bg-gray-700/80 border-purple-500/40 text-purple-400 hover:border-purple-500/60 hover:bg-gray-700 hover:scale-105'
+                    : 'bg-gray-800/80 border-purple-500/40 text-purple-400 hover:border-purple-500/60 hover:bg-gray-700 hover:scale-105'
                   }
                 `}
                 aria-label="Toggle profile menu"
                 aria-expanded={rightSidebarOpen}
               >
-                <FaUserCircle className="w-4 h-4" />
+                <FaUserCircle className="w-4 h-4 " />
               </button>
             </div>
             

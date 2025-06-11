@@ -74,7 +74,7 @@ const HeroSection = () => {
           {/* The stats section */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-4 mt-8">
             {[
-              { value: "125%", label: "APY", icon: <FaChartLine /> },
+              { value: "87%", label: "APY", icon: <FaChartLine /> },
               { value: "100%", label: "Transparent", icon: <FaShieldAlt /> },
               { value: "Token ERC20", label: "Powered By Polygon Network", icon: <FaCloud /> }
             ].map((stat, index) => (

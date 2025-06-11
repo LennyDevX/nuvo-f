@@ -335,7 +335,7 @@ const Navbar = () => {
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
                   onClick={handleViewProfile}
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-purple-600/80 to-purple-700/80 hover:from-purple-600 hover:to-purple-700 transition-all text-white font-medium active:scale-95"
+                  className="flex items-center justify-center gap-2 p-3 rounded-xl btn-nuvo-base bg-nuvo-gradient-button transition-all text-white font-medium active:scale-95"
                 >
                   <FaUser className="w-4 h-4" />
                   View Profile
@@ -343,7 +343,7 @@ const Navbar = () => {
                 <button
                   onClick={handleDisconnectWallet}
                   disabled={!walletConnected || !account}
-                  className="flex items-center justify-center gap-2 p-3 rounded-xl bg-gradient-to-r from-red-600/80 to-red-700/80 hover:from-red-600 hover:to-red-700 transition-all text-white font-medium active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center justify-center gap-2 p-3 btn-nuvo-base btn-nuvo-outline transition-all text-white font-medium active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FaSignOutAlt className="w-4 h-4" />
                   Disconnect
