@@ -79,14 +79,16 @@ const Footer = () => {
                   Roadmap
                 </NavLink>
               </li>
-              <a 
-                href="https://github.com/LennyDevX/nuvo-f" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-gray-400 hover:text-purple-400 transition-colors"
-              >
-                Documentation
-              </a>
+              <li>
+                <a 
+                  href="https://github.com/LennyDevX/nuvo-f" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                >
+                  Documentation
+                </a>
+              </li>
               <li>
                 <NavLink 
                   to="/game"
@@ -95,6 +97,16 @@ const Footer = () => {
                   onClick={() => window.scrollTo(0, 0)}
                 >
                   Game
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/marketplace"
+                  prefetchStrategy="intent" 
+                  className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
+                >
+                  Marketplace
                 </NavLink>
               </li>
               <li>
@@ -117,7 +129,6 @@ const Footer = () => {
                   AI-Hub
                 </NavLink>
               </li>
-              
             </ul>
           </div>
 

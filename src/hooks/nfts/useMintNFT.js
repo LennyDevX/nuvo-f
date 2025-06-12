@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 import { uploadFileToIPFS, uploadJsonToIPFS, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
+import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+// Contract address - usar la dirección del contrato desplegado
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
 
 // Move category map outside component to prevent recreation on each render
 const categoryMap = {
@@ -28,7 +29,6 @@ const createLocalDataUrl = (file) => {
 export default function useMintNFT() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
   const [txHash, setTxHash] = useState(null);
 
   // Memoize contract address validation to prevent rechecking on every render
@@ -41,7 +41,6 @@ export default function useMintNFT() {
   const mintNFT = useCallback(async ({ file, name, description, category, royalty }) => {
     setLoading(true);
     setError(null);
-    setSuccess(false);
     setTxHash(null);
 
     try {
@@ -150,8 +149,6 @@ export default function useMintNFT() {
       const receipt = await tx.wait();
       console.log("Transaction confirmed:", receipt);
       
-      setSuccess(true);
-      
       // Extraer tokenId del evento TokenMinted
       let tokenId = null;
       try {
@@ -233,5 +230,279 @@ export default function useMintNFT() {
     }
   }, [validatedContractAddress]); // Add validatedContractAddress as dependency
 
-  return { mintNFT, loading, error, success, txHash };
+  // List NFT for sale - CORREGIDO
+  const listNFT = async (tokenId, price, category) => {
+    if (!window.ethereum) {
+      throw new Error('MetaMask not found');
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const account = await signer.getAddress();
+      
+      const contract = new ethers.Contract(
+        validatedContractAddress,
+        TokenizationAppABI.abi,
+        signer
+      );
+
+      // Convert category to Spanish if needed (matching the mint function)
+      const translatedCategory = categoryMap[category.toLowerCase()] || 'coleccionables';
+      console.log("Using translated category for listing:", translatedCategory);
+
+      // Check if user owns the NFT
+      const owner = await contract.ownerOf(tokenId);
+      console.log("NFT owner:", owner, "Current account:", account);
+      if (owner.toLowerCase() !== account.toLowerCase()) {
+        throw new Error('You do not own this NFT');
+      }
+
+      // Check if NFT is already listed
+      try {
+        const listingData = await contract.getListedToken(tokenId);
+        if (listingData[4]) { // isForSale
+          throw new Error('NFT is already listed for sale');
+        }
+      } catch (listingError) {
+        console.log("Could not check listing status, proceeding with listing");
+      }
+
+      // Validate price (minimum 0.001 ETH)
+      const minPrice = ethers.parseEther("0.001");
+      const priceInWei = ethers.parseEther(price.toString());
+      if (priceInWei <= 0) {
+        throw new Error('Price must be greater than 0');
+      }
+      if (priceInWei < minPrice) {
+        throw new Error('Price must be at least 0.001 ETH');
+      }
+
+      console.log("Listing NFT with params:", {
+        tokenId: tokenId.toString(),
+        price: priceInWei.toString(),
+        category: translatedCategory
+      });
+
+      // Check if contract is approved to transfer this NFT
+      const approved = await contract.getApproved(tokenId);
+      const isApprovedForAll = await contract.isApprovedForAll(account, validatedContractAddress);
+      
+      console.log("Approval status:", { approved, isApprovedForAll, contractAddress: validatedContractAddress });
+
+      if (approved.toLowerCase() !== validatedContractAddress.toLowerCase() && !isApprovedForAll) {
+        console.log("Approving contract to transfer NFT...");
+        // Approve the contract to transfer this NFT
+        const approveTx = await contract.approve(validatedContractAddress, tokenId, {
+          gasLimit: BigInt(100000)
+        });
+        await approveTx.wait();
+        console.log("Approval transaction completed");
+      }
+
+      // List the NFT with proper gas limit
+      const tx = await contract.listTokenForSale(tokenId, priceInWei, translatedCategory, {
+        gasLimit: BigInt(500000) // Increased gas limit
+      });
+      const receipt = await tx.wait();
+
+      return {
+        success: true,
+        txHash: receipt.hash,
+        tokenId: tokenId,
+        price: priceInWei.toString(),
+        category: translatedCategory
+      };
+
+    } catch (error) {
+      console.error('Error listing NFT:', error);
+      
+      // Enhanced error parsing for contract errors
+      let errorMessage = 'Error listing NFT';
+      
+      if (error.message.includes('user rejected')) {
+        errorMessage = 'Transaction was rejected by user';
+      } else if (error.message.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds for transaction';
+      } else if (error.message.includes('already listed')) {
+        errorMessage = 'NFT is already listed for sale';
+      } else if (error.message.includes('not own')) {
+        errorMessage = 'You do not own this NFT';
+      } else if (error.data === '0x8f563f02') {
+        errorMessage = 'Invalid category. The category must be registered in the contract.';
+      } else if (error.data === '0x82b42960') {
+        errorMessage = 'You are not authorized to list this NFT';
+      } else if (error.data === '0x037eff13') {
+        errorMessage = 'This NFT is not available for listing';
+      } else if (error.code === 'CALL_EXCEPTION') {
+        if (error.data) {
+          // Try to decode the custom error
+          errorMessage = `Smart contract error. The NFT cannot be listed. Please ensure the category "${category}" is valid and you own the NFT.`;
+        } else {
+          errorMessage = 'Smart contract error - the transaction was rejected';
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
+
+  // Buy NFT
+  const buyNFT = useCallback(async (tokenId, price) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+
+      // Verificar que el NFT esté listado
+      const listing = await contract.getListedToken(tokenId);
+      if (!listing[4]) { // isForSale
+        throw new Error('Este NFT no está en venta');
+      }
+
+      const priceInWei = ethers.parseEther(price.toString());
+
+      console.log('Buying NFT:', { tokenId, price: priceInWei.toString() });
+
+      const tx = await contract.buyToken(tokenId, { 
+        value: priceInWei,
+        gasLimit: BigInt(300000) // Gas suficiente para la compra
+      });
+      
+      setTxHash(tx.hash);
+      console.log('Purchase transaction sent:', tx.hash);
+      
+      const receipt = await tx.wait();
+      console.log('Purchase confirmed:', receipt);
+      
+      return tx;
+    } catch (err) {
+      console.error('Error buying NFT:', err);
+      
+      let errorMessage = 'Error al comprar NFT';
+      if (err.message.includes('user rejected')) {
+        errorMessage = 'Transacción rechazada por el usuario';
+      } else if (err.message.includes('insufficient funds')) {
+        errorMessage = 'Fondos insuficientes';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Make offer
+  const makeOffer = useCallback(async (tokenId, offerAmount, expiresInDays) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+
+      const offerAmountWei = ethers.parseEther(offerAmount.toString());
+
+      const tx = await contract.makeOffer(tokenId, expiresInDays, {
+        value: offerAmountWei,
+        gasLimit: BigInt(200000)
+      });
+      
+      setTxHash(tx.hash);
+      await tx.wait();
+      return tx;
+    } catch (err) {
+      console.error('Error making offer:', err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Accept offer
+  const acceptOffer = useCallback(async (offerId) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+
+      const tx = await contract.acceptOffer(offerId, {
+        gasLimit: BigInt(300000)
+      });
+      
+      setTxHash(tx.hash);
+      await tx.wait();
+      return tx;
+    } catch (err) {
+      console.error('Error accepting offer:', err);
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get listed token information
+  const getListedToken = useCallback(async (tokenId) => {
+    try {
+      if (!window.ethereum) {
+        throw new Error('MetaMask not found');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, provider);
+
+      const listing = await contract.getListedToken(tokenId);
+      
+      return {
+        tokenId: listing[0].toString(),
+        seller: listing[1],
+        owner: listing[2],
+        price: listing[3].toString(),
+        isListed: listing[4],
+        timestamp: listing[5].toString(),
+        category: listing[6]
+      };
+    } catch (err) {
+      console.error('Error getting listed token:', err);
+      return null;
+    }
+  }, []);
+
+  return {
+    mintNFT,
+    loading,
+    error,
+    txHash,
+    listNFT,
+    buyNFT,
+    makeOffer,
+    acceptOffer,
+    getListedToken
+  };
 }

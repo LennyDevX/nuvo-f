@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
-import { FaArrowLeft, FaEthereum, FaHeart, FaShareAlt, FaTags, FaClock, FaUser, FaCheck, FaCopy } from 'react-icons/fa';
+import { FaArrowLeft, FaEthereum, FaHeart, FaShareAlt, FaTags, FaClock, FaUser, FaCheck, FaCopy, FaTimes, FaTag, FaStore } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingOverlay from '../../../ui/LoadingOverlay';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import IPFSImage from '../../../ui/IPFSImage';
+import { useTokenization } from '../../../../context/TokenizationContext';
+import { getCSPCompliantImageURL } from '../../../../utils/blockchain/blockchainUtils';
 
 // Agregar un simple sistema de caché para evitar llamadas repetidas
 const nftCache = new Map();
@@ -22,13 +24,21 @@ console.log("TokenizationApp Contract Address:", CONTRACT_ADDRESS);
 
 const NFTDetail = () => {
   const { tokenId } = useParams();
+  const navigate = useNavigate();
   const { account, walletConnected } = useContext(WalletContext);
+  const { nfts, listNFT, getListedToken } = useTokenization();
+  
   const [nft, setNft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [isListed, setIsListed] = useState(false);
+  const [listingData, setListingData] = useState(null);
+  const [showListModal, setShowListModal] = useState(false);
+  const [listPrice, setListPrice] = useState('');
+  const [listCategory, setListCategory] = useState('collectible');
   const callCountRef = useRef(0);
   const fetchingRef = useRef(false);
 
@@ -158,6 +168,7 @@ const NFTDetail = () => {
         console.log("Datos del NFT recuperados con éxito");
         
         const nftData = {
+          id: tokenId, // Add id property for consistency
           tokenId,
           name: metadata?.name || `NFT #${tokenId}`,
           description: metadata?.description || '',
@@ -168,7 +179,8 @@ const NFTDetail = () => {
           price: tokenDetails[3].toString(),
           isForSale: tokenDetails[4],
           listedTimestamp: tokenDetails[5].toString(),
-          category: tokenDetails[6]
+          category: tokenDetails[6],
+          standard: 'ERC721' // Add standard property
         };
         
         // Guardar en caché
@@ -181,6 +193,9 @@ const NFTDetail = () => {
         setNft(nftData);
         setLikesCount(likesCount.toString());
         setHasLiked(hasLiked);
+        
+        // Check listing status after setting NFT data
+        await checkListingStatus();
       } catch (err) {
         console.error("Error fetching NFT details:", err);
         setError(err.message || "Error al cargar los detalles del NFT");
@@ -197,7 +212,33 @@ const NFTDetail = () => {
       fetchingRef.current = true; // Evita más llamadas durante desmontaje
     };
   }, [tokenId, account, walletConnected]);
-  
+
+  // Remove the conflicting useEffect and merge its logic into checkListingStatus
+  const checkListingStatus = async () => {
+    try {
+      if (!tokenId) return;
+      
+      const listing = await getListedToken(tokenId);
+      if (listing && listing.isListed) {
+        setIsListed(true);
+        setListingData(listing);
+      }
+      
+      // Also check if NFT exists in the nfts array from context
+      const foundNft = nfts.find(n => n.id === tokenId || n.tokenId === tokenId);
+      if (foundNft && !nft) {
+        setNft({
+          ...foundNft,
+          id: foundNft.id || foundNft.tokenId,
+          tokenId: foundNft.tokenId || foundNft.id,
+          standard: foundNft.standard || 'ERC721'
+        });
+      }
+    } catch (error) {
+      console.error('Error checking listing status:', error);
+    }
+  };
+
   // Función auxiliar para obtener metadatos desde IPFS
   const fetchMetadata = async (uri) => {
     try {
@@ -336,6 +377,69 @@ const NFTDetail = () => {
     } catch (err) {
       console.error("Error copying to clipboard:", err);
     }
+  };
+
+  const handleListNFT = async () => {
+    if (!listPrice || parseFloat(listPrice) <= 0) {
+      alert('Please enter a valid price');
+      return;
+    }
+
+    if (!walletConnected) {
+      alert('Please connect your wallet');
+      return;
+    }
+
+    try {
+      setShowListModal(false);
+      
+      const result = await listNFT(tokenId, listPrice, listCategory);
+      
+      if (result.success) {
+        alert('NFT listed successfully!');
+        setIsListed(true);
+        setListingData({
+          price: result.price,
+          category: result.category,
+          isListed: true
+        });
+        // Refresh NFT data
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Error listing NFT:', error);
+      alert(error.message || 'Error listing NFT. Please try again.');
+    } finally {
+      setListPrice('');
+      setListCategory('collectible');
+    }
+  };
+
+  // Add null checks for the NFT info section
+  const renderNFTInfo = () => {
+    if (!nft) return null;
+    
+    return (
+      <div className="bg-gray-800 rounded-xl p-6">
+        <h3 className="text-xl font-bold text-white mb-4">Información del NFT</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Token ID</span>
+            <span className="text-white font-medium">{nft.id || nft.tokenId}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Propietario</span>
+            <span className="text-white font-medium font-mono">
+              {nft.owner ? `${nft.owner.slice(0, 6)}...${nft.owner.slice(-4)}` : 'No disponible'}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Estándar</span>
+            <span className="text-white font-medium">{nft.standard || 'ERC721'}</span>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -491,38 +595,99 @@ const NFTDetail = () => {
                 
                 {/* Botones de acción */}
                 <div className="space-y-3">
-                  {nft.isForSale && nft.owner !== account && (
-                    <motion.button 
-                      onClick={buyNFT}
-                      whileHover={{ scale: 1.01 }}
+                  {!isListed ? (
+                    <motion.button
+                      onClick={() => setShowListModal(true)}
+                      className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-3"
+                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-purple-500/20 transition-all"
                     >
-                      <FaEthereum className="mr-2" /> Comprar por {formattedPrice} MATIC
+                      <FaTag />
+                      Listar para venta
                     </motion.button>
+                  ) : (
+                    <div className="bg-emerald-500/20 border border-emerald-500 rounded-xl p-4 text-center">
+                      <p className="text-emerald-400 font-medium">Este NFT está listado actualmente para la venta</p>
+                    </div>
                   )}
                   
-                  {nft.owner === account && !nft.isForSale && (
-                    <motion.button 
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-green-500/20 transition-all"
-                    >
-                      <FaTags className="mr-2" /> Listar para venta
-                    </motion.button>
-                  )}
-                  
-                  {nft.owner !== account && !nft.isForSale && (
-                    <button className="w-full py-4 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center opacity-70 cursor-not-allowed shadow-lg">
-                      No disponible para venta
-                    </button>
-                  )}
+                  <motion.button
+                    onClick={() => navigate('/marketplace')}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white py-4 rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center gap-3"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <FaStore />
+                    Visitar Marketplace
+                  </motion.button>
                 </div>
+                
+                {/* Información del NFT */}
+                {renderNFTInfo()}
               </div>
             </div>
           </div>
         </motion.div>
       </div>
+      
+      {/* Modal para listar NFT */}
+      {showListModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gray-800 rounded-2xl p-6 w-full max-w-md"
+          >
+            <h3 className="text-2xl font-bold text-white mb-6">Listar NFT para Venta</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-400 mb-2">Precio (MATIC)</label>
+                <input
+                  type="number"
+                  value={listPrice}
+                  onChange={(e) => setListPrice(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-gray-700 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-2">Categoría</label>
+                <select
+                  value={listCategory}
+                  onChange={(e) => setListCategory(e.target.value)}
+                  className="w-full bg-gray-700 text-white rounded-lg px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:outline-none"
+                >
+                  <option value="collectible">Coleccionable</option>
+                  <option value="art">Arte</option>
+                  <option value="photography">Fotografía</option>
+                  <option value="music">Música</option>
+                  <option value="video">Video</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => setShowListModal(false)}
+                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-3 rounded-lg font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleListNFT}
+                disabled={loading}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white py-3 rounded-lg font-medium transition-all duration-200 disabled:opacity-50"
+              >
+                {loading ? 'Listando...' : 'Listar NFT'}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

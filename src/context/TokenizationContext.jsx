@@ -39,9 +39,19 @@ export const TokenizationProvider = ({ children }) => {
     mintNFT: mintNFTHook, 
     loading: mintLoading, 
     error: mintError, 
-    txHash: mintTxHash 
+    txHash: mintTxHash,
+    listNFT,
+    buyNFT,
+    makeOffer,
+    acceptOffer,
+    getListedToken
   } = useMintNFT();
-  
+
+  // Marketplace state
+  const [listedNFTs, setListedNFTs] = useState([]);
+  const [marketplaceLoading, setMarketplaceLoading] = useState(false);
+  const [offers, setOffers] = useState([]);
+
   // Function to update user account
   const updateUserAccount = useCallback((account) => {
     setUserAccount(account);
@@ -103,45 +113,90 @@ export const TokenizationProvider = ({ children }) => {
     return await mintNFTHook(nftData);
   }, [mintNFTHook]);
 
+  // Enhanced list NFT function with better error handling
+  const listNFTWithErrorHandling = useCallback(async (tokenId, price, category) => {
+    try {
+      const result = await listNFT(tokenId, price, category);
+      
+      // Refresh NFTs after successful listing
+      if (result.success) {
+        setTimeout(() => {
+          refreshNFTs();
+        }, 2000);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error in TokenizationContext listNFT:', error);
+      throw error;
+    }
+  }, [listNFT, refreshNFTs]);
+
+  const handleBuyNFT = useCallback(async (tokenId, price) => {
+    try {
+      await buyNFT(tokenId, price);
+      // Refresh NFTs after purchase
+      if (userAccount) {
+        await refreshNFTs();
+      }
+    } catch (error) {
+      console.error('Error buying NFT:', error);
+      throw error;
+    }
+  }, [buyNFT, userAccount, refreshNFTs]);
+
+  const value = {
+    // Original tokenization states
+    currentStep,
+    setCurrentStep,
+    image,
+    setImage,
+    imageFile,
+    setImageFile,
+    isUploading,
+    setIsUploading,
+    metadata,
+    setMetadata,
+    isMinting,
+    setIsMinting,
+    mintingError,
+    setMintingError,
+    mintedNFT,
+    setMintedNFT,
+    fileInputRef,
+    resetForm,
+    ipfsImageUri,
+    ipfsMetadataUri,
+    handleImageUpload,
+    handleMetadataUpload,
+    
+    // NFT related states and functions
+    nfts,
+    nftsLoading,
+    nftsError,
+    refreshNFTs,
+    mintNFT,
+    mintLoading,
+    mintError,
+    mintTxHash,
+    updateUserAccount,
+    userAccount,
+
+    // Marketplace data
+    listedNFTs,
+    marketplaceLoading,
+    offers,
+    // Marketplace functions
+    listNFT: listNFTWithErrorHandling,
+    buyNFT: handleBuyNFT,
+    makeOffer,
+    acceptOffer,
+    getListedToken,
+  };
+
   return (
     <TokenizationContext.Provider
-      value={{
-        // Original tokenization states
-        currentStep,
-        setCurrentStep,
-        image,
-        setImage,
-        imageFile,
-        setImageFile,
-        isUploading,
-        setIsUploading,
-        metadata,
-        setMetadata,
-        isMinting,
-        setIsMinting,
-        mintingError,
-        setMintingError,
-        mintedNFT,
-        setMintedNFT,
-        fileInputRef,
-        resetForm,
-        ipfsImageUri,
-        ipfsMetadataUri,
-        handleImageUpload,
-        handleMetadataUpload,
-        
-        // NFT related states and functions
-        nfts,
-        nftsLoading,
-        nftsError,
-        refreshNFTs,
-        mintNFT,
-        mintLoading,
-        mintError,
-        mintTxHash,
-        updateUserAccount,
-        userAccount
-      }}
+      value={value}
     >
       {children}
     </TokenizationContext.Provider>

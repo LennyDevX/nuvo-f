@@ -137,14 +137,7 @@ const Navbar = () => {
   useEffect(() => {
     if (!walletContext) {
       console.warn('WalletContext is not available - component will work with limited functionality');
-    } else {
-      console.log('WalletContext available:', { 
-        walletConnected, 
-        account: !!account, 
-        handleDisconnect: !!handleDisconnect,
-        allMethods: Object.keys(walletContext)
-      });
-    }
+    } 
   }, [walletContext, walletConnected, account, handleDisconnect]);
 
   // Handlers para los botones - Con verificaciones adicionales

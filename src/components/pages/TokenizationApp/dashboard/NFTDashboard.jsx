@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useContext, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { motion } from 'framer-motion';
-import { FaRedo, FaPlus } from 'react-icons/fa';
+import { FaRedo, FaPlus, FaStore } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
@@ -19,6 +19,7 @@ const NFTDashboard = () => {
     refreshNFTs, 
     updateUserAccount 
   } = useTokenization();
+  const navigate = useNavigate();
   
   // Update TokenizationContext with current user account
   useEffect(() => {
@@ -174,6 +175,15 @@ const NFTDashboard = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
 
+  // Navigation handlers
+  const handleMintNFT = () => {
+    navigate('/tokenize');
+  };
+
+  const handleMarketplace = () => {
+    navigate('/marketplace');
+  };
+
   return (
     <div className="relative min-h-screen bg-nuvo-gradient pb-12">
       <SpaceBackground customClass="" />
@@ -189,19 +199,25 @@ const NFTDashboard = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-              <Link 
-                to="/tokenize"
-                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base bg-nuvo-gradient-button text-white font-medium transition-all duration-200 border border-purple-500/20 hover:border-pink-500/30"
+              <motion.button
+                onClick={handleMintNFT}
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <FaPlus className="text-sm" /> Mint NFTs
-              </Link>
+                <FaPlus className="text-sm" />
+                Mint NFT
+              </motion.button>
               
-              <button 
-                onClick={handleRefreshNFTs} 
-                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
+              <motion.button
+                onClick={handleMarketplace}
+                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <FaRedo className="text-sm" /> Refresh NFTs
-              </button>
+                <FaStore className="text-sm" />
+                Marketplace
+              </motion.button>
             </div>
           </div>
           

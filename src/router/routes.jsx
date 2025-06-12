@@ -44,6 +44,7 @@ const NFTsPage = createLazyComponent(() => import('../components/pages/nfts/NFTH
 const NFTDashboard = createLazyComponent(() => import('../components/pages/TokenizationApp/dashboard/NFTDashboard.jsx'));
 const NFTDetail = createLazyComponent(() => import('../components/pages/TokenizationApp/components/NFTDetail.jsx'));
 const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/MintNFT/TokenizationTool.jsx'));
+const NFTMarketplace = createLazyComponent(() => import('../components/pages/TokenizationApp/marketplace/NFTMarketplace.jsx'));
 const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
 const ChatPage = createLazyComponent(() => import('../components/pages/chat/ChatPage'));
 
@@ -136,6 +137,11 @@ export const routes = [
   {
     path: "/profile",
     element: withSuspense(<MainLayout><ProfilePage /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/marketplace",
+    element: withSuspense(<MainLayout><NFTMarketplace /></MainLayout>),
     loader: async () => null
   }
 ];

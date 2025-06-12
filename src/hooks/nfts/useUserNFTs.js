@@ -88,255 +88,238 @@ export default function useUserNFTs(address) {
     console.log("Using tokenization contract address:", TOKENIZATION_ADDRESS);
 
     const getAndProcessNFTs = async () => {
-      if (!isMounted) return;
-      
       try {
         setLoading(true);
         setError(null);
-        
+        console.log("Starting NFT fetch process...");
+
         // Double-check contract address validity
         if (!ethers.isAddress(TOKENIZATION_ADDRESS)) {
           console.error("Invalid contract address format:", TOKENIZATION_ADDRESS);
           throw new Error(`Dirección de contrato inválida: ${TOKENIZATION_ADDRESS}`);
         }
 
-        // Try to use our enhanced fetchNFTs function first
-        if (ethProvider) {
-          try {
-            console.log("Using enhanced fetchNFTs function with contract:", TOKENIZATION_ADDRESS);
-            
-            // Set flag to indicate we're fetching NFTs
-            const cacheKey = `nfts_${address}_${TOKENIZATION_ADDRESS}`;
-            
-            // Use configured options to reduce log fetching
-            const fetchedNfts = await fetchNFTs(address, ethProvider, {
-              contractAddress: TOKENIZATION_ADDRESS,
-              limit: 100,
-              withMetadata: true,
-              skipLogs: !shouldFetchLogs(address) // Skip logs fetching if recently done
-            });
-            
-            if (shouldFetchLogs(address)) {
-              // Mark that we've fetched logs and cache the result
-              logsInProgressRef.current = true;
-              const logCacheKey = `logs_${address}_${TOKENIZATION_ADDRESS}`;
-              logFetchCache.set(logCacheKey, {
-                timestamp: Date.now(),
-                // Could store actual log data here if needed
-              });
-            }
-            
-            // Rest of the function processing the NFTs
-            const filteredNfts = fetchedNfts.filter(nft => {
-              const nftContract = nft.contract?.toLowerCase();
-              const ourContract = TOKENIZATION_ADDRESS.toLowerCase();
-              if (nftContract) {
-                console.log(`Comparing NFT contract: ${nftContract} with our contract: ${ourContract}`);
-              }
-              return nftContract === ourContract;
-            });
-            
-            const uniqueNfts = filteredNfts.map((nft, index) => {
-              const uniqueId = `${nft.contract || TOKENIZATION_ADDRESS}-${nft.tokenId || `unknown-${index}`}`;
-              return {
-                ...nft,
-                uniqueId,
-                tokenId: nft.tokenId || `unknown-${index}`
-              };
-            });
-            
-            if (uniqueNfts.length > 0) {
-              console.log("Successfully filtered NFTs for our contract:", uniqueNfts.length);
-              setNfts(uniqueNfts);
-              setLoading(false);
-              return;
-            } else {
-              console.log("No NFTs found for our contract using enhanced method, trying fallback");
-            }
-            
-            // After we're done with logs processing
-            logsInProgressRef.current = false;
-          } catch (enhancedError) {
-            console.warn("Enhanced NFT fetch failed, falling back to contract:", enhancedError);
-            logsInProgressRef.current = false;
-          }
-        }
-
-        // Fallback to direct contract method
-        console.log("Using direct contract method to fetch NFTs from:", TOKENIZATION_ADDRESS);
+        const provider = ethProvider;
+        const contract = new ethers.Contract(TOKENIZATION_ADDRESS, TokenizationAppABI.abi, provider);
         
-        // Connect to provider without shadowing
-        if (!window.ethereum) {
-          throw new Error("No se encontró una wallet de Ethereum");
-        }
+        let allNFTs = [];
         
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
-        
+        // Method 1: Use getTokensByCreator function from the contract
         try {
-          const code = await browserProvider.getCode(TOKENIZATION_ADDRESS);
-          if (code === '0x' || code === '') {
-            console.error("Contract does not exist at address:", TOKENIZATION_ADDRESS);
-            throw new Error(`No se encontró un contrato en la dirección: ${TOKENIZATION_ADDRESS}`);
-          }
-          console.log("Contract exists at address:", TOKENIZATION_ADDRESS);
-        } catch (codeError) {
-          console.error("Error checking contract code:", codeError);
-          throw new Error("Error verificando la existencia del contrato");
-        }
-        
-        const contract = new ethers.Contract(
-          TOKENIZATION_ADDRESS,
-          TokenizationAppABI.abi,
-          browserProvider
-        );
-        
-        let tokenIds = [];
-        try {
-          const balance = await contract.balanceOf(address);
-          console.log("User has", balance.toString(), "NFTs from our contract");
+          console.log("Trying getTokensByCreator method...");
+          const tokenIds = await contract.getTokensByCreator(address);
+          console.log("Tokens created by user:", tokenIds.length);
           
-          if (balance && Number(balance) > 0) {
-            for (let i = 0; i < Number(balance); i++) {
-              try {
-                const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-                console.log("Found token:", tokenId.toString());
-                if (tokenId) tokenIds.push(tokenId);
-              } catch (indexError) {
-                console.warn("Could not get token by index:", indexError);
-              }
-            }
-          }
-          
-          try {
-            console.log("Checking for tokens created by user");
-            if (contract.getTokensByCreator) {
-              const createdTokens = await contract.getTokensByCreator(address);
-              if (createdTokens && createdTokens.length) {
-                const existingIds = new Set(tokenIds.map(id => id.toString()));
-                createdTokens.forEach(token => {
-                  if (!existingIds.has(token.toString())) {
-                    tokenIds.push(token);
-                  }
-                });
-                console.log("Added creator tokens, total tokens:", tokenIds.length);
-              }
-            }
-          } catch (creatorError) {
-            console.warn("Could not get creator tokens:", creatorError.message);
-          }
-        } catch (balanceError) {
-          if (balanceError.message && balanceError.message.includes("BAD_DATA") && 
-              balanceError.message.includes("resolver")) {
-            console.warn("ENS resolution error - ignoring:", balanceError.message);
-          } else {
-            console.error("Error checking token balance:", balanceError);
-          }
-        }
-        
-        if (!isMounted) return;
-        
-        if (tokenIds.length === 0) {
-          console.log("No tokens found from our contract for address:", address);
-          setNfts([]);
-          setLoading(false);
-          return;
-        }
-        
-        const BATCH_SIZE = 5;
-        const results = [];
-        
-        for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
-          if (!isMounted) break;
-          
-          const batch = tokenIds.slice(i, i + BATCH_SIZE);
-          const batchPromises = batch.map(async (tokenId, batchIndex) => {
+          for (const tokenId of tokenIds) {
             try {
-              const tokenIdString = tokenId.toString();
+              // Check if user still owns this token
+              const owner = await contract.ownerOf(tokenId);
+              if (owner.toLowerCase() !== address.toLowerCase()) {
+                console.log(`User no longer owns token ${tokenId.toString()}`);
+                continue;
+              }
               
-              const [tokenURI, tokenData, likes, owner] = await Promise.all([
-                contract.tokenURI(tokenId),
-                contract.getListedToken(tokenId),
-                contract.getLikesCount(tokenId),
-                contract.ownerOf(tokenId)
-              ]);
+              console.log("Processing owned token:", tokenId.toString());
               
-              const metadata = await fetchTokenMetadata(tokenURI);
+              const tokenURI = await contract.tokenURI(tokenId);
               
-              const uniqueId = `${TOKENIZATION_ADDRESS}-${tokenIdString}-${i}-${batchIndex}`;
-
-              return {
-                tokenId: tokenIdString,
-                uniqueId,
+              // Get listing info
+              let listingInfo = null;
+              try {
+                listingInfo = await contract.getListedToken(tokenId);
+              } catch (e) {
+                console.log(`No listing info for token ${tokenId}`);
+              }
+              
+              const nftData = {
+                tokenId: tokenId.toString(),
+                uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId.toString()}-${Date.now()}`,
                 tokenURI,
                 contract: TOKENIZATION_ADDRESS,
-                name: metadata.name || `NFT #${tokenIdString}`,
-                description: metadata.description || "Sin descripción",
-                image: metadata.image ? ipfsToHttp(metadata.image) : DEFAULT_IMAGE,
-                attributes: metadata.attributes || [],
-                owner,
-                creator: address,
-                price: tokenData[3] ? tokenData[3] : ethers.parseEther("0"),
-                isForSale: tokenData[4],
-                likes: likes.toString(),
-                category: tokenData[6] || "collectibles"
+                name: `NFT #${tokenId.toString()}`,
+                description: 'Loading...',
+                image: '',
+                isForSale: listingInfo ? listingInfo[4] : false,
+                price: listingInfo ? listingInfo[3].toString() : '0',
+                category: listingInfo ? listingInfo[6] : 'collectible',
+                blockNumber: 0,
+                transactionHash: ''
               };
-            } catch (err) {
-              console.error(`Error processing token ${tokenId}:`, err);
-              return null;
-            }
-          });
-          
-          try {
-            const batchResults = await Promise.all(batchPromises);
-            const validResults = batchResults.filter(Boolean);
-            
-            if (validResults.length > 0) {
-              results.push(...validResults);
               
-              if (isMounted) {
-                setNfts(prev => {
-                  const nftMap = new Map(prev.map(nft => [nft.uniqueId, nft]));
-                  validResults.forEach(nft => nftMap.set(nft.uniqueId, nft));
-                  return Array.from(nftMap.values());
-                });
+              allNFTs.push(nftData);
+            } catch (tokenError) {
+              console.error(`Error processing token ${tokenId}:`, tokenError);
+            }
+          }
+        } catch (creatorError) {
+          console.log("getTokensByCreator failed, trying balance method:", creatorError);
+          
+          // Method 2: Try getting balance first, then use Transfer events
+          try {
+            const balance = await contract.balanceOf(address);
+            console.log("User balance:", balance.toString());
+            
+            if (balance > 0) {
+              // Since tokenOfOwnerByIndex doesn't exist, use Transfer events
+              console.log("Using Transfer events method");
+              
+              // Get Transfer events to find user's NFTs
+              const transferFilter = contract.filters.Transfer(null, address);
+              const transferEvents = await contract.queryFilter(transferFilter, -50000);
+              
+              console.log("Found Transfer events to user:", transferEvents.length);
+              
+              for (const event of transferEvents) {
+                try {
+                  const tokenId = event.args.tokenId.toString();
+                  
+                  // Check if user still owns this token
+                  const owner = await contract.ownerOf(tokenId);
+                  if (owner.toLowerCase() !== address.toLowerCase()) {
+                    console.log(`User no longer owns token ${tokenId}`);
+                    continue;
+                  }
+                  
+                  // Skip if we already have this token
+                  if (allNFTs.some(nft => nft.tokenId === tokenId)) {
+                    continue;
+                  }
+                  
+                  const tokenURI = await contract.tokenURI(tokenId);
+                  
+                  // Get listing info
+                  let listingInfo = null;
+                  try {
+                    listingInfo = await contract.getListedToken(tokenId);
+                  } catch (e) {
+                    console.log(`No listing info for token ${tokenId}`);
+                  }
+                  
+                  const nftData = {
+                    tokenId,
+                    uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId}-${event.blockNumber}-${event.transactionIndex}`,
+                    tokenURI,
+                    contract: TOKENIZATION_ADDRESS,
+                    name: `NFT #${tokenId}`,
+                    description: 'Loading...',
+                    image: '',
+                    isForSale: listingInfo ? listingInfo[4] : false,
+                    price: listingInfo ? listingInfo[3].toString() : '0',
+                    category: listingInfo ? listingInfo[6] : 'collectible',
+                    blockNumber: event.blockNumber,
+                    transactionHash: event.transactionHash
+                  };
+                  
+                  allNFTs.push(nftData);
+                } catch (tokenError) {
+                  console.error(`Error processing token from transfer event:`, tokenError);
+                }
               }
             }
-          } catch (batchError) {
-            console.error("Error processing batch:", batchError);
+          } catch (balanceError) {
+            console.error("Error getting balance:", balanceError);
+            
+            // Method 3: Fallback - use TokenMinted events
+            try {
+              const filter = contract.filters.TokenMinted(null, address);
+              const events = await contract.queryFilter(filter, -50000);
+              
+              console.log("Found TokenMinted events:", events.length);
+              
+              for (const event of events) {
+                try {
+                  const tokenId = event.args.tokenId.toString();
+                  console.log("Processing minted token:", tokenId);
+                  
+                  // Check if user still owns this token
+                  const owner = await contract.ownerOf(tokenId);
+                  if (owner.toLowerCase() !== address.toLowerCase()) {
+                    console.log(`User no longer owns token ${tokenId}`);
+                    continue;
+                  }
+                  
+                  const tokenURI = await contract.tokenURI(tokenId);
+                  
+                  // Get listing info
+                  let listingInfo = null;
+                  try {
+                    listingInfo = await contract.getListedToken(tokenId);
+                  } catch (e) {
+                    console.log(`No listing info for token ${tokenId}`);
+                  }
+                  
+                  const nftData = {
+                    tokenId,
+                    uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId}-${event.blockNumber}-${event.transactionIndex}`,
+                    tokenURI,
+                    contract: TOKENIZATION_ADDRESS,
+                    name: `NFT #${tokenId}`,
+                    description: 'Loading...',
+                    image: '',
+                    isForSale: listingInfo ? listingInfo[4] : false,
+                    price: listingInfo ? listingInfo[3].toString() : '0',
+                    category: listingInfo ? listingInfo[6] : 'collectible',
+                    blockNumber: event.blockNumber,
+                    transactionHash: event.transactionHash
+                  };
+                  
+                  allNFTs.push(nftData);
+                } catch (tokenError) {
+                  console.error(`Error processing token from event:`, tokenError);
+                }
+              }
+            } catch (eventError) {
+              console.error("Error fetching TokenMinted events:", eventError);
+            }
           }
         }
-        
-        if (isMounted) {
-          const uniqueNfts = Array.from(new Map(results.map(nft => [nft.uniqueId, nft])).values());
-          console.log(`Final NFTs from contract: ${uniqueNfts.length}`);
-          setNfts(uniqueNfts);
+
+        console.log(`Final NFTs found: ${allNFTs.length}`);
+
+        // Process metadata for all NFTs
+        if (allNFTs.length > 0) {
+          const processedNFTs = await Promise.all(
+            allNFTs.map(async (nft) => {
+              try {
+                let metadata = { name: nft.name, description: nft.description, image: nft.image };
+                
+                if (nft.tokenURI) {
+                  const httpUrl = ipfsToHttp(nft.tokenURI);
+                  const response = await fetch(httpUrl);
+                  if (response.ok) {
+                    metadata = await response.json();
+                  }
+                }
+                
+                return {
+                  ...nft,
+                  name: metadata.name || nft.name,
+                  description: metadata.description || nft.description,
+                  image: metadata.image ? ipfsToHttp(metadata.image) : nft.image || DEFAULT_IMAGE,
+                  attributes: metadata.attributes || []
+                };
+              } catch (metadataError) {
+                console.error(`Error fetching metadata for token ${nft.tokenId}:`, metadataError);
+                return {
+                  ...nft,
+                  image: nft.image || DEFAULT_IMAGE
+                };
+              }
+            })
+          );
+          
+          setNfts(processedNFTs);
+        } else {
+          setNfts([]);
         }
+
       } catch (err) {
-        console.error("Error fetching Tokenization NFTs:", err);
-        if (isMounted) {
-          let userFriendlyError = "Error al obtener tus NFTs";
-          
-          if (err.message.includes("inválida") || err.message.includes("Invalid")) {
-            userFriendlyError = "Dirección de contrato inválida. Por favor verifica la configuración.";
-          } else if (err.message.includes("No se encontró un contrato")) {
-            userFriendlyError = "No se encontró un contrato en la dirección configurada.";
-          } else if (err.message.includes("BAD_DATA")) {
-            userFriendlyError = "No se pudieron decodificar los datos del contrato. Es posible que aún no tengas NFTs o que estés en la red incorrecta.";
-          } else if (err.message.includes("network")) {
-            userFriendlyError = "Error de conexión a la red blockchain. Por favor verifica tu conexión.";
-          } else if (err.message.includes("user rejected")) {
-            userFriendlyError = "Operación cancelada por el usuario.";
-          }
-          
-          setError(userFriendlyError);
-        }
+        console.error("Error in getAndProcessNFTs:", err);
+        setError(err.message || 'Error fetching NFTs');
+        setNfts([]);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-          fetchingRef.current = false;
-          lastFetchTimeRef.current = Date.now();
-        }
-        logsInProgressRef.current = false;
+        setLoading(false);
+        fetchingRef.current = false;
       }
     };
 
@@ -345,7 +328,6 @@ export default function useUserNFTs(address) {
     return () => {
       isMounted = false;
       abortController.abort();
-      // Don't reset fetchingRef here, as the cleanup might run during component re-renders
     };
   }, [address, lastUpdated, ethProvider, shouldFetchLogs]);
 
