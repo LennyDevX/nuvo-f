@@ -282,7 +282,7 @@ export const ipfsToHttp = (uri, preferredGateway) => {
   }
   
   // For CIDs without protocol prefix
-  if (/^Qm[1-9A-Za-z]{44}/.test(uri) || /^bafy/.test(uri)) {
+  if (/^Qm[1-9A-ZaZ]{44}/.test(uri) || /^bafy/.test(uri)) {
     return gateways[0] + uri;
   }
   
@@ -334,7 +334,7 @@ export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
     }
     
     // Try to extract CID if it's another IPFS gateway
-    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-Za-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-ZaZ]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
     if (pathMatch) {
       const cid = pathMatch[1];
       const subpath = pathMatch[2] || '';
@@ -1101,50 +1101,71 @@ export const calculateTimeBonus = (stakingDays, bonusConfig = {
  */
 export const uploadJsonToIPFS = async (data, options = {}) => {
   const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-  const headers = {
-    'Content-Type': 'application/json',
-    ...getPinataHeaders()
-  };
-
+  
   try {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getPinataHeaders()
+    };
+
+    console.log('Uploading JSON to Pinata with headers:', Object.keys(headers));
+
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(data)
     });
+    
     let result;
     try {
       result = await response.json();
-    } catch {
+    } catch (parseError) {
+      console.error('Failed to parse Pinata response:', parseError);
       result = {};
     }
+    
     if (!response.ok) {
-      let pinataMsg = result.error || result.errorDetails || result.message || result.error_message;
-      if (!pinataMsg && typeof result === 'object') {
-        pinataMsg = JSON.stringify(result);
+      // Better error message extraction
+      let errorMessage = 'Unknown Pinata error';
+      
+      if (result.error) {
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (result.error.details) {
+          errorMessage = result.error.details;
+        } else {
+          errorMessage = JSON.stringify(result.error);
+        }
+      } else if (result.message) {
+        errorMessage = result.message;
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid Pinata credentials. Please check your API keys or regenerate your JWT token.';
+      } else if (response.status === 403) {
+        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
+      } else {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
-      throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
+      
+      console.error('Pinata API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        result,
+        url,
+        headers: Object.keys(headers)
+      });
+      
+      throw new Error(`Pinata error: ${errorMessage}`);
     }
+    
+    if (!result.IpfsHash) {
+      throw new Error('Pinata response missing IpfsHash');
+    }
+    
     return `ipfs://${result.IpfsHash}`;
   } catch (error) {
-    console.error("Error uploading to IPFS:", error);
+    console.error("Error uploading JSON to IPFS:", error);
     throw error;
   }
-};
-
-// Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
-const getPinataHeaders = () => {
-  // Unifica los nombres de variables de entorno
-  const apiKey = import.meta.env.VITE_PINATA_API || import.meta.env.VITE_PINATA || '';
-  const secret = import.meta.env.VITE_PINATA_SK || import.meta.env.VITE_PINATA_SK || '';
-  const jwt = import.meta.env.VITE_JWT_SK || '';
-  if (jwt) {
-    return { Authorization: `Bearer ${jwt}` };
-  }
-  return {
-    pinata_api_key: apiKey,
-    pinata_secret_api_key: secret
-  };
 };
 
 /**
@@ -1156,38 +1177,90 @@ const getPinataHeaders = () => {
  */
 export const uploadFileToIPFS = async (file, options = {}) => {
   const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const headers = getPinataHeaders();
-  let fetchHeaders = {};
-  if (headers.Authorization) {
-    fetchHeaders['Authorization'] = headers.Authorization;
-  } else {
-    fetchHeaders['pinata_api_key'] = headers.pinata_api_key;
-    fetchHeaders['pinata_secret_api_key'] = headers.pinata_secret_api_key;
-  }
-
+  
   try {
+    const headers = getPinataHeaders();
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Add optional metadata
+    if (options.name || file.name) {
+      const metadata = JSON.stringify({
+        name: options.name || file.name,
+        keyvalues: {
+          originalName: file.name,
+          fileSize: file.size.toString(),
+          fileType: file.type
+        }
+      });
+      formData.append('pinataMetadata', metadata);
+    }
+
+    let fetchHeaders = {};
+    if (headers.Authorization) {
+      fetchHeaders['Authorization'] = headers.Authorization;
+    } else {
+      fetchHeaders['pinata_api_key'] = headers.pinata_api_key;
+      fetchHeaders['pinata_secret_api_key'] = headers.pinata_secret_api_key;
+    }
+
+    console.log('Uploading file to Pinata:', file.name, 'using auth method:', headers.Authorization ? 'JWT' : 'API Keys');
+
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
       headers: fetchHeaders
     });
+    
     let data;
     try {
       data = await response.json();
-    } catch {
+    } catch (parseError) {
+      console.error('Failed to parse Pinata response:', parseError);
       data = {};
     }
+    
     if (!response.ok) {
-      // Intenta mostrar el mensaje de error real de Pinata
-      let pinataMsg = data.error || data.errorDetails || data.message || data.error_message;
-      if (!pinataMsg && typeof data === 'object') {
-        pinataMsg = JSON.stringify(data);
+      // Better error message extraction
+      let errorMessage = 'Unknown Pinata error';
+      
+      if (data.error) {
+        if (typeof data.error === 'string') {
+          errorMessage = data.error;
+        } else if (data.error.details) {
+          errorMessage = data.error.details;
+        } else {
+          errorMessage = JSON.stringify(data.error);
+        }
+      } else if (data.message) {
+        errorMessage = data.message;
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid Pinata credentials. Please regenerate your JWT token or check your API keys.';
+      } else if (response.status === 403) {
+        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
+      } else if (response.status === 413) {
+        errorMessage = 'File too large for Pinata upload.';
+      } else {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
-      throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
+      
+      console.error('Pinata API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data,
+        url,
+        headers: Object.keys(fetchHeaders),
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
+      throw new Error(`Pinata error: ${errorMessage}`);
     }
+    
+    if (!data.IpfsHash) {
+      throw new Error('Pinata response missing IpfsHash');
+    }
+    
     return `ipfs://${data.IpfsHash}`;
   } catch (err) {
     console.error("Error uploading file to IPFS:", err);
@@ -1288,4 +1361,25 @@ export const cardemodule = {
     console.log('Card module initialized');
     return true;
   }
+};
+
+// Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
+const getPinataHeaders = () => {
+  const jwt = import.meta.env.VITE_PINATA_JWT || import.meta.env.VITE_JWT_SK || '';
+  if (jwt.trim()) {
+    const parts = jwt.split('.');
+    if (parts.length === 3) return { Authorization: `Bearer ${jwt}` };
+    console.warn('Malformed JWT, falling back to API keys');
+  }
+  // new & old var names
+  const apiKey = import.meta.env.VITE_PINATA_API_KEY
+               || import.meta.env.VITE_PINATA_API
+               || '';
+  const secret = import.meta.env.VITE_PINATA_SECRET_KEY
+               || import.meta.env.VITE_PINATA_SK
+               || '';
+  if (!apiKey || !secret) {
+    throw new Error('Missing Pinata API key/secret in env vars');
+  }
+  return { pinata_api_key: apiKey, pinata_secret_api_key: secret };
 };

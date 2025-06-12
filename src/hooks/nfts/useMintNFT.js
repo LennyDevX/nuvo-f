@@ -53,19 +53,50 @@ export default function useMintNFT() {
       
       console.log("Using contract address:", validatedContractAddress);
       
+      // Validate Pinata credentials before attempting upload
+      const hasJwt   = !!(import.meta.env.VITE_PINATA_JWT || import.meta.env.VITE_JWT_SK);
+      const hasKeys  = !!(
+        import.meta.env.VITE_PINATA_API_KEY  ||
+        import.meta.env.VITE_PINATA_API      &&
+        import.meta.env.VITE_PINATA_SECRET_KEY ||
+        import.meta.env.VITE_PINATA_SK
+      );
+      
+      console.log('Pinata credentials check:', { 
+        hasJwt, 
+        hasKeys,
+        jwtLength: import.meta.env.VITE_JWT_SK?.length,
+        apiKeyLength: import.meta.env.VITE_PINATA_API?.length
+      });
+      
+      if (!hasJwt && !hasKeys) {
+        throw new Error('Configure Pinata: VITE_PINATA_API_KEY & VITE_PINATA_SECRET_KEY (or JWT).');
+      }
+      
+      // Additional JWT validation
+      if (hasJwt) {
+        const jwt = import.meta.env.VITE_JWT_SK;
+        const jwtParts = jwt.split('.');
+        if (jwtParts.length !== 3) {
+          console.warn('JWT token appears to be malformed, will try API keys if available');
+          if (!hasKeys) {
+            throw new Error("Token JWT de Pinata inválido y no hay API keys configuradas. Por favor regenera tu JWT token o configura VITE_PINATA_API y VITE_PINATA_SK.");
+          }
+        }
+      }
+      
       // Traducir la categoría al español si existe en el mapa
       const translatedCategory = categoryMap[category.toLowerCase()] || 'coleccionables';
       console.log("Translated category:", translatedCategory);
       
       let imageUri;
       let metadataUri;
-      let useLocalFallback = false;
 
       // Try uploading to IPFS via Pinata
       try {
         // Subir imagen using our enhanced IPFS utility
         console.log("Uploading image file:", file.name, "size:", file.size, "type:", file.type);
-        imageUri = await uploadFileToIPFS(file);
+        imageUri = await uploadFileToIPFS(file, { name: `${name}_image` });
         console.log("Image uploaded, URI:", imageUri);
         
         // Crear metadatos
@@ -79,18 +110,35 @@ export default function useMintNFT() {
         };
         
         console.log("Creating metadata");
-        metadataUri = await uploadJsonToIPFS(metadata);
+        metadataUri = await uploadJsonToIPFS(metadata, { name: `${name}_metadata` });
         console.log("Metadata uploaded, URI:", metadataUri);
       } catch (ipfsError) {
-        // Si falla el upload, NO permitas mintear, muestra error
-        setError("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
-        throw new Error("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
+        console.error("IPFS upload error:", ipfsError);
+        
+        // Provide more specific error messages
+        let errorMessage = "No se pudo subir el archivo a IPFS.";
+        
+        if (ipfsError.message.includes('credentials')) {
+          errorMessage = "Credenciales de Pinata inválidas. Por favor verifica tu configuración de API keys o JWT token.";
+        } else if (ipfsError.message.includes('403')) {
+          errorMessage = "Acceso denegado a Pinata. Verifica los permisos de tu cuenta.";
+        } else if (ipfsError.message.includes('413')) {
+          errorMessage = "El archivo es demasiado grande para subir a Pinata.";
+        } else if (ipfsError.message.includes('network') || ipfsError.message.includes('fetch')) {
+          errorMessage = "Error de conexión. Verifica tu conexión a internet y vuelve a intentar.";
+        } else if (ipfsError.message) {
+          errorMessage = `Error de Pinata: ${ipfsError.message}`;
+        }
+        
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Si por alguna razón no hay metadataUri, no mintees
       if (!metadataUri || !imageUri) {
-        setError("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
-        throw new Error("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
+        const errorMsg = "No se pudo obtener la URI de IPFS para la metadata o la imagen.";
+        setError(errorMsg);
+        throw new Error(errorMsg);
       }
 
       // Conectar a wallet
@@ -199,11 +247,11 @@ export default function useMintNFT() {
       
       // Even if we couldn't get the token ID, we'll return what we have
       // Determine the best image URL to return
-      const imageUrl = useLocalFallback ? imageUri : ipfsToHttp(imageUri);
+      const imageUrl = ipfsToHttp(imageUri);
       
       return { 
         imageUrl,
-        metadataUrl: useLocalFallback ? metadataUri : ipfsToHttp(metadataUri), 
+        metadataUrl: ipfsToHttp(metadataUri), 
         txHash: tx.hash,
         tokenId: tokenId || "Unknown"
       };
@@ -217,6 +265,10 @@ export default function useMintNFT() {
         errorMessage = 'Transaction was rejected by the user';
       } else if (err.message && err.message.includes('insufficient funds')) {
         errorMessage = 'Insufficient funds for gas * price + value';
+      } else if (err.message && err.message.includes('Pinata')) {
+        errorMessage = err.message; // Use the specific Pinata error message
+      } else if (err.message && err.message.includes('credenciales')) {
+        errorMessage = err.message; // Use the specific credentials error message
       } else if (err.code === 'CALL_EXCEPTION') {
         errorMessage = 'Smart contract error - the transaction was rejected';
       } else if (err.message) {
