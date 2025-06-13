@@ -83,9 +83,20 @@ export default function useMintNFT() {
         metadataUri = await uploadJsonToIPFS(metadata);
         console.log("Metadata uploaded, URI:", metadataUri);
       } catch (ipfsError) {
-        // Si falla el upload, NO permitas mintear, muestra error
-        setError("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
-        throw new Error("No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
+        // Show the actual error message from Pinata if available
+        let msg = ipfsError?.message || ipfsError?.toString() || '';
+        if (
+          msg.includes('Pinata authentication failed') ||
+          msg.includes('401') ||
+          msg.includes('403')
+        ) {
+          setError(
+            "No se pudo subir el archivo a IPFS. Tus credenciales de Pinata son inválidas o faltan. Por favor revisa tu configuración de API Key/Secret o JWT."
+          );
+        } else {
+          setError(msg || "No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
+        }
+        throw new Error(msg || "No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
       }
 
       // Si por alguna razón no hay metadataUri, no mintees
@@ -215,17 +226,24 @@ export default function useMintNFT() {
       
       // Provide a more user-friendly error message
       let errorMessage = 'Error minting NFT';
-      
+
       if (err.message && err.message.includes('user rejected')) {
         errorMessage = 'Transaction was rejected by the user';
       } else if (err.message && err.message.includes('insufficient funds')) {
         errorMessage = 'Insufficient funds for gas * price + value';
       } else if (err.code === 'CALL_EXCEPTION') {
         errorMessage = 'Smart contract error - the transaction was rejected';
+      } else if (
+        err.message &&
+        (err.message.includes('Pinata authentication failed') ||
+         err.message.includes('401') ||
+         err.message.includes('403'))
+      ) {
+        errorMessage = "No se pudo subir el archivo a IPFS. Tus credenciales de Pinata son inválidas o faltan. Por favor revisa tu configuración de API Key/Secret o JWT.";
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {

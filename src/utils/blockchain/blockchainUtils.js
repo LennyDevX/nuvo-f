@@ -1119,9 +1119,19 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
       result = {};
     }
     if (!response.ok) {
+      // Improve error message for Pinata 401/403
       let pinataMsg = result.error || result.errorDetails || result.message || result.error_message;
       if (!pinataMsg && typeof result === 'object') {
         pinataMsg = JSON.stringify(result);
+      }
+      // Ensure pinataMsg is always a string
+      if (typeof pinataMsg === 'object') {
+        pinataMsg = JSON.stringify(pinataMsg);
+      }
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(
+          `Pinata authentication failed (HTTP ${response.status}). Verifica tus credenciales de Pinata (API Key/Secret o JWT). Mensaje: ${pinataMsg || response.statusText}`
+        );
       }
       throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
     }
@@ -1134,12 +1144,19 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
 
 // Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
 const getPinataHeaders = () => {
-  // Unifica los nombres de variables de entorno
-  const apiKey = import.meta.env.VITE_PINATA_API || import.meta.env.VITE_PINATA || '';
-  const secret = import.meta.env.VITE_PINATA_SK || import.meta.env.VITE_PINATA_SK || '';
-  const jwt = import.meta.env.VITE_JWT_SK || '';
-  if (jwt) {
+  // Use correct variable names from .env/.env.local
+  const apiKey = import.meta.env.VITE_PINATA || '';
+  const secret = import.meta.env.VITE_PINATA_SK || '';
+  const jwt = import.meta.env.VITE_PINATA_JWT || '';
+  // Validate JWT: must have 3 segments separated by '.'
+  if (jwt && jwt.split('.').length === 3) {
     return { Authorization: `Bearer ${jwt}` };
+  }
+  if (jwt && jwt.length > 0) {
+    // JWT present but malformed
+    console.warn(
+      '[Pinata] JWT token is malformed (should have 3 segments separated by dots). Falling back to API Key/Secret.'
+    );
   }
   return {
     pinata_api_key: apiKey,
@@ -1181,10 +1198,19 @@ export const uploadFileToIPFS = async (file, options = {}) => {
       data = {};
     }
     if (!response.ok) {
-      // Intenta mostrar el mensaje de error real de Pinata
+      // Improve error message for Pinata 401/403
       let pinataMsg = data.error || data.errorDetails || data.message || data.error_message;
       if (!pinataMsg && typeof data === 'object') {
         pinataMsg = JSON.stringify(data);
+      }
+      // Ensure pinataMsg is always a string
+      if (typeof pinataMsg === 'object') {
+        pinataMsg = JSON.stringify(pinataMsg);
+      }
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(
+          `Pinata authentication failed (HTTP ${response.status}). Verifica tus credenciales de Pinata (API Key/Secret o JWT). Mensaje: ${pinataMsg || response.statusText}`
+        );
       }
       throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
     }
