@@ -6,7 +6,7 @@ import BetaBadge from '../ui/BetaBadge';
 import {  
   FaCoins, 
   FaChartPie, 
-  FaExchangeAlt, 
+  FaStore,
   FaImage,
   FaComments,
   FaEllipsisH,
@@ -105,12 +105,12 @@ const Navbar = () => {
     return `${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`;
   }, []);
 
-  // Updated navigation items with Home button
+  // Updated navigation items with Marketplace instead of Swap
   const navigationItems = useMemo(() => [
     { path: '/', label: 'Home', icon: FaHome },
     { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
-    { path: '/swaptoken', label: 'Swap', icon: FaExchangeAlt },
+    { path: '/marketplace', label: 'Market', icon: FaStore },
     { path: '/tokenomics', label: 'Token', icon: FaChartPie },
     { path: '/chat', label: 'Chat', icon: FaComments },
   ], []);

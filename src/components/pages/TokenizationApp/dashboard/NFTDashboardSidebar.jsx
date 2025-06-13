@@ -74,7 +74,7 @@ const NFTDashboardSidebar = ({
           <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <button
             type="submit"
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs bg-purple-600 hover:bg-purple-700 text-white px-2 py-1 rounded"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs border boder-2 purple-800/20 bg-purple-400/20 text-white px-2 py-1 rounded"
           >
             Search
           </button>

@@ -94,7 +94,13 @@ const NFTMarketplace = () => {
             if (listingData[4]) { // isForSale is true
               const [tokenIdFromContract, seller, owner, price, isForSale, timestamp, category] = listingData;
               
-              console.log("Found listed NFT:", {
+              // FILTRO CLAVE: Excluir NFTs del usuario actual
+              if (account && seller.toLowerCase() === account.toLowerCase()) {
+                console.log(`Skipping NFT ${tokenId} - belongs to current user`);
+                continue; // Skip this NFT, it belongs to the current user
+              }
+              
+              console.log("Found listed NFT from other user:", {
                 tokenId,
                 seller,
                 price: ethers.formatEther(price),
@@ -154,7 +160,7 @@ const NFTMarketplace = () => {
           return acc;
         }, []);
         
-        console.log(`Found ${uniqueNFTs.length} listed NFTs`);
+        console.log(`Found ${uniqueNFTs.length} listed NFTs from other users`);
         setListedNFTs(uniqueNFTs);
         
       } catch (eventError) {
@@ -180,6 +186,12 @@ const NFTMarketplace = () => {
             
             if (listingData[4]) { // isForSale is true
               const [tokenIdFromContract, seller, owner, price, isForSale, timestamp, category] = listingData;
+              
+              // FILTRO CLAVE: Excluir NFTs del usuario actual
+              if (account && seller.toLowerCase() === account.toLowerCase()) {
+                console.log(`Skipping NFT ${tokenId} - belongs to current user (fallback)`);
+                continue; // Skip this NFT, it belongs to the current user
+              }
               
               console.log("Found listed NFT (fallback):", {
                 tokenId,
@@ -219,7 +231,7 @@ const NFTMarketplace = () => {
         }
         
         setListedNFTs(fallbackNFTs);
-        console.log(`Fallback found ${fallbackNFTs.length} listed NFTs`);
+        console.log(`Fallback found ${fallbackNFTs.length} listed NFTs from other users`);
       }
       
     } catch (error) {
@@ -458,9 +470,9 @@ const NFTMarketplace = () => {
                             </button>
                           </>
                         )}
-                        {account && account.toLowerCase() === nft.seller.toLowerCase() && (
-                          <div className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">
-                            Your NFT
+                        {!account && (
+                          <div className="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                            Connect Wallet to Buy
                           </div>
                         )}
                       </div>

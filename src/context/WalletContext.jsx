@@ -126,9 +126,9 @@ export const WalletProvider = ({ children }) => {
                             // Setup event listeners
                             setupEventListeners(provider);
                             
-                            console.log("Wallet reconnected successfully");
+                            console.log("Wallet reconnected successfully for account:", account);
                         } else {
-                            console.log("Saved account no longer authorized");
+                            console.log("Saved account no longer authorized:", account);
                             handleDisconnect();
                         }
                     } else {
@@ -196,6 +196,7 @@ export const WalletProvider = ({ children }) => {
                 const newProvider = new ethers.BrowserProvider(window.ethereum);
                 await newProvider.ready;
                 setProvider(newProvider);
+                console.log("Provider initialized for account:", account);
                 return newProvider;
             } catch (error) {
                 console.error("Error creating provider:", error);

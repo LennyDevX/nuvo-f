@@ -1,335 +1,203 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ethers } from 'ethers';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
-import { fetchNFTs, fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
+import { fetchNFTs } from '../../utils/blockchain/blockchainUtils';
+import { WalletContext } from '../../context/WalletContext';
+import { useContext } from 'react';
 import useProvider from '../blockchain/useProvider';
 
-// Cache time for log fetching to prevent excessive API calls
-const LOG_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in ms
-const logFetchCache = new Map();
+const ITEMS_PER_PAGE = 20;
+const CACHE_DURATION = 5 * 60 * 1000;
 
-// Directly access the environment variable and log it for debugging
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
-console.log('Raw TOKENIZATION CONTRACT ADDRESS from env:', CONTRACT_ADDRESS);
-
-// Make sure the address is valid by removing any surrounding whitespace
-const cleanedAddress = CONTRACT_ADDRESS ? CONTRACT_ADDRESS.trim() : '';
-
-// Validate the address format
-const isValidAddress = ethers.isAddress(cleanedAddress);
-console.log('Is tokenization address valid format?', isValidAddress);
-
-// Use the valid address or fallback
-const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
-console.log('Final TOKENIZATION_ADDRESS being used:', TOKENIZATION_ADDRESS);
-
-// Default image placeholder
-const DEFAULT_IMAGE = "/LogoNuvos.webp";
-
-export default function useUserNFTs(address) {
-  // Rename provider to avoid shadowing
-  const { provider: ethProvider } = useProvider();
+export const useUserNFTs = () => {
   const [nfts, setNfts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(0);
-  const fetchingRef = useRef(false); // To prevent concurrent fetches
-  const logsInProgressRef = useRef(false); // Track if we're currently fetching logs
-  const lastFetchTimeRef = useRef(0); // Track when we last did a full fetch
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  
+  const { account, walletConnected } = useContext(WalletContext);
+  const { provider } = useProvider();
 
-  // Function to refresh NFTs
-  const refreshNFTs = useCallback(() => {
-    // Only allow refreshes if enough time has passed since last fetch
-    const now = Date.now();
-    if (now - lastFetchTimeRef.current > 10000) { // 10 seconds minimum between forced refreshes
-      lastFetchTimeRef.current = now;
-      setLastUpdated(now);
-    } else {
-      console.log("Refresh request throttled - too frequent");
-    }
-  }, []);
+  // Contract address from your .env
+  const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
-  // Check if we should fetch logs based on cache
-  const shouldFetchLogs = useCallback((userAddress) => {
-    if (!userAddress) return false;
-    
-    // Check if we're already fetching logs
-    if (logsInProgressRef.current) {
-      console.log("Log fetching already in progress, skipping");
-      return false;
-    }
-    
-    const cacheKey = `logs_${userAddress}_${TOKENIZATION_ADDRESS}`;
-    const cachedData = logFetchCache.get(cacheKey);
-    
-    if (cachedData && Date.now() - cachedData.timestamp < LOG_CACHE_DURATION) {
-      console.log("Using cached logs data");
-      return false;
-    }
-    
-    return true;
-  }, []);
+  // Performance optimization refs
+  const cacheRef = useRef(new Map());
+  const isLoadingRef = useRef(false);
+  const mountedRef = useRef(true);
+  const abortControllerRef = useRef(null);
 
-  // Main effect for fetching NFTs
-  useEffect(() => {
-    if (!address || !ethProvider) return;
-    
-    // Skip if we're already fetching
-    if (fetchingRef.current) {
-      console.log("Fetch already in progress, skipping");
+  const loadUserNFTs = useCallback(async (reset = false) => {
+    // Prevent multiple simultaneous calls
+    if (isLoadingRef.current) {
+      console.log('Already loading NFTs, skipping duplicate call');
       return;
     }
-    
-    const abortController = new AbortController();
-    let isMounted = true;
-    fetchingRef.current = true;
-    
-    console.log("Fetching NFTs for address:", address);
-    console.log("Using tokenization contract address:", TOKENIZATION_ADDRESS);
 
-    const getAndProcessNFTs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log("Starting NFT fetch process...");
+    if (!account || !walletConnected || !provider) {
+      console.log('Missing requirements:', { account, walletConnected, provider: !!provider });
+      setNfts([]);
+      setLoading(false);
+      return;
+    }
 
-        // Double-check contract address validity
-        if (!ethers.isAddress(TOKENIZATION_ADDRESS)) {
-          console.error("Invalid contract address format:", TOKENIZATION_ADDRESS);
-          throw new Error(`Dirección de contrato inválida: ${TOKENIZATION_ADDRESS}`);
-        }
+    // Abort previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
-        const provider = ethProvider;
-        const contract = new ethers.Contract(TOKENIZATION_ADDRESS, TokenizationAppABI.abi, provider);
-        
-        let allNFTs = [];
-        
-        // Method 1: Use getTokensByCreator function from the contract
-        try {
-          console.log("Trying getTokensByCreator method...");
-          const tokenIds = await contract.getTokensByCreator(address);
-          console.log("Tokens created by user:", tokenIds.length);
-          
-          for (const tokenId of tokenIds) {
-            try {
-              // Check if user still owns this token
-              const owner = await contract.ownerOf(tokenId);
-              if (owner.toLowerCase() !== address.toLowerCase()) {
-                console.log(`User no longer owns token ${tokenId.toString()}`);
-                continue;
-              }
-              
-              console.log("Processing owned token:", tokenId.toString());
-              
-              const tokenURI = await contract.tokenURI(tokenId);
-              
-              // Get listing info
-              let listingInfo = null;
-              try {
-                listingInfo = await contract.getListedToken(tokenId);
-              } catch (e) {
-                console.log(`No listing info for token ${tokenId}`);
-              }
-              
-              const nftData = {
-                tokenId: tokenId.toString(),
-                uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId.toString()}-${Date.now()}`,
-                tokenURI,
-                contract: TOKENIZATION_ADDRESS,
-                name: `NFT #${tokenId.toString()}`,
-                description: 'Loading...',
-                image: '',
-                isForSale: listingInfo ? listingInfo[4] : false,
-                price: listingInfo ? listingInfo[3].toString() : '0',
-                category: listingInfo ? listingInfo[6] : 'collectible',
-                blockNumber: 0,
-                transactionHash: ''
-              };
-              
-              allNFTs.push(nftData);
-            } catch (tokenError) {
-              console.error(`Error processing token ${tokenId}:`, tokenError);
-            }
-          }
-        } catch (creatorError) {
-          console.log("getTokensByCreator failed, trying balance method:", creatorError);
-          
-          // Method 2: Try getting balance first, then use Transfer events
-          try {
-            const balance = await contract.balanceOf(address);
-            console.log("User balance:", balance.toString());
-            
-            if (balance > 0) {
-              // Since tokenOfOwnerByIndex doesn't exist, use Transfer events
-              console.log("Using Transfer events method");
-              
-              // Get Transfer events to find user's NFTs
-              const transferFilter = contract.filters.Transfer(null, address);
-              const transferEvents = await contract.queryFilter(transferFilter, -50000);
-              
-              console.log("Found Transfer events to user:", transferEvents.length);
-              
-              for (const event of transferEvents) {
-                try {
-                  const tokenId = event.args.tokenId.toString();
-                  
-                  // Check if user still owns this token
-                  const owner = await contract.ownerOf(tokenId);
-                  if (owner.toLowerCase() !== address.toLowerCase()) {
-                    console.log(`User no longer owns token ${tokenId}`);
-                    continue;
-                  }
-                  
-                  // Skip if we already have this token
-                  if (allNFTs.some(nft => nft.tokenId === tokenId)) {
-                    continue;
-                  }
-                  
-                  const tokenURI = await contract.tokenURI(tokenId);
-                  
-                  // Get listing info
-                  let listingInfo = null;
-                  try {
-                    listingInfo = await contract.getListedToken(tokenId);
-                  } catch (e) {
-                    console.log(`No listing info for token ${tokenId}`);
-                  }
-                  
-                  const nftData = {
-                    tokenId,
-                    uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId}-${event.blockNumber}-${event.transactionIndex}`,
-                    tokenURI,
-                    contract: TOKENIZATION_ADDRESS,
-                    name: `NFT #${tokenId}`,
-                    description: 'Loading...',
-                    image: '',
-                    isForSale: listingInfo ? listingInfo[4] : false,
-                    price: listingInfo ? listingInfo[3].toString() : '0',
-                    category: listingInfo ? listingInfo[6] : 'collectible',
-                    blockNumber: event.blockNumber,
-                    transactionHash: event.transactionHash
-                  };
-                  
-                  allNFTs.push(nftData);
-                } catch (tokenError) {
-                  console.error(`Error processing token from transfer event:`, tokenError);
-                }
-              }
-            }
-          } catch (balanceError) {
-            console.error("Error getting balance:", balanceError);
-            
-            // Method 3: Fallback - use TokenMinted events
-            try {
-              const filter = contract.filters.TokenMinted(null, address);
-              const events = await contract.queryFilter(filter, -50000);
-              
-              console.log("Found TokenMinted events:", events.length);
-              
-              for (const event of events) {
-                try {
-                  const tokenId = event.args.tokenId.toString();
-                  console.log("Processing minted token:", tokenId);
-                  
-                  // Check if user still owns this token
-                  const owner = await contract.ownerOf(tokenId);
-                  if (owner.toLowerCase() !== address.toLowerCase()) {
-                    console.log(`User no longer owns token ${tokenId}`);
-                    continue;
-                  }
-                  
-                  const tokenURI = await contract.tokenURI(tokenId);
-                  
-                  // Get listing info
-                  let listingInfo = null;
-                  try {
-                    listingInfo = await contract.getListedToken(tokenId);
-                  } catch (e) {
-                    console.log(`No listing info for token ${tokenId}`);
-                  }
-                  
-                  const nftData = {
-                    tokenId,
-                    uniqueId: `${TOKENIZATION_ADDRESS}-${tokenId}-${event.blockNumber}-${event.transactionIndex}`,
-                    tokenURI,
-                    contract: TOKENIZATION_ADDRESS,
-                    name: `NFT #${tokenId}`,
-                    description: 'Loading...',
-                    image: '',
-                    isForSale: listingInfo ? listingInfo[4] : false,
-                    price: listingInfo ? listingInfo[3].toString() : '0',
-                    category: listingInfo ? listingInfo[6] : 'collectible',
-                    blockNumber: event.blockNumber,
-                    transactionHash: event.transactionHash
-                  };
-                  
-                  allNFTs.push(nftData);
-                } catch (tokenError) {
-                  console.error(`Error processing token from event:`, tokenError);
-                }
-              }
-            } catch (eventError) {
-              console.error("Error fetching TokenMinted events:", eventError);
-            }
-          }
-        }
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
 
-        console.log(`Final NFTs found: ${allNFTs.length}`);
+    try {
+      isLoadingRef.current = true;
+      setLoading(true);
+      setError(null);
 
-        // Process metadata for all NFTs
-        if (allNFTs.length > 0) {
-          const processedNFTs = await Promise.all(
-            allNFTs.map(async (nft) => {
-              try {
-                let metadata = { name: nft.name, description: nft.description, image: nft.image };
-                
-                if (nft.tokenURI) {
-                  const httpUrl = ipfsToHttp(nft.tokenURI);
-                  const response = await fetch(httpUrl);
-                  if (response.ok) {
-                    metadata = await response.json();
-                  }
-                }
-                
-                return {
-                  ...nft,
-                  name: metadata.name || nft.name,
-                  description: metadata.description || nft.description,
-                  image: metadata.image ? ipfsToHttp(metadata.image) : nft.image || DEFAULT_IMAGE,
-                  attributes: metadata.attributes || []
-                };
-              } catch (metadataError) {
-                console.error(`Error fetching metadata for token ${nft.tokenId}:`, metadataError);
-                return {
-                  ...nft,
-                  image: nft.image || DEFAULT_IMAGE
-                };
-              }
-            })
-          );
-          
-          setNfts(processedNFTs);
+      console.log("🚀 Loading user NFTs for account:", account);
+
+      // Add delay to ensure provider is fully ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Check if component is still mounted
+      if (!mountedRef.current) return;
+
+      const options = {
+        limit: 100, // Increase limit to ensure we get all NFTs
+        contractAddress: CONTRACT_ADDRESS,
+        chainId: 137,
+        includeMetadata: true,
+        includeListing: true
+      };
+
+      const userNFTs = await fetchNFTs(account, provider, options);
+      
+      // Check if component is still mounted after async operation
+      if (!mountedRef.current) return;
+      
+      // Ensure userNFTs is always an array and log the results
+      const nftsArray = Array.isArray(userNFTs) ? userNFTs : [];
+      
+      console.log(`📊 Loaded ${nftsArray.length} NFTs for user:`, nftsArray.map(nft => ({
+        id: nft.id,
+        name: nft.name,
+        image: nft.image
+      })));
+
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        if (reset) {
+          setNfts(nftsArray);
+          setTotalCount(nftsArray.length);
+          setHasMore(false);
+          console.log(`✅ NFT state updated: ${nftsArray.length} NFTs set`);
         } else {
+          setNfts(prev => {
+            // Merge with existing, avoiding duplicates
+            const existingIds = new Set(prev.map(nft => nft.id || nft.tokenId));
+            const newNfts = nftsArray.filter(nft => !existingIds.has(nft.id || nft.tokenId));
+            const combined = [...prev, ...newNfts];
+            console.log(`🔄 NFT state merged: ${prev.length} existing + ${newNfts.length} new = ${combined.length} total`);
+            return combined;
+          });
+          setHasMore(nftsArray.length >= 20);
+        }
+      }
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        console.log('NFT loading was aborted');
+        return;
+      }
+
+      console.error('❌ Error loading user NFTs:', err);
+      
+      // Only update state if component is still mounted
+      if (mountedRef.current) {
+        setError(err.message || 'Error loading NFTs');
+        // Ensure nfts is always an array even on error
+        if (reset) {
           setNfts([]);
         }
-
-      } catch (err) {
-        console.error("Error in getAndProcessNFTs:", err);
-        setError(err.message || 'Error fetching NFTs');
-        setNfts([]);
-      } finally {
-        setLoading(false);
-        fetchingRef.current = false;
       }
-    };
+    } finally {
+      if (mountedRef.current) {
+        isLoadingRef.current = false;
+        setLoading(false);
+      }
+    }
+  }, [account, walletConnected, provider, CONTRACT_ADDRESS]);
 
-    getAndProcessNFTs();
+  // Load more NFTs (pagination) - now mostly unused since we load all at once
+  const loadMore = useCallback(async () => {
+    if (!hasMore || loading || isLoadingRef.current) return;
+    await loadUserNFTs(false);
+  }, [hasMore, loading, loadUserNFTs]);
+
+  // Refresh NFTs (reload first page)
+  const refreshNFTs = useCallback(async () => {
+    // Clear cache
+    cacheRef.current.clear();
+    
+    // Abort any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Reset loading state
+    isLoadingRef.current = false;
+    
+    setNfts([]);
+    await loadUserNFTs(true);
+  }, [loadUserNFTs]);
+
+  // Initial load with better timing
+  useEffect(() => {
+    // Reset mounted ref
+    mountedRef.current = true;
+
+    // Add delay to ensure all context is properly initialized
+    const timeoutId = setTimeout(() => {
+      if (account && provider && walletConnected && mountedRef.current) {
+        loadUserNFTs(true);
+      } else {
+        setNfts([]);
+        setHasMore(false);
+        setTotalCount(0);
+        setLoading(false);
+      }
+    }, 200); // Small delay to ensure provider is ready
 
     return () => {
-      isMounted = false;
-      abortController.abort();
+      clearTimeout(timeoutId);
     };
-  }, [address, lastUpdated, ethProvider, shouldFetchLogs]);
+  }, [account, provider, walletConnected]); // Remove loadUserNFTs from dependencies to prevent infinite loop
 
-  return { nfts, loading, error, refreshNFTs };
-}
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      isLoadingRef.current = false;
+      
+      // Abort any ongoing request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      
+      // Clear cache
+      cacheRef.current.clear();
+    };
+  }, []);
+
+  return {
+    nfts: Array.isArray(nfts) ? nfts : [],
+    loading,
+    error,
+    hasMore,
+    totalCount,
+    loadUserNFTs,
+    loadMore,
+    refresh: refreshNFTs
+  };
+};
+
+export default useUserNFTs;

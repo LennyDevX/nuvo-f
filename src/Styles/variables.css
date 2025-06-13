@@ -50,5 +50,25 @@
     --button-size: 36px;
     /* Update mobile bottom spacing to only account for navbar */
     --mobile-bottom-spacing: calc(var(--mobile-navbar-height) + var(--safe-area-inset-bottom));
+    /* Toast positioning for mobile */
+    --toast-bottom-mobile: calc(80px + env(safe-area-inset-bottom, 0px));
   }
+}
+
+/* Utility classes for safe area and toast positioning */
+.mb-safe-area-mobile {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.toast-mobile-position {
+  bottom: var(--toast-bottom-mobile, 80px);
+}
+
+/* Toast z-index utilities */
+.z-toast {
+  z-index: 200;
+}
+
+.z-toast-backdrop {
+  z-index: 150;
 }

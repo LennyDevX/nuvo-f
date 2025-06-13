@@ -201,7 +201,7 @@ const NFTDashboard = () => {
             <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
               <motion.button
                 onClick={handleMintNFT}
-                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 btn-nuvo-base btn-nuvo-outline font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -211,7 +211,7 @@ const NFTDashboard = () => {
               
               <motion.button
                 onClick={handleMarketplace}
-                className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="flex items-center gap-2 btn-nuvo-base bg-nuvo-gradient-button font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

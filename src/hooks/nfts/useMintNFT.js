@@ -53,38 +53,23 @@ export default function useMintNFT() {
       
       console.log("Using contract address:", validatedContractAddress);
       
-      // Validate Pinata credentials before attempting upload
-      const hasJwt   = !!(import.meta.env.VITE_PINATA_JWT || import.meta.env.VITE_JWT_SK);
-      const hasKeys  = !!(
-        import.meta.env.VITE_PINATA_API_KEY  ||
-        import.meta.env.VITE_PINATA_API      &&
-        import.meta.env.VITE_PINATA_SECRET_KEY ||
-        import.meta.env.VITE_PINATA_SK
+      // Validate Pinata credentials using correct env variable names
+      const hasApiKeys = !!(
+        import.meta.env.VITE_PINATA_API_KEY && 
+        import.meta.env.VITE_PINATA_SECRET_KEY
       );
       
       console.log('Pinata credentials check:', { 
-        hasJwt, 
-        hasKeys,
-        jwtLength: import.meta.env.VITE_JWT_SK?.length,
-        apiKeyLength: import.meta.env.VITE_PINATA_API?.length
+        hasApiKeys,
+        apiKeyLength: import.meta.env.VITE_PINATA_API_KEY?.length,
+        secretLength: import.meta.env.VITE_PINATA_SECRET_KEY?.length
       });
       
-      if (!hasJwt && !hasKeys) {
-        throw new Error('Configure Pinata: VITE_PINATA_API_KEY & VITE_PINATA_SECRET_KEY (or JWT).');
+      if (!hasApiKeys) {
+        throw new Error('Configure Pinata: VITE_PINATA_API_KEY & VITE_PINATA_SECRET_KEY are required.');
       }
       
-      // Additional JWT validation
-      if (hasJwt) {
-        const jwt = import.meta.env.VITE_JWT_SK;
-        const jwtParts = jwt.split('.');
-        if (jwtParts.length !== 3) {
-          console.warn('JWT token appears to be malformed, will try API keys if available');
-          if (!hasKeys) {
-            throw new Error("Token JWT de Pinata inválido y no hay API keys configuradas. Por favor regenera tu JWT token o configura VITE_PINATA_API y VITE_PINATA_SK.");
-          }
-        }
-      }
-      
+      // Remove the hasJwt validation that was causing errors
       // Traducir la categoría al español si existe en el mapa
       const translatedCategory = categoryMap[category.toLowerCase()] || 'coleccionables';
       console.log("Translated category:", translatedCategory);
@@ -314,9 +299,13 @@ export default function useMintNFT() {
       try {
         const listingData = await contract.getListedToken(tokenId);
         if (listingData[4]) { // isForSale
+          console.log(`NFT ${tokenId} is already listed by seller: ${listingData[1]}`);
           throw new Error('NFT is already listed for sale');
         }
       } catch (listingError) {
+        if (listingError.message.includes('already listed')) {
+          throw listingError; // Re-throw if it's the "already listed" error
+        }
         console.log("Could not check listing status, proceeding with listing");
       }
 
@@ -357,6 +346,8 @@ export default function useMintNFT() {
         gasLimit: BigInt(500000) // Increased gas limit
       });
       const receipt = await tx.wait();
+
+      console.log(`NFT ${tokenId} successfully listed for ${ethers.formatEther(priceInWei)} MATIC by ${account}`);
 
       return {
         success: true,

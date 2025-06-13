@@ -34,12 +34,13 @@ const Footer = () => {
                 </NavLink>
               </li>
               <li>
-                <NavLink 
-                  to="/airdrops"
+                <NavLink
+                  to="/marketplace"
                   prefetchStrategy="intent" 
                   className="text-gray-400 hover:text-purple-400 transition-colors"
+                  onClick={() => window.scrollTo(0, 0)}
                 >
-                  Airdrops
+                  Marketplace
                 </NavLink>
               </li>
               <li>

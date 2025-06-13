@@ -1,69 +1,94 @@
-import { useState, useEffect } from 'react';
-import { fetchTransactions, formatTimestamp } from '../../utils/blockchain/blockchainUtils';
-import useProvider from './useProvider';
+import { useState, useEffect, useCallback } from 'react';
+import { ethers } from 'ethers';
+import { useProvider } from './useProvider';
+import { globalCache } from '../../utils/cache/CacheManager';
 
-export default function useUserTransactions() {
-  const { provider, account } = useProvider();
+export const useUserTransactions = (userAddress) => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(0);
+  const { provider } = useProvider();
 
-  // Refrescar transacciones
-  const refreshTransactions = () => {
-    console.log('Refreshing transactions...');
-    setLastUpdated(Date.now());
-  };
+  const fetchUserTransactions = useCallback(async () => {
+    if (!userAddress || !provider) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const cacheKey = `user_transactions_${userAddress}`;
+      const cached = globalCache.get(cacheKey);
+      
+      if (cached) {
+        setTransactions(cached);
+        setLoading(false);
+        return;
+      }
+
+      // Get current block
+      const currentBlock = await provider.getBlockNumber();
+      const fromBlock = Math.max(0, currentBlock - 10000); // Last 10k blocks
+
+      // Create filter for transactions involving the user
+      const transferFilter = {
+        topics: [
+          ethers.id("Transfer(address,address,uint256)"),
+          null, // from (any address)
+          ethers.zeroPadValue(userAddress, 32) // to (user address)
+        ],
+        fromBlock,
+        toBlock: currentBlock
+      };
+
+      const logs = await provider.getLogs(transferFilter);
+      
+      const transactionData = await Promise.all(
+        logs.slice(0, 50).map(async (log) => { // Limit to 50 recent transactions
+          try {
+            const tx = await provider.getTransaction(log.transactionHash);
+            const receipt = await provider.getTransactionReceipt(log.transactionHash);
+            
+            return {
+              hash: log.transactionHash,
+              blockNumber: log.blockNumber,
+              from: tx.from,
+              to: tx.to,
+              value: tx.value ? ethers.formatEther(tx.value) : '0',
+              gasUsed: receipt.gasUsed.toString(),
+              status: receipt.status,
+              timestamp: null // Would need to fetch block for timestamp
+            };
+          } catch (err) {
+            console.warn('Error processing transaction:', err);
+            return null;
+          }
+        })
+      );
+
+      const validTransactions = transactionData.filter(Boolean);
+      
+      // Cache for 5 minutes
+      globalCache.set(cacheKey, validTransactions, 5 * 60 * 1000);
+      setTransactions(validTransactions);
+
+    } catch (err) {
+      console.error('Error fetching user transactions:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [userAddress, provider]);
 
   useEffect(() => {
-    console.log('useUserTransactions hook running with account:', account ? `${account.substring(0, 8)}...` : 'none');
-    if (!account || !provider) {
-      console.log('No account or provider available');
-      return;
-    }
+    fetchUserTransactions();
+  }, [fetchUserTransactions]);
 
-    let isMounted = true;
-    setLoading(true);
-    
-    const getTransactions = async () => {
-      try {
-        console.log('Fetching transactions from blockchain...');
-        // Use the enhanced fetchTransactions with additional options
-        const options = {
-          chainId: provider.network?.chainId || 137,
-          limit: 50
-        };
-        
-        const txs = await fetchTransactions(account, provider, options);
-        console.log(`Retrieved ${txs?.length || 0} transactions from blockchain`);
-        
-        if (isMounted) {
-          // Note: enhanced fetchTransactions already includes formattedDate and description
-          setTransactions(txs || []);
-          setError(null);
-        }
-      } catch (err) {
-        console.error("Error fetching transactions:", err);
-        if (isMounted) {
-          setError("No se pudieron cargar las transacciones");
-          // Even if there's an error, return empty array to prevent loading forever
-          setTransactions([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-          console.log('Transaction loading completed');
-        }
-      }
-    };
-    
-    getTransactions();
-    
-    return () => {
-      console.log('useUserTransactions cleanup');
-      isMounted = false;
-    };
-  }, [account, provider, lastUpdated]);
+  return {
+    transactions,
+    loading,
+    error,
+    refetch: fetchUserTransactions
+  };
+};
 
-  return { transactions, loading, error, refreshTransactions };
-}
+export default useUserTransactions;

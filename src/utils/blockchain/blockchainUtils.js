@@ -1,10 +1,4 @@
 import { ethers } from 'ethers';
-import {
-  shouldFetchLogs,
-  getCachedLogs,
-  cacheLogResult,
-  markLogQueryInProgress
-} from './blockchainLogCache';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [
@@ -27,8 +21,8 @@ const erc721Abi = [
   "function totalSupply() view returns (uint256)"
 ];
 
-// Default image placeholder for NFTs and tokens
-export const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
+// Default image placeholder for NFTs and tokens - MUST be local path
+export const DEFAULT_PLACEHOLDER = '/LogoNuvos.webp';
 
 // Supported NFT APIs and their base URLs
 const NFT_API_CONFIG = {
@@ -42,12 +36,45 @@ const NFT_API_CONFIG = {
   }
 };
 
-// API keys storage - best to move to environment variables in production
-const getApiKeys = () => ({
-  alchemy: import.meta.env.VITE_ALCHEMY || '',
-  moralis: import.meta.env.VITE_MORALIS_API || '',
-  polygonscan: import.meta.env.VITE_POLYGONSCAN_API || ''
-});
+// API keys storage - fix the validation using correct env vars
+const getApiKeys = () => {
+  const alchemyKey = import.meta.env.VITE_ALCHEMY_API_KEY || '';
+  
+  // Check for placeholder values or empty keys
+  if (!alchemyKey || 
+      alchemyKey.trim() === '' || 
+      alchemyKey === 'YOUR_ALCHEMY_API_KEY_HERE' ||
+      alchemyKey.includes('YOUR_') ||
+      alchemyKey.length < 10) {
+    console.warn('Invalid or missing Alchemy API key detected');
+    return {
+      alchemy: null,
+      moralis: import.meta.env.VITE_MORALIS_API || '',
+      polygonscan: import.meta.env.VITE_POLYGONSCAN_API || ''
+    };
+  }
+  
+  return {
+    alchemy: alchemyKey,
+    moralis: import.meta.env.VITE_MORALIS_API || '',
+    polygonscan: import.meta.env.VITE_POLYGONSCAN_API || ''
+  };
+};
+
+// Utilidad para obtener headers de Pinata usando las variables correctas del .env
+const getPinataHeaders = () => {
+  const apiKey = import.meta.env.VITE_PINATA_API_KEY || '';
+  const secret = import.meta.env.VITE_PINATA_SECRET_KEY || '';
+  
+  if (!apiKey || !secret) {
+    throw new Error('Missing Pinata API credentials. Check VITE_PINATA_API_KEY and VITE_PINATA_SECRET_KEY in .env');
+  }
+  
+  return { 
+    pinata_api_key: apiKey, 
+    pinata_secret_api_key: secret 
+  };
+};
 
 // Caching utilities for API responses
 const apiCache = new Map();
@@ -66,21 +93,500 @@ const setCachedData = (key, data) => {
   return data;
 };
 
+// Enhanced metadata cache with expiration
+const metadataCache = new Map();
+const METADATA_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+
+// Cache utility functions
+const getCachedMetadata = (uri) => {
+  const cached = metadataCache.get(uri);
+  if (cached && Date.now() - cached.timestamp < METADATA_CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedMetadata = (uri, data) => {
+  metadataCache.set(uri, {
+    data,
+    timestamp: Date.now()
+  });
+  return data;
+};
+
 /**
- * Utility: Check if ENS is supported on the current chain
- * Only Ethereum Mainnet (chainId 1) supports ENS
+ * Convert IPFS URI to HTTP URL using multiple gateways with CORS fallbacks
  */
-export const isENSSupported = (chainId) => {
-  return chainId === 1;
+export const ipfsToHttp = (ipfsUri) => {
+  if (!ipfsUri) return DEFAULT_PLACEHOLDER;
+  
+  // If it's already an HTTP URL, return as is
+  if (ipfsUri.startsWith('http://') || ipfsUri.startsWith('https://')) {
+    return ipfsUri;
+  }
+  
+  // Handle data URLs (base64 encoded metadata)
+  if (ipfsUri.startsWith('data:')) {
+    try {
+      // Extract the JSON part after the comma
+      const base64Data = ipfsUri.split(',')[1];
+      if (base64Data) {
+        const decodedData = decodeURIComponent(base64Data);
+        const metadata = JSON.parse(decodedData);
+        if (metadata.image) {
+          return ipfsToHttp(metadata.image);
+        }
+      }
+    } catch (e) {
+      console.warn('Error parsing data URL:', e);
+    }
+    return DEFAULT_PLACEHOLDER;
+  }
+  
+  // Extract hash from IPFS URI
+  let hash = '';
+  if (ipfsUri.startsWith('ipfs://')) {
+    hash = ipfsUri.replace('ipfs://', '');
+  } else if (ipfsUri.startsWith('Qm') || ipfsUri.startsWith('ba')) {
+    hash = ipfsUri;
+  } else {
+    return DEFAULT_PLACEHOLDER;
+  }
+  
+  // Use multiple IPFS gateways with CORS support
+  const gateways = [
+    `https://ipfs.io/ipfs/${hash}`,
+    `https://cloudflare-ipfs.com/ipfs/${hash}`,
+    `https://dweb.link/ipfs/${hash}`,
+    `https://gateway.ipfs.io/ipfs/${hash}`,
+    `https://gateway.pinata.cloud/ipfs/${hash}`
+  ];
+  
+  // Return the first gateway (ipfs.io has better CORS support)
+  return gateways[0];
+};
+
+/**
+ * Fetch token metadata from IPFS with multiple gateway fallbacks and no-cors mode
+ */
+export const fetchTokenMetadata = async (tokenURI) => {
+  if (!tokenURI) {
+    return {
+      name: 'Unknown NFT',
+      description: 'No metadata available',
+      image: DEFAULT_PLACEHOLDER,
+      attributes: []
+    };
+  }
+
+  // Check cache first
+  const cached = getCachedMetadata(tokenURI);
+  if (cached) return cached;
+
+  try {
+    // Handle data URLs (inline JSON metadata)
+    if (tokenURI.startsWith('data:')) {
+      try {
+        let jsonData;
+        
+        if (tokenURI.includes('application/json')) {
+          // Handle data:application/json;base64, or data:application/json,
+          const base64Part = tokenURI.split(',')[1];
+          if (tokenURI.includes('base64')) {
+            // Base64 encoded
+            jsonData = atob(base64Part);
+          } else {
+            // URL encoded
+            jsonData = decodeURIComponent(base64Part);
+          }
+        } else {
+          // Try to extract JSON directly
+          const dataPart = tokenURI.split(',')[1];
+          jsonData = decodeURIComponent(dataPart);
+        }
+        
+        const metadata = JSON.parse(jsonData);
+        
+        // Fix problematic image URLs in metadata
+        let imageUrl = metadata.image;
+        if (imageUrl && (
+          imageUrl.includes('nuvos.app/nft-placeholder.png') ||
+          imageUrl.includes('/nft-placeholder.png')
+        )) {
+          console.warn('Replacing problematic image URL in metadata:', imageUrl);
+          imageUrl = DEFAULT_PLACEHOLDER;
+        }
+        
+        // Process and validate metadata
+        const processedMetadata = {
+          name: metadata.name || 'Unknown NFT',
+          description: metadata.description || '',
+          image: imageUrl ? ipfsToHttp(imageUrl) : DEFAULT_PLACEHOLDER,
+          attributes: Array.isArray(metadata.attributes) ? metadata.attributes : []
+        };
+
+        // Cache the result
+        setCachedMetadata(tokenURI, processedMetadata);
+        return processedMetadata;
+      } catch (dataError) {
+        console.warn('Error parsing data URL metadata:', dataError);
+        const fallback = {
+          name: 'Unknown NFT',
+          description: 'Error parsing inline metadata',
+          image: DEFAULT_PLACEHOLDER,
+          attributes: []
+        };
+        setCachedMetadata(tokenURI, fallback);
+        return fallback;
+      }
+    }
+
+    // Handle IPFS URLs with multiple gateway fallbacks
+    const gateways = [
+      ipfsToHttp(tokenURI),
+      tokenURI.replace('ipfs://', 'https://ipfs.io/ipfs/'),
+      tokenURI.replace('ipfs://', 'https://cloudflare-ipfs.com/ipfs/'),
+      tokenURI.replace('ipfs://', 'https://dweb.link/ipfs/'),
+      tokenURI.replace('ipfs://', 'https://gateway.ipfs.io/ipfs/')
+    ];
+    
+    // Try each gateway until one works
+    for (let i = 0; i < gateways.length; i++) {
+      const httpUrl = gateways[i];
+      
+      try {
+        // Add timeout and better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const response = await fetch(httpUrl, {
+          headers: {
+            'Accept': 'application/json'
+            // Remove Cache-Control header that causes CORS issues
+          },
+          signal: controller.signal,
+          mode: 'cors' // Try CORS first
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        let metadata;
+        try {
+          metadata = await response.json();
+        } catch (jsonError) {
+          console.warn('Failed to parse JSON metadata:', jsonError);
+          throw new Error('Invalid JSON metadata');
+        }
+        
+        // Fix problematic image URLs in metadata
+        let imageUrl = metadata.image;
+        if (imageUrl && (
+          imageUrl.includes('nuvos.app/nft-placeholder.png') ||
+          imageUrl.includes('/nft-placeholder.png')
+        )) {
+          console.warn('Replacing problematic image URL in metadata:', imageUrl);
+          imageUrl = DEFAULT_PLACEHOLDER;
+        }
+        
+        // Process and validate metadata
+        const processedMetadata = {
+          name: metadata.name || 'Unknown NFT',
+          description: metadata.description || '',
+          image: imageUrl ? ipfsToHttp(imageUrl) : DEFAULT_PLACEHOLDER,
+          attributes: Array.isArray(metadata.attributes) ? metadata.attributes : []
+        };
+
+        // Cache the result
+        setCachedMetadata(tokenURI, processedMetadata);
+        return processedMetadata;
+      } catch (fetchError) {
+        console.warn(`Failed to fetch from gateway ${i + 1}/${gateways.length}: ${httpUrl}`, fetchError.message);
+        
+        // If this is the last gateway, try no-cors mode as fallback
+        if (i === gateways.length - 1) {
+          try {
+            console.log('Trying no-cors fallback for:', httpUrl);
+            const response = await fetch(httpUrl, {
+              mode: 'no-cors',
+              headers: {
+                'Accept': 'application/json'
+              }
+            });
+            
+            // no-cors mode doesn't allow reading response, so we can't get metadata
+            // Fall through to fallback metadata
+          } catch (noCorsError) {
+            console.warn('No-cors fallback also failed:', noCorsError);
+          }
+        }
+        
+        // Continue to next gateway
+        continue;
+      }
+    }
+    
+    // If all gateways failed, return fallback metadata
+    throw new Error('All IPFS gateways failed');
+    
+  } catch (error) {
+    console.warn(`Failed to fetch metadata from ${tokenURI}:`, error.message);
+    
+    // Return fallback metadata
+    const fallback = {
+      name: 'Unknown NFT',
+      description: 'Metadata unavailable',
+      image: DEFAULT_PLACEHOLDER,
+      attributes: []
+    };
+    
+    setCachedMetadata(tokenURI, fallback);
+    return fallback;
+  }
+};
+
+/**
+ * Get image from metadata object
+ */
+export const getImageFromMetadata = (metadata) => {
+  if (!metadata) return DEFAULT_PLACEHOLDER;
+  
+  if (metadata.image) {
+    return ipfsToHttp(metadata.image);
+  }
+  
+  if (metadata.image_url) {
+    return ipfsToHttp(metadata.image_url);
+  }
+  
+  if (metadata.animation_url) {
+    return ipfsToHttp(metadata.animation_url);
+  }
+  
+  return DEFAULT_PLACEHOLDER;
+};
+
+/**
+ * Get CSP compliant image URL with better fallbacks
+ */
+export const getCSPCompliantImageURL = (imageUrl) => {
+  if (!imageUrl) return DEFAULT_PLACEHOLDER;
+  
+  // Convert IPFS URLs to HTTP
+  const httpUrl = ipfsToHttp(imageUrl);
+  
+  // If it's our default placeholder, return it directly
+  if (httpUrl === DEFAULT_PLACEHOLDER) return DEFAULT_PLACEHOLDER;
+  
+  // Handle known problematic URLs that should use placeholder
+  const problematicUrls = [
+    'https://nuvos.app/nft-placeholder.png',
+    'nuvos.app/nft-placeholder.png',
+    '/nft-placeholder.png'
+  ];
+  
+  if (problematicUrls.some(problemUrl => httpUrl.includes(problemUrl))) {
+    console.warn(`Problematic URL detected: ${httpUrl}, using local placeholder`);
+    return DEFAULT_PLACEHOLDER;
+  }
+  
+  // List of allowed domains from CSP - updated with better CORS support
+  const allowedDomains = [
+    'ipfs.io',
+    'cloudflare-ipfs.com',
+    'dweb.link',
+    'gateway.ipfs.io',
+    'gateway.pinata.cloud',
+    'nftstorage.link',
+    'w3s.link'
+    // Removed 'nuvos.app' since it's causing resolution issues
+  ];
+  
+  try {
+    const url = new URL(httpUrl);
+    if (allowedDomains.some(domain => url.hostname.includes(domain))) {
+      return httpUrl;
+    } else {
+      console.warn(`Domain ${url.hostname} not in CSP allowlist, using placeholder`);
+    }
+  } catch (e) {
+    console.warn('Invalid URL:', httpUrl);
+  }
+  
+  return DEFAULT_PLACEHOLDER;
+};
+
+/**
+ * Upload data to IPFS using Pinata
+ */
+export const uploadJsonToIPFS = async (data, options = {}) => {
+  const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
+  
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...getPinataHeaders()
+    };
+
+    console.log('Uploading JSON to Pinata with headers:', Object.keys(headers));
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    });
+    
+    let result;
+    try {
+      result = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse Pinata response:', parseError);
+      result = {};
+    }
+    
+    if (!response.ok) {
+      let errorMessage = 'Unknown Pinata error';
+      
+      if (result.error) {
+        if (typeof result.error === 'string') {
+          errorMessage = result.error;
+        } else if (result.error.details) {
+          errorMessage = result.error.details;
+        } else {
+          errorMessage = JSON.stringify(result.error);
+        }
+      } else if (result.message) {
+        errorMessage = result.message;
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid Pinata credentials. Please check your API keys or regenerate your JWT token.';
+      } else if (response.status === 403) {
+        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
+      } else {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      
+      console.error('Pinata API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        result,
+        url,
+        headers: Object.keys(headers)
+      });
+      
+      throw new Error(`Pinata error: ${errorMessage}`);
+    }
+    
+    if (!result.IpfsHash) {
+      throw new Error('Pinata response missing IpfsHash');
+    }
+    
+    return `ipfs://${result.IpfsHash}`;
+  } catch (error) {
+    console.error("Error uploading JSON to IPFS:", error);
+    throw error;
+  }
+};
+
+/**
+ * Upload file to IPFS using Pinata
+ */
+export const uploadFileToIPFS = async (file, options = {}) => {
+  const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
+  
+  try {
+    const headers = getPinataHeaders();
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Add optional metadata
+    if (options.name || file.name) {
+      const metadata = JSON.stringify({
+        name: options.name || file.name,
+        keyvalues: {
+          originalName: file.name,
+          fileSize: file.size.toString(),
+          fileType: file.type
+        }
+      });
+      formData.append('pinataMetadata', metadata);
+    }
+
+    let fetchHeaders = {};
+    if (headers.Authorization) {
+      fetchHeaders['Authorization'] = headers.Authorization;
+    } else {
+      fetchHeaders['pinata_api_key'] = headers.pinata_api_key;
+      fetchHeaders['pinata_secret_api_key'] = headers.pinata_secret_api_key;
+    }
+
+    console.log('Uploading file to Pinata:', file.name, 'using auth method:', headers.Authorization ? 'JWT' : 'API Keys');
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      headers: fetchHeaders
+    });
+    
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      console.error('Failed to parse Pinata response:', parseError);
+      data = {};
+    }
+    
+    if (!response.ok) {
+      let errorMessage = 'Unknown Pinata error';
+      
+      if (data.error) {
+        if (typeof data.error === 'string') {
+          errorMessage = data.error;
+        } else if (data.error.details) {
+          errorMessage = data.error.details;
+        } else {
+          errorMessage = JSON.stringify(data.error);
+        }
+      } else if (data.message) {
+        errorMessage = data.message;
+      } else if (response.status === 401) {
+        errorMessage = 'Invalid Pinata credentials. Please regenerate your JWT token or check your API keys.';
+      } else if (response.status === 403) {
+        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
+      } else if (response.status === 413) {
+        errorMessage = 'File too large for Pinata upload.';
+      } else {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      
+      console.error('Pinata API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data,
+        url,
+        headers: Object.keys(fetchHeaders),
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
+      throw new Error(`Pinata error: ${errorMessage}`);
+    }
+    
+    if (!data.IpfsHash) {
+      throw new Error('Pinata response missing IpfsHash');
+    }
+    
+    return `ipfs://${data.IpfsHash}`;
+  } catch (err) {
+    console.error("Error uploading file to IPFS:", err);
+    throw err;
+  }
 };
 
 /**
  * Fetch NFTs owned by an address using multiple providers with fallbacks
- * 
- * @param {string} address - Wallet address to fetch NFTs for
- * @param {Object} provider - Ethers provider
- * @param {Object} options - Options like limit, offset, chainId, etc.
- * @returns {Array} - Array of NFT objects
  */
 export const fetchNFTs = async (address, provider, options = {}) => {
   if (!address) {
@@ -89,14 +595,17 @@ export const fetchNFTs = async (address, provider, options = {}) => {
 
   const cacheKey = `nfts_${address}_${options.chainId || '137'}`;
   const cachedNfts = getCachedData(cacheKey);
-  if (cachedNfts) return cachedNfts;
+  if (cachedNfts) {
+    console.log(`Returning ${cachedNfts.length} cached NFTs for ${address}`);
+    return cachedNfts;
+  }
 
-  const chainId = options.chainId || 137; // Default to Polygon
+  const chainId = options.chainId || 137;
   const apiKeys = getApiKeys();
   const limit = options.limit || 100;
 
   try {
-    // Try Alchemy API first if key exists
+    // Only try Alchemy if we have a valid API key
     if (apiKeys.alchemy) {
       try {
         console.log("Fetching NFTs with Alchemy API");
@@ -118,922 +627,505 @@ export const fetchNFTs = async (address, provider, options = {}) => {
           tokenURI: nft.tokenUri?.gateway || "",
           standard: nft.id.tokenMetadata?.tokenType || "ERC721",
           attributes: nft.metadata?.attributes || [],
-          minter: address, // Always address, never ENS
-          owner: address   // Always address, never ENS
+          minter: address,
+          owner: address
         }));
         
         return setCachedData(cacheKey, processedNfts);
       } catch (alchemyError) {
         console.warn("Alchemy API error:", alchemyError);
-        // Fall through to next provider
       }
     }
     
-    // Try Moralis API if key exists
-    if (apiKeys.moralis) {
-      try {
-        console.log("Fetching NFTs with Moralis API");
-        const url = `${NFT_API_CONFIG.moralis.baseUrl(chainId)}${NFT_API_CONFIG.moralis.formatOwnerQuery(address)}?limit=${limit}`;
-        
-        const response = await fetch(url, {
-          headers: { 'X-API-Key': apiKeys.moralis }
-        });
-        if (!response.ok) throw new Error(`Moralis API error: ${response.statusText}`);
-        
-        const data = await response.json();
-        
-        // Process Moralis NFT data
-        const processedNfts = data.result.map(nft => ({
-          id: nft.token_id,
-          contractAddress: nft.token_address,
-          name: nft.name || `NFT #${nft.token_id}`,
-          description: nft.metadata?.description || "",
-          image: getImageFromMetadata(nft.metadata) || DEFAULT_PLACEHOLDER,
-          tokenURI: nft.token_uri || "",
-          standard: nft.contract_type,
-          attributes: nft.metadata?.attributes || [],
-          minter: nft.minter_address || address, // Always address, never ENS
-          owner: address   // Always address, never ENS
-        }));
-        
-        return setCachedData(cacheKey, processedNfts);
-      } catch (moralisError) {
-        console.warn("Moralis API error:", moralisError);
-        // Fall through to blockchain direct method
-      }
-    }
-    
-    // Direct blockchain method as last resort
-    console.log("Fetching NFTs directly from blockchain");
+    // Direct blockchain method using contract functions from ABI
+    console.log("Fetching NFTs directly from blockchain using contract functions");
     if (!provider) throw new Error("Provider required for direct blockchain NFT fetch");
     
     // Get token contract address
-    const contractAddress = options.contractAddress;
+    const contractAddress = options.contractAddress || import.meta.env.VITE_TOKENIZATION_ADDRESS;
     if (!contractAddress) {
-      console.log("No contract address provided, falling back to placeholder data");
-      return setCachedData(cacheKey, getPlaceholderNFTs(address));
+      console.log("No contract address provided, cannot fetch NFTs");
+      return setCachedData(cacheKey, []);
     }
     
-    // Connect to the contract and fetch NFTs
     try {
-      const contract = new ethers.Contract(contractAddress, erc721Abi, provider);
-      const balance = await contract.balanceOf(address);
+      // Use the TokenizationApp ABI
+      const TokenizationAppABI = await import('../../Abi/TokenizationApp.json');
+      const contract = new ethers.Contract(contractAddress, TokenizationAppABI.abi, provider);
       
-      if (balance === 0) {
+      // Check if user has NFTs using balanceOf
+      let balance;
+      try {
+        balance = await contract.balanceOf(address);
+        console.log(`User has ${balance.toString()} NFTs`);
+      } catch (balanceError) {
+        console.warn("Error getting balance:", balanceError.message);
+        return setCachedData(cacheKey, []);
+      }
+      
+      if (balance === 0n) {
+        console.log("User has no NFTs");
         return setCachedData(cacheKey, []);
       }
       
       const nfts = [];
-      for (let i = 0; i < Math.min(Number(balance), limit); i++) {
-        try {
-          const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-          let tokenURI = "";
-          let metadata = {};
+      const maxTokens = Math.min(Number(balance), limit);
+      
+      // Use getTokensByCreator function from the ABI
+      try {
+        const createdTokens = await contract.getTokensByCreator(address);
+        console.log(`Found ${createdTokens.length} tokens created by user`);
+        
+        // Process ALL tokens sequentially to avoid losing any
+        for (let i = 0; i < createdTokens.length; i++) {
+          const tokenId = createdTokens[i];
           
           try {
-            tokenURI = await contract.tokenURI(tokenId);
-            metadata = await fetchTokenMetadata(tokenURI);
-          } catch (metadataError) {
-            console.warn(`Error fetching metadata for token ${tokenId}:`, metadataError);
+            console.log(`Processing token ${tokenId} (${i + 1}/${createdTokens.length})`);
+            
+            // Get token details with individual timeouts - more generous timeouts
+            let tokenURI = "";
+            let owner = address;
+            let isListed = false;
+            
+            try {
+              tokenURI = await Promise.race([
+                contract.tokenURI(tokenId),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('TokenURI timeout')), 5000))
+              ]);
+              console.log(`Got tokenURI for ${tokenId}: ${tokenURI}`);
+            } catch (uriError) {
+              console.warn(`Failed to get tokenURI for token ${tokenId}:`, uriError.message);
+              tokenURI = "";
+            }
+            
+            try {
+              owner = await Promise.race([
+                contract.ownerOf(tokenId),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('OwnerOf timeout')), 3000))
+              ]);
+            } catch (ownerError) {
+              console.warn(`Failed to get owner for token ${tokenId}:`, ownerError.message);
+              owner = address;
+            }
+            
+            try {
+              const listingResult = await Promise.race([
+                contract.getListedToken(tokenId),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('GetListedToken timeout')), 3000))
+              ]);
+              isListed = listingResult[4];
+              
+              // Additional marketplace info
+              if (isListed) {
+                console.log(`Token ${tokenId} is listed for sale - seller: ${listingResult[1]}, price: ${ethers.formatEther(listingResult[3])}`);
+              }
+            } catch (listingError) {
+              console.warn(`Failed to get listing for token ${tokenId}:`, listingError.message);
+              isListed = false;
+            }
+            
+            // Fetch metadata with more generous timeout and better fallback
+            let metadata = {
+              name: `NFT #${tokenId}`,
+              description: '',
+              image: DEFAULT_PLACEHOLDER,
+              attributes: []
+            };
+            
+            if (tokenURI && tokenURI.trim() !== '') {
+              try {
+                console.log(`Fetching metadata for token ${tokenId} from: ${tokenURI}`);
+                const fetchedMetadata = await Promise.race([
+                  fetchTokenMetadata(tokenURI),
+                  new Promise((_, reject) => setTimeout(() => reject(new Error('Metadata timeout')), 8000))
+                ]);
+                
+                if (fetchedMetadata && typeof fetchedMetadata === 'object') {
+                  metadata = { ...metadata, ...fetchedMetadata };
+                  console.log(`Successfully fetched metadata for token ${tokenId}:`, metadata.name);
+                } else {
+                  console.warn(`Invalid metadata format for token ${tokenId}`);
+                }
+              } catch (metadataError) {
+                console.warn(`Error fetching metadata for token ${tokenId}:`, metadataError.message);
+                // Keep default metadata
+              }
+            } else {
+              console.warn(`Token ${tokenId} has empty or invalid tokenURI`);
+            }
+            
+            // Get additional data with individual error handling
+            let listingData = null;
+            let likesCount = 0;
+            
+            if (isListed) {
+              try {
+                const listing = await Promise.race([
+                  contract.getListedToken(tokenId),
+                  new Promise((_, reject) => setTimeout(() => reject(new Error('Listing timeout')), 3000))
+                ]);
+                listingData = {
+                  price: listing[3].toString(),
+                  seller: listing[1],
+                  timestamp: listing[5].toString(),
+                  category: listing[6]
+                };
+              } catch (listingError) {
+                console.warn(`Error getting listing details for token ${tokenId}:`, listingError.message);
+              }
+            }
+            
+            try {
+              likesCount = await Promise.race([
+                contract.getLikesCount(tokenId),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Likes timeout')), 2000))
+              ]);
+            } catch (likesError) {
+              console.warn(`Error getting likes for token ${tokenId}:`, likesError.message);
+              likesCount = 0;
+            }
+            
+            // Ensure image URL is CSP compliant
+            const processedImage = getCSPCompliantImageURL(metadata.image);
+            
+            const nftData = {
+              id: tokenId.toString(),
+              tokenId: tokenId.toString(),
+              contractAddress,
+              name: metadata.name || `NFT #${tokenId}`,
+              description: metadata.description || "",
+              image: processedImage,
+              tokenURI,
+              standard: "ERC721",
+              attributes: Array.isArray(metadata.attributes) ? metadata.attributes : [],
+              minter: address,
+              owner: owner,
+              isForSale: isListed,
+              price: listingData?.price || "0",
+              seller: listingData?.seller || "",
+              category: listingData?.category || "",
+              likes: likesCount.toString(),
+              timestamp: listingData?.timestamp || "0"
+            };
+            
+            console.log(`✅ Successfully processed NFT ${tokenId}: ${metadata.name} with image: ${processedImage}`);
+            nfts.push(nftData);
+            
+            // Small delay between tokens to avoid overwhelming the RPC
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+          } catch (tokenError) {
+            console.error(`❌ Critical error processing token ${tokenId}:`, tokenError);
+            
+            // Even if there's an error, try to add a basic NFT entry so it's not lost
+            const fallbackNft = {
+              id: tokenId.toString(),
+              tokenId: tokenId.toString(),
+              contractAddress,
+              name: `NFT #${tokenId}`,
+              description: 'Error loading details',
+              image: DEFAULT_PLACEHOLDER,
+              tokenURI: '',
+              standard: "ERC721",
+              attributes: [],
+              minter: address,
+              owner: address,
+              isForSale: false,
+              price: "0",
+              seller: "",
+              category: "",
+              likes: "0",
+              timestamp: "0"
+            };
+            
+            nfts.push(fallbackNft);
+            console.log(`Added fallback NFT for token ${tokenId}`);
           }
-          
-          nfts.push({
-            id: tokenId.toString(),
-            contractAddress,
-            name: metadata.name || `NFT #${tokenId}`,
-            description: metadata.description || "",
-            image: getImageFromMetadata(metadata) || DEFAULT_PLACEHOLDER,
-            tokenURI,
-            standard: "ERC721",
-            attributes: metadata.attributes || [],
-            minter: address, // Assuming owner is minter as a fallback
-            owner: address   // Always address, never ENS
-          });
-        } catch (tokenError) {
-          console.warn(`Error processing token at index ${i}:`, tokenError);
         }
+        
+        console.log(`🎉 Successfully loaded ${nfts.length} out of ${createdTokens.length} NFTs from contract`);
+        
+        // Verify we have all the NFTs
+        if (nfts.length !== createdTokens.length) {
+          console.warn(`⚠️ Mismatch: Expected ${createdTokens.length} NFTs but got ${nfts.length}`);
+        }
+        
+        return setCachedData(cacheKey, nfts);
+        
+      } catch (creatorError) {
+        console.warn("Error using getTokensByCreator:", creatorError);
+        
+        // Fallback: try tokenOfOwnerByIndex if available
+        console.log("Trying alternative method with tokenOfOwnerByIndex");
+        
+        for (let i = 0; i < maxTokens; i++) {
+          try {
+            const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+            let tokenURI = "";
+            let metadata = {};
+            
+            try {
+              tokenURI = await contract.tokenURI(tokenId);
+              metadata = await fetchTokenMetadata(tokenURI);
+            } catch (metadataError) {
+              console.warn(`Error fetching metadata for token ${tokenId}:`, metadataError);
+            }
+            
+            nfts.push({
+              id: tokenId.toString(),
+              tokenId: tokenId.toString(),
+              contractAddress,
+              name: metadata.name || `NFT #${tokenId}`,
+              description: metadata.description || "",
+              image: getImageFromMetadata(metadata) || DEFAULT_PLACEHOLDER,
+              tokenURI,
+              standard: "ERC721",
+              attributes: metadata.attributes || [],
+              minter: address,
+              owner: address
+            });
+          } catch (tokenError) {
+            console.warn(`Error processing token at index ${i}:`, tokenError);
+          }
+        }
+        
+        console.log(`Fallback method loaded ${nfts.length} NFTs`);
+        return setCachedData(cacheKey, nfts);
       }
       
-      return setCachedData(cacheKey, nfts);
     } catch (contractError) {
       console.error("Error interacting with NFT contract:", contractError);
       return setCachedData(cacheKey, getPlaceholderNFTs(address));
     }
   } catch (error) {
     console.error('Error fetching NFTs:', error);
-    return getPlaceholderNFTs(address); // Fallback to placeholder data
+    return getPlaceholderNFTs(address);
   }
 };
 
 /**
- * Extract image URL from metadata accounting for various formats
+ * Fetch token balances for multiple tokens
+ * @param {string} address - User wallet address
+ * @param {Object} provider - Ethereum provider
+ * @param {Array} tokenAddresses - Array of token contract addresses
+ * @returns {Array} Array of token balance objects
  */
-const getImageFromMetadata = (metadata) => {
-  if (!metadata) return null;
-  
-  // Try parsing if it's a string
-  let parsedMetadata = metadata;
-  if (typeof metadata === 'string') {
-    try {
-      parsedMetadata = JSON.parse(metadata);
-    } catch (e) {
-      return null;
-    }
+export const fetchTokenBalances = async (address, provider, tokenAddresses = []) => {
+  if (!address || !provider) {
+    console.warn('Address and provider are required for fetchTokenBalances');
+    return [];
   }
-  
-  // Look for image in various fields
-  return parsedMetadata.image || 
-         parsedMetadata.image_url || 
-         parsedMetadata.image_uri || 
-         parsedMetadata.animation_url ||
-         null;
-};
 
-/**
- * Convert IPFS URI to HTTP gateway URL with improved reliability
- * 
- * @param {string} uri - IPFS URI (ipfs://...)
- * @param {string} preferredGateway - Preferred IPFS gateway URL
- * @returns {string} - HTTP gateway URL
- */
-export const ipfsToHttp = (uri, preferredGateway) => {
-  if (!uri) return '';
-  
-  // If it's already an HTTP URL, return as is
-  if (uri.startsWith('http')) return uri;
-  
-  // If it's a data URL, return as is
-  if (uri.startsWith('data:')) return uri;
-  
-  // Available gateways in order of preference
-  const gateways = [
-    preferredGateway,
-    'https://nftstorage.link/ipfs/',
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://ipfs.io/ipfs/',
-    'https://gateway.ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://ipfs.cf-ipfs.com/ipfs/',
-  ].filter(Boolean); // Remove undefined entries
-  
-  if (uri.startsWith('ipfs://')) {
-    // Use the first gateway in the list (or preferred gateway if provided)
-    return gateways[0] + uri.substring(7);
-  }
-  
-  // For CIDs without protocol prefix
-  if (/^Qm[1-9A-ZaZ]{44}/.test(uri) || /^bafy/.test(uri)) {
-    return gateways[0] + uri;
-  }
-  
-  return uri;
-};
+  const balances = [];
 
-/**
- * Get a CSP and CORS/CORP compliant image URL
- * 
- * @param {string} originalUrl - Original image URL
- * @param {Array<string>} allowedDomains - List of CSP-allowed domains
- * @returns {string} - A usable image URL
- */
-export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
-  'ipfs.io',
-  'gateway.pinata.cloud',
-  'cloudflare-ipfs.com',
-  'nftstorage.link',
-  'dweb.link',
-  'cf-ipfs.com'
-]) => {
-  if (!originalUrl) return DEFAULT_PLACEHOLDER;
-  
-  // If it's a data URL or relative URL, it's already compliant
-  if (originalUrl.startsWith('data:') || originalUrl.startsWith('/')) {
-    return originalUrl;
-  }
-  
   try {
-    // If IPFS, use the gateway rotation system instead of just ipfs.io
-    if (originalUrl.startsWith('ipfs://')) {
-      return ipfsToHttp(originalUrl, 'https://nftstorage.link/ipfs/');
-    }
-    
-    // If it starts with gateway.pinata.cloud, replace it with an alternative
-    if (originalUrl.includes('gateway.pinata.cloud')) {
-      const ipfsPath = originalUrl.split('/ipfs/')[1];
-      if (ipfsPath) {
-        return `https://nftstorage.link/ipfs/${ipfsPath}`;
-      }
-    }
-    
-    // Check if URL is from an allowed domain
-    const url = new URL(originalUrl);
-    const domain = url.hostname;
-    
-    if (allowedDomains.some(allowed => domain.includes(allowed))) {
-      return originalUrl;
-    }
-    
-    // Try to extract CID if it's another IPFS gateway
-    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-ZaZ]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
-    if (pathMatch) {
-      const cid = pathMatch[1];
-      const subpath = pathMatch[2] || '';
-      return `https://nftstorage.link/ipfs/${cid}${subpath}`;
-    }
-    
-    console.warn(`Image URL ${originalUrl} might violate CSP or CORP - using placeholder`);
-    return DEFAULT_PLACEHOLDER;
-  } catch (e) {
-    console.error("Error parsing URL:", e);
-    return DEFAULT_PLACEHOLDER;
-  }
-};
-
-/**
- * Fetch content from IPFS with gateway fallbacks
- * 
- * @param {string} ipfsUri - IPFS URI or CID
- * @returns {Promise<Response>} - Fetch response
- */
-export const fetchFromIPFSWithFallback = async (ipfsUri) => {
-  if (!ipfsUri) throw new Error('No IPFS URI provided');
-  
-  // Available gateways in order of preference
-  const gateways = [
-    'https://nftstorage.link/ipfs/',
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://ipfs.cf-ipfs.com/ipfs/'
-  ];
-  
-  let cid = ipfsUri;
-  if (ipfsUri.startsWith('ipfs://')) {
-    cid = ipfsUri.substring(7);
-  }
-  
-  let lastError = null;
-  
-  // Try each gateway until one works
-  for (const gateway of gateways) {
+    // Add MATIC (native token) balance
     try {
-      const response = await fetch(gateway + cid, {
-        method: 'GET',
-        headers: {
-          'Accept': '*/*'
-        },
-        mode: 'cors',
+      const maticBalance = await provider.getBalance(address);
+      balances.push({
+        symbol: 'MATIC',
+        name: 'Polygon',
+        balance: ethers.formatEther(maticBalance),
+        decimals: 18,
+        contractAddress: null, // Native token
+        logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png'
       });
-      
-      if (response.ok) {
-        return response;
-      }
-    } catch (err) {
-      lastError = err;
-      console.warn(`Gateway ${gateway} failed:`, err.message);
+    } catch (error) {
+      console.warn('Error fetching MATIC balance:', error);
     }
-  }
-  
-  throw new Error(`All IPFS gateways failed: ${lastError?.message}`);
-};
 
-// Replace the fetchTokenMetadata function to use our new fallback mechanism
-export const fetchTokenMetadata = async (tokenURI) => {
-  if (!tokenURI) return {};
-  
-  try {
-    // Handle IPFS URIs with our enhanced fallback system
-    if (tokenURI.startsWith('ipfs://')) {
-      const response = await fetchFromIPFSWithFallback(tokenURI);
-      return await response.json();
-    }
-    
-    // Handle data URIs
-    if (tokenURI.startsWith('data:application/json;base64,')) {
-      const base64Data = tokenURI.substring('data:application/json;base64,'.length);
-      const jsonString = atob(base64Data);
-      return JSON.parse(jsonString);
-    }
-    
-    // Handle HTTP URIs
-    if (tokenURI.startsWith('http')) {
-      // If it's a Pinata gateway URL, use our fallback method
-      if (tokenURI.includes('gateway.pinata.cloud')) {
-        const ipfsPath = tokenURI.split('/ipfs/')[1];
-        if (ipfsPath) {
-          const response = await fetchFromIPFSWithFallback(ipfsPath);
-          return await response.json();
-        }
+    // Add NUVO token balance if configured
+    const nuvoTokenAddress = import.meta.env.VITE_NUVO_TOKEN;
+    if (nuvoTokenAddress && ethers.isAddress(nuvoTokenAddress)) {
+      try {
+        const nuvoContract = new ethers.Contract(nuvoTokenAddress, erc20Abi, provider);
+        const [balance, decimals, symbol, name] = await Promise.all([
+          nuvoContract.balanceOf(address),
+          nuvoContract.decimals(),
+          nuvoContract.symbol(),
+          nuvoContract.name()
+        ]);
+
+        balances.push({
+          symbol,
+          name,
+          balance: ethers.formatUnits(balance, decimals),
+          decimals,
+          contractAddress: nuvoTokenAddress,
+          logo: '/LogoNuvos.webp' // Use local logo for NUVO token
+        });
+      } catch (error) {
+        console.warn('Error fetching NUVO token balance:', error);
       }
-      
-      // Regular HTTP fetch with timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-      
-      const response = await fetch(tokenURI, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      return await response.json();
     }
-    
-    return {};
+
+    // Fetch balances for additional token addresses
+    for (const tokenAddress of tokenAddresses) {
+      if (!ethers.isAddress(tokenAddress)) continue;
+
+      try {
+        const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, provider);
+        const [balance, decimals, symbol, name] = await Promise.all([
+          tokenContract.balanceOf(address),
+          tokenContract.decimals(),
+          tokenContract.symbol(),
+          tokenContract.name()
+        ]);
+
+        balances.push({
+          symbol,
+          name,
+          balance: ethers.formatUnits(balance, decimals),
+          decimals,
+          contractAddress: tokenAddress,
+          logo: null // Could be enhanced to fetch token logos from a service
+        });
+      } catch (error) {
+        console.warn(`Error fetching balance for token ${tokenAddress}:`, error);
+      }
+    }
+
+    return balances;
   } catch (error) {
-    console.warn('Error fetching token metadata:', error);
-    return {};
+    console.error('Error in fetchTokenBalances:', error);
+    return [];
   }
 };
 
 /**
- * Generate placeholder NFT data for fallback
- */
-const getPlaceholderNFTs = (address) => {
-  return [
-    { 
-      id: '1', 
-      name: "NUVO Early Supporter", 
-      image: "/NFT-X1.webp",
-      description: "Exclusive NFT granted to early supporters of the NUVO ecosystem.",
-      minter: address,
-      attributes: [
-        { trait_type: "Rarity", value: "Rare" },
-        { trait_type: "Benefits", value: "Staking Boost" },
-        { trait_type: "Type", value: "Membership" }
-      ]
-    }
-  ];
-};
-
-/**
- * Fetch transaction history for an address
- * 
+ * Fetch transactions for a given address
  * @param {string} address - Wallet address
- * @param {Object} provider - Ethers provider 
- * @param {Object} options - Additional options (limit, offset, etc.)
- * @returns {Array} - Array of transaction objects
+ * @param {Object} provider - Ethereum provider
+ * @returns {Array} Array of transaction objects
  */
-export const fetchTransactions = async (address, provider, options = {}) => {
-  if (!address) {
-    throw new Error("Address is required");
+export const fetchTransactions = async (address, provider) => {
+  if (!address || !provider) {
+    console.warn('Address and provider are required for fetchTransactions');
+    return [];
   }
 
-  const cacheKey = `txs_${address}_${options.chainId || '137'}`;
-  const cachedTxs = getCachedData(cacheKey);
-  if (cachedTxs) return cachedTxs;
-  
-  const chainId = options.chainId || 137; // Default to Polygon
-  const apiKeys = getApiKeys();
-  const limit = options.limit || 100;
-  
   try {
-    // Try Polygonscan API first if key exists (best for transaction history)
-    if (apiKeys.polygonscan) {
-      try {
-        console.log("Fetching transactions from Polygonscan API");
-        const baseUrl = chainId === 137 
-          ? 'https://api.polygonscan.com/api' 
-          : 'https://api-testnet.polygonscan.com/api';
-        
-        // Set a timeout for the API request to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const url = `${baseUrl}?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKeys.polygonscan}&offset=${limit}`;
-        
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        const data = await response.json();
-        
-        if (data.status === '1' && Array.isArray(data.result)) {
-          // Process and categorize transactions
-          const processedTxs = await processPolygonscanTransactions(data.result, address, provider);
-          return setCachedData(cacheKey, processedTxs);
-        } else {
-          console.warn("Polygonscan API error:", data.message || "Unknown error");
-          throw new Error("Polygonscan data unavailable");
-        }
-      } catch (scanError) {
-        console.warn("Polygonscan API error:", scanError);
-        // Fall through to next method
-      }
+    // Get recent transactions - limited to last 50 for performance
+    const currentBlock = await provider.getBlockNumber();
+    const fromBlock = Math.max(0, currentBlock - 10000); // Last 10k blocks
+
+    // Get sent transactions
+    const sentFilter = {
+      fromBlock,
+      toBlock: 'latest',
+      from: address
+    };
+
+    // Get received transactions
+    const receivedFilter = {
+      fromBlock,
+      toBlock: 'latest',
+      to: address
+    };
+
+    const [sentTxs, receivedTxs] = await Promise.allSettled([
+      provider.getLogs(sentFilter),
+      provider.getLogs(receivedFilter)
+    ]);
+
+    const transactions = [];
+
+    // Process sent transactions
+    if (sentTxs.status === 'fulfilled') {
+      sentTxs.value.slice(0, 25).forEach(tx => {
+        transactions.push({
+          hash: tx.transactionHash,
+          type: 'sent',
+          from: address,
+          to: tx.to || 'Contract',
+          value: '0', // We'd need to get full transaction details for value
+          timestamp: Date.now(), // Placeholder
+          blockNumber: tx.blockNumber
+        });
+      });
     }
-    
-    // Direct blockchain method using provider with improved timeout handling
-    if (provider) {
-      try {
-        console.log("Fetching transactions directly from blockchain");
-        const blockNumber = await provider.getBlockNumber();
-        const startBlock = Math.max(blockNumber - 10000, 0); // Get last 10000 blocks
-        
-        // Get transactions from blocks
-        const txs = [];
-        for (let i = blockNumber; i > startBlock && txs.length < limit; i -= 10) {
-          try {
-            const block = await provider.getBlock(i, { includeTransactions: true });
-            if (!block || !block.transactions) continue;
-            
-            // Filter transactions that involve our address
-            const relevantTxs = block.transactions.filter(tx => 
-              tx.from?.toLowerCase() === address.toLowerCase() || 
-              tx.to?.toLowerCase() === address.toLowerCase()
-            );
-            
-            // Process each transaction
-            for (const tx of relevantTxs) {
-              if (txs.length >= limit) break;
-              
-              try {
-                // Get receipt for more details
-                const receipt = await provider.getTransactionReceipt(tx.hash);
-                
-                // Determine transaction type based on data and logs
-                const txType = determineTransactionType(tx, receipt, address);
-                
-                txs.push({
-                  hash: tx.hash,
-                  from: tx.from,
-                  to: tx.to,
-                  value: tx.value ? ethers.formatEther(tx.value) : '0',
-                  timestamp: block.timestamp,
-                  formattedDate: formatTimestamp(block.timestamp),
-                  blockNumber: tx.blockNumber || block.number,
-                  status: receipt?.status ? 'Confirmed' : 'Failed',
-                  type: txType.type,
-                  amount: txType.amount || ethers.formatEther(tx.value),
-                  tokenAddress: txType.tokenAddress,
-                  description: getTransactionDescription({
-                    ...tx,
-                    ...txType,
-                    timestamp: block.timestamp,
-                    status: receipt?.status ? 'Confirmed' : 'Failed'
-                  }, address)
-                });
-              } catch (receiptError) {
-                console.warn(`Error fetching receipt for tx ${tx.hash}:`, receiptError);
-              }
-            }
-          } catch (blockError) {
-            console.warn(`Error fetching block ${i}:`, blockError);
-          }
-        }
-        
-        return setCachedData(cacheKey, txs);
-      } catch (providerError) {
-        console.error("Error fetching transactions from provider:", providerError);
-        // Fall through to fallback
-      }
+
+    // Process received transactions
+    if (receivedTxs.status === 'fulfilled') {
+      receivedTxs.value.slice(0, 25).forEach(tx => {
+        transactions.push({
+          hash: tx.transactionHash,
+          type: 'received',
+          from: tx.from || 'Contract',
+          to: address,
+          value: '0', // We'd need to get full transaction details for value
+          timestamp: Date.now(), // Placeholder
+          blockNumber: tx.blockNumber
+        });
+      });
     }
-    
-    // If all methods fail, return placeholder data
-    return setCachedData(cacheKey, getPlaceholderTransactions(address));
+
+    return transactions.slice(0, 50); // Limit to 50 total transactions
   } catch (error) {
     console.error('Error fetching transactions:', error);
-    return getPlaceholderTransactions(address);
+    return [];
   }
 };
 
 /**
- * Process Polygonscan API transaction data
+ * Safely fetch logs from a blockchain by dividing the request into smaller chunks
  */
-const processPolygonscanTransactions = async (txs, address, provider) => {
-  const processedTxs = [];
-  const contractDataCache = new Map();
-  
-  for (const tx of txs) {
-    try {
-      // Basic transaction info
-      const processed = {
-        hash: tx.hash,
-        from: tx.from,
-        to: tx.to,
-        value: ethers.formatEther(tx.value),
-        timestamp: parseInt(tx.timeStamp),
-        formattedDate: formatTimestamp(parseInt(tx.timeStamp)),
-        blockNumber: parseInt(tx.blockNumber),
-        status: tx.txreceipt_status === '1' ? 'Confirmed' : 'Failed',
-        type: 'Transfer', // Default type, may be updated below
-        amount: ethers.formatEther(tx.value),
-        gasUsed: tx.gasUsed,
-        gasPrice: tx.gasPrice
-      };
-      
-      // Determine transaction type
-      if (tx.input && tx.input.length > 10) {
-        const methodId = tx.input.substring(0, 10);
-        
-        // Cache contract data by address to reduce RPC calls
-        if (!contractDataCache.has(tx.to) && provider) {
-          try {
-            const code = await provider.getCode(tx.to);
-            if (code && code !== '0x') {
-              // It's a contract, try to determine its purpose
-              const contract = new ethers.Contract(tx.to, erc20Abi, provider);
-              
-              let symbol = '';
-              let decimals = 18;
-              try {
-                symbol = await contract.symbol();
-                decimals = await contract.decimals();
-              } catch (e) {
-                // Not an ERC20 token
-              }
-              
-              contractDataCache.set(tx.to, { isContract: true, symbol, decimals });
-            } else {
-              contractDataCache.set(tx.to, { isContract: false });
-            }
-          } catch (e) {
-            contractDataCache.set(tx.to, { isContract: false });
+export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRetries = 3) => {
+  if (!provider) throw new Error('Provider is required');
+
+  try {
+    const currentBlock = await provider.getBlockNumber();
+    const startBlock = filter.fromBlock === 0 || !filter.fromBlock ?
+      Math.max(0, currentBlock - 50000) :
+      parseInt(filter.fromBlock);
+
+    const endBlock = filter.toBlock === 'latest' ? currentBlock : parseInt(filter.toBlock);
+
+    // Si el rango es pequeño, consulta directo
+    if (endBlock - startBlock <= chunkSize) {
+      const logs = await provider.getLogs({
+        ...filter,
+        fromBlock: ethers.toQuantity(startBlock),
+        toBlock: ethers.toQuantity(endBlock)
+      });
+      return logs;
+    }
+
+    console.info(`[LogFetch] Fetching logs in chunks: ${startBlock} to ${endBlock}`);
+
+    const logs = [];
+    for (let from = startBlock; from < endBlock; from += chunkSize) {
+      const to = Math.min(from + chunkSize - 1, endBlock);
+      let attempt = 0;
+      let success = false;
+
+      while (!success && attempt < maxRetries) {
+        try {
+          const chunk = await provider.getLogs({
+            ...filter,
+            fromBlock: ethers.toQuantity(from),
+            toBlock: ethers.toQuantity(to)
+          });
+          logs.push(...chunk);
+          success = true;
+        } catch (error) {
+          attempt++;
+          if (attempt >= maxRetries) {
+            console.error(`[LogFetch] Max retries exceeded for blocks ${from}-${to}: ${error.message}`);
+          } else {
+            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
           }
         }
-        
-        // Get contract data from cache
-        const contractData = contractDataCache.get(tx.to);
-        
-        // Common method IDs for standard ERC20/721 operations
-        if (methodId === '0xa9059cbb') { // ERC20 transfer
-          processed.type = 'Token Transfer';
-          processed.tokenAddress = tx.to;
-          
-          // Try to decode parameters if we have contract data
-          if (contractData?.symbol) {
-            try {
-              const iface = new ethers.Interface(erc20Abi);
-              const decodedData = iface.parseTransaction({ data: tx.input });
-              const amount = ethers.formatUnits(decodedData.args[1], contractData.decimals);
-              processed.amount = `${amount} ${contractData.symbol}`;
-            } catch (e) {
-              // Fallback if parsing fails
-              processed.amount = 'Unknown';
-            }
-          }
-        } else if (methodId === '0x095ea7b3') { // ERC20 approve
-          processed.type = 'Approve';
-          processed.tokenAddress = tx.to;
-        } else if (methodId === '0xa0712d68') { // Mint NFT (common pattern)
-          processed.type = 'Mint NFT';
-        } else if (methodId === '0xed88c68e' || methodId === '0x44bd4627') { // Stake/deposit (common patterns)
-          processed.type = 'Stake';
-        } else if (methodId === '0x3ccfd60b' || methodId === '0x2e1a7d4d') { // Withdraw (common patterns)
-          processed.type = 'Withdraw';
-        } else if (methodId === '0x797eee24' || methodId === '0x3d18b912') { // Claim rewards (common patterns)
-          processed.type = 'Claim';
-        } else if (methodId === '0x38ed1739' || methodId === '0x7ff36ab5') { // Swap (common patterns)
-          processed.type = 'Swap';
-        }
-      } else if (tx.value !== '0') {
-        processed.type = 'Transfer';
-        if (tx.from.toLowerCase() === address.toLowerCase()) {
-          processed.description = `Sent ${processed.amount} MATIC`;
-        } else {
-          processed.description = `Received ${processed.amount} MATIC`;
-        }
       }
-      
-      // If we haven't set a description yet, set it based on the determined type
-      if (!processed.description) {
-        processed.description = getTransactionDescription(processed, address);
-      }
-      
-      processedTxs.push(processed);
-    } catch (txError) {
-      console.warn(`Error processing transaction ${tx.hash}:`, txError);
+      await new Promise(r => setTimeout(r, 200));
     }
-  }
-  
-  return processedTxs;
-};
 
-/**
- * Determine transaction type from transaction data and receipt
- */
-const determineTransactionType = (tx, receipt, userAddress) => {
-  // Default type
-  const result = { 
-    type: 'Transfer', 
-    amount: tx.value ? ethers.formatEther(tx.value) : '0',
-    tokenAddress: null
-  };
-  
-  // Try to determine transaction type from data
-  if (tx.data && tx.data.length > 10) {
-    const methodId = tx.data.substring(0, 10);
-    
-    switch (methodId) {
-      // Common methods by signature
-      case '0xa9059cbb': // ERC20 transfer
-        result.type = 'Token Transfer';
-        result.tokenAddress = tx.to;
-        break;
-      case '0x095ea7b3': // approve
-        result.type = 'Approve';
-        result.tokenAddress = tx.to;
-        break;
-      case '0x23b872dd': // transferFrom
-        result.type = 'Token Transfer';
-        result.tokenAddress = tx.to;
-        break;
-      case '0xd0e30db0': // deposit
-      case '0xa694fc3a': // stake
-        result.type = 'Stake';
-        break;
-      case '0x2e1a7d4d': // withdraw
-      case '0x853828b6': // withdrawAll
-        result.type = 'Withdraw';
-        break;
-      case '0x6a761202': // execTransaction (common for multisig wallets)
-        result.type = 'Contract Interaction';
-        break;
-      default:
-        // Check if it might be a swap by input length
-        if (tx.data.length > 200) { 
-          result.type = 'Contract Interaction';
-        }
-    }
-  }
-  
-  // Further refine type using receipt logs if available
-  if (receipt && receipt.logs) {
-    // Look for ERC20 Transfer events
-    const transferEventTopic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-    const transferLogs = receipt.logs.filter(log => log.topics[0] === transferEventTopic);
-    
-    if (transferLogs.length > 0) {
-      // If we have transfer events, this might be a token transaction
-      if (transferLogs.length === 1) {
-        result.type = 'Token Transfer';
-        result.tokenAddress = transferLogs[0].address;
-      } else if (transferLogs.length === 2) {
-        // Might be a swap (one token in, one token out)
-        result.type = 'Swap';
-      }
-    }
-  }
-  
-  return result;
-};
-
-/**
- * Format a timestamp into a human-readable date
- */
-export const formatTimestamp = (timestamp) => {
-  if (!timestamp) return 'Unknown date';
-  
-  try {
-    const date = new Date(timestamp * 1000);
-    const options = { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    };
-    return new Intl.DateTimeFormat('es-ES', options).format(date);
+    return logs;
   } catch (error) {
-    console.error('Error formatting timestamp:', error);
-    return 'Invalid date';
+    console.error('[LogFetch] Error fetching logs in chunks:', error);
+    return [];
   }
-};
-
-/**
- * Generate transaction description based on transaction data
- */
-const getTransactionDescription = (tx, userAddress = '') => {
-  const address = userAddress.toLowerCase();
-  
-  switch (tx.type) {
-    case 'Stake':
-      return `Depositaste ${tx.amount} en el staking`;
-    case 'Claim':
-      return `Reclamaste ${tx.amount} de recompensas`;
-    case 'Transfer':
-      return tx.from?.toLowerCase() === address 
-        ? `Enviaste ${tx.amount} a ${formatAddress(tx.to)}`
-        : `Recibiste ${tx.amount} de ${formatAddress(tx.from)}`;
-    case 'Token Transfer':
-      return tx.from?.toLowerCase() === address 
-        ? `Enviaste ${tx.amount || 'tokens'} a ${formatAddress(tx.to)}`
-        : `Recibiste ${tx.amount || 'tokens'} de ${formatAddress(tx.from)}`;
-    case 'Swap':
-      return `Intercambiaste ${tx.amount || 'tokens'}`;
-    case 'Approve':
-      return `Aprobaste tokens para gastar`;
-    case 'Withdraw':
-      return `Retiraste ${tx.amount || 'tokens'}`;
-    case 'Mint NFT':
-      return 'Minteaste un NFT';
-    case 'Contract Interaction':
-      return 'Interactuaste con un contrato';
-    default:
-      return `Transacción: ${formatAddress(tx.hash)}`;
-  }
-};
-
-/**
- * Format address for readability
- */
-const formatAddress = (address) => {
-  if (!address) return 'desconocido';
-  return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-};
-
-/**
- * Generate placeholder transaction data for fallback
- */
-const getPlaceholderTransactions = (address) => {
-  const now = Math.floor(Date.now() / 1000);
-  
-  return [
-    {
-      id: generateRandomId(),
-      type: 'Stake',
-      amount: '10.5 POL',
-      tokenAddress: '0x8c92e38eca8210f4fcbf17f0951b198dd7668292',
-      timestamp: now - 86400 * 2,
-      formattedDate: formatTimestamp(now - 86400 * 2),
-      status: 'Completed',
-      hash: generateRandomId(),
-      from: address,
-      to: '0x8c92e38eca8210f4fcbf17f0951b198dd7668292',
-      description: `Depositaste 10.5 POL en el staking`
-    },
-    {
-      id: generateRandomId(),
-      type: 'Claim',
-      amount: '1.2 POL',
-      tokenAddress: '0x8c92e38eca8210f4fcbf17f0951b198dd7668292',
-      timestamp: now - 86400 * 5,
-      formattedDate: formatTimestamp(now - 86400 * 5),
-      status: 'Completed',
-      hash: generateRandomId(),
-      from: '0x8c92e38eca8210f4fcbf17f0951b198dd7668292',
-      to: address,
-      description: `Reclamaste 1.2 POL de recompensas`
-    }
-  ];
-};
-
-/**
- * Generate a random transaction ID
- */
-const generateRandomId = () => {
-  return '0x' + Math.random().toString(16).slice(2, 10) + Math.random().toString(16).slice(2, 10);
-};
-
-/**
- * Fetch ERC20 token balances for an address
- * 
- * @param {string} address - Wallet address
- * @param {Object} provider - Ethers provider
- * @param {Object} options - Additional options like tokenAddresses
- * @returns {Array} - Array of token balance objects
- */
-export const fetchTokenBalances = async (address, provider, options = {}) => {
-  if (!address) {
-    throw new Error("Address is required");
-  }
-  
-  const cacheKey = `balances_${address}`;
-  const cachedBalances = getCachedData(cacheKey);
-  if (cachedBalances) return cachedBalances;
-
-  const tokenAddresses = options.tokenAddresses || [
-    '0x0000000000000000000000000000000000001010', // MATIC on Polygon
-    '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',  // USDC on Polygon
-    '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',  // WETH on Polygon
-    '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6',  // WBTC on Polygon
-  ];
-  
-  try {
-    // Add NUVO token if specified in options
-    if (options.nuvoTokenAddress) {
-      tokenAddresses.push(options.nuvoTokenAddress);
-    }
-    
-    // 1. Try to use provider to get balances
-    if (provider) {
-      try {
-        console.log("Fetching token balances from blockchain");
-        const balances = await Promise.all(
-          tokenAddresses.map(async (tokenAddress) => {
-            try {
-              // Special case for native MATIC
-              if (tokenAddress === '0x0000000000000000000000000000000000001010') {
-                const balance = await provider.getBalance(address);
-                return {
-                  address: tokenAddress,
-                  symbol: 'MATIC',
-                  name: 'Polygon',
-                  decimals: 18,
-                  logo: 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025',
-                  balance: ethers.formatUnits(balance, 18),
-                  // We would fetch these from a price API in production
-                  price: 0.68,
-                  change: 2.45
-                };
-              }
-              
-              // For ERC20 tokens
-              const contract = new ethers.Contract(tokenAddress, erc20Abi, provider);
-              
-              // Fetch token details and balance in parallel
-              const [balance, symbol, name, decimals] = await Promise.all([
-                contract.balanceOf(address).catch(() => BigInt(0)),
-                contract.symbol().catch(() => 'UNKNOWN'),
-                contract.name().catch(() => 'Unknown Token'),
-                contract.decimals().catch(() => 18)
-              ]);
-              
-              // Get logo URL based on symbol (in production, use a token DB)
-              const logo = getTokenLogo(symbol);
-              
-              return {
-                address: tokenAddress,
-                symbol,
-                name,
-                decimals,
-                logo,
-                balance: ethers.formatUnits(balance, decimals),
-                // Placeholder prices - would use price API in production
-                price: symbol === 'USDC' ? 1.0 : 0.0,
-                change: symbol === 'USDC' ? 0.01 : 0.0
-              };
-            } catch (tokenError) {
-              console.warn(`Error fetching details for token ${tokenAddress}:`, tokenError);
-              return null;
-            }
-          })
-        );
-        
-        // Filter out failed tokens and set cache
-        const validBalances = balances.filter(Boolean);
-        return setCachedData(cacheKey, validBalances);
-      } catch (providerError) {
-        console.error("Error fetching balances from provider:", providerError);
-        // Fall through to fallback
-      }
-    }
-    
-    // 2. Fallback to placeholder data
-    return setCachedData(cacheKey, getPlaceholderTokenBalances());
-  } catch (error) {
-    console.error('Error fetching token balances:', error);
-    return getPlaceholderTokenBalances();
-  }
-};
-
-/**
- * Get token logo URL based on symbol
- */
-const getTokenLogo = (symbol) => {
-  const logos = {
-    'MATIC': 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025',
-    'WMATIC': 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025',
-    'USDC': 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=025',
-    'USDT': 'https://cryptologos.cc/logos/tether-usdt-logo.svg?v=025',
-    'WETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=025',
-    'WBTC': 'https://cryptologos.cc/logos/wrapped-bitcoin-wbtc-logo.svg?v=025',
-    'DAI': 'https://cryptologos.cc/logos/multi-collateral-dai-dai-logo.svg?v=025',
-    'NUVO': '/LogoNuvos.webp'
-  };
-  
-  return logos[symbol] || '/token-placeholder.png';
-};
-
-/**
- * Generate placeholder token balance data
- */
-const getPlaceholderTokenBalances = () => {
-  return [
-    {
-      address: '0x0000000000000000000000000000000000001010',
-      symbol: 'MATIC',
-      name: 'Polygon',
-      decimals: 18,
-      logo: 'https://cryptologos.cc/logos/polygon-matic-logo.svg?v=025',
-      balance: "25.5",
-      price: 0.68,
-      change: 2.45
-    },
-    {
-      address: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174',
-      symbol: 'USDC',
-      name: 'USD Coin',
-      decimals: 6,
-      logo: 'https://cryptologos.cc/logos/usd-coin-usdc-logo.svg?v=025',
-      balance: "100.0",
-      price: 1.0,
-      change: 0.01
-    },
-    {
-      address: '0xnuvoaddress',
-      symbol: 'NUVO',
-      name: 'Nuvos Token',
-      decimals: 18,
-      logo: '/LogoNuvos.webp',
-      balance: "500.0",
-      price: 0.0,
-      change: 0.0
-    }
-  ];
 };
 
 /**
@@ -1092,294 +1184,25 @@ export const calculateTimeBonus = (stakingDays, bonusConfig = {
   return 1; // No bonus (multiplier of 1)
 };
 
-/**
- * Upload data to IPFS using Pinata
- * 
- * @param {Object} data - JSON data to upload
- * @param {Object} options - Upload options including Pinata keys
- * @returns {Promise<string>} - IPFS URI (ipfs://...)
- */
-export const uploadJsonToIPFS = async (data, options = {}) => {
-  const url = `https://api.pinata.cloud/pinning/pinJSONToIPFS`;
-  
-  try {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...getPinataHeaders()
-    };
-
-    console.log('Uploading JSON to Pinata with headers:', Object.keys(headers));
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data)
-    });
-    
-    let result;
-    try {
-      result = await response.json();
-    } catch (parseError) {
-      console.error('Failed to parse Pinata response:', parseError);
-      result = {};
-    }
-    
-    if (!response.ok) {
-      // Better error message extraction
-      let errorMessage = 'Unknown Pinata error';
-      
-      if (result.error) {
-        if (typeof result.error === 'string') {
-          errorMessage = result.error;
-        } else if (result.error.details) {
-          errorMessage = result.error.details;
-        } else {
-          errorMessage = JSON.stringify(result.error);
-        }
-      } else if (result.message) {
-        errorMessage = result.message;
-      } else if (response.status === 401) {
-        errorMessage = 'Invalid Pinata credentials. Please check your API keys or regenerate your JWT token.';
-      } else if (response.status === 403) {
-        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
-      } else {
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      }
-      
-      console.error('Pinata API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        result,
-        url,
-        headers: Object.keys(headers)
-      });
-      
-      throw new Error(`Pinata error: ${errorMessage}`);
-    }
-    
-    if (!result.IpfsHash) {
-      throw new Error('Pinata response missing IpfsHash');
-    }
-    
-    return `ipfs://${result.IpfsHash}`;
-  } catch (error) {
-    console.error("Error uploading JSON to IPFS:", error);
-    throw error;
-  }
-};
-
-/**
- * Upload file to IPFS using Pinata
- * 
- * @param {File} file - File to upload
- * @param {Object} options - Upload options including Pinata keys
- * @returns {Promise<string>} - IPFS URI (ipfs://...)
- */
-export const uploadFileToIPFS = async (file, options = {}) => {
-  const url = 'https://api.pinata.cloud/pinning/pinFileToIPFS';
-  
-  try {
-    const headers = getPinataHeaders();
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // Add optional metadata
-    if (options.name || file.name) {
-      const metadata = JSON.stringify({
-        name: options.name || file.name,
-        keyvalues: {
-          originalName: file.name,
-          fileSize: file.size.toString(),
-          fileType: file.type
-        }
-      });
-      formData.append('pinataMetadata', metadata);
-    }
-
-    let fetchHeaders = {};
-    if (headers.Authorization) {
-      fetchHeaders['Authorization'] = headers.Authorization;
-    } else {
-      fetchHeaders['pinata_api_key'] = headers.pinata_api_key;
-      fetchHeaders['pinata_secret_api_key'] = headers.pinata_secret_api_key;
-    }
-
-    console.log('Uploading file to Pinata:', file.name, 'using auth method:', headers.Authorization ? 'JWT' : 'API Keys');
-
-    const response = await fetch(url, {
-      method: 'POST',
-      body: formData,
-      headers: fetchHeaders
-    });
-    
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseError) {
-      console.error('Failed to parse Pinata response:', parseError);
-      data = {};
-    }
-    
-    if (!response.ok) {
-      // Better error message extraction
-      let errorMessage = 'Unknown Pinata error';
-      
-      if (data.error) {
-        if (typeof data.error === 'string') {
-          errorMessage = data.error;
-        } else if (data.error.details) {
-          errorMessage = data.error.details;
-        } else {
-          errorMessage = JSON.stringify(data.error);
-        }
-      } else if (data.message) {
-        errorMessage = data.message;
-      } else if (response.status === 401) {
-        errorMessage = 'Invalid Pinata credentials. Please regenerate your JWT token or check your API keys.';
-      } else if (response.status === 403) {
-        errorMessage = 'Pinata access forbidden. Please check your account permissions.';
-      } else if (response.status === 413) {
-        errorMessage = 'File too large for Pinata upload.';
-      } else {
-        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      }
-      
-      console.error('Pinata API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        data,
-        url,
-        headers: Object.keys(fetchHeaders),
-        fileSize: file.size,
-        fileType: file.type
-      });
-      
-      throw new Error(`Pinata error: ${errorMessage}`);
-    }
-    
-    if (!data.IpfsHash) {
-      throw new Error('Pinata response missing IpfsHash');
-    }
-    
-    return `ipfs://${data.IpfsHash}`;
-  } catch (err) {
-    console.error("Error uploading file to IPFS:", err);
-    throw err;
-  }
-};
-
-/**
- * Safely fetch logs from a blockchain by dividing the request into smaller chunks
- * to handle RPC provider limitations (typically 500 blocks per request)
- * 
- * @param {Object} provider - Ethers provider
- * @param {Object} filter - Log filter object
- * @param {number} chunkSize - Maximum blocks per request (default: 480)
- * @param {number} maxRetries - Maximum retry attempts per chunk
- * @returns {Array} - Combined array of log results
- */
-export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRetries = 3) => {
-  if (!provider) throw new Error('Provider is required');
-
-  const cacheKey = `logs_${filter.address || 'all'}_${(filter.topics || []).join('-')}_${filter.fromBlock}_${filter.toBlock}`;
-
-  // Usa el caché y evita múltiples fetch simultáneos
-  if (!shouldFetchLogs(cacheKey)) {
-    const cachedData = getCachedLogs(cacheKey);
-    if (cachedData) return cachedData;
-    // Si hay una consulta en progreso, espera un poco y reintenta (simple polling)
-    await new Promise(r => setTimeout(r, 500));
-    return getCachedLogs(cacheKey) || [];
-  }
-
-  markLogQueryInProgress(cacheKey);
-
-  try {
-    const currentBlock = await provider.getBlockNumber();
-    const startBlock = filter.fromBlock === 0 || !filter.fromBlock ?
-      Math.max(0, currentBlock - 50000) :
-      parseInt(filter.fromBlock);
-
-    const endBlock = filter.toBlock === 'latest' ? currentBlock : parseInt(filter.toBlock);
-
-    // Si el rango es pequeño, consulta directo
-    if (endBlock - startBlock <= chunkSize) {
-      const logs = await provider.getLogs({
-        ...filter,
-        fromBlock: ethers.toQuantity(startBlock),
-        toBlock: ethers.toQuantity(endBlock)
-      });
-      cacheLogResult(cacheKey, logs);
-      return logs;
-    }
-
-    // Solo un log de inicio
-    console.info(`[LogFetch] Fetching logs in chunks: ${startBlock} to ${endBlock}`);
-
-    const logs = [];
-    for (let from = startBlock; from < endBlock; from += chunkSize) {
-      const to = Math.min(from + chunkSize - 1, endBlock);
-      let attempt = 0;
-      let success = false;
-
-      while (!success && attempt < maxRetries) {
-        try {
-          const chunk = await provider.getLogs({
-            ...filter,
-            fromBlock: ethers.toQuantity(from),
-            toBlock: ethers.toQuantity(to)
-          });
-          logs.push(...chunk);
-          success = true;
-        } catch (error) {
-          attempt++;
-          if (attempt >= maxRetries) {
-            console.error(`[LogFetch] Max retries exceeded for blocks ${from}-${to}: ${error.message}`);
-          } else {
-            await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
-          }
-        }
-      }
-      await new Promise(r => setTimeout(r, 200)); // Menor delay para más eficiencia
-    }
-
-    cacheLogResult(cacheKey, logs);
-    return logs;
-  } catch (error) {
-    console.error('[LogFetch] Error fetching logs in chunks:', error);
-    cacheLogResult(cacheKey, null);
-    return [];
-  }
-};
-
-// Add the missing export that's causing the error
-export const cardemodule = {
-  isEnabled: true,
-  version: '1.0.0',
-  // Add any other properties that might be needed
-  init: () => {
-    console.log('Card module initialized');
-    return true;
-  }
-};
-
-// Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
-const getPinataHeaders = () => {
-  const jwt = import.meta.env.VITE_PINATA_JWT || import.meta.env.VITE_JWT_SK || '';
-  if (jwt.trim()) {
-    const parts = jwt.split('.');
-    if (parts.length === 3) return { Authorization: `Bearer ${jwt}` };
-    console.warn('Malformed JWT, falling back to API keys');
-  }
-  // new & old var names
-  const apiKey = import.meta.env.VITE_PINATA_API_KEY
-               || import.meta.env.VITE_PINATA_API
-               || '';
-  const secret = import.meta.env.VITE_PINATA_SECRET_KEY
-               || import.meta.env.VITE_PINATA_SK
-               || '';
-  if (!apiKey || !secret) {
-    throw new Error('Missing Pinata API key/secret in env vars');
-  }
-  return { pinata_api_key: apiKey, pinata_secret_api_key: secret };
+// Helper function to get placeholder NFTs when contract fails
+const getPlaceholderNFTs = (address) => {
+  return [{
+    id: "1",
+    tokenId: "1",
+    contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS || "",
+    name: "Welcome to Nuvos NFT",
+    description: "This is a placeholder NFT. Connect your wallet and create your first NFT!",
+    image: DEFAULT_PLACEHOLDER,
+    tokenURI: "",
+    standard: "ERC721",
+    attributes: [
+      { trait_type: "Type", value: "Placeholder" },
+      { trait_type: "Status", value: "Demo" }
+    ],
+    minter: address,
+    owner: address,
+    isForSale: false,
+    price: "0",
+    likes: "0"
+  }];
 };

@@ -91,12 +91,12 @@ const AIHubSection = ({ account }) => {
   const stakingDataForAnalysis = useMemo(() => ({
     userDeposits: state.userDeposits,
     stakingStats: {
-      totalStaked: state.userInfo?.totalStaked || '0',
-      pendingRewards: state.userInfo?.pendingRewards || '0'
+      totalStaked: state.userInfo?.totalStaked || state.stakingStats?.totalStaked || '0',
+      pendingRewards: state.userInfo?.calculatedRewards || state.userInfo?.pendingRewards || state.stakingStats?.pendingRewards || '0'
     },
     totalWithdrawn: eventData.totalWithdrawn,
     rewardsClaimed: eventData.rewardsClaimed,
-    stakingConstants: state.STAKING_CONSTANTS || {
+    stakingConstants: {
       HOURLY_ROI: 0.0001,
       MAX_ROI: 1.25,
       MAX_DEPOSITS_PER_USER: 300
@@ -105,7 +105,9 @@ const AIHubSection = ({ account }) => {
     state.userDeposits, 
     state.userInfo?.totalStaked,
     state.userInfo?.pendingRewards,
-    state.STAKING_CONSTANTS,
+    state.userInfo?.calculatedRewards,
+    state.stakingStats?.totalStaked,
+    state.stakingStats?.pendingRewards,
     eventData
   ]);
 

@@ -54,6 +54,7 @@ export const TokenizationProvider = ({ children }) => {
 
   // Function to update user account
   const updateUserAccount = useCallback((account) => {
+    console.log("TokenizationContext: Updating user account to:", account);
     setUserAccount(account);
   }, []);
   
@@ -116,10 +117,12 @@ export const TokenizationProvider = ({ children }) => {
   // Enhanced list NFT function with better error handling
   const listNFTWithErrorHandling = useCallback(async (tokenId, price, category) => {
     try {
+      console.log(`TokenizationContext: Listing NFT ${tokenId} for ${price} in category ${category}`);
       const result = await listNFT(tokenId, price, category);
       
       // Refresh NFTs after successful listing
       if (result.success) {
+        console.log(`NFT ${tokenId} successfully listed, refreshing NFT collection`);
         setTimeout(() => {
           refreshNFTs();
         }, 2000);

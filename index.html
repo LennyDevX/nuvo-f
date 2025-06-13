@@ -9,8 +9,7 @@
     <meta name="theme-color" content="#000000" />
     <title>Nuvos</title>
 
-    <!-- Static CSP Meta Tag for Development - Allows Vite HMR -->
-    <!-- NOTE: Replace or remove this tag for production builds -->
+    <!-- Updated CSP Meta Tag for Development - Now includes nuvos.app -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       connect-src 'self'
@@ -19,59 +18,26 @@
                   https://gateway.pinata.cloud
                   https://ipfs.io
                   https://cloudflare-ipfs.com
-                  https://*.ipfs.dweb.link
-                  https://*.ipfs.cf-ipfs.com
-                  https://*.ipfs.nftstorage.link
-                  https://nftstorage.link
-                  https://*.ipfs.w3s.link
-                  https://nftstorage.link
                   https://dweb.link
-                  https://*.dodoex.io
-                  https://nuvos.app
-                  https://*.nuvos.app
-                  https://*.alchemy.com
-                  wss://*.alchemy.com
-                  https://*.googleapis.com
-                  https://*.firebase.com
-                  https://*.firebaseio.com
-                  https://identitytoolkit.googleapis.com
+                  https://gateway.ipfs.io
+                  https://polygon-mainnet.g.alchemy.com
+                  wss://polygon-mainnet.g.alchemy.com
                   https://polygon-rpc.com
                   https://rpc-mainnet.matic.network
-                  https://matic-mainnet.chainstacklabs.com
-                  https://rpc-mumbai.maticvigil.com
-                  https://matic-mumbai.chainstacklabs.com
-                  https://*.vercel.app
-                  https://*.vercel.com
-                  https://vercel.live
-                  ws://localhost:*
                   wss://localhost:*;
-      img-src 'self' data: 
-                   https://gateway.pinata.cloud 
-                   https://ipfs.io
-                   https://cloudflare-ipfs.com
-                   https://*.ipfs.dweb.link
-                   https://*.ipfs.cf-ipfs.com
-                   https://*.ipfs.nftstorage.link
-                   https://nftstorage.link
-                   https://*.ipfs.w3s.link
-                   https://nftstorage.link
-                   https://images.dodoex.io
-                   https://*.dodoex.io
-                   https://nuvos.app
-                   https://*.nuvos.app
-                   https://*.vercel.app
-                   https://static.okx.com 
-                   https://polygonscan.com 
-                   https://*.googleapis.com;
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com https://*.vercel.app https://*.vercel.com https://vercel.live;
+      img-src 'self'
+              data:
+              blob:
+              https://gateway.pinata.cloud
+              https://ipfs.io
+              https://cloudflare-ipfs.com
+              https://dweb.link
+              https://gateway.ipfs.io
+              https://nuvos.app
+              https://*.nuvos.app;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
       style-src 'self' 'unsafe-inline';
-      font-src 'self' data:;
-      frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com https://*.vercel.app https://*.vercel.com;
-      object-src 'none';
-      base-uri 'self';
-      form-action 'self';
-      upgrade-insecure-requests;
-    ">
+      upgrade-insecure-requests;">
     
     <!-- Performance optimizations -->
     <link rel="dns-prefetch" href="https://api.dodoex.io">

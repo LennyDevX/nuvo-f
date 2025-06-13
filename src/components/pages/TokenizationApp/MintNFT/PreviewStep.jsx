@@ -105,11 +105,11 @@ const PreviewStep = () => {
     setMintingError(null);
     setTxStatus('pending');
     
-    // Show pending transaction toast
+    // Show pending transaction toast with improved messaging
     showTransactionToast(
       'loading', 
-      'Processing Transaction', 
-      'Please confirm the transaction in your wallet...'
+      'Initiating Transaction', 
+      'Please confirm the minting transaction in your wallet. This may take a few moments...'
     );
     
     try {
@@ -157,7 +157,7 @@ const PreviewStep = () => {
         parsedError.status === 'rejected' ? 'info' : 'error',
         parsedError.status === 'rejected' ? 'Transaction Cancelled' : 'Transaction Failed',
         parsedError.status === 'rejected' ? 
-          'Transaction rejected. No gas fees were charged.' : 
+          'Transaction was cancelled by user. No fees were charged.' : 
           parsedError.message
       );
     } finally {
