@@ -9,21 +9,6 @@ export const cspConfig = {
 
       'https://polygon-mainnet.g.alchemy.com',
       'wss://polygon-mainnet.g.alchemy.com',
-      "https://api.pinata.cloud",
-      "https://gateway.pinata.cloud",
-      "https://ipfs.io",
-      "https://cloudflare-ipfs.com",
-      "https://dweb.link",
-      "https://*.ipfs.dweb.link",
-      "https://*.ipfs.cf-ipfs.com",
-      "https://*.ipfs.nftstorage.link", 
-      "https://nftstorage.link", // Add explicit domain without wildcard
-      "https://*.ipfs.w3s.link",
-      "https://w3s.link",
-      "https://ipfs.cf-ipfs.com",
-      'https://*.dodoex.io',
-      'https://nuvos.app',
-      'https://*.nuvos.app',
       'https://*.alchemy.com',
       'wss://*.alchemy.com',
       'https://*.googleapis.com',
@@ -38,8 +23,8 @@ export const cspConfig = {
       'https://*.vercel.app',
       'https://*.vercel.com',
       'https://vercel.live',
-      process.env.NODE_ENV === 'development' ? 'ws://localhost:*' : null,
-      process.env.NODE_ENV === 'development' ? 'wss://localhost:*' : null
+      import.meta.env.MODE === 'development' ? 'ws://localhost:*' : null,
+      import.meta.env.MODE === 'development' ? 'wss://localhost:*' : null
     ].filter(Boolean),
     'img-src': [
       "'self'",

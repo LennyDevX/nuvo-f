@@ -5,6 +5,7 @@ import {
   cacheLogResult,
   markLogQueryInProgress
 } from './blockchainLogCache';
+import { getAlchemyApiKey, getAlchemyNftUrl } from '../alchemy';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [
@@ -33,7 +34,7 @@ export const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
 // Supported NFT APIs and their base URLs
 const NFT_API_CONFIG = {
   alchemy: {
-    baseUrl: (network, apiKey) => `https://${network}.g.alchemy.com/v2/${apiKey}/getNFTs/`,
+    baseUrl: (network) => getAlchemyNftUrl({ network }),
     formatOwnerQuery: (address) => `?owner=${address}`
   },
   moralis: {
@@ -42,9 +43,9 @@ const NFT_API_CONFIG = {
   }
 };
 
-// API keys storage - best to move to environment variables in production
+// API keys storage - best to move a environment variables en producción
 const getApiKeys = () => ({
-  alchemy: import.meta.env.VITE_ALCHEMY || '',
+  alchemy: (() => { try { return getAlchemyApiKey(); } catch { return ''; } })(),
   moralis: import.meta.env.VITE_MORALIS_API || '',
   polygonscan: import.meta.env.VITE_POLYGONSCAN_API || ''
 });
@@ -101,7 +102,7 @@ export const fetchNFTs = async (address, provider, options = {}) => {
       try {
         console.log("Fetching NFTs with Alchemy API");
         const network = chainId === 137 ? 'polygon-mainnet' : 'polygon-mumbai';
-        const url = `${NFT_API_CONFIG.alchemy.baseUrl(network, apiKeys.alchemy)}${NFT_API_CONFIG.alchemy.formatOwnerQuery(address)}&pageSize=${limit}`;
+        const url = `${NFT_API_CONFIG.alchemy.baseUrl(network)}${NFT_API_CONFIG.alchemy.formatOwnerQuery(address)}&pageSize=${limit}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Alchemy API error: ${response.statusText}`);
@@ -334,7 +335,7 @@ export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
     }
     
     // Try to extract CID if it's another IPFS gateway
-    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-Za-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-ZaZ]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
     if (pathMatch) {
       const cid = pathMatch[1];
       const subpath = pathMatch[2] || '';

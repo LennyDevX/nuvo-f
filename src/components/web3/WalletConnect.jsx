@@ -6,6 +6,7 @@ import { detectWallet } from '../../utils/blockchain/walletDetector';
 import MetaMaskLogo from '/metamask-logo.png';
 import TrustWalletLogo from '/trustwallet-logo.png';
 import { useNavigate } from 'react-router-dom';
+import { getAlchemyRpcUrl } from '../../utils/alchemy';
 
 const WalletConnect = ({ className }) => {
   const { 
@@ -32,7 +33,7 @@ const WalletConnect = ({ className }) => {
   const navigate = useNavigate();
 
   const rpcUrls = useMemo(() => [
-    `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
+    getAlchemyRpcUrl({ network: 'polygon-mainnet' }),
     'https://polygon-rpc.com',
     'https://rpc-mainnet.matic.network',
     'https://rpc-mainnet.maticvigil.com'
@@ -99,7 +100,7 @@ const WalletConnect = ({ className }) => {
                     decimals: 18
                   },
                   rpcUrls: [
-                    `https://polygon-mainnet.g.alchemy.com/v2/${import.meta.env.VITE_ALCHEMY}`,
+                    getAlchemyRpcUrl({ network: 'polygon-mainnet' }),
                     'https://polygon-rpc.com'
                   ],
                   blockExplorerUrls: ['https://polygonscan.com']

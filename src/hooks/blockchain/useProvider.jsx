@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ethers } from "ethers";
 import { globalCache } from '../../utils/cache/CacheManager';
+import { getAlchemyRpcUrl, getAlchemyApiKey } from '../../utils/alchemy';
 
 // Public RPC fallbacks if primary provider fails
 const PUBLIC_RPC_ENDPOINTS = {
@@ -20,16 +21,10 @@ const useProvider = () => {
   const [error, setError] = useState(null);
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const providerRef = useRef(null);
-  const networkInitialized = useRef(false);
-  const ALCHEMY_KEY = import.meta.env.VITE_ALCHEMY || "";
-  const CHAIN_ID = parseInt(import.meta.env.VITE_CHAIN_ID || "137");
+  const [isConnecting, setIsConnecting] = useState(false);  const providerRef = useRef(null);
+  const networkInitialized = useRef(false);  const CHAIN_ID = parseInt(import.meta.env.VITE_CHAIN_ID || '137');
+    // Safely get RPC URL with error handling - moved inside initProvider
   
-  // Get the RPC URL from environment variables
-  const RPC_URL = import.meta.env.VITE_RPC_URL_POLYGON || 
-    `https://polygon-${CHAIN_ID === 137 ? 'mainnet' : 'mumbai'}.g.alchemy.com/v2/`;
-
   // Helper to safely initialize provider
   const initProvider = useCallback(async () => {
     // Set initializing flag to prevent concurrent initialization attempts
@@ -41,17 +36,13 @@ const useProvider = () => {
       if (cachedNetwork) {
         setChainId(cachedNetwork.chainId);
         console.log("Loaded network info from cache:", cachedNetwork.name);
-      }
-
-      // Check if the URL already contains the API key to prevent duplication
-      let alchemyUrl = RPC_URL;
-      
-      if (RPC_URL.includes('alchemy.com/v2/') && !RPC_URL.includes(ALCHEMY_KEY)) {
-        // Only append the key if the URL is for Alchemy but doesn't already contain the key
-        alchemyUrl = `${RPC_URL}${ALCHEMY_KEY}`;
-      } else if (RPC_URL.includes('alchemy.com') && !RPC_URL.includes('/v2/')) {
-        // If it's Alchemy but missing the v2/ path
-        alchemyUrl = `${RPC_URL}/v2/${ALCHEMY_KEY}`;
+      }      // Generate RPC URL dynamically to ensure env vars are loaded
+      let alchemyUrl;
+      try {
+        alchemyUrl = getAlchemyRpcUrl({ network: CHAIN_ID === 137 ? 'polygon-mainnet' : 'polygon-mumbai' });
+      } catch (error) {
+        console.error('Failed to generate Alchemy RPC URL, using fallbacks:', error);
+        throw new Error("Alchemy not available, using fallbacks");
       }
 
       console.log(`Connecting to ${CHAIN_ID === 137 ? 'Polygon Mainnet' : 'Mumbai Testnet'}...`);
@@ -110,13 +101,12 @@ const useProvider = () => {
       
       console.log("Provider successfully initialized");
       setError(null);
-    } catch (error) {
-      console.error("Provider initialization error:", error);
+    } catch (error) {      console.error("Provider initialization error:", error);
       setError(error.message);
       // Reset initialization flag on error
       networkInitialized.current = false;
     }
-  }, [ALCHEMY_KEY, RPC_URL, CHAIN_ID]);
+  }, [CHAIN_ID]); // Removed ALCHEMY_KEY and RPC_URL as they're now generated dynamically
 
   // Access browser wallet provider for sending transactions
   const getWalletProvider = useCallback(async () => {
