@@ -8,6 +8,7 @@ import useIntersectionObserver from '../../../hooks/performance/useIntersectionO
 import memoWithName from '../../../utils/performance/memoWithName'; 
 import { useThrottle } from '../../../hooks/performance/useEventOptimizers';
 import { FaBars, FaUser } from 'react-icons/fa';
+import { logger } from '../../../utils/debug/logger';
 
 // Import styles for chat
 import '../../../Styles/chat.css';
@@ -43,25 +44,27 @@ const ChatPage = () => {
     triggerOnce: true
   });
   
-  // Debug NFT loading
+  // Debug NFT loading - UPDATED WITH SMART LOGGING
   useEffect(() => {
     if (walletConnected && account) {
-      console.log('ChatPage NFT Debug:', {
-        account,
-        nfts,
+      const nftInfo = {
+        account: account.substring(0, 8) + '...',
+        nftsLength: nfts?.length || 0,
         nftsLoading,
-        nftError,
-        nftsLength: nfts?.length
-      });
+        hasError: !!nftError
+      };
+      
+      // Only log when NFT data actually changes
+      logger.logOnChange('NFT', 'chat_page_nfts', nftInfo);
     }
-  }, [account, walletConnected, nfts, nftsLoading, nftError]);
+  }, [account, walletConnected, nfts?.length, nftsLoading, nftError]);
   
-  // Update user account when account changes - with proper dependency array
+  // Update user account when account changes - UPDATED LOGGING
   useEffect(() => {
     let isMounted = true;
     
     if (account && walletConnected && updateUserAccount && isMounted) {
-      console.log('Updating user account:', account);
+      logger.debug('NFT', 'Updating user account for chat');
       updateUserAccount(account);
     }
     
@@ -70,7 +73,7 @@ const ChatPage = () => {
     };
   }, [account, walletConnected, updateUserAccount]);
   
-  // Fetch staking info when account changes - with proper cleanup
+  // Fetch staking info when account changes - UPDATED LOGGING
   useEffect(() => {
     let isMounted = true;
     
@@ -78,8 +81,9 @@ const ChatPage = () => {
       if (walletConnected && account && refreshUserInfo && isMounted) {
         try {
           await refreshUserInfo(account);
+          logger.debug('STAKING', 'Staking info refreshed for chat');
         } catch (error) {
-          console.error('Error fetching staking info:', error);
+          logger.error('STAKING', 'Error fetching staking info for chat', error.message);
         }
       }
     };

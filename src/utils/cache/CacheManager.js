@@ -1,3 +1,5 @@
+import { logger } from '../debug/logger';
+
 export class CacheManager {
   constructor(maxSize = 100) {
     this.cache = new Map();
@@ -41,10 +43,8 @@ export class CacheManager {
       
       // If we have stale data, return it as fallback
       if (cached) {
-        console.log(`Returning stale data for ${key} due to fetch error`);
-        return cached;
+        logger.throttledLog('WARN', 'CACHE', `Returning stale data for ${key} due to fetch error`, null, 30000);
       }
-      throw error;
     }
   }
 
