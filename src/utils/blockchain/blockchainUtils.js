@@ -5,6 +5,7 @@ import {
   cacheLogResult,
   markLogQueryInProgress
 } from './blockchainLogCache';
+import { getAlchemyApiKey, getAlchemyNftUrl } from '../alchemy';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [
@@ -33,7 +34,7 @@ export const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
 // Supported NFT APIs and their base URLs
 const NFT_API_CONFIG = {
   alchemy: {
-    baseUrl: (network, apiKey) => `https://${network}.g.alchemy.com/v2/${apiKey}/getNFTs/`,
+    baseUrl: (network) => getAlchemyNftUrl({ network }),
     formatOwnerQuery: (address) => `?owner=${address}`
   },
   moralis: {
@@ -42,9 +43,9 @@ const NFT_API_CONFIG = {
   }
 };
 
-// API keys storage - best to move to environment variables in production
+// API keys storage - best to move a environment variables en producción
 const getApiKeys = () => ({
-  alchemy: import.meta.env.VITE_ALCHEMY || '',
+  alchemy: (() => { try { return getAlchemyApiKey(); } catch { return ''; } })(),
   moralis: import.meta.env.VITE_MORALIS_API || '',
   polygonscan: import.meta.env.VITE_POLYGONSCAN_API || ''
 });
@@ -101,7 +102,7 @@ export const fetchNFTs = async (address, provider, options = {}) => {
       try {
         console.log("Fetching NFTs with Alchemy API");
         const network = chainId === 137 ? 'polygon-mainnet' : 'polygon-mumbai';
-        const url = `${NFT_API_CONFIG.alchemy.baseUrl(network, apiKeys.alchemy)}${NFT_API_CONFIG.alchemy.formatOwnerQuery(address)}&pageSize=${limit}`;
+        const url = `${NFT_API_CONFIG.alchemy.baseUrl(network)}${NFT_API_CONFIG.alchemy.formatOwnerQuery(address)}&pageSize=${limit}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Alchemy API error: ${response.statusText}`);
@@ -334,7 +335,7 @@ export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
     }
     
     // Try to extract CID if it's another IPFS gateway
-    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-Za-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-ZaZ]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
     if (pathMatch) {
       const cid = pathMatch[1];
       const subpath = pathMatch[2] || '';
@@ -1119,9 +1120,19 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
       result = {};
     }
     if (!response.ok) {
+      // Improve error message for Pinata 401/403
       let pinataMsg = result.error || result.errorDetails || result.message || result.error_message;
       if (!pinataMsg && typeof result === 'object') {
         pinataMsg = JSON.stringify(result);
+      }
+      // Ensure pinataMsg is always a string
+      if (typeof pinataMsg === 'object') {
+        pinataMsg = JSON.stringify(pinataMsg);
+      }
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(
+          `Pinata authentication failed (HTTP ${response.status}). Verifica tus credenciales de Pinata (API Key/Secret o JWT). Mensaje: ${pinataMsg || response.statusText}`
+        );
       }
       throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
     }
@@ -1134,12 +1145,19 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
 
 // Utilidad para obtener headers de Pinata (API Key/Secret o JWT)
 const getPinataHeaders = () => {
-  // Unifica los nombres de variables de entorno
-  const apiKey = import.meta.env.VITE_PINATA_API || import.meta.env.VITE_PINATA || '';
-  const secret = import.meta.env.VITE_PINATA_SK || import.meta.env.VITE_PINATA_SK || '';
-  const jwt = import.meta.env.VITE_JWT_SK || '';
-  if (jwt) {
+  // Use correct variable names from .env/.env.local
+  const apiKey = import.meta.env.VITE_PINATA || '';
+  const secret = import.meta.env.VITE_PINATA_SK || '';
+  const jwt = import.meta.env.VITE_PINATA_JWT || '';
+  // Validate JWT: must have 3 segments separated by '.'
+  if (jwt && jwt.split('.').length === 3) {
     return { Authorization: `Bearer ${jwt}` };
+  }
+  if (jwt && jwt.length > 0) {
+    // JWT present but malformed
+    console.warn(
+      '[Pinata] JWT token is malformed (should have 3 segments separated by dots). Falling back to API Key/Secret.'
+    );
   }
   return {
     pinata_api_key: apiKey,
@@ -1181,10 +1199,19 @@ export const uploadFileToIPFS = async (file, options = {}) => {
       data = {};
     }
     if (!response.ok) {
-      // Intenta mostrar el mensaje de error real de Pinata
+      // Improve error message for Pinata 401/403
       let pinataMsg = data.error || data.errorDetails || data.message || data.error_message;
       if (!pinataMsg && typeof data === 'object') {
         pinataMsg = JSON.stringify(data);
+      }
+      // Ensure pinataMsg is always a string
+      if (typeof pinataMsg === 'object') {
+        pinataMsg = JSON.stringify(pinataMsg);
+      }
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(
+          `Pinata authentication failed (HTTP ${response.status}). Verifica tus credenciales de Pinata (API Key/Secret o JWT). Mensaje: ${pinataMsg || response.statusText}`
+        );
       }
       throw new Error(`Pinata error: ${pinataMsg || response.statusText}`);
     }
@@ -1277,6 +1304,154 @@ export const fetchLogsInChunks = async (provider, filter, chunkSize = 480, maxRe
     cacheLogResult(cacheKey, null);
     return [];
   }
+};
+
+/**
+ * Decode contract custom error from error data
+ * @param {string} errorData - The error data from contract call
+ * @returns {string} - Human readable error message
+ */
+export const decodeContractError = (errorData) => {
+  const errorSignatures = {
+    '0x8f563f02': 'CategoryNotValid - The category must be registered in the contract first',
+    '0x82b42960': 'Unauthorized - You are not authorized to perform this action',
+    '0x677510db': 'TokenDoesNotExist - The NFT does not exist',
+    '0x037eff13': 'TokenNotForSale - The NFT is not available for sale operations',
+    '0x356680b7': 'InsufficientFunds - Insufficient funds for the operation',
+    '0xb4fa3fb3': 'InvalidInput - Invalid input parameters provided',
+    '0x0df56d4f': 'SectionPaused - This section is currently paused',
+    '0xc2b03beb': 'RoyaltyTooHigh - The royalty percentage is too high',
+    '0x99fb3302': 'BlacklistedAddress - This address is blacklisted',
+    '0x12171d83': 'TransferFailed - The transfer operation failed'
+  };
+
+  return errorSignatures[errorData] || `Unknown contract error (${errorData})`;
+};
+
+/**
+ * Get valid categories for NFT listing
+ * @returns {Array} - Array of valid category mappings
+ */
+export const getValidCategories = () => {
+  return [
+    { key: 'coleccionables', label: 'Coleccionables', english: 'collectible' },
+    { key: 'arte', label: 'Arte', english: 'artwork' },
+    { key: 'fotografia', label: 'Fotografía', english: 'photography' },
+    { key: 'musica', label: 'Música', english: 'music' },
+    { key: 'video', label: 'Video', english: 'video' }
+  ];
+};
+
+/**
+ * Map English category to Spanish for contract
+ * @param {string} category - English category name
+ * @returns {string} - Spanish category name expected by contract
+ */
+export const mapCategoryToSpanish = (category) => {
+  const categoryMap = {
+    'collectible': 'coleccionables',
+    'coleccionables': 'coleccionables',
+    'artwork': 'arte',
+    'arte': 'arte',
+    'photography': 'fotografia',
+    'fotografia': 'fotografia',
+    'music': 'musica',
+    'musica': 'musica',
+    'video': 'video'
+  };
+
+  const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
+  return categoryMap[normalizedCategory] || 'coleccionables';
+};
+
+/**
+ * Validate NFT listing parameters
+ * @param {Object} params - Listing parameters
+ * @returns {Object} - Validation result
+ */
+export const validateNFTListingParams = (params) => {
+  const { tokenId, price, category } = params;
+  const errors = [];
+
+  // Validate tokenId
+  if (!tokenId) {
+    errors.push('Token ID is required');
+  } else {
+    try {
+      const id = BigInt(tokenId);
+      if (id < 0) {
+        errors.push('Token ID must be positive');
+      }
+    } catch (e) {
+      errors.push('Invalid Token ID format');
+    }
+  }
+
+  // Validate price
+  if (!price) {
+    errors.push('Price is required');
+  } else {
+    const priceNum = parseFloat(price);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      errors.push('Price must be a positive number');
+    } else if (priceNum < 0.001) {
+      errors.push('Minimum price is 0.001 MATIC');
+    }
+  }
+
+  // Validate category
+  const validCategories = ['coleccionables', 'arte', 'fotografia', 'musica', 'video'];
+  if (category && !validCategories.includes(category.toLowerCase())) {
+    errors.push('Invalid category');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Format contract error messages for user display
+ * @param {Error} error - Contract error
+ * @returns {string} - User-friendly error message
+ */
+export const formatContractError = (error) => {
+  if (!error) return 'Unknown error occurred';
+
+  const message = error.message || error.toString();
+
+  // Common contract error patterns
+  if (message.includes('user rejected')) {
+    return 'Transaction was rejected by user';
+  }
+  
+  if (message.includes('insufficient funds')) {
+    return 'Insufficient funds for gas fees';
+  }
+  
+  if (message.includes('TokenNotForSale')) {
+    return 'This NFT is not currently for sale';
+  }
+  
+  if (message.includes('Unauthorized')) {
+    return 'You are not authorized to perform this action';
+  }
+  
+  if (message.includes('TokenDoesNotExist')) {
+    return 'This NFT does not exist';
+  }
+  
+  if (message.includes('execution reverted')) {
+    return 'Transaction failed - contract requirements not met';
+  }
+  
+  if (message.includes('gas')) {
+    return 'Transaction failed due to gas issues';
+  }
+
+  // Return the original message if no pattern matches
+  return message;
 };
 
 // Add the missing export that's causing the error

@@ -30,7 +30,7 @@ class ErrorBoundary extends React.Component {
           <h3 className="text-lg font-medium mb-2">Something went wrong</h3>
           <p className="text-sm mb-4">{String(this.state.error)}</p>
           
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.MODE === 'development' && (
             <details className="border border-red-500/50 rounded p-2 mb-4">
               <summary className="cursor-pointer mb-2">Component Stack (Dev Mode)</summary>
               <pre className="text-xs overflow-auto p-2 bg-black/30 rounded max-h-60 whitespace-pre-wrap">

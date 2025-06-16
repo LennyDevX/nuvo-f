@@ -11,7 +11,7 @@ const createLazyComponent = (importFn) => {
     return importFn()
       .then(module => {
         const loadTime = performance.now() - startTime;
-        if (process.env.NODE_ENV === 'development') {
+        if (import.meta.env.MODE === 'development') {
           console.debug(`Route loaded in ${loadTime.toFixed(2)}ms`);
         }
         return module;

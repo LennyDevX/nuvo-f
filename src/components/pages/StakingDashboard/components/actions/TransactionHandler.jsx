@@ -78,7 +78,7 @@ const createEnhancedLogger = (settings = {}) => {
     }
     
     // In production, limit debug logs unless explicitly enabled
-    if (level === 'DEBUG' && !config.persistentDebug && process.env.NODE_ENV === 'production') {
+    if (level === 'DEBUG' && !config.persistentDebug && import.meta.env.MODE === 'production') {
       return false;
     }
     

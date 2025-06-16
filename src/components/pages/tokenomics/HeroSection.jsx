@@ -1,6 +1,7 @@
 import React from 'react';
 import { m } from 'framer-motion';
 import { FaRocket, FaLock, FaUsers } from 'react-icons/fa';
+import OptimizedImage from '../../image/OptimizedImage';
 
 const HeroSection = ({ onOpenTokenModal }) => {
   // Container variants for the whole section
@@ -130,17 +131,24 @@ const HeroSection = ({ onOpenTokenModal }) => {
               variants={coinFloatVariants}
               animate="animate"
             >
-              <m.img
-                src="/NuvosToken.png"
-                alt="NUVOS Token"
-                className="w-24 h-24 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-64 xl:h-64 
-                  object-contain drop-shadow-[0_0_12px_rgba(139,92,246,0.7)]"
+              <m.div
+                className="w-24 h-24 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:w-48 lg:h-48 xl:w-64 xl:h-64"
                 variants={coinRotateVariants}
                 animate="animate"
                 style={{ 
                   filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.6))'
                 }}
-              />
+              >
+                <OptimizedImage
+                  src="/NuvosToken.png"
+                  alt="NUVOS Token"
+                  priority={true}
+                  quality={90}
+                  className="w-full h-full object-contain"
+                  loadingStrategy="eager"
+                  placeholderColor="transparent"
+                />
+              </m.div>
             </m.div>
           </m.div>
 

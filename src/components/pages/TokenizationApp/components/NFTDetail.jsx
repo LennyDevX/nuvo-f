@@ -8,6 +8,8 @@ import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingOverlay from '../../../ui/LoadingOverlay';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import IPFSImage from '../../../ui/IPFSImage';
+import useListNFT from '../../../../hooks/nfts/useListNFT';
+import { getCSPCompliantImageURL } from '../../../../utils/blockchain/blockchainUtils';
 
 // Agregar un simple sistema de caché para evitar llamadas repetidas
 const nftCache = new Map();
@@ -29,6 +31,10 @@ const NFTDetail = () => {
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [showListForm, setShowListForm] = useState(false);
+  const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('collectible');
+  const { listNFT, loading: listingLoading, error: listingError, success: listingSuccess, txHash } = useListNFT();
   const callCountRef = useRef(0);
   const fetchingRef = useRef(false);
 
@@ -338,6 +344,50 @@ const NFTDetail = () => {
     }
   };
 
+  // Determinar si el NFT está listado
+  const isListed = nft && nft.price && Number(nft.price) > 0;
+
+  // Handler para listar NFT
+  const handleListNFT = async (e) => {
+    e.preventDefault();
+    try {
+      // Enhanced validation
+      if (!nft?.tokenId) {
+        throw new Error("Token ID no válido");
+      }
+      
+      if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
+        throw new Error("El precio debe ser un número positivo");
+      }
+
+      if (parseFloat(price) < 0.001) {
+        throw new Error("El precio mínimo es 0.001 MATIC");
+      }
+
+      console.log('Attempting to list NFT:', {
+        tokenId: nft.tokenId,
+        price: price,
+        category: category || 'coleccionables'
+      });
+
+      await listNFT({
+        tokenId: nft.tokenId,
+        price: price.toString(),
+        category: category || 'coleccionables'
+      });
+      
+      setShowListForm(false);
+      setPrice('');
+      setCategory('coleccionables');
+      
+      // Reload NFT data after successful listing
+      setTimeout(() => window.location.reload(), 2000);
+    } catch (err) {
+      console.error('Error listing NFT:', err);
+      // Error is handled by the hook
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
@@ -504,6 +554,7 @@ const NFTDetail = () => {
                   
                   {nft.owner === account && !nft.isForSale && (
                     <motion.button 
+                      onClick={() => setShowListForm(true)}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-green-500/20 transition-all"
@@ -521,6 +572,108 @@ const NFTDetail = () => {
               </div>
             </div>
           </div>
+          
+          {/* Formulario para listar NFT */}
+          {!isListed && (account?.toLowerCase() === (nft?.owner || nft?.minter)?.toLowerCase()) && (
+            <div className="mt-8 p-6 bg-black/30 rounded-xl border border-purple-500/20 shadow-lg">
+              <h3 className="text-xl font-semibold text-white mb-4">Listar NFT para venta</h3>
+              
+              {showListForm ? (
+                <form onSubmit={handleListNFT} className="space-y-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">
+                      Precio (MATIC):
+                    </label>
+                    <input
+                      type="number"
+                      min="0.001"
+                      step="0.001"
+                      value={price}
+                      onChange={e => setPrice(e.target.value)}
+                      required
+                      placeholder="Ej: 1.5"
+                      className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Precio mínimo: 0.001 MATIC</p>
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">
+                      Categoría:
+                    </label>
+                    <select
+                      value={category}
+                      onChange={e => setCategory(e.target.value)}
+                      className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
+                    >
+                      <option value="coleccionables">Coleccionables</option>
+                      <option value="arte">Arte</option>
+                      <option value="fotografia">Fotografía</option>
+                      <option value="musica">Música</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={listingLoading || !price}
+                      className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {listingLoading ? 'Listando...' : 'Confirmar listado'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowListForm(false)}
+                      className="flex-1 py-3 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center transition-all hover:shadow-md"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+              
+                  {listingError && (
+                    <div className="p-3 bg-red-900/30 border border-red-500/30 rounded-lg">
+                      <p className="text-red-300 text-sm">{listingError}</p>
+                    </div>
+                  )}
+                  {listingSuccess && (
+                    <div className="p-3 bg-green-900/30 border border-green-500/30 rounded-lg">
+                      <p className="text-green-300 text-sm">NFT listado correctamente</p>
+                    </div>
+                  )}
+                  {txHash && (
+                    <div className="mt-2">
+                      <a
+                        href={`https://polygonscan.com/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 underline text-sm hover:text-blue-300"
+                      >
+                        Ver transacción en Polygonscan
+                      </a>
+                    </div>
+                  )}
+                </form>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <p className="text-gray-300 text-sm">
+                    Este NFT no está listado para venta. Puedes listar tu NFT estableciendo un precio y categoría.
+                  </p>
+                  <button
+                    onClick={() => setShowListForm(true)}
+                    className="py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg"
+                  >
+                    Listar NFT para venta
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Mensaje para no propietarios */}
+          {!isListed && account?.toLowerCase() !== (nft?.owner || nft?.minter)?.toLowerCase() && (
+            <div className="mt-4 text-gray-400 text-sm">
+              Solo el propietario puede listar este NFT.
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

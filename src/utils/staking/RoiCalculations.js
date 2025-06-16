@@ -1,3 +1,5 @@
+import { logger } from '../debug/logger';
+
 const REWARD_RATE = 0.3; // 30% max reward
 const COMMISSION_RATE = 0.06; // 6% commission on withdrawals
 
@@ -9,7 +11,7 @@ export const calculateROIProgress = (depositAmount, totalWithdrawn) => {
       ? parseFloat(totalWithdrawn) / (1 - COMMISSION_RATE)
       : totalWithdrawn / (1 - COMMISSION_RATE);
 
-    console.log('ROI Calculation details:', {
+    logger.debug('STAKING', 'ROI Calculation completed', {
       depositAmount: deposit,
       netWithdrawn: totalWithdrawn,
       grossWithdrawn,

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
+import { logger } from '../utils/debug/logger';
 
 export const WalletContext = createContext({
     account: null,
@@ -39,6 +40,18 @@ export const WalletProvider = ({ children }) => {
     const [lastActivityTime, setLastActivityTime] = useState(Date.now());
     const AUTO_DISCONNECT_TIME = 3600000; // 1 hour of inactivity
 
+    const handleDisconnect = useCallback(() => {
+        setAccount(null);
+        setBalance(null);
+        setNetwork(null);
+        setWalletConnected(false);
+        setProvider(null);
+        localStorage.removeItem('walletAccount');
+        localStorage.removeItem('walletBalance');
+        localStorage.removeItem('walletNetwork');
+        localStorage.removeItem('walletConnected');
+    }, []);
+
     // Update lastActivityTime on user activity
     useEffect(() => {
         const updateLastActivity = () => setLastActivityTime(Date.now());
@@ -67,7 +80,7 @@ export const WalletProvider = ({ children }) => {
         }, 60000); // Check every minute
         
         return () => clearInterval(intervalId);
-    }, [walletConnected, lastActivityTime]);
+    }, [walletConnected, lastActivityTime, handleDisconnect]);
 
     // Persistir estados en localStorage
     useEffect(() => {
@@ -89,12 +102,31 @@ export const WalletProvider = ({ children }) => {
         localStorage.setItem('walletConnected', walletConnected.toString());
     }, [walletConnected]);
 
+    // Debug: Verificar el estado del contexto - REPLACED WITH SMART LOGGING
+    useEffect(() => {
+        // Only log when values actually change
+        logger.walletChange('connected', walletConnected);
+        logger.walletChange('account', account ? `${account.substring(0, 8)}...` : null);
+        logger.walletChange('network', network);
+        
+        // Log full context only once per session or on significant changes
+        const contextSummary = { 
+            walletConnected, 
+            hasAccount: !!account, 
+            network,
+            hasDisconnectMethod: !!handleDisconnect,
+            methodCount: Object.keys(value || {}).length
+        };
+        
+        logger.logOnChange('WALLET', 'context_state', contextSummary);
+    }, [walletConnected, account, network, handleDisconnect]);
+
     // Improved auto-reconnect logic
     useEffect(() => {
         const initProvider = async () => {
             if (window.ethereum && walletConnected && account) {
                 try {
-                    console.log("Attempting to reconnect wallet:", account);
+                    logger.debug('WALLET', 'Attempting to reconnect wallet');
                     const provider = new ethers.BrowserProvider(window.ethereum);
                     await provider.ready;
                     
@@ -126,17 +158,17 @@ export const WalletProvider = ({ children }) => {
                             // Setup event listeners
                             setupEventListeners(provider);
                             
-                            console.log("Wallet reconnected successfully");
+                            logger.success('WALLET', 'Wallet reconnected successfully');
                         } else {
-                            console.log("Saved account no longer authorized");
+                            logger.warn('WALLET', 'Saved account no longer authorized');
                             handleDisconnect();
                         }
                     } else {
-                        console.log("No authorized accounts found");
+                        logger.warn('WALLET', 'No authorized accounts found');
                         handleDisconnect();
                     }
                 } catch (error) {
-                    console.error("Error reconnecting wallet:", error);
+                    logger.error('WALLET', 'Error reconnecting wallet', error.message);
                     handleDisconnect();
                 }
             }
@@ -162,11 +194,11 @@ export const WalletProvider = ({ children }) => {
             // Handle account changes
             window.ethereum.on('accountsChanged', async (accounts) => {
                 if (accounts.length === 0) {
-                    // User disconnected all accounts
+                    logger.info('WALLET', 'User disconnected all accounts');
                     handleDisconnect();
                 } else {
-                    // User switched account
                     const newAccount = accounts[0];
+                    logger.info('WALLET', 'Account changed', `${newAccount.substring(0, 8)}...`);
                     setAccount(newAccount);
                     
                     // Update balance for new account
@@ -207,18 +239,6 @@ export const WalletProvider = ({ children }) => {
         }
         return provider;
     }, [provider, account]);
-
-    const handleDisconnect = useCallback(() => {
-        setAccount(null);
-        setBalance(null);
-        setNetwork(null);
-        setWalletConnected(false);
-        setProvider(null);
-        localStorage.removeItem('walletAccount');
-        localStorage.removeItem('walletBalance');
-        localStorage.removeItem('walletNetwork');
-        localStorage.removeItem('walletConnected');
-    }, []);
 
     const value = {
         account,

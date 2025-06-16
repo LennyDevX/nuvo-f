@@ -7,7 +7,7 @@ const OptimizedImage = ({
   width,
   height,
   loadingStrategy = 'lazy',
-  placeholderColor = 'rgba(139, 92, 246, 0.1)',
+  placeholderColor = 'transparent',
   priority = false,
   sizes,
   quality = 75,
@@ -16,9 +16,11 @@ const OptimizedImage = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState('');
+  const [shouldPreload, setShouldPreload] = useState(false);
   const imgRef = useRef(null);
   const timeoutRef = useRef(null);
   const observerRef = useRef(null);
+  const preloadLinkRef = useRef(null);
 
   // Debounced src update to prevent rapid re-renders
   const debouncedSrcUpdate = useCallback((newSrc) => {
@@ -52,18 +54,21 @@ const OptimizedImage = ({
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
-              entry.target.loading = 'eager';
+              setShouldPreload(true);
               observerRef.current?.unobserve(entry.target);
             }
           });
         },
         { 
-          rootMargin: '50px',
+          rootMargin: '100px',
           threshold: 0.1 
         }
       );
       
       observerRef.current.observe(imgRef.current);
+    } else if (priority) {
+      // For priority images, preload immediately
+      setShouldPreload(true);
     }
 
     return () => {
@@ -73,42 +78,81 @@ const OptimizedImage = ({
     };
   }, [priority, loadingStrategy]);
 
-  // Preload critical images
+  // Optimized preload logic - only when actually needed
   useEffect(() => {
-    if (priority && currentSrc) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
-      link.href = currentSrc;
-      if (sizes) link.imageSizes = sizes;
-      document.head.appendChild(link);
-      
-      return () => {
-        document.head.removeChild(link);
-      };
+    if (shouldPreload && currentSrc && priority) {
+      // Only preload if it's a priority image and we haven't already preloaded
+      if (!preloadLinkRef.current) {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = getOptimizedSrc(currentSrc);
+        if (sizes) link.imageSizes = sizes;
+        
+        // Add to head
+        document.head.appendChild(link);
+        preloadLinkRef.current = link;
+        
+        // Remove preload link after image loads or after timeout
+        const cleanup = () => {
+          if (preloadLinkRef.current && document.head.contains(preloadLinkRef.current)) {
+            document.head.removeChild(preloadLinkRef.current);
+            preloadLinkRef.current = null;
+          }
+        };
+        
+        // Cleanup after 10 seconds or when component unmounts
+        const timeoutId = setTimeout(cleanup, 10000);
+        
+        return () => {
+          clearTimeout(timeoutId);
+          cleanup();
+        };
+      }
     }
-  }, [priority, currentSrc, sizes]);
+  }, [shouldPreload, currentSrc, priority, sizes]);
 
   const handleLoad = useCallback(() => {
     setIsLoaded(true);
+    
+    // Remove preload link once image is loaded
+    if (preloadLinkRef.current && document.head.contains(preloadLinkRef.current)) {
+      document.head.removeChild(preloadLinkRef.current);
+      preloadLinkRef.current = null;
+    }
   }, []);
 
   const handleError = useCallback((e) => {
     console.error("Error loading image:", currentSrc);
     setError(true);
+    
+    // Remove preload link on error
+    if (preloadLinkRef.current && document.head.contains(preloadLinkRef.current)) {
+      document.head.removeChild(preloadLinkRef.current);
+      preloadLinkRef.current = null;
+    }
   }, [currentSrc]);
 
   // Generate optimized src with quality parameter
   const getOptimizedSrc = useCallback((originalSrc) => {
     if (!originalSrc) return '';
     
-    // If it's a URL with query params, append quality
-    const url = new URL(originalSrc, window.location.origin);
-    if (!url.searchParams.has('q') && !url.searchParams.has('quality')) {
-      url.searchParams.set('q', quality.toString());
+    // Don't modify external URLs or data URLs
+    if (originalSrc.startsWith('http') || originalSrc.startsWith('data:')) {
+      return originalSrc;
     }
     
-    return url.toString();
+    // For local images, add quality parameter if not present
+    try {
+      const url = new URL(originalSrc, window.location.origin);
+      if (!url.searchParams.has('q') && !url.searchParams.has('quality')) {
+        url.searchParams.set('q', quality.toString());
+      }
+      return url.toString();
+    } catch {
+      // Fallback for relative paths
+      return originalSrc;
+    }
   }, [quality]);
 
   const optimizedSrc = getOptimizedSrc(currentSrc);
@@ -117,7 +161,7 @@ const OptimizedImage = ({
     <div 
       className={`relative overflow-hidden ${className}`}
       style={{ 
-        backgroundColor: placeholderColor, // asegúrate que sea 'transparent'
+        backgroundColor: placeholderColor,
         width: width || 'auto',
         height: height || 'auto'
       }}
@@ -126,7 +170,7 @@ const OptimizedImage = ({
         <div 
           className="absolute inset-0"
           style={{ 
-            background: 'transparent', // <-- fuerza fondo transparente
+            background: 'transparent',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite linear'
           }}
@@ -144,7 +188,7 @@ const OptimizedImage = ({
           ref={imgRef}
           src={optimizedSrc}
           alt={alt}
-          loading={priority ? 'eager' : loadingStrategy}
+          loading={priority ? 'eager' : (shouldPreload ? 'eager' : 'lazy')}
           onLoad={handleLoad}
           onError={handleError}
           sizes={sizes}
@@ -153,7 +197,7 @@ const OptimizedImage = ({
             width: '100%', 
             height: '100%', 
             objectFit: 'contain',
-            background: 'transparent', // <-- fuerza fondo transparente en la imagen
+            background: 'transparent',
             ...props.style 
           }}
           {...props}
@@ -171,7 +215,8 @@ const areEqual = (prevProps, nextProps) => {
     prevProps.width === nextProps.width &&
     prevProps.height === nextProps.height &&
     prevProps.priority === nextProps.priority &&
-    prevProps.quality === nextProps.quality
+    prevProps.quality === nextProps.quality &&
+    prevProps.loadingStrategy === nextProps.loadingStrategy
   );
 };
 

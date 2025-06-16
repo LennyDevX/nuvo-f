@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fa';
 import { HiMenuAlt3 } from 'react-icons/hi';
 import { WalletContext } from '../../context/WalletContext';
+import { logger } from '../../utils/debug/logger';
 
 // Importa la variable de entorno
 const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
@@ -133,17 +134,20 @@ const Navbar = () => {
     connect = null
   } = walletContext || {};
 
-  // Debug: Verificar el estado del contexto
+  // Debug: Verificar el estado del contexto - UPDATED WITH SMART LOGGING
   useEffect(() => {
     if (!walletContext) {
-      console.warn('WalletContext is not available - component will work with limited functionality');
+      logger.warn('WALLET', 'WalletContext not available - limited functionality');
     } else {
-      console.log('WalletContext available:', { 
+      // Only log significant changes, not every render
+      const contextInfo = { 
         walletConnected, 
-        account: !!account, 
-        handleDisconnect: !!handleDisconnect,
-        allMethods: Object.keys(walletContext)
-      });
+        hasAccount: !!account, 
+        hasDisconnectMethod: !!handleDisconnect,
+        availableMethods: Object.keys(walletContext).length
+      };
+      
+      logger.logOnChange('WALLET', 'navbar_context', contextInfo);
     }
   }, [walletContext, walletConnected, account, handleDisconnect]);
 
@@ -154,25 +158,21 @@ const Navbar = () => {
   }, [handleNavigation]);
   
   const handleDisconnectWallet = useCallback(async () => {
-    console.log('Disconnect attempt:', { 
-      handleDisconnect: !!handleDisconnect,
-      walletConnected, 
-      account: !!account 
-    });
+    logger.debug('WALLET', 'Disconnect attempt initiated');
     
     try {
-      setIsOpen(false); // Cerrar el menú inmediatamente
+      setIsOpen(false);
       
       if (handleDisconnect && typeof handleDisconnect === 'function') {
-        console.log('Calling handleDisconnect method...');
+        logger.info('WALLET', 'Calling disconnect method');
         handleDisconnect();
-        console.log('Disconnect successful');
+        logger.success('WALLET', 'Wallet disconnected successfully');
       } else {
-        console.error('handleDisconnect method not found in context');
+        logger.error('WALLET', 'Disconnect method not available');
         throw new Error('Disconnect method not available');
       }
     } catch (error) {
-      console.error('Error disconnecting wallet:', error);
+      logger.error('WALLET', 'Error disconnecting wallet', error.message);
       alert('Error disconnecting wallet. Please try again.');
     }
   }, [handleDisconnect, walletConnected, account]);

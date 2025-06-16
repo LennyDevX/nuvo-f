@@ -149,8 +149,8 @@ const TokenomicsSystem = () => {
                 <OptimizedImage
                   src="/NuvosToken.png"
                   alt="Nuvos Token"
-                  priority={true}
-                  quality={90}
+                  priority={false}
+                  quality={85}
                   className="w-full h-full"
                   style={{
                     filter: useSimpleAnimation 
@@ -159,7 +159,7 @@ const TokenomicsSystem = () => {
                     objectFit: 'contain'
                   }}
                   placeholderColor="transparent"
-                  loadingStrategy="eager"
+                  loadingStrategy="lazy"
                 />
               </motion.div>
               
