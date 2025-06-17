@@ -113,14 +113,14 @@ const MarketplaceFilters = ({ filters, setFilters, categories, showMobileFilters
                 placeholder="Min"
                 value={filters.priceRange.min}
                 onChange={(e) => handlePriceRangeChange('min', e.target.value)}
-                className="nuvos-marketplace-input"
+                className="bg-black/30 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
               />
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.priceRange.max}
                 onChange={(e) => handlePriceRangeChange('max', e.target.value)}
-                className="nuvos-marketplace-input"
+                className="bg-black/30 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
               />
             </div>
           </div>
@@ -149,4 +149,3 @@ const MarketplaceFilters = ({ filters, setFilters, categories, showMobileFilters
 };
 
 export default MarketplaceFilters;
-              

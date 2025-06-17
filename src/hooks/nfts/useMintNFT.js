@@ -12,8 +12,8 @@ const categoryMap = {
   'photography': 'fotografia',
   'music': 'musica',
   'video': 'video',
-  'item': 'coleccionables',
-  'document': 'coleccionables'
+  'item': 'collectible',
+  'document': 'collectible'
 };
 
 // Local fallback for when IPFS upload fails - moved outside to avoid recreation
@@ -55,7 +55,7 @@ export default function useMintNFT() {
       console.log("Using contract address:", validatedContractAddress);
       
       // Traducir la categoría al español si existe en el mapa
-      const translatedCategory = categoryMap[category.toLowerCase()] || 'coleccionables';
+      const translatedCategory = categoryMap[category.toLowerCase()] || 'collectible';
       console.log("Translated category:", translatedCategory);
       
       let imageUri;

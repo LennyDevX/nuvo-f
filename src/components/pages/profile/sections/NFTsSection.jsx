@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup, FaHeart, FaTags, FaEthereum } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -7,9 +7,6 @@ import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 import IPFSImage from '../../../ui/IPFSImage';
-
-// Lazy load the NFT detail modal component
-const NFTDetailModal = lazy(() => import('./NFTDetailModal'));
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
@@ -279,23 +276,9 @@ const NFTsSection = ({ account }) => {
           </div>
         )}
       </div>
-
-      {/* NFT Detail Modal - Outside of card container */}
-      {selectedNFT && (
-        <Suspense fallback={
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80">
-            <div className="w-16 h-16 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin"></div>
-          </div>
-        }>
-          <NFTDetailModal
-            selectedNFT={selectedNFT}
-            onClose={() => setSelectedNFT(null)}
-            contractAddress={CONTRACT_ADDRESS}
-          />
-        </Suspense>
-      )}
     </>
   );
 };
 
 export default React.memo(NFTsSection);
+      

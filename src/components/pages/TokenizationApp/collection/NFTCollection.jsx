@@ -9,7 +9,7 @@ import NFTErrorState from './NFTErrorState';
 import IPFSImage from '../../../ui/IPFSImage';
 
 
-const NFTDetailModal = lazy(() => import('../../profile/sections/NFTDetailModal'));
+const NFTDetailModal = lazy(() => import('../../../modals/NFTDetailModal'));
 
 
 const NFTCollection = ({ nfts, loading, error, onRetry }) => {
