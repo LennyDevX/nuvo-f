@@ -43,7 +43,7 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft }) => {
             {nft.metadata?.name || `NFT #${nft.tokenId}`}
           </h4>
           <p className="text-gray-400 text-sm">
-            Current Price: {parseFloat(nft.price).toFixed(4)} MATIC
+            Current Price: {parseFloat(nft.price).toFixed(4)} POL
           </p>
         </div>
 
@@ -52,7 +52,7 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft }) => {
           {/* Offer Amount */}
           <div className="nuvos-filter-group">
             <label className="nuvos-filter-label">
-              Offer Amount (MATIC)
+              Offer Amount (POL)
             </label>
             <div className="nuvos-search-container">
               <FiDollarSign className="nuvos-search-icon" />

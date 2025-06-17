@@ -80,9 +80,9 @@ const MetadataStep = () => {
             >
               <option value="collectible">Collectible</option>
               <option value="artwork">Artwork</option>
-              <option value="item">Consumer Item</option>
-              <option value="document">Document</option>
-              <option value="realestate">Real Estate</option>
+              <option value="photography">Photography</option>
+              <option value="music">Music</option>
+              <option value="video">Video</option>
             </select>
           </div>
           

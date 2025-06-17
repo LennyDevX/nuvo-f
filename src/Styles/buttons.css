@@ -60,6 +60,7 @@
   border: 2px solid rgba(139, 92, 246, 0.4);
   color: rgba(139, 92, 246, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .btn-nuvo-secondary:hover {
@@ -74,12 +75,54 @@
   transform: translateY(0) scale(0.98);
 }
 
+/* Enhanced mobile support for secondary buttons */
+@media (max-width: 767px) {
+  .btn-nuvo-secondary {
+    background: rgba(55, 65, 81, 0.9) !important;
+    border: 2px solid rgba(139, 92, 246, 0.5) !important;
+    color: rgba(139, 92, 246, 1) !important;
+    backdrop-filter: blur(12px) !important;
+    font-weight: 600 !important;
+    padding: 0.875rem 1.25rem !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    min-height: 3rem !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+
+  .btn-nuvo-secondary:hover {
+    background: rgba(55, 65, 81, 1) !important;
+    border-color: rgba(139, 92, 246, 0.7) !important;
+    color: white !important;
+    transform: translateY(-1px) scale(1.01) !important;
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.3) !important;
+  }
+
+  .btn-nuvo-secondary:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2) !important;
+  }
+
+  /* Ensure icons inside buttons are properly sized */
+  .btn-nuvo-secondary svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    flex-shrink: 0 !important;
+  }
+}
+
 /* Success Button */
 .btn-nuvo-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: linear-gradient(135deg, #215845 0%, #25453b 100%);
+  border: 2px solid rgba(86, 183, 151, 0.651);
   color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
 .btn-nuvo-success:hover {

@@ -16,10 +16,10 @@ const nftCache = new Map();
 // Caché para metadatos
 const metadataCache = new Map();
 
-// Asegurar que tengamos la dirección del contrato, ya sea de las variables de entorno o como fallback hardcoded
+// Ensure we have the contract address from environment variables or hardcoded fallback
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
 
-// Log para depuración
+// Debug log
 console.log("TokenizationApp Contract Address:", CONTRACT_ADDRESS);
 
 const NFTDetail = () => {
@@ -42,16 +42,16 @@ const NFTDetail = () => {
     const fetchNFTDetails = async () => {
       if (!tokenId) return;
       
-      // Evitar múltiples peticiones simultáneas
+      // Avoid multiple simultaneous requests
       if (fetchingRef.current) {
-        console.log("Fetch ya en progreso, evitando llamada duplicada");
+        console.log("Fetch already in progress, avoiding duplicate call");
         return;
       }
       
-      // Verificar caché
+      // Check cache
       const cacheKey = `nft-${tokenId}`;
       if (nftCache.has(cacheKey)) {
-        console.log("Usando datos cacheados para NFT", tokenId);
+        console.log("Using cached data for NFT", tokenId);
         const cachedData = nftCache.get(cacheKey);
         setNft(cachedData.nft);
         setLikesCount(cachedData.likesCount);
@@ -65,32 +65,32 @@ const NFTDetail = () => {
       setError(null);
       
       try {
-        // Validación mejorada con logging
-        console.log("Validando dirección:", CONTRACT_ADDRESS);
-        console.log("Es dirección válida:", ethers.isAddress(CONTRACT_ADDRESS));
+        // Enhanced validation with logging
+        console.log("Validating address:", CONTRACT_ADDRESS);
+        console.log("Is valid address:", ethers.isAddress(CONTRACT_ADDRESS));
 
-        // Formato hexadecimal correcto para dirección Ethereum
+        // Correct hexadecimal format for Ethereum address
         const formattedAddress = CONTRACT_ADDRESS.trim().toLowerCase();
         
         if (!formattedAddress || !ethers.isAddress(formattedAddress)) {
-          console.error("Validación fallida para dirección:", formattedAddress);
-          setError("Dirección de contrato inválida o no configurada.");
+          console.error("Validation failed for address:", formattedAddress);
+          setError("Invalid or unconfigured contract address.");
           setLoading(false);
           fetchingRef.current = false;
           return;
         }
         
-        // Validar tokenId
+        // Validate tokenId
         if (isNaN(tokenId) || Number(tokenId) < 0) {
-          setError("ID de token inválido.");
+          setError("Invalid token ID.");
           setLoading(false);
           fetchingRef.current = false;
           return;
         }
         
-        console.log("Intentando conectar con dirección:", formattedAddress);
+        console.log("Attempting to connect with address:", formattedAddress);
         
-        // Conectar al provider con retardo para evitar límite de tasa
+        // Connect to provider with delay to avoid rate limit
         await new Promise(resolve => setTimeout(resolve, 100));
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
@@ -99,41 +99,42 @@ const NFTDetail = () => {
           provider
         );
 
-        // Obtener URI del token
+        // Get token URI
         let tokenURI;
         try {
           tokenURI = await contract.tokenURI(tokenId);
-          if (!tokenURI) throw new Error("El contrato no devolvió un tokenURI válido.");
-          console.log("Token URI obtenido:", tokenURI);
+          if (!tokenURI) throw new Error("Contract did not return a valid tokenURI.");
+          console.log("Token URI obtained:", tokenURI);
         } catch (err) {
-          console.error("Error al obtener tokenURI:", err);
-          setError("No se encontró el NFT o el contrato no devolvió datos válidos.");
+          console.error("Error getting tokenURI:", err);
+          setError("NFT not found or contract did not return valid data.");
           setLoading(false);
           fetchingRef.current = false;
           return;
         }
         
-        // Obtener metadata desde IPFS
+        // Get metadata from IPFS
         const metadata = await fetchMetadata(tokenURI);
         console.log("Metadata:", metadata);
-          // Obtener detalles del token en el marketplace
+        
+        // Get token details in marketplace
         let tokenDetails;
         try {
           tokenDetails = await contract.getListedToken(tokenId);
           console.log("Token details:", tokenDetails);
         } catch (err) {
-          console.error("Error al obtener detalles del token:", err);
-          setError("No se pudieron obtener los detalles del token en el marketplace.");
+          console.error("Error getting token details:", err);
+          setError("Could not get token details from marketplace.");
           setLoading(false);
           fetchingRef.current = false;
           return;
         }
         
-        // Obtener conteo de likes y si el usuario actual ha dado like
+        // Get likes count and if current user has liked
         let likesCount = 0;
         let hasLiked = false;
         try {
-          // Verificar primero si el contrato tiene estas funciones implementadas
+          // First check if contract has these functions implemented
           if (typeof contract.getLikesCount === 'function') {
             likesCount = await contract.getLikesCount(tokenId);
             
@@ -141,15 +142,15 @@ const NFTDetail = () => {
               hasLiked = await contract.hasUserLiked(tokenId, account);
             }
           } else {
-            console.log("El contrato no implementa la función getLikesCount");
+            console.log("Contract does not implement getLikesCount function");
           }
         } catch (err) {
-          console.warn("Error al obtener likes:", err);
-          // Si falla, continuar sin likes y agregar los logs necesarios
-          console.log("Continuando sin información de likes");
+          console.warn("Error getting likes:", err);
+          // If it fails, continue without likes and add necessary logs
+          console.log("Continuing without likes information");
         }
         
-        // Obtener dirección del creador/propietario original
+        // Get original creator/owner address
         let owner = "";
         try {
           owner = await contract.ownerOf(tokenId);
@@ -157,11 +158,11 @@ const NFTDetail = () => {
             owner = "0x0000000000000000000000000000000000000000";
           }
         } catch (err) {
-          console.warn("Error al obtener propietario:", err);
+          console.warn("Error getting owner:", err);
           owner = "0x0000000000000000000000000000000000000000";
         }
         
-        console.log("Datos del NFT recuperados con éxito");
+        console.log("NFT data retrieved successfully");
         
         const nftData = {
           tokenId,
@@ -177,7 +178,7 @@ const NFTDetail = () => {
           category: tokenDetails[6]
         };
         
-        // Guardar en caché
+        // Save to cache
         nftCache.set(`nft-${tokenId}`, {
           nft: nftData,
           likesCount: likesCount.toString(),
@@ -189,7 +190,7 @@ const NFTDetail = () => {
         setHasLiked(hasLiked);
       } catch (err) {
         console.error("Error fetching NFT details:", err);
-        setError(err.message || "Error al cargar los detalles del NFT");
+        setError(err.message || "Error loading NFT details");
       } finally {
         setLoading(false);
         fetchingRef.current = false;
@@ -198,43 +199,44 @@ const NFTDetail = () => {
     
     fetchNFTDetails();
     
-    // Limpieza para evitar actualizaciones en componentes desmontados
+    // Cleanup to avoid updates on unmounted components
     return () => {
-      fetchingRef.current = true; // Evita más llamadas durante desmontaje
+      fetchingRef.current = true; // Prevents more calls during unmounting
     };
   }, [tokenId, account, walletConnected]);
   
-  // Función auxiliar para obtener metadatos desde IPFS
+  // Helper function to get metadata from IPFS
   const fetchMetadata = async (uri) => {
     try {
       if (!uri) {
         return {
           name: `NFT #${tokenId}`,
-          description: 'No hay descripción disponible',
+          description: 'No description available',
           image: '/NFT-X1.webp',
           attributes: []
-        };      }
+        };
+      }
       
-      // Verificar caché global de metadatos
+      // Check global metadata cache
       if (metadataCache.has(uri)) {
-        console.log("Usando metadatos en caché para:", uri);
+        console.log("Using cached metadata for:", uri);
         return metadataCache.get(uri);
       }
       
-      // Manejar diferentes formatos de URI
+      // Handle different URI formats
       let url = uri;
       
-      // Normalizar URIs IPFS
+      // Normalize IPFS URIs
       if (uri.includes('ipfs')) {
         if (uri.startsWith('ipfs://')) {
           url = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
         }
       }
       
-      // Control de tiempo para evitar errores de limitación de tasa
+      // Time control to avoid rate limiting errors
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Configurar timeout para la petición
+      // Set timeout for request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
@@ -250,16 +252,16 @@ const NFTDetail = () => {
         
         const metadata = await response.json();
         
-        // Guardar en caché
+        // Save to cache
         metadataCache.set(uri, metadata);
         
         return metadata;
       } catch (fetchErr) {
         clearTimeout(timeoutId);
-        console.error("Error en fetch de metadata:", fetchErr);
+        console.error("Error in metadata fetch:", fetchErr);
         return {
           name: `NFT #${tokenId}`,
-          description: 'Error al cargar metadatos',
+          description: 'Error loading metadata',
           image: '/NFT-X1.webp',
           attributes: []
         };
@@ -268,14 +270,14 @@ const NFTDetail = () => {
       console.error("Error fetching metadata:", err);
       return {
         name: `NFT #${tokenId}`,
-        description: 'Error al cargar metadatos',
+        description: 'Error loading metadata',
         image: '/NFT-X1.webp',
         attributes: []
       };
     }
   };
   
-  // Función para dar/quitar like a un NFT
+  // Function to like/unlike an NFT
   const toggleLike = async () => {
     if (!walletConnected) return;
     
@@ -288,25 +290,25 @@ const NFTDetail = () => {
         signer
       );
       
-      // Verificar si el contrato tiene la función implementada
+      // Check if contract has the function implemented
       if (typeof contract.toggleLike !== 'function') {
-        console.warn("La función toggleLike no está implementada en el contrato");
+        console.warn("The toggleLike function is not implemented in the contract");
         return;
       }
       
       const tx = await contract.toggleLike(tokenId, !hasLiked);
       await tx.wait();
       
-      // Actualizar estado local
+      // Update local state
       setHasLiked(!hasLiked);
       setLikesCount(prev => !hasLiked ? String(Number(prev) + 1) : String(Math.max(0, Number(prev) - 1)));
     } catch (err) {
-      console.error("Error al dar/quitar like:", err);
-      // No mostrar error en la UI, simplemente registrar en consola
+      console.error("Error liking/unliking:", err);
+      // Don't show error in UI, just log to console
     }
   };
   
-  // Función para comprar un NFT
+  // Function to buy an NFT
   const buyNFT = async () => {
     if (!walletConnected || !nft || !nft.isForSale) return;
     
@@ -325,10 +327,10 @@ const NFTDetail = () => {
       
       await tx.wait();
       
-      // Recargar datos después de la compra
+      // Reload data after purchase
       window.location.reload();
     } catch (err) {
-      console.error("Error al comprar NFT:", err);
+      console.error("Error buying NFT:", err);
     }
   };
 
@@ -344,41 +346,44 @@ const NFTDetail = () => {
     }
   };
 
-  // Determinar si el NFT está listado
+  // Determine if NFT is listed
   const isListed = nft && nft.price && Number(nft.price) > 0;
 
-  // Handler para listar NFT
+  // Check if current user is the owner
+  const isOwner = account && nft && account.toLowerCase() === nft.owner.toLowerCase();
+
+  // Handler to list NFT
   const handleListNFT = async (e) => {
     e.preventDefault();
     try {
       // Enhanced validation
       if (!nft?.tokenId) {
-        throw new Error("Token ID no válido");
+        throw new Error("Invalid token ID");
       }
       
       if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
-        throw new Error("El precio debe ser un número positivo");
+        throw new Error("Price must be a positive number");
       }
 
       if (parseFloat(price) < 0.001) {
-        throw new Error("El precio mínimo es 0.001 MATIC");
+        throw new Error("Minimum price is 0.001 POL");
       }
 
       console.log('Attempting to list NFT:', {
         tokenId: nft.tokenId,
         price: price,
-        category: category || 'coleccionables'
+        category: category || 'collectibles'
       });
 
       await listNFT({
         tokenId: nft.tokenId,
         price: price.toString(),
-        category: category || 'coleccionables'
+        category: category || 'collectibles'
       });
       
       setShowListForm(false);
       setPrice('');
-      setCategory('coleccionables');
+      setCategory('collectibles');
       
       // Reload NFT data after successful listing
       setTimeout(() => window.location.reload(), 2000);
@@ -393,7 +398,7 @@ const NFTDetail = () => {
       <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
         <SpaceBackground />
         <div className="container mx-auto px-4 py-20 flex justify-center items-center relative z-10">
-          <LoadingOverlay text="Cargando detalles del NFT..." />
+          <LoadingOverlay text="Loading NFT details..." />
         </div>
       </div>
     );
@@ -406,9 +411,9 @@ const NFTDetail = () => {
         <div className="container mx-auto px-4 py-8 relative z-10">
           <div className="max-w-3xl mx-auto bg-black/30 backdrop-blur-md p-8 rounded-xl border border-red-500/20 text-center shadow-xl">
             <h1 className="text-3xl font-bold text-red-400 mb-4">Error</h1>
-            <p className="text-gray-300 mb-6">{error || "No se pudo cargar el NFT"}</p>
+            <p className="text-gray-300 mb-6">{error || "Could not load NFT"}</p>
             <Link to="/my-nfts" className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium inline-flex items-center transition-all">
-              <FaArrowLeft className="mr-2" /> Volver a mi colección
+              <FaArrowLeft className="mr-2" /> Back to my collection
             </Link>
           </div>
         </div>
@@ -422,7 +427,7 @@ const NFTDetail = () => {
   // Formatear la fecha de listado
   const listedDate = nft.listedTimestamp && nft.listedTimestamp !== '0' 
     ? new Date(Number(nft.listedTimestamp) * 1000).toLocaleDateString() 
-    : 'No listado';
+    : 'Not listed';
 
   return (
     <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
@@ -437,20 +442,20 @@ const NFTDetail = () => {
           {/* Navegación */}
           <div className="mb-6">
             <Link to="/my-nfts" className="inline-flex items-center text-purple-300 hover:text-purple-200 transition-colors group">
-              <FaArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> Volver a mi colección
+              <FaArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to my collection
             </Link>
           </div>
           
           {/* Contenido principal */}
           <div className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/20 overflow-hidden shadow-2xl hover:shadow-purple-900/10 transition-all">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-              {/* Lado izquierdo - Imagen */}
-              <div>
-                <div className="bg-black/40 rounded-xl overflow-hidden aspect-square shadow-lg border border-purple-500/10">
+              {/* Image Section - Left side, smaller */}
+              <div className="w-80 flex-shrink-0">
+                <div className="aspect-square bg-black/40 rounded-xl overflow-hidden shadow-lg border border-purple-500/10">
                   <IPFSImage 
                     src={getOptimizedImageUrl(nft.image)} 
                     alt={nft.name} 
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     placeholderSrc="/NFT-X1.webp"
                     onLoad={() => console.log(`NFT ${nft.tokenId} image loaded`)}
                     onError={() => console.warn(`NFT ${nft.tokenId} image failed to load`)}
@@ -481,7 +486,7 @@ const NFTDetail = () => {
                     }`}
                   >
                     {copied ? <FaCheck className="text-green-400" /> : <FaShareAlt />} 
-                    {copied ? 'Copiado!' : 'Compartir'}
+                    {copied ? 'Copied!' : 'Share'}
                   </motion.button>
                 </div>
               </div>
@@ -491,7 +496,7 @@ const NFTDetail = () => {
                 <div className="mb-6">
                   <div className="flex justify-between items-start mb-3">
                     <span className="px-3 py-1 bg-purple-900/70 text-purple-200 text-xs rounded-full shadow-sm border border-purple-500/30">
-                      {nft.category || 'Coleccionable'}
+                      {nft.category || 'Collectible'}
                     </span>
                     <span className="text-gray-400 text-sm bg-black/30 px-3 py-1 rounded-full">Token ID: {nft.tokenId}</span>
                   </div>
@@ -501,22 +506,22 @@ const NFTDetail = () => {
                 
                 <div className="space-y-4 mb-8 bg-black/20 p-4 rounded-xl border border-purple-500/10">
                   <div className="flex justify-between py-2 border-b border-purple-500/10">
-                    <span className="text-gray-400 flex items-center"><FaUser className="mr-2 text-blue-400" /> Propietario</span>
+                    <span className="text-gray-400 flex items-center"><FaUser className="mr-2 text-blue-400" /> Owner</span>
                     <span className="text-white font-mono bg-black/30 px-2 py-1 rounded-md">{nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}</span>
                   </div>
                   
                   {nft.isForSale && (
                     <div className="flex justify-between py-2 border-b border-purple-500/10">
-                      <span className="text-gray-400 flex items-center"><FaEthereum className="mr-2 text-purple-400" /> Precio</span>
+                      <span className="text-gray-400 flex items-center"><FaEthereum className="mr-2 text-purple-400" /> Price</span>
                       <span className="text-white flex items-center bg-green-900/30 px-2 py-1 rounded-md border border-green-500/20">
                         <FaEthereum className="mr-1 text-green-400" />
-                        {formattedPrice} MATIC
+                        {formattedPrice} POL
                       </span>
                     </div>
                   )}
                   
                   <div className="flex justify-between py-2 border-b border-purple-500/10">
-                    <span className="text-gray-400 flex items-center"><FaClock className="mr-2 text-blue-400" /> Fecha de listado</span>
+                    <span className="text-gray-400 flex items-center"><FaClock className="mr-2 text-blue-400" /> Listed date</span>
                     <span className="text-white flex items-center bg-black/30 px-2 py-1 rounded-md">
                       {listedDate}
                     </span>
@@ -528,7 +533,7 @@ const NFTDetail = () => {
                   <div className="mb-8">
                     <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
                       <span className="w-1 h-6 bg-purple-500 rounded-full mr-2"></span>
-                      Atributos
+                      Attributes
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       {nft.attributes.map((attr, index) => (
@@ -543,31 +548,41 @@ const NFTDetail = () => {
                 
                 {/* Botones de acción */}
                 <div className="space-y-3">
-                  {nft.isForSale && nft.owner !== account && (
+                  {/* Buy button - only for non-owners when NFT is for sale */}
+                  {nft.isForSale && !isOwner && (
                     <motion.button 
                       onClick={buyNFT}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-purple-500/20 transition-all"
+                      className="btn-nuvo-base bg-nuvo-gradient-button w-full py-4 rounded-lg text-white font-medium flex items-center justify-center shadow-lg"
                     >
-                      <FaEthereum className="mr-2" /> Comprar por {formattedPrice} MATIC
+                      <FaEthereum className="mr-2" /> Buy for {formattedPrice} POL
                     </motion.button>
                   )}
+
+                  {/* Owner status button - only for owners */}
+                  {isOwner && (
+                    <div className="btn-nuvo-base btn-nuvo-success w-full py-4 rounded-lg text-white font-medium flex items-center justify-center shadow-lg cursor-default">
+                      <FaCheck className="mr-2" /> You own this NFT
+                    </div>
+                  )}
                   
-                  {nft.owner === account && !nft.isForSale && (
+                  {/* List for sale button - only for owners when not listed */}
+                  {isOwner && !nft.isForSale && (
                     <motion.button 
                       onClick={() => setShowListForm(true)}
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
                       className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-green-500/20 transition-all"
                     >
-                      <FaTags className="mr-2" /> Listar para venta
+                      <FaTags className="mr-2" /> List for sale
                     </motion.button>
                   )}
                   
-                  {nft.owner !== account && !nft.isForSale && (
+                  {/* Not available button - for non-owners when not for sale */}
+                  {!isOwner && !nft.isForSale && (
                     <button className="w-full py-4 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center opacity-70 cursor-not-allowed shadow-lg">
-                      No disponible para venta
+                      Not available for sale
                     </button>
                   )}
                 </div>
@@ -575,16 +590,16 @@ const NFTDetail = () => {
             </div>
           </div>
           
-          {/* Formulario para listar NFT */}
-          {!isListed && (account?.toLowerCase() === (nft?.owner || nft?.minter)?.toLowerCase()) && (
+          {/* Form to list NFT */}
+          {!isListed && isOwner && (
             <div className="mt-8 p-6 bg-black/30 rounded-xl border border-purple-500/20 shadow-lg">
-              <h3 className="text-xl font-semibold text-white mb-4">Listar NFT para venta</h3>
+              <h3 className="text-xl font-semibold text-white mb-4">List NFT for sale</h3>
               
               {showListForm ? (
                 <form onSubmit={handleListNFT} className="space-y-4">
                   <div>
                     <label className="block text-gray-300 text-sm mb-1">
-                      Precio (MATIC):
+                      Price (POL):
                     </label>
                     <input
                       type="number"
@@ -593,24 +608,24 @@ const NFTDetail = () => {
                       value={price}
                       onChange={e => setPrice(e.target.value)}
                       required
-                      placeholder="Ej: 1.5"
+                      placeholder="e.g. 1.5"
                       className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Precio mínimo: 0.001 MATIC</p>
+                    <p className="text-xs text-gray-400 mt-1">Minimum price: 0.001 POL</p>
                   </div>
                   <div>
                     <label className="block text-gray-300 text-sm mb-1">
-                      Categoría:
+                      Category:
                     </label>
                     <select
                       value={category}
                       onChange={e => setCategory(e.target.value)}
                       className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
                     >
-                      <option value="coleccionables">Coleccionables</option>
-                      <option value="arte">Arte</option>
-                      <option value="fotografia">Fotografía</option>
-                      <option value="musica">Música</option>
+                      <option value="collectibles">Collectibles</option>
+                      <option value="art">Art</option>
+                      <option value="photography">Photography</option>
+                      <option value="music">Music</option>
                       <option value="video">Video</option>
                     </select>
                   </div>
@@ -620,14 +635,14 @@ const NFTDetail = () => {
                       disabled={listingLoading || !price}
                       className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {listingLoading ? 'Listando...' : 'Confirmar listado'}
+                      {listingLoading ? 'Listing...' : 'Confirm listing'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowListForm(false)}
                       className="flex-1 py-3 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center transition-all hover:shadow-md"
                     >
-                      Cancelar
+                      Cancel
                     </button>
                   </div>
               
@@ -638,7 +653,7 @@ const NFTDetail = () => {
                   )}
                   {listingSuccess && (
                     <div className="p-3 bg-green-900/30 border border-green-500/30 rounded-lg">
-                      <p className="text-green-300 text-sm">NFT listado correctamente</p>
+                      <p className="text-green-300 text-sm">NFT listed successfully</p>
                     </div>
                   )}
                   {txHash && (
@@ -649,7 +664,7 @@ const NFTDetail = () => {
                         rel="noopener noreferrer"
                         className="text-blue-400 underline text-sm hover:text-blue-300"
                       >
-                        Ver transacción en Polygonscan
+                        View transaction on Polygonscan
                       </a>
                     </div>
                   )}
@@ -657,13 +672,13 @@ const NFTDetail = () => {
               ) : (
                 <div className="flex flex-col gap-2">
                   <p className="text-gray-300 text-sm">
-                    Este NFT no está listado para venta. Puedes listar tu NFT estableciendo un precio y categoría.
+                    This NFT is not listed for sale. You can list your NFT by setting a price and category.
                   </p>
                   <button
                     onClick={() => setShowListForm(true)}
                     className="py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg"
                   >
-                    Listar NFT para venta
+                    List NFT for sale
                   </button>
                 </div>
               )}
@@ -671,9 +686,9 @@ const NFTDetail = () => {
           )}
           
           {/* Mensaje para no propietarios */}
-          {!isListed && account?.toLowerCase() !== (nft?.owner || nft?.minter)?.toLowerCase() && (
+          {!isListed && !isOwner && (
             <div className="mt-4 text-gray-400 text-sm">
-              Solo el propietario puede listar este NFT.
+              Only the owner can list this NFT.
             </div>
           )}
         </motion.div>

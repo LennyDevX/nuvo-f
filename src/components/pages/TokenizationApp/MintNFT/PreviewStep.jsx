@@ -62,7 +62,7 @@ const PreviewStep = () => {
     if (errorString.includes('insufficient funds')) {
       return { 
         status: 'error', 
-        message: 'Insufficient funds: Not enough MATIC to complete this transaction.'
+        message: 'Insufficient funds: Not enough POL to complete this transaction.'
       };
     }
     

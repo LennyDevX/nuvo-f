@@ -6,7 +6,7 @@ import BetaBadge from '../ui/BetaBadge';
 import {  
   FaCoins, 
   FaChartPie, 
-  FaExchangeAlt, 
+  FaStoreAlt, 
   FaImage,
   FaComments,
   FaEllipsisH,
@@ -111,7 +111,7 @@ const Navbar = () => {
     { path: '/', label: 'Home', icon: FaHome },
     { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
-    { path: '/swaptoken', label: 'Swap', icon: FaExchangeAlt },
+    { path: '/marketplace', label: 'Marketplace', icon: FaStoreAlt },
     { path: '/tokenomics', label: 'Token', icon: FaChartPie },
     { path: '/chat', label: 'Chat', icon: FaComments },
   ], []);

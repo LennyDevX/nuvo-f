@@ -56,19 +56,17 @@ export default function useListNFT() {
 
       // Validate and map category to Spanish as the contract expects
       const categoryMap = {
-        'collectible': 'coleccionables',
-        'coleccionables': 'coleccionables',
-        'artwork': 'arte',
-        'arte': 'arte',
-        'photography': 'fotografia',
-        'fotografia': 'fotografia',
-        'music': 'musica',
-        'musica': 'musica',
+        'collectible': 'collectibles',
+        'collectibles': 'collectibles',
+        'artwork': 'art',
+        'art': 'art',
+        'photography': 'photography',
+        'music': 'music',
         'video': 'video'
       };
 
       const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-      const categoryValue = categoryMap[normalizedCategory] || 'coleccionables';
+      const categoryValue = categoryMap[normalizedCategory] || 'collectibles';
 
       console.log('Mapped category:', normalizedCategory, '->', categoryValue);
 
@@ -190,3 +188,4 @@ export default function useListNFT() {
 
   return { listNFT, loading, error, success, txHash };
 }
+

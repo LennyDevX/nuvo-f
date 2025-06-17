@@ -39,12 +39,12 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
-      {/* NFT Image */}
-      <div className="aspect-square relative overflow-hidden">
+      {/* NFT Image with consistent aspect ratio */}
+      <div className="nft-profile-image-container">
         <IPFSImage 
           src={getOptimizedImageUrl(nft.image)}
           alt={nft.name || `NFT #${nft.tokenId}`} 
-          className="w-full h-full object-cover transition-transform duration-300"
+          className="nft-profile-image"
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
           placeholderSrc={PLACEHOLDER_IMAGE}
           onLoad={() => console.log(`NFT ${nft.tokenId} loaded in profile`)}
@@ -101,7 +101,7 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
           </p>
           
           <button
-            className="btn-primary btn-sm btn-full mt-2 flex items-center justify-center gap-1"
+            className="btn-nuvo-base bg-nuvo-gradient-button btn-sm btn-full mt-2 flex items-center justify-center gap-1"
             onClick={(e) => {
               e.stopPropagation();
               handleClick();

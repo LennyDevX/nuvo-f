@@ -30,20 +30,22 @@ const MarketplaceStats = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div className="nuvos-marketplace-stats-grid">
       {statItems.map((item, index) => (
         <div
           key={index}
           className="nuvos-marketplace-stat-card"
         >
-          <div className={`inline-flex items-center justify-center w-12 h-12 ${item.color} bg-current/10 rounded-xl mb-4`}>
-            <item.icon className="w-6 h-6" />
+          <div className="nuvos-marketplace-stat-icon">
+            <item.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
           </div>
-          <div className="text-2xl font-bold text-white mb-1">
-            {item.value}
-          </div>
-          <div className="text-gray-400 text-sm">
-            {item.label}
+          <div className="nuvos-marketplace-stat-content">
+            <div className="nuvos-marketplace-stat-value">
+              {item.value}
+            </div>
+            <div className="nuvos-marketplace-stat-label">
+              {item.label}
+            </div>
           </div>
         </div>
       ))}

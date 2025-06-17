@@ -296,7 +296,7 @@ const RightSidebar = ({
                       <div className="space-y-3 md:space-y-2">
                         <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 md:p-2.5 flex justify-between items-center border border-gray-600/30 shadow-sm">
                           <span className="text-gray-300 text-sm md:text-xs font-medium">Balance:</span>
-                          <span className="text-white font-semibold text-sm md:text-base truncate">{parseFloat(balance || 0).toFixed(4)} MATIC</span>
+                          <span className="text-white font-semibold text-sm md:text-base truncate">{parseFloat(balance || 0).toFixed(4)} POL</span>
                         </div>
                         <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 md:p-2.5 flex justify-between items-center border border-gray-600/30 shadow-sm">
                           <span className="text-gray-300 text-sm md:text-xs font-medium">NFTs:</span>

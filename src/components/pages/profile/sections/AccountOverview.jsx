@@ -30,11 +30,11 @@ const NFTImage = React.memo(({ src, alt, className }) => {
   );
 });
 
-// NFT preview list component
+// NFT preview list component with consistent aspect ratios
 const NFTPreviewList = React.memo(({ nfts = [], count = 0 }) => (
   <div className="flex flex-wrap gap-2 mt-3 mb-2">
     {nfts.slice(0, 3).map((nft, idx) => (
-      <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
+      <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30 flex-shrink-0">
         <NFTImage 
           src={nft.image} 
           alt={nft.name || `NFT #${nft.tokenId}`} 
@@ -43,7 +43,7 @@ const NFTPreviewList = React.memo(({ nfts = [], count = 0 }) => (
       </div>
     ))}
     {count > 3 && (
-      <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center flex-shrink-0">
         <span className="text-xs text-purple-300">+{count - 3}</span>
       </div>
     )}
@@ -252,4 +252,3 @@ const AccountOverview = ({ account, balance, network }) => {
 };
 
 export default React.memo(AccountOverview);
-           

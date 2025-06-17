@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
-import { FiHeart, FiTag, FiDollarSign, FiUser, FiClock } from 'react-icons/fi';
+import React, { useState, useContext } from 'react';
+import { FiHeart, FiTag, FiDollarSign, FiUser, FiClock, FiCheck } from 'react-icons/fi';
 import IPFSImage from '../../../ui/IPFSImage';
 import OfferModal from './OfferModal';
+import { WalletContext } from '../../../../context/WalletContext';
 
 const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const { account } = useContext(WalletContext);
+
+  // Check if current user is the owner/seller
+  const isCurrentUserOwner = account && (
+    nft.owner?.toLowerCase() === account.toLowerCase() ||
+    nft.seller?.toLowerCase() === account.toLowerCase()
+  );
 
   const handleBuy = () => {
     onBuy(nft.tokenId, nft.price);
@@ -42,7 +50,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
   return (
     <>
       <div className="nft-card-pro group">
-        {/* Image using IPFSImage component for better IPFS compatibility */}
+        {/* Image using IPFSImage component with consistent sizing */}
         <div className="nft-card-pro-image-container">
           <IPFSImage 
             src={getImageUrl()}
@@ -57,7 +65,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
           />
         </div>
 
-        {/* Badges Section - Like e ID intercambiados */}
+        {/* Badges Section */}
         <div className="nft-card-pro-badges-section">
           <span className="nft-card-pro-badge nft-badge-category">
             {nft.category || 'NFT'}
@@ -78,9 +86,9 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
           </span>
         </div>
 
-        {/* Contenido organizado */}
+        {/* Content */}
         <div className="nft-card-pro-content">
-          {/* Header: Título/Descripción a la izquierda, Precio a la derecha */}
+          {/* Header: Title/Description and Price */}
           <div className="nft-card-pro-header">
             <div className="nft-card-pro-title-section">
               <h3 className="nft-card-pro-title">
@@ -101,12 +109,12 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
             </div>
           </div>
 
-          {/* Info: Solo Owner */}
+          {/* Owner Info */}
           <div className="nft-card-pro-info">
             <div className="nft-card-pro-owner-section">
               <div className="nft-card-pro-owner-label">
                 <FiUser className="w-3 h-3" />
-                <span>{isSeller ? 'Your Listing' : 'Owner'}</span>
+                <span>{isCurrentUserOwner ? 'Your Listing' : 'Owner'}</span>
               </div>
               <div className="nft-card-pro-owner">
                 {nft.seller ?
@@ -128,12 +136,12 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
             </span>
           </div>
 
-          {/* Actions */}
-          {!isOwner && !isSeller ? (
+          {/* Actions - Show different buttons based on ownership */}
+          {!isCurrentUserOwner ? (
             <div className="nft-card-pro-actions">
               <button
                 onClick={handleBuy}
-                className="nft-buy-btn"
+                className="btn-nuvo-base bg-nuvo-gradient-button text-white font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:opacity-90"
                 aria-label={`Buy NFT ${nft.metadata?.name || nft.tokenId} for ${formatPrice(nft.price)} POL`}
               >
                 <FiTag className="w-3 h-3" />
@@ -141,7 +149,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
               </button>
               <button
                 onClick={() => setShowOfferModal(true)}
-                className="nft-offer-btn"
+                className="btn-nuvo-base btn-nuvo-outline text-purple-400 font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:bg-purple-500/10"
                 aria-label={`Make offer for NFT ${nft.metadata?.name || nft.tokenId}`}
               >
                 <FiDollarSign className="w-3 h-3" />
@@ -149,8 +157,15 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
               </button>
             </div>
           ) : (
-            <div className="nft-card-pro-status">
-              {isSeller ? '🏷️ Yours' : '👑 Owned'}
+            <div className="nft-card-pro-actions">
+              <button
+                disabled
+                className="btn-nuvo-base bg-green-600/80 text-white font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 w-full cursor-not-allowed opacity-75"
+                aria-label="You own this NFT"
+              >
+                <FiCheck className="w-3 h-3" />
+                You Own This NFT
+              </button>
             </div>
           )}
         </div>

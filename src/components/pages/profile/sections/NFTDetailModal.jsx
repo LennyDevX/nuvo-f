@@ -92,12 +92,12 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
               <div className="space-y-3">
                 {/* Mobile: Horizontal layout with image left, info right */}
                 <div className="flex gap-3">
-                  {/* Compact Image */}
+                  {/* Compact Image with consistent aspect ratio */}
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 flex items-center justify-center flex-shrink-0">
                     <IPFSImage 
                       src={getOptimizedImageUrl(selectedNFT.image)} 
                       alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover"
                       placeholderSrc={PLACEHOLDER_IMAGE}
                       onLoad={() => console.log(`Modal image loaded for NFT ${selectedNFT.tokenId}`)}
                       onError={() => console.warn(`Modal image failed for NFT ${selectedNFT.tokenId}`)}
@@ -116,7 +116,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                     {selectedNFT.isForSale && selectedNFT.price && (
                       <div className="p-2 bg-green-900/30 rounded text-xs">
                         <div className="flex justify-between">
-                          <span className="text-gray-300">Precio:</span>
+                          <span className="text-gray-300">Price:</span>
                           <span className="text-green-400 font-bold">
                             {ethers.formatUnits(selectedNFT.price, 18)} POL
                           </span>
@@ -129,7 +129,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                 {/* Description - Compact */}
                 {selectedNFT.description && (
                   <div className="p-2 bg-gray-800/50 rounded">
-                    <h4 className="text-white font-medium text-xs mb-1">Descripción</h4>
+                    <h4 className="text-white font-medium text-xs mb-1">Description</h4>
                     <p className="text-gray-300 text-xs leading-relaxed line-clamp-2">
                       {selectedNFT.description}
                     </p>
@@ -171,13 +171,13 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
             ) : (
               // Desktop Layout - Enhanced horizontal
               <div className="flex gap-6">
-                {/* Image Section - Left side, smaller */}
+                {/* Image Section - Left side, with consistent aspect ratio */}
                 <div className="w-80 flex-shrink-0">
-                  <div className="rounded-xl overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 aspect-square flex items-center justify-center">
+                  <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 flex items-center justify-center">
                     <IPFSImage 
                       src={getOptimizedImageUrl(selectedNFT.image)} 
                       alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
-                      className="w-full h-full object-contain p-4"
+                      className="w-full h-full object-cover"
                       placeholderSrc={PLACEHOLDER_IMAGE}
                       onLoad={() => console.log(`Desktop modal image loaded for NFT ${selectedNFT.tokenId}`)}
                       onError={() => console.warn(`Desktop modal image failed for NFT ${selectedNFT.tokenId}`)}
@@ -251,4 +251,4 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
 };
 
 export default NFTDetailModal;
-      
+

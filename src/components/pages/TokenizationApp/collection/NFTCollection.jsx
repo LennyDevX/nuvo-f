@@ -136,12 +136,12 @@ const NFTCard = ({ nft, onClick }) => {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
-      {/* NFT Image */}
-      <div className="aspect-square relative overflow-hidden">
+      {/* NFT Image with consistent aspect ratio */}
+      <div className="nft-collection-image-container">
         <IPFSImage 
           src={nft.image}
           alt={nft.name || "NFT"} 
-          className="w-full h-full object-cover transition-transform duration-300"
+          className="nft-collection-image"
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
           placeholderSrc="/LogoNuvos.webp"
         />
@@ -187,7 +187,7 @@ const NFTCard = ({ nft, onClick }) => {
           <p className="text-gray-300 text-xs mb-3 line-clamp-3">{nft.description}</p>
           
           <button
-            className="btn-primary btn-sm btn-full mt-2 flex items-center justify-center gap-1"
+            className="btn-nuvo-base bg-nuvo-gradient-button btn-sm btn-full mt-2 flex items-center justify-center gap-1"
             onClick={(e) => {
               e.stopPropagation();
               handleClick();
