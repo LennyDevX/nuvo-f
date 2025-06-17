@@ -4,6 +4,7 @@ import { FaEdit, FaCoins, FaSpinner, FaShieldAlt } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import { WalletContext } from '../../../../context/WalletContext';
 import TransactionToast from '../../../ui/TransactionToast';
+import IPFSImage from '../../../ui/IPFSImage';
 
 const PreviewStep = () => {
   const { account, walletConnected } = useContext(WalletContext);
@@ -258,11 +259,14 @@ const PreviewStep = () => {
         <div className="space-y-3 sm:space-y-4 order-2 lg:order-1">
           <div className="aspect-square bg-white/5 backdrop-blur-sm rounded-xl overflow-hidden border border-white/20 shadow-lg max-w-xs mx-auto lg:max-w-none lg:mx-0">
             {image && (
-              <img 
+              <IPFSImage 
                 src={image} 
                 alt="Asset Preview" 
                 className="w-full h-full object-contain p-2"
+                placeholderSrc="/NFT-placeholder.webp"
                 style={{ maxHeight: '100%' }}
+                onLoad={() => console.log('Preview image loaded')}
+                onError={() => console.warn('Preview image failed to load')}
               />
             )}
           </div>

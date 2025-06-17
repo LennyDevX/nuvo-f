@@ -9,7 +9,7 @@ import LoadingOverlay from '../../../ui/LoadingOverlay';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import IPFSImage from '../../../ui/IPFSImage';
 import useListNFT from '../../../../hooks/nfts/useListNFT';
-import { getCSPCompliantImageURL } from '../../../../utils/blockchain/blockchainUtils';
+import { getCSPCompliantImageURL, getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 
 // Agregar un simple sistema de caché para evitar llamadas repetidas
 const nftCache = new Map();
@@ -448,10 +448,12 @@ const NFTDetail = () => {
               <div>
                 <div className="bg-black/40 rounded-xl overflow-hidden aspect-square shadow-lg border border-purple-500/10">
                   <IPFSImage 
-                    src={nft.image} 
+                    src={getOptimizedImageUrl(nft.image)} 
                     alt={nft.name} 
                     className="w-full h-full object-contain"
                     placeholderSrc="/NFT-X1.webp"
+                    onLoad={() => console.log(`NFT ${nft.tokenId} image loaded`)}
+                    onError={() => console.warn(`NFT ${nft.tokenId} image failed to load`)}
                   />
                 </div>
                 

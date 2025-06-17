@@ -3,6 +3,8 @@ import { motion as m } from 'framer-motion';
 import { FaImage, FaTimes } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
+import IPFSImage from '../../../ui/IPFSImage';
+import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 
 // Constants
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
@@ -57,7 +59,6 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
       onClick={handleBackdropClick}
       style={isMobile ? { paddingTop: `${Math.max(scrollY * 0.1, 16)}px` } : {}}
     >
-      {console.log('NFTDetailModal rendering with NFT:', selectedNFT)}
       <m.div
         initial={{ opacity: 0, scale: 0.95, y: isMobile ? 50 : 0 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -93,18 +94,14 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                 <div className="flex gap-3">
                   {/* Compact Image */}
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 flex items-center justify-center flex-shrink-0">
-                    {selectedNFT.image ? (
-                      <img 
-                        src={selectedNFT.image} 
-                        alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.src = PLACEHOLDER_IMAGE;
-                        }}
-                      />
-                    ) : (
-                      <FaImage className="text-2xl text-purple-400" />
-                    )}
+                    <IPFSImage 
+                      src={getOptimizedImageUrl(selectedNFT.image)} 
+                      alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
+                      className="w-full h-full object-contain"
+                      placeholderSrc={PLACEHOLDER_IMAGE}
+                      onLoad={() => console.log(`Modal image loaded for NFT ${selectedNFT.tokenId}`)}
+                      onError={() => console.warn(`Modal image failed for NFT ${selectedNFT.tokenId}`)}
+                    />
                   </div>
 
                   {/* Basic Info */}
@@ -177,18 +174,14 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                 {/* Image Section - Left side, smaller */}
                 <div className="w-80 flex-shrink-0">
                   <div className="rounded-xl overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 aspect-square flex items-center justify-center">
-                    {selectedNFT.image ? (
-                      <img 
-                        src={selectedNFT.image} 
-                        alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
-                        className="w-full h-full object-contain p-4"
-                        onError={(e) => {
-                          e.target.src = PLACEHOLDER_IMAGE;
-                        }}
-                      />
-                    ) : (
-                      <FaImage className="text-6xl text-purple-400" />
-                    )}
+                    <IPFSImage 
+                      src={getOptimizedImageUrl(selectedNFT.image)} 
+                      alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
+                      className="w-full h-full object-contain p-4"
+                      placeholderSrc={PLACEHOLDER_IMAGE}
+                      onLoad={() => console.log(`Desktop modal image loaded for NFT ${selectedNFT.tokenId}`)}
+                      onError={() => console.warn(`Desktop modal image failed for NFT ${selectedNFT.tokenId}`)}
+                    />
                   </div>
                 </div>
                 
@@ -258,3 +251,4 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
 };
 
 export default NFTDetailModal;
+      

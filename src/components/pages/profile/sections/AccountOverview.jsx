@@ -4,6 +4,8 @@ import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, Fa
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
+import IPFSImage from '../../../ui/IPFSImage';
+import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 
 // Move constants outside component to prevent recreation
 const FALLBACK_IMAGES = [
@@ -15,49 +17,14 @@ const FALLBACK_IMAGES = [
 
 // Extract NFTImage as a memoized component
 const NFTImage = React.memo(({ src, alt, className }) => {
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    // Reset state when src changes
-    setCurrentSrc(src);
-    setFallbackIndex(0);
-    setHasError(false);
-  }, [src]);
-
-  // Memoize the error handler to prevent recreation
-  const handleError = useCallback(() => {
-    if (currentSrc === src && fallbackIndex < FALLBACK_IMAGES.length) {
-      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
-      setFallbackIndex(prevIndex => prevIndex + 1);
-    } 
-    else if (fallbackIndex < FALLBACK_IMAGES.length) {
-      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
-      setFallbackIndex(prevIndex => prevIndex + 1);
-    } 
-    else {
-      setHasError(true);
-    }
-  }, [currentSrc, src, fallbackIndex]);
-
-  if (hasError) {
-    return (
-      <div className={`flex items-center justify-center ${className}`}>
-        <FaImage className="text-lg text-purple-400" />
-      </div>
-    );
-  }
-
   return (
-    <img 
-      src={currentSrc} 
+    <IPFSImage 
+      src={getOptimizedImageUrl(src)} 
       alt={alt} 
       className={className}
-      onError={handleError}
-      // Add width/height to prevent layout shifts
-      width="100%"
-      height="100%"
+      placeholderSrc={FALLBACK_IMAGES[0]}
+      onLoad={() => console.log('Account overview NFT image loaded')}
+      onError={() => console.warn('Account overview NFT image failed to load')}
       loading="lazy"
     />
   );
@@ -285,3 +252,4 @@ const AccountOverview = ({ account, balance, network }) => {
 };
 
 export default React.memo(AccountOverview);
+           

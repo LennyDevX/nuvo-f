@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { FiHeart, FiTag, FiDollarSign, FiUser, FiClock } from 'react-icons/fi';
+import IPFSImage from '../../../ui/IPFSImage';
 import OfferModal from './OfferModal';
 
 const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
   const [showOfferModal, setShowOfferModal] = useState(false);
-  const [isImageLoading, setIsImageLoading] = useState(true);
-  const [imageError, setImageError] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
   const handleBuy = () => {
@@ -19,19 +18,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
 
   const handleLike = () => {
     setIsLiked(!isLiked);
-    // Aquí puedes agregar la lógica para guardar el like en el backend
     console.log(`NFT ${nft.tokenId} ${isLiked ? 'unliked' : 'liked'}`);
-  };
-
-  const getImageUrl = () => {
-    if (nft.metadata?.image) {
-      if (nft.metadata.image.startsWith('ipfs://')) {
-        const ipfsHash = nft.metadata.image.replace('ipfs://', '');
-        return `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-      }
-      return nft.metadata.image;
-    }
-    return '/placeholder-nft.jpg';
   };
 
   const formatPrice = (price) => {
@@ -47,37 +34,27 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
+  // Get image URL from various possible sources
+  const getImageUrl = () => {
+    return nft.metadata?.image || nft.image || nft.imageUrl || null;
+  };
+
   return (
     <>
       <div className="nft-card-pro group">
-        {/* Imagen grande y profesional */}
-        <div style={{ position: 'relative' }}>
-          {(isImageLoading || imageError) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-t-lg">
-              {imageError ? (
-                <div className="text-center text-gray-400">
-                  <FiTag className="w-8 h-8 mx-auto mb-2" />
-                  <p className="text-xs">No Image</p>
-                </div>
-              ) : (
-                <div className="animate-pulse w-full h-full bg-purple-900/30 rounded-t-lg" />
-              )}
-            </div>
-          )}
-          {!imageError && (
-            <img
-              src={getImageUrl()}
-              alt={nft.metadata?.name || `NFT #${nft.tokenId}`}
-              className="nft-card-pro-image"
-              onLoad={() => setIsImageLoading(false)}
-              onError={() => {
-                setIsImageLoading(false);
-                setImageError(true);
-              }}
-              draggable={false}
-              style={{ border: 'none', outline: 'none' }}
-            />
-          )}
+        {/* Image using IPFSImage component for better IPFS compatibility */}
+        <div className="nft-card-pro-image-container">
+          <IPFSImage 
+            src={getImageUrl()}
+            alt={nft.metadata?.name || `NFT #${nft.tokenId}`}
+            className="nft-card-pro-image"
+            placeholderSrc="/NFT-placeholder.webp"
+            onLoad={() => console.log(`NFT #${nft.tokenId} image loaded successfully`)}
+            onError={() => console.warn(`Failed to load image for NFT #${nft.tokenId}`, { 
+              metadata: nft.metadata,
+              imageUrl: getImageUrl() 
+            })}
+          />
         </div>
 
         {/* Badges Section - Like e ID intercambiados */}

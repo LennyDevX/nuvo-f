@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
+import IPFSImage from '../../../ui/IPFSImage';
 
 // Lazy load the NFT detail modal component
 const NFTDetailModal = lazy(() => import('./NFTDetailModal'));
@@ -39,22 +41,16 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
     >
       {/* NFT Image */}
       <div className="aspect-square relative overflow-hidden">
-        {nft.image ? (
-          <img 
-            src={nft.image} 
-            alt={nft.name || `NFT #${nft.tokenId}`} 
-            className="w-full h-full object-cover transition-transform duration-300"
-            style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-            onError={(e) => {
-              e.target.src = PLACEHOLDER_IMAGE;
-            }}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-purple-900/20">
-            <FaImage className="text-3xl text-purple-400" />
-          </div>
-        )}
+        <IPFSImage 
+          src={getOptimizedImageUrl(nft.image)}
+          alt={nft.name || `NFT #${nft.tokenId}`} 
+          className="w-full h-full object-cover transition-transform duration-300"
+          style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+          placeholderSrc={PLACEHOLDER_IMAGE}
+          onLoad={() => console.log(`NFT ${nft.tokenId} loaded in profile`)}
+          onError={() => console.warn(`NFT ${nft.tokenId} failed to load in profile`)}
+          loading="lazy"
+        />
         
         {/* Sale Status Badge */}
         {nft.isForSale && nft.price && (

@@ -51,27 +51,108 @@ const MarketplaceDashboard = () => {
     return new ethers.Contract(TOKENIZATION_ADDRESS, contractABI.abi, signer);
   }, [provider, account]);
 
-  // Fetch marketplace data
+  // Fetch metadata from IPFS - Enhanced to handle different URL formats
+  const fetchMetadata = async (tokenURI) => {
+    try {
+      if (!tokenURI) {
+        return {
+          name: `NFT #${tokenId}`,
+          description: 'No hay descripción disponible',
+          image: '/NFT-placeholder.webp',
+          attributes: []
+        };
+      }
+      
+      console.log(`Fetching metadata for URI: ${tokenURI}`);
+      
+      // Enhanced IPFS URL handling
+      let url = tokenURI;
+      
+      // Handle different IPFS URL formats
+      if (tokenURI.startsWith('ipfs://')) {
+        const ipfsHash = tokenURI.replace('ipfs://', '');
+        url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+      } else if (tokenURI.includes('/ipfs/')) {
+        // Already a gateway URL, use as-is
+        url = tokenURI;
+      }
+      
+      console.log(`Resolved metadata URL: ${url}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const metadata = await response.json();
+        console.log(`Metadata loaded successfully:`, metadata);
+        
+        // Ensure image URL is properly formatted
+        if (metadata.image && metadata.image.startsWith('ipfs://')) {
+          const imageHash = metadata.image.replace('ipfs://', '');
+          metadata.image = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
+        }
+        
+        return metadata;
+      } catch (fetchErr) {
+        clearTimeout(timeoutId);
+        console.error("Error in metadata fetch:", fetchErr);
+        throw fetchErr;
+      }
+    } catch (err) {
+      console.error("Error fetching metadata:", err);
+      return {
+        name: `NFT #${tokenId || 'Unknown'}`,
+        description: 'Error al cargar metadatos',
+        image: '/NFT-placeholder.webp',
+        attributes: []
+      };
+    }
+  };
+
+  // Fetch marketplace data - Enhanced error handling
   const fetchMarketplaceData = useCallback(async () => {
     try {
       setLoading(true);
       const contract = getContract();
-      if (!contract) return;
+      if (!contract) {
+        console.warn('No contract available');
+        return;
+      }
 
-      // Get all listed tokens - assuming we need to iterate through token IDs
-      // This is a simplified approach - in production you'd want events or a backend
+      console.log('Fetching marketplace data...');
+      
+      // Get all listed tokens - Enhanced iteration
       const listedNfts = [];
       let tokenId = 1;
-      const maxTokens = 1000; // Reasonable limit
+      let consecutiveErrors = 0;
+      const maxConsecutiveErrors = 5;
+      const maxTokens = 100; // Reasonable limit for testing
       
-      while (tokenId <= maxTokens) {
+      while (tokenId <= maxTokens && consecutiveErrors < maxConsecutiveErrors) {
         try {
+          console.log(`Checking token ${tokenId}...`);
+          
           const tokenData = await contract.getListedToken(tokenId);
+          
           if (tokenData[4]) { // isListed
+            console.log(`Token ${tokenId} is listed, fetching details...`);
+            
             const tokenURI = await contract.tokenURI(tokenId);
             const metadata = await fetchMetadata(tokenURI);
             
-            listedNfts.push({
+            const nftData = {
               tokenId: tokenData[0].toString(),
               owner: tokenData[1],
               seller: tokenData[2],
@@ -80,16 +161,35 @@ const MarketplaceDashboard = () => {
               listedAt: tokenData[5].toString(),
               category: tokenData[6],
               tokenURI,
-              metadata
-            });
+              metadata,
+              // Add direct image access for compatibility
+              image: metadata.image,
+              name: metadata.name
+            };
+            
+            listedNfts.push(nftData);
+            console.log(`Added NFT ${tokenId} to marketplace:`, nftData);
+            consecutiveErrors = 0; // Reset error counter
+          } else {
+            console.log(`Token ${tokenId} exists but is not listed`);
+            consecutiveErrors = 0; // Reset error counter
           }
         } catch (error) {
-          // Token doesn't exist or not listed, continue
-          if (error.message.includes('TokenDoesNotExist')) break;
+          consecutiveErrors++;
+          console.log(`Error with token ${tokenId} (${consecutiveErrors}/${maxConsecutiveErrors}):`, error.message);
+          
+          // If it's a "TokenDoesNotExist" error, we've probably reached the end
+          if (error.message.includes('TokenDoesNotExist') || 
+              error.message.includes('ERC721: invalid token ID') ||
+              error.message.includes('ERC721NonexistentToken')) {
+            console.log(`Reached end of tokens at ${tokenId}`);
+            break;
+          }
         }
         tokenId++;
       }
 
+      console.log(`Found ${listedNfts.length} listed NFTs:`, listedNfts);
       setNfts(listedNfts);
       setFilteredNfts(listedNfts);
       
@@ -103,21 +203,6 @@ const MarketplaceDashboard = () => {
       setLoading(false);
     }
   }, [getContract, showToast]);
-
-  // Fetch metadata from IPFS
-  const fetchMetadata = async (tokenURI) => {
-    try {
-      if (tokenURI.startsWith('ipfs://')) {
-        const ipfsHash = tokenURI.replace('ipfs://', '');
-        const response = await fetch(`https://gateway.pinata.cloud/ipfs/${ipfsHash}`);
-        return await response.json();
-      }
-      return {};
-    } catch (error) {
-      console.error('Error fetching metadata:', error);
-      return {};
-    }
-  };
 
   // Calculate marketplace statistics
   const calculateStats = (nftList) => {
