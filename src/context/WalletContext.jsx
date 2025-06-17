@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { ethers } from 'ethers';
 import { logger } from '../utils/debug/logger';
 
@@ -14,6 +14,15 @@ export const WalletContext = createContext({
     setWalletConnected: () => {},
     ensureProvider: async () => {},
 });
+
+// Custom hook to use the WalletContext
+export const useWallet = () => {
+    const context = useContext(WalletContext);
+    if (context === undefined) {
+        throw new Error('useWallet must be used within a WalletProvider');
+    }
+    return context;
+};
 
 export const WalletProvider = ({ children }) => {
     // Inicializar estados desde localStorage con comprobación más robusta

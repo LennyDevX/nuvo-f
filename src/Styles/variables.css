@@ -34,6 +34,11 @@
   
   /* Mobile navbar height */
   --mobile-navbar-height: 64px;
+
+  /* Marketplace specific variables */
+  --marketplace-card-hover: rgba(124, 58, 237, 0.1);
+  --marketplace-border: rgba(124, 58, 237, 0.2);
+  --marketplace-gradient: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
 }
 
 @media (max-width: 768px) {
