@@ -63,20 +63,20 @@ export function useStakingEvents() {
             const withdrawalTopic = ethers.id("WithdrawalMade(address,uint256,uint256)");
             const paddedAddress = ethers.zeroPadValue(address, 32).toLowerCase();
 
-            // Fetch logs in parallel
+            // Fetch logs in parallel with retry/backoff
             const [depositLogs, withdrawalLogs] = await Promise.all([
-              fetchLogsInChunks(provider, {
+              fetchWithRetry(() => fetchLogsInChunks(provider, {
                 address: CONTRACT_ADDRESS,
                 topics: [depositTopic, paddedAddress],
                 fromBlock,
                 toBlock: latestBlock
-              }),
-              fetchLogsInChunks(provider, {
+              }), 2, 1000),
+              fetchWithRetry(() => fetchLogsInChunks(provider, {
                 address: CONTRACT_ADDRESS,
                 topics: [withdrawalTopic, paddedAddress],
                 fromBlock,
                 toBlock: latestBlock
-              })
+              }), 2, 1000)
             ]);
 
             const iface = new ethers.Interface(ABI.abi);
@@ -170,6 +170,13 @@ export function useStakingEvents() {
           : prev
       );
       setLoading(false);
+
+      // Prefetch next likely events (prefetching inteligente)
+      if (address) {
+        setTimeout(() => {
+          globalCache.clearByPrefix('pool_events_');
+        }, 1000);
+      }
       return events;
     } catch (error) {
       setError(error);

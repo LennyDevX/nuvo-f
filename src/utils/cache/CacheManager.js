@@ -1,5 +1,7 @@
 import { logger } from '../debug/logger';
 
+const CACHE_STORAGE_KEY = 'nuvo-cache-manager-v1';
+
 export class CacheManager {
   constructor(maxSize = 100) {
     this.cache = new Map();
@@ -11,6 +13,7 @@ export class CacheManager {
       sets: 0,
       clears: 0
     };
+    this._loadFromStorage();
   }
 
   async get(key, fetchFn, ttl = 60000) {
@@ -62,6 +65,7 @@ export class CacheManager {
     
     this.cache.set(key, data);
     this.ttls.set(key, Date.now() + ttl);
+    this._saveToStorage();
   }
 
   clear(key) {
@@ -74,8 +78,20 @@ export class CacheManager {
       this.cache.clear();
       this.ttls.clear();
     }
+    this._saveToStorage();
   }
-  
+
+  clearByPrefix(prefix) {
+    // Invalidation inteligente por grupo
+    for (const key of this.cache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.cache.delete(key);
+        this.ttls.delete(key);
+      }
+    }
+    this._saveToStorage();
+  }
+
   // Find the key with the oldest expiry time
   _getOldestKey() {
     let oldestKey = null;
@@ -94,12 +110,15 @@ export class CacheManager {
   // Clean expired items
   purgeExpired() {
     const now = Date.now();
+    let changed = false;
     for (const [key, expiry] of this.ttls.entries()) {
       if (now > expiry) {
         this.cache.delete(key);
         this.ttls.delete(key);
+        changed = true;
       }
     }
+    if (changed) this._saveToStorage();
   }
   
   // Get statistics about the cache usage
@@ -110,6 +129,32 @@ export class CacheManager {
       maxSize: this.maxSize,
       hitRate: this.stats.hits / (this.stats.hits + this.stats.misses || 1)
     };
+  }
+
+  _saveToStorage() {
+    try {
+      const obj = {
+        cache: Array.from(this.cache.entries()),
+        ttls: Array.from(this.ttls.entries())
+      };
+      localStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(obj));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  }
+
+  _loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(CACHE_STORAGE_KEY);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (obj.cache && obj.ttls) {
+        this.cache = new Map(obj.cache);
+        this.ttls = new Map(obj.ttls);
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
   }
 }
 

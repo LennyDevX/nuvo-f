@@ -2,6 +2,20 @@ import { useState, useEffect } from 'react';
 import { cacheData, getCachedData } from '../../utils/cacheUtils';
 // import { trackApiCall } from '...'; // TODO: Import or define trackApiCall
 
+// Helper: fetch with retry/backoff
+const fetchWithRetry = async (fetchFn, retries = 2, backoff = 1000) => {
+  let attempt = 0;
+  while (attempt <= retries) {
+    try {
+      return await fetchFn();
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, backoff * Math.pow(2, attempt)));
+      attempt++;
+    }
+  }
+};
+
 /**
  * Hook for fetching data with localStorage caching
  * @param {string} key - Cache key
@@ -22,12 +36,9 @@ export default function useCachedData(key, fetchFn, options = {}) {
   
   const fetchData = async (skipCache = false) => {
     if (!enabled) return;
-    
     setLoading(true);
     setError(null);
-    
     try {
-      // Try to get from cache first if not skipping cache
       if (!skipCache) {
         const cachedData = getCachedData(key);
         if (cachedData) {
@@ -36,13 +47,9 @@ export default function useCachedData(key, fetchFn, options = {}) {
           return cachedData;
         }
       }
-      
-      // Fetch fresh data
-      const freshData = await fetchFn();
-      
-      // Cache the result
+      // Retry/backoff
+      const freshData = await fetchWithRetry(fetchFn, 2, 1000);
       cacheData(key, freshData, ttl);
-      
       setData(freshData);
       return freshData;
     } catch (err) {
@@ -94,4 +101,20 @@ export function useBlockchainData(key, fetchFn, options = {}) {
     // TTL más corto para datos blockchain que cambian frecuentemente
     ttl: options.ttl || 60000 // 1 minuto por defecto para datos blockchain
   });
+}
+
+// Prefetch hook
+export function usePrefetchCachedData(keys, fetchFn, options = {}) {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const key of keys) {
+        if (cancelled) break;
+        try {
+          await fetchWithRetry(() => fetchFn(key), 1, 500);
+        } catch {}
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [JSON.stringify(keys), fetchFn]);
 }

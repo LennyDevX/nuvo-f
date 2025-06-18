@@ -1514,6 +1514,53 @@ export const getBestIPFSGateway = async (ipfsHash) => {
   return gateways[0] + ipfsHash;
 };
 
+// Helper: fetch with retry and backoff
+export async function fetchWithRetry(url, options = {}, retries = 2, backoff = 1000) {
+  let attempt = 0;
+  while (attempt <= retries) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, backoff * Math.pow(2, attempt)));
+      attempt++;
+    }
+  }
+}
+
+// Dynamic IPFS gateway selection based on latency
+let ipfsGatewayLatencies = {};
+async function measureGatewayLatency(gateway, cid) {
+  const url = gateway + cid;
+  const start = performance.now();
+  try {
+    await fetch(url, { method: 'HEAD', mode: 'cors' });
+    return performance.now() - start;
+  } catch {
+    return Infinity;
+  }
+}
+export async function selectBestIpfsGateway(cid) {
+  const gateways = [
+    'https://nftstorage.link/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://ipfs.io/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://ipfs.cf-ipfs.com/ipfs/'
+  ];
+  // Measure all in parallel, cache for session
+  if (!ipfsGatewayLatencies[cid]) {
+    const results = await Promise.all(gateways.map(gw => measureGatewayLatency(gw, cid)));
+    ipfsGatewayLatencies[cid] = gateways
+      .map((gw, i) => ({ gw, latency: results[i] }))
+      .sort((a, b) => a.latency - b.latency)
+      .map(x => x.gw);
+  }
+  return ipfsGatewayLatencies[cid];
+}
+
 export const cardemodule = {
   isEnabled: true,
   version: '1.0.0',

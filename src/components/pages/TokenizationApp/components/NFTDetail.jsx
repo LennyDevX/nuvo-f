@@ -66,6 +66,11 @@ const NFTDetail = () => {
       
       try {
         // Enhanced validation with logging
+        // Prefetch next NFT metadata for better UX
+        if (tokenId && Number(tokenId) < 10000) {
+          prefetchNFTMetadata([`ipfs://${Number(tokenId) + 1}`]);
+        }
+
         console.log("Validating address:", CONTRACT_ADDRESS);
         console.log("Is valid address:", ethers.isAddress(CONTRACT_ADDRESS));
 

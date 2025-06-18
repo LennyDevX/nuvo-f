@@ -258,6 +258,8 @@ export const StakingProvider = ({ children }) => {
           userDeposits: userInfo.deposits,
           stakingStats: userInfo.stakingStats
         }));
+        // Invalidate only staking-related cache
+        globalCache.clearByPrefix('pool_events_');
       }
       
       return true;

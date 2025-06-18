@@ -9,11 +9,12 @@ import LoadingSpinner from '../../ui/LoadingSpinner';
 import EmptyState from './components/EmptyState';
 import SpaceBackground from '../../effects/SpaceBackground';
 import contractABI from '../../../Abi/TokenizationApp.json';
+import NotConnectedMessage from '../../ui/NotConnectedMessage';
 
 const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
-const MarketplaceDashboard = () => {
-  const { account, provider } = useContext(WalletContext);
+function MarketplaceDashboard(props) {
+  const { account, provider, walletConnected, connectWallet } = useContext(WalletContext);
   const { showToast } = useToast();
   
   // States
@@ -62,54 +63,37 @@ const MarketplaceDashboard = () => {
           attributes: []
         };
       }
-      
-      console.log(`Fetching metadata for URI: ${tokenURI}`);
-      
-      // Enhanced IPFS URL handling
+      // Retry/backoff
       let url = tokenURI;
-      
-      // Handle different IPFS URL formats
       if (tokenURI.startsWith('ipfs://')) {
         const ipfsHash = tokenURI.replace('ipfs://', '');
         url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
       } else if (tokenURI.includes('/ipfs/')) {
-        // Already a gateway URL, use as-is
         url = tokenURI;
       }
-      
-      console.log(`Resolved metadata URL: ${url}`);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      try {
-        const response = await fetch(url, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-          }
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      let metadata;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const response = await fetch(url, {
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
+          });
+          clearTimeout(timeoutId);
+          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          metadata = await response.json();
+          break;
+        } catch (fetchErr) {
+          if (attempt === 2) throw fetchErr;
+          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
         }
-        
-        const metadata = await response.json();
-        console.log(`Metadata loaded successfully:`, metadata);
-        
-        // Ensure image URL is properly formatted
-        if (metadata.image && metadata.image.startsWith('ipfs://')) {
-          const imageHash = metadata.image.replace('ipfs://', '');
-          metadata.image = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
-        }
-        
-        return metadata;
-      } catch (fetchErr) {
-        clearTimeout(timeoutId);
-        console.error("Error in metadata fetch:", fetchErr);
-        throw fetchErr;
       }
+      if (metadata.image && metadata.image.startsWith('ipfs://')) {
+        const imageHash = metadata.image.replace('ipfs://', '');
+        metadata.image = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
+      }
+      return metadata;
     } catch (err) {
       console.error("Error fetching metadata:", err);
       return {
@@ -270,6 +254,14 @@ const MarketplaceDashboard = () => {
     setFilteredNfts(filtered);
   }, [nfts, filters]);
 
+  // Prefetch next NFTs for better UX
+  useEffect(() => {
+    if (filteredNfts.length > 20) {
+      const nextPageURIs = filteredNfts.slice(20, 40).map(nft => nft.tokenURI);
+      prefetchNFTMetadata(nextPageURIs);
+    }
+  }, [filteredNfts]);
+
   // Buy NFT function
   const buyNFT = async (tokenId, price) => {
     try {
@@ -289,6 +281,8 @@ const MarketplaceDashboard = () => {
       
       // Refresh marketplace data
       fetchMarketplaceData();
+      // Invalidate NFT cache for this tokenId
+      localStorage.removeItem(`nuvo-cache-nft-${tokenId}`);
       
     } catch (error) {
       console.error('Error buying NFT:', error);
@@ -319,10 +313,45 @@ const MarketplaceDashboard = () => {
     }
   };
 
-  // Initialize marketplace data
+  // Efecto: recargar los NFTs cada vez que cambia la conexión de la wallet
   useEffect(() => {
-    fetchMarketplaceData();
-  }, [fetchMarketplaceData]);
+    if (walletConnected && account && provider) {
+      fetchMarketplaceData();
+    } else {
+      setNfts([]);
+      setFilteredNfts([]);
+      setStats({
+        totalItems: 0,
+        totalVolume: '0',
+        floorPrice: '0',
+        owners: 0
+      });
+    }
+    // No disables eslint aquí, es correcto que dependa de estos valores
+  }, [walletConnected, account, provider, fetchMarketplaceData]);
+
+  // Conditionally render the not connected message
+  if (!walletConnected || !account || !provider) {
+    return (
+      <div className="relative min-h-screen bg-nuvo-gradient pb-12">
+        <SpaceBackground customClass="" />
+        <div className="container mx-auto px-3 md:px-4 py-8 relative z-10">
+          <NotConnectedMessage
+            title="Connect Wallet"
+            message="Please connect your wallet to explore and trade NFTs in the marketplace."
+          />
+          <div className="flex justify-center mt-6">
+            <button
+              className="btn-nuvo-base btn-nuvo-outline px-6 py-3 text-white font-medium"
+              onClick={connectWallet}
+            >
+              Connect Wallet
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-nuvo-gradient pb-12">
