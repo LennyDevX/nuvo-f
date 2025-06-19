@@ -1,5 +1,5 @@
 import { useReducer, useRef, useCallback, useEffect } from 'react';
-import { debounce } from '../../utils/debounce';
+import { debounce } from '../../utils/performance/debounce';
 import { chatReducer, initialChatState } from '../../components/GeminiChat/core/chatReducer';
 import { StreamingService } from '../../components/GeminiChat/core/streamingService';
 

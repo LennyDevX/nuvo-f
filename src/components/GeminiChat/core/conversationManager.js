@@ -1,4 +1,4 @@
-import { debounce } from '../../../utils/debounce';
+import { debounce } from '../../../utils/performance/debounce';
 
 const STORAGE_KEY = 'nuvos_chat_conversations';
 const MAX_STORED_CONVERSATIONS = 10;

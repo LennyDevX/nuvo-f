@@ -4,7 +4,7 @@ import { useStakingContract } from './useStakingContract';
 import { globalCache } from '../../utils/cache/CacheManager';
 import { globalRateLimiter } from '../../utils/performance/RateLimiter';
 import { calculateStakingRewards } from '../../utils/blockchain/blockchainUtils';
-import { STAKING_CONSTANTS } from '../../utils/constants';
+import { STAKING_CONSTANTS } from '../../utils/staking/constants';
 
 export function useStakingRewards() {
   const { contract, getSignerAddress } = useStakingContract();

@@ -191,6 +191,19 @@ const RightSidebar = ({
         )}
       </AnimatePresence>
       
+      {/* Desktop blur overlay for main content */}
+      <AnimatePresence>
+        {isOpen && (
+          <m.div 
+            className="hidden md:block fixed inset-0 backdrop-blur-sm z-[150] pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.3 }}
+          />
+        )}
+      </AnimatePresence>
+      
       <AnimatePresence>
         {isOpen && (
           <m.div

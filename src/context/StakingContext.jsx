@@ -4,7 +4,7 @@ import { useStakingTransactions } from '../hooks/staking/useStakingTransactions'
 import { useStakingRewards } from '../hooks/staking/useStakingRewards';
 import { useStakingEvents } from '../hooks/staking/useStakingEvents';
 import { calculateTimeBonus as calculateTimeBonusFromUtils } from '../utils/blockchain/blockchainUtils';
-import { STAKING_CONSTANTS } from '../utils/constants';
+import { STAKING_CONSTANTS } from '../utils/staking/constants';
 
 // Initial default state
 const defaultState = {

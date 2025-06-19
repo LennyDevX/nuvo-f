@@ -5,7 +5,7 @@ import {
   cacheLogResult,
   markLogQueryInProgress
 } from './blockchainLogCache';
-import { getAlchemyApiKey, getAlchemyNftUrl } from '../alchemy';
+import { getAlchemyApiKey, getAlchemyNftUrl } from './alchemy';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [

@@ -6,7 +6,7 @@ import { detectWallet } from '../../utils/blockchain/walletDetector';
 import MetaMaskLogo from '/metamask-logo.png';
 import TrustWalletLogo from '/trustwallet-logo.png';
 import { useNavigate } from 'react-router-dom';
-import { getAlchemyRpcUrl } from '../../utils/alchemy';
+import { getAlchemyRpcUrl } from '../../utils/blockchain/alchemy';
 
 const WalletConnect = ({ className }) => {
   const { 
