@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { m } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FaCamera, FaUpload, FaExclamationTriangle } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 
@@ -77,7 +77,7 @@ const CaptureStep = () => {
   };
 
   return (
-    <m.div 
+    <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-4 sm:space-y-6"
@@ -119,7 +119,7 @@ const CaptureStep = () => {
       
       {/* Action buttons - responsive layout */}
       <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4 sm:px-0">
-        <m.button 
+        <motion.button 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full sm:w-auto px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center gap-2 shadow-lg touch-manipulation"
@@ -127,9 +127,9 @@ const CaptureStep = () => {
         >
           <FaCamera /> 
           <span className="text-sm sm:text-base">Take Photo</span>
-        </m.button>
+        </motion.button>
         
-        <m.button
+        <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full sm:w-auto px-6 py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center justify-center gap-2 touch-manipulation"
@@ -144,9 +144,9 @@ const CaptureStep = () => {
             accept="image/*"
             onChange={handleFileUpload}
           />
-        </m.button>
+        </motion.button>
       </div>
-    </m.div>
+    </motion.div>
   );
 };
 
