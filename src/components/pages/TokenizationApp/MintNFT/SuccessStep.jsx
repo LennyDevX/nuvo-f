@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaCheckCircle, FaExternalLinkAlt, FaWallet, FaPlus, FaSearch } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useTokenization } from '../../../../context/TokenizationContext';
@@ -33,29 +33,29 @@ const SuccessStep = () => {
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial="hidden"
       animate="visible"
       variants={containerVariants}
       className="space-y-4 sm:space-y-6 text-center"
     >
-      <motion.div
+      <m.div
         variants={itemVariants}
         className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-green-500/20 rounded-full flex items-center justify-center text-green-400 text-2xl sm:text-3xl"
       >
         <FaCheckCircle />
-      </motion.div>
+      </m.div>
       
-      <motion.h2 variants={itemVariants} className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-500 px-4">
+      <m.h2 variants={itemVariants} className="text-xl sm:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-500 px-4">
         Asset Successfully Tokenized!
-      </motion.h2>
+      </m.h2>
       
-      <motion.p variants={itemVariants} className="text-sm sm:text-base text-gray-300 px-4">
+      <m.p variants={itemVariants} className="text-sm sm:text-base text-gray-300 px-4">
         Your asset has been successfully transformed into an NFT on the blockchain
-      </motion.p>
+      </m.p>
       
       {mintedNFT && (
-        <motion.div 
+        <m.div 
           variants={itemVariants}
           className="max-w-sm sm:max-w-md mx-auto bg-white/5 backdrop-blur-sm rounded-xl p-4 sm:p-6 text-left border border-white/20"
         >
@@ -93,11 +93,11 @@ const SuccessStep = () => {
               <p className="text-white text-sm sm:text-base">{metadata.name}</p>
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
       
-      <motion.div variants={itemVariants} className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 px-4">
-        <motion.button
+      <m.div variants={itemVariants} className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 px-4">
+        <m.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center gap-2 shadow-lg mx-auto touch-manipulation"
@@ -105,10 +105,10 @@ const SuccessStep = () => {
         >
           <FaWallet className="text-base sm:text-lg" /> 
           <span className="text-sm sm:text-base">View My NFT Collection</span>
-        </motion.button>
+        </m.button>
         
         <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-slate-700 border border-purple-500/30 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-all hover:bg-slate-600 touch-manipulation"
@@ -116,9 +116,9 @@ const SuccessStep = () => {
           >
             <FaPlus /> 
             <span className="text-sm sm:text-base">Create Another NFT</span>
-          </motion.button>
+          </m.button>
           
-          <motion.button
+          <m.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-slate-800 border border-purple-500/20 rounded-lg text-white font-medium flex items-center justify-center gap-2 transition-all hover:bg-slate-700 touch-manipulation"
@@ -126,16 +126,16 @@ const SuccessStep = () => {
           >
             <FaSearch /> 
             <span className="text-sm sm:text-base">Explore Marketplace</span>
-          </motion.button>
+          </m.button>
         </div>
-      </motion.div>
+      </m.div>
       
-      <motion.div variants={itemVariants} className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 mt-4 mx-4">
+      <m.div variants={itemVariants} className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 mt-4 mx-4">
         <p className="text-xs sm:text-sm text-purple-300">
           This NFT now belongs to you on the Polygon blockchain. You can view, transfer, or list it for sale anytime.
         </p>
-      </motion.div>
-    </motion.div>
+      </m.div>
+    </m.div>
   );
 };
 

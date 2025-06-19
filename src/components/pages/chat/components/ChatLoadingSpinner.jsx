@@ -38,7 +38,7 @@ const ChatLoadingSpinner = () => {
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          Cargando Nuvos AI...
+          Loading Nuvos AI...
         </m.p>
       </m.div>
     </div>

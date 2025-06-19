@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import { TokenizationProvider } from '../../../../context/TokenizationContext';
 import UploadImageStep from './UploadImageStep';
@@ -20,7 +20,7 @@ const StepRenderer = () => {
   };
   
   return (
-    <motion.div
+    <m.div
       key={currentStep}
       variants={fadeVariants}
       initial="hidden"
@@ -42,7 +42,7 @@ const StepRenderer = () => {
             return null;
         }
       })()}
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -137,7 +137,7 @@ const HeroSection = () => {
   const { currentStep } = useTokenization();
   
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       className="text-center mb-6 sm:mb-8"
@@ -175,7 +175,7 @@ const HeroSection = () => {
           <div className="text-[10px] sm:text-xs text-gray-400">Level up</div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 
@@ -186,7 +186,7 @@ const TokenizationToolContent = () => {
       
       {/* Eliminar padding superior y ajustar para mobile navbar */}
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 pt-2 pb-20 sm:pb-6 relative z-10">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-full sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto"
@@ -202,7 +202,7 @@ const TokenizationToolContent = () => {
             {/* Step content */}
             <StepRenderer />
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

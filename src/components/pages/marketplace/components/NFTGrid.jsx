@@ -1,7 +1,17 @@
 import React from 'react';
 import NFTCard from './NFTCard';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
 
-const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount }) => {
+// Añade la prop loading
+const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading }) => {
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
   return (
     <div className="nft-grid-pro">
       {nfts.map((nft) => (

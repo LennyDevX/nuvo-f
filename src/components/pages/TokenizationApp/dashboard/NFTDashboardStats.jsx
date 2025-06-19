@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { 
   FaTh, 
   FaList, 
@@ -11,8 +11,8 @@ import {
 
 // Use memo to prevent unnecessary re-renders
 const NFTDashboardStats = memo(({ stats, isMobile }) => {
-  // Apply responsive isMobile prop even on larger screens for smaller devices
-  const useMobileLayout = isMobile || window.innerWidth < 768;
+  // Use a more reliable mobile detection
+  const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 1024);
   
   const { 
     totalNFTs, 
@@ -33,7 +33,7 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
     <div className="mb-6">
       {/* Primary Stats Row */}
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <motion.div 
+        <m.div 
           whileHover="hover"
           whileTap="tap"
           variants={cardVariants}
@@ -49,9 +49,9 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
               <FaTh size={16} />
             </div>
           </div>
-        </motion.div>
+        </m.div>
         
-        <motion.div 
+        <m.div 
           whileHover="hover"
           whileTap="tap"
           variants={cardVariants}
@@ -71,11 +71,11 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
               <FaEthereum size={16} />
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
       
       <div className="grid grid-cols-2 gap-3">
-        <motion.div 
+        <m.div 
           whileHover="hover"
           whileTap="tap"
           variants={cardVariants}
@@ -93,9 +93,9 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
               <FaGem size={16} />
             </div>
           </div>
-        </motion.div>
+        </m.div>
         
-        <motion.div 
+        <m.div 
           whileHover="hover"
           whileTap="tap"
           variants={cardVariants}
@@ -113,12 +113,12 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
               <FaLayerGroup size={16} />
             </div>
           </div>
-        </motion.div>
+        </m.div>
       </div>
 
-      {/* Activity Summary - Only on mobile and when there are NFTs */}
-      {useMobileLayout && totalNFTs > 0 && (
-        <motion.div 
+      {/* Activity Summary - Show on mobile or when explicitly requested */}
+      {totalNFTs > 0 && (
+        <m.div 
           whileHover="hover"
           whileTap="tap"
           variants={cardVariants}
@@ -148,7 +148,7 @@ const NFTDashboardStats = memo(({ stats, isMobile }) => {
               <FaChartLine size={14} />
             </div>
           </div>
-        </motion.div>
+        </m.div>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaCheckCircle, FaExclamationCircle, FaInfoCircle, FaTimes } from 'react-icons/fa';
 
 const Toast = ({ message, type = 'info', onClose }) => {
@@ -18,7 +18,7 @@ const Toast = ({ message, type = 'info', onClose }) => {
   };
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: -50 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -50 }}
@@ -39,7 +39,7 @@ const Toast = ({ message, type = 'info', onClose }) => {
           <FaTimes className="w-4 h-4" />
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

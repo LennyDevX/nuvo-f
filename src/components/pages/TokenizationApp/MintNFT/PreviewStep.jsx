@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaEdit, FaCoins, FaSpinner, FaShieldAlt } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import { WalletContext } from '../../../../context/WalletContext';
@@ -167,7 +167,7 @@ const PreviewStep = () => {
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-4 sm:space-y-6"
@@ -291,7 +291,7 @@ const PreviewStep = () => {
           onDismiss={() => setToastInfo(prev => ({ ...prev, show: false }))}
         />
       )}
-    </motion.div>
+    </m.div>
   );
 };
 

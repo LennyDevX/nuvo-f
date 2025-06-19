@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaUpload, FaImage } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import OptimizedImage from '../../../image/OptimizedImage';
@@ -31,7 +31,7 @@ const UploadImageStep = () => {
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-4 sm:space-y-6"
@@ -73,7 +73,7 @@ const UploadImageStep = () => {
             </p>
             <p className="text-gray-500 text-xs mb-3 sm:mb-4">PNG, JPG, GIF o WEBP (Max. 10MB)</p>
             
-            <motion.button
+            <m.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-medium flex items-center justify-center gap-2 touch-manipulation"
@@ -88,7 +88,7 @@ const UploadImageStep = () => {
                 accept="image/*"
                 onChange={handleFileUpload}
               />
-            </motion.button>
+            </m.button>
           </div>
         </div>
         
@@ -99,7 +99,7 @@ const UploadImageStep = () => {
           </p>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

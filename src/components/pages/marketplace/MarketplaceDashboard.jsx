@@ -339,15 +339,8 @@ function MarketplaceDashboard(props) {
           <NotConnectedMessage
             title="Connect Wallet"
             message="Please connect your wallet to explore and trade NFTs in the marketplace."
+            connectWallet={connectWallet}
           />
-          <div className="flex justify-center mt-6">
-            <button
-              className="btn-nuvo-base btn-nuvo-outline px-6 py-3 text-white font-medium"
-              onClick={connectWallet}
-            >
-              Connect Wallet
-            </button>
-          </div>
         </div>
       </div>
     );

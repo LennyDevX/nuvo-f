@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaSpinner } from 'react-icons/fa';
 
 /**
@@ -11,13 +11,13 @@ import { FaSpinner } from 'react-icons/fa';
 const LoadingOverlay = ({ text = 'Cargando...', className = '' }) => {
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
-      <motion.div
+      <m.div
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
         className="text-purple-500 text-3xl mb-3"
       >
         <FaSpinner />
-      </motion.div>
+      </m.div>
       <p className="text-gray-300 text-sm">{text}</p>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useContext, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaRedo, FaPlus } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
@@ -205,11 +205,11 @@ const NFTDashboard = () => {
             </div>
           </div>
           
-          {/* Stats Overview - Pass true for isMobile on smaller screens */}
+          {/* Stats Overview */}
           <NFTDashboardStats stats={stats} isMobile={true} />
           
           {/* Mobile Filters Toggle */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button 
               onClick={toggleMobileFilters}
               className="w-full py-3 btn-nuvo-base btn-nuvo-outline flex items-center justify-center border border-purple-500/30 hover:border-pink-400/50 transition-all duration-200 font-medium"
@@ -219,24 +219,26 @@ const NFTDashboard = () => {
           </div>
           
           {/* Main Content */}
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar - Hidden on mobile unless toggled */}
-            <div className={`${showMobileFilters ? 'block' : 'hidden'} md:block md:w-64 flex-shrink-0`}>
-              <NFTDashboardSidebar 
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onSearchChange={handleSearchChange}
-                onSearchApply={() => setShowMobileFilters(false)}
-                searchValue={searchTerm}
-                onSortChange={handleSortChange}
-                activeView={activeView}
-                isMobile={true}
-                stats={stats} 
-              />
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Sidebar - Always visible on desktop, toggleable on mobile */}
+            <div className={`${showMobileFilters ? 'block' : 'hidden lg:block'} w-full lg:w-80 flex-shrink-0 relative z-10`}>
+              <div className="sticky top-6">
+                <NFTDashboardSidebar 
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onSearchChange={handleSearchChange}
+                  onSearchApply={() => setShowMobileFilters(false)}
+                  searchValue={searchTerm}
+                  onSortChange={handleSortChange}
+                  activeView={activeView}
+                  isMobile={window.innerWidth < 1024}
+                  stats={stats} 
+                />
+              </div>
             </div>
             
             {/* NFT Collection */}
-            <div className="flex-1 nuvos-card  backdrop-blur-md p-4 ">
+            <div className="flex-1 nuvos-card backdrop-blur-md p-4 relative z-0">
               <NFTCollection 
                 nfts={filteredNFTs}
                 loading={loading}

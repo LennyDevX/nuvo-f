@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 const TokenomicsExplanation = () => {
   // Memoize card data
@@ -54,7 +54,7 @@ const TokenomicsExplanation = () => {
 
   // Memoize the card component with improved mobile styling
   const Card = useMemo(() => ({ title, description, index }) => (
-    <motion.div 
+    <m.div 
       variants={cardVariants}
       className="p-3 sm:p-4 lg:p-5 bg-gradient-to-br from-purple-900/25 to-purple-800/15 
                  rounded-xl border border-purple-500/25 hover:border-purple-400/50 
@@ -69,12 +69,12 @@ const TokenomicsExplanation = () => {
                     group-hover:text-gray-200 transition-colors">
         {description}
       </p>
-    </motion.div>
+    </m.div>
   ), []);
 
   // Memoize the cards grid with 2x2 mobile layout
   const cardsGrid = useMemo(() => (
-    <motion.div 
+    <m.div 
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -83,11 +83,11 @@ const TokenomicsExplanation = () => {
       {cardData.map((card, index) => (
         <Card key={index} title={card.title} description={card.description} index={index} />
       ))}
-    </motion.div>
+    </m.div>
   ), [cardData, Card]);
 
   return (
-    <motion.div
+    <m.div
       className="mx-2 sm:mx-4 nuvos-card"
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
@@ -104,7 +104,7 @@ const TokenomicsExplanation = () => {
         </p>
       </div>
       {cardsGrid}
-    </motion.div>
+    </m.div>
   );
 };
 

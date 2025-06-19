@@ -30,7 +30,7 @@ const SectionLoader = () => (
 );
 
 const ProfilePage = () => {
-  const { account, walletConnected, balance, network, provider, isInitialized } = useContext(WalletContext);
+  const { account, walletConnected, balance, network, provider, isInitialized, connectWallet } = useContext(WalletContext);
   const { state: stakingState, refreshUserInfo } = useStaking();
   
   const [nfts, setNfts] = useState([]);
@@ -207,6 +207,7 @@ const ProfilePage = () => {
           <NotConnectedMessage 
             title="Profile Not Available"
             message="Please connect your wallet to view your profile information."
+            connectWallet={connectWallet}
           />
         </div>
       </div>

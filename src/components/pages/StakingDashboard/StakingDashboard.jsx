@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useStaking } from '../../../context/StakingContext';
+import { WalletContext } from '../../../context/WalletContext';
+import SpaceBackground from '../../effects/SpaceBackground';
+import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { FriendlyAlert } from './ui/CommonComponents';
 
 // Import modular components
@@ -9,13 +12,15 @@ import StakingActions from './components/StakingActions';
 import TimeBonus from './components/TimeBonus';
 import RewardsProjection from './components/RewardsProjection';
 
-const StakingDashboard = ({ account }) => {
+const StakingDashboard = ({ account: propAccount }) => {
   const { 
     state, 
     STAKING_CONSTANTS,
     refreshUserInfo, 
   } = useStaking();
-  
+
+  const { account, walletConnected, connectWallet } = useContext(WalletContext);
+
   const [isPending, setIsPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   
@@ -39,8 +44,41 @@ const StakingDashboard = ({ account }) => {
     setTimeout(() => setStatusMessage(null), 5000);
   }, []);
   
+  // Mostrar mensaje de no conectado si la wallet no está conectada
+  if (!walletConnected || !account) {
+    return (
+      <div className="relative min-h-screen bg-nuvo-gradient pb-12">
+        <SpaceBackground customClass="" />
+        <div className="container mx-auto px-3 md:px-4 py-8 relative z-10">
+          <NotConnectedMessage
+            title="Smart Staking"
+            message="Connect your wallet to view your staking dashboard"
+            connectWallet={connectWallet}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 pb-20 md:pb-8">
+      {/* Título simplificado sin animaciones complejas */}
+      <div className="text-center mb-6 sm:mb-10">
+        <div className="mb-3 sm:mb-4">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text">
+            Smart Staking
+          </h1>
+        </div>
+        <div>
+          <p className="text-base sm:text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2 px-2">
+            Stake your tokens and earn rewards in our decentralized staking platform
+          </p>
+          <p className="text-sm md:text-base text-slate-400/60 px-2">
+            Manage your staking positions and track your rewards in real-time
+          </p>
+        </div>
+      </div>
+
       <div className="w-full space-y-4 sm:space-y-6">
         {/* Status Message Display */}
         {statusMessage && (
@@ -95,12 +133,10 @@ const StakingDashboard = ({ account }) => {
             currentTx={currentTx}
           />
         </div>
-        
-        {/* Contract Info - Positioned naturally below content */}
-        
       </div>
     </div>
   );
 };
 
 export default StakingDashboard;
+         

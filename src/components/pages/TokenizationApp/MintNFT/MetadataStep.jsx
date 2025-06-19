@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaArrowLeft, FaArrowRight, FaInfoCircle } from 'react-icons/fa';
 import { useTokenization } from '../../../../context/TokenizationContext';
 
@@ -24,7 +24,7 @@ const MetadataStep = () => {
   };
 
   return (
-    <motion.div 
+    <m.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="space-y-4 sm:space-y-6"
@@ -148,7 +148,7 @@ const MetadataStep = () => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

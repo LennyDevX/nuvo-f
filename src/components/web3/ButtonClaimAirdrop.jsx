@@ -1,6 +1,6 @@
 // src/components/web3/ButtonClaimAirdrop.jsx
 import React, { useState, useContext, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../context/WalletContext';
 import { FaGift } from 'react-icons/fa';
@@ -138,7 +138,7 @@ const ButtonClaimAirdrop = ({ account, isEligible }) => {
         </div>
       )}
 
-      <motion.button
+      <m.button
         onClick={handleClick}
         disabled={isLoading || !account || !isEligible || airdropStats.hasClaimed}
         className={`
@@ -159,19 +159,19 @@ const ButtonClaimAirdrop = ({ account, isEligible }) => {
          !airdropStats.isActive ? `Airdrop Not Active ${airdropStats.remainingTime ? `(${airdropStats.remainingTime}s)` : ''}` :
          !isEligible ? "Not Eligible" :
          "Claim 10 POL"}
-      </motion.button>
+      </m.button>
 
       {/* Modal de confirmación */}
       <AnimatePresence>
         {showConfirmation && (
-          <motion.div
+          <m.div
             className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleCancel}
           >
-            <motion.div
+            <m.div
               className="bg-gray-900 p-6 rounded-2xl border border-purple-500/20 max-w-md w-full"
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
@@ -197,15 +197,15 @@ const ButtonClaimAirdrop = ({ account, isEligible }) => {
                   Cancel
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
 
       {/* Notificaciones */}
       <AnimatePresence>
         {notification.message && (
-          <motion.div
+          <m.div
             className={`
               mt-4 p-4 rounded-xl text-white text-center
               ${notification.type === 'error' ? 'bg-red-500/20' : 
@@ -217,7 +217,7 @@ const ButtonClaimAirdrop = ({ account, isEligible }) => {
             exit={{ opacity: 0 }}
           >
             {notification.message}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
