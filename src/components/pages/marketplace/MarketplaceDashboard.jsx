@@ -262,6 +262,24 @@ function MarketplaceDashboard(props) {
     }
   }, [filteredNfts]);
 
+  // Prefetch metadata function for better UX
+  const prefetchNFTMetadata = async (uriList) => {
+    try {
+      for (const uri of uriList.slice(0, 5)) { // Limit to 5 to avoid rate limiting
+        if (uri && !localStorage.getItem(`nuvo-cache-metadata-${uri}`)) {
+          try {
+            const metadata = await fetchMetadata(uri);
+            localStorage.setItem(`nuvo-cache-metadata-${uri}`, JSON.stringify(metadata));
+          } catch (err) {
+            console.log(`Prefetch failed for ${uri}:`, err.message);
+          }
+        }
+      }
+    } catch (err) {
+      console.log("Prefetch error:", err);
+    }
+  };
+
   // Buy NFT function
   const buyNFT = async (tokenId, price) => {
     try {

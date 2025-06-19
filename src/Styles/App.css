@@ -1,12 +1,15 @@
-/* Add or update these rules */
+/* Essential App-level Styles */
 
 :root {
   --vh: 1vh;
   --bg-color: #1a1a2e;
   --text-color: #ffffff;
   --accent-color: #8A2BE2;
+  --purple-primary: #7c3aed;
   --input-bg: rgba(255, 255, 255, 0.1);
   --placeholder-color: rgba(255, 255, 255, 0.5);
+  --marketplace-border: rgba(124, 58, 237, 0.18);
+  --mobile-navbar-height: 64px;
 }
 
 html, body {
@@ -14,12 +17,18 @@ html, body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Fallback for browsers that do not support Custom Properties */
+  height: 100vh;
   height: calc(var(--vh, 1vh) * 100);
   overflow: hidden;
   background-color: var(--bg-color);
@@ -39,6 +48,7 @@ html, body {
   position: relative;
 }
 
+/* Chat Styles */
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -50,7 +60,8 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
-  padding-bottom: 80px; /* Make room for input */
+  padding-bottom: 80px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .message {
@@ -78,7 +89,7 @@ html, body {
   text-align: center;
 }
 
-/* Mobile-specific fixes */
+/* Mobile Viewport and Keyboard Handling */
 @media screen and (max-width: 768px) {
   .app-header {
     padding: 12px;
@@ -93,7 +104,6 @@ html, body {
     padding-bottom: calc(140px + var(--mobile-navbar-height, 64px));
   }
   
-  /* Enhanced mobile keyboard handling */
   .mobile-keyboard-open {
     padding-bottom: 0 !important;
     margin-bottom: 0 !important;
@@ -109,210 +119,102 @@ html, body {
     backdrop-filter: blur(20px);
   }
   
-  /* Fix for notched phones */
-  @supports (padding: max(0px)) {
-    .chat-input-container {
-      padding-left: max(16px, env(safe-area-inset-left));
-      padding-right: max(16px, env(safe-area-inset-right));
-      padding-bottom: max(10px, env(safe-area-inset-bottom));
-    }
-    
-    .mobile-input-visible {
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-  }
-  
-  /* Viewport height management for mobile */
-  .mobile-vh-fix {
-    height: calc(var(--vh, 1vh) * 100);
-    height: -webkit-fill-available;
-  }
-  
-  /* Input focus improvements */
   .input-focused {
     position: fixed !important;
     bottom: 0 !important;
     z-index: 300 !important;
   }
+  
+  .mobile-vh-fix {
+    height: calc(var(--vh, 1vh) * 100);
+    height: -webkit-fill-available;
+  }
 }
 
-/* Mobile Profile Page Optimizations */
-@media screen and (max-width: 1023px) {
-  /* Ensure content is always scrollable */
-  .min-h-screen {
-    min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height for mobile */
+/* Safe Area Support for Notched Devices */
+@supports (padding: max(0px)) {
+  .chat-input-container {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
   }
   
-  /* Profile page specific fixes - reduce bottom spacing */
+  .mobile-input-visible {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Mobile Profile and Navigation Optimizations */
+@media screen and (max-width: 1023px) {
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  
   .profile-content {
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
     margin-bottom: 0;
   }
   
-  /* Smooth scrolling for mobile */
-  html {
-    scroll-behavior: smooth;
-    overflow-x: hidden;
-  }
-  
-  body {
-    overflow-x: hidden;
-    /* Prevent horizontal scroll */
-    max-width: 100vw;
-  }
-  
-  /* Bottom navigation improvements */
   .mobile-nav-expanded {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
   
-  /* Card spacing improvements */
-  .nuvos-card {
-    margin-bottom: 1rem;
-  }
-  
-  .nuvos-card:last-child {
-    margin-bottom: 6rem; /* Extra space for mobile nav */
-  }
-  
-  /* Improve touch targets */
-  button {
-    min-height: 44px; /* iOS recommended minimum */
-    min-width: 44px;
-  }
-  
-  /* Prevent zoom on input focus */
-  input, select, textarea {
-    font-size: 16px;
-  }
-}
-
-/* Specific mobile viewport fixes */
-@media screen and (max-width: 768px) {
-  /* Ensure content doesn't get cut off but footer sits properly */
-  main:not(:has(footer)), section:not(:has(footer)), .content-area:not(:has(footer)) {
-    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
-  }
-  
-  /* When footer is present, reduce main content spacing */
-  main:has(footer), section:has(footer), .content-area:has(footer) {
-    margin-bottom: 0;
-  }
-  
-  /* Bottom sheet animation improvements */
-  .bottom-sheet-enter {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  
-  .bottom-sheet-enter-active {
-    transform: translateY(0);
-    opacity: 1;
-    transition: all 300ms ease-out;
-  }
-  
-  .bottom-sheet-exit {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  .bottom-sheet-exit-active {
-    transform: translateY(100%);
-    opacity: 0;
-    transition: all 300ms ease-in;
-  }
-}
-
-/* Safe area utilities */
-.h-safe-area-inset-bottom {
-  height: env(safe-area-inset-bottom, 0px);
-}
-
-.pb-safe-area-mobile {
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
-}
-
-/* Improved scrolling for iOS */
-@supports (-webkit-overflow-scrolling: touch) {
-  .overflow-y-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* Profile Page Mobile Navigation Fixes */
-@media screen and (max-width: 1023px) {
-  /* Ensure profile content has proper bottom spacing for navigation */
   .profile-page-content {
     padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px));
   }
   
-  /* Profile navigation positioning */
   .profile-nav-bottom {
     bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
   
-  /* Prevent content overlap with profile nav */
   .profile-main-content {
     margin-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
   }
   
-  /* Profile menu button accessibility */
   .profile-menu-button {
     min-height: 48px;
     min-width: 48px;
     touch-action: manipulation;
   }
-  
-  /* Smooth profile menu animations */
-  .profile-menu-enter {
-    transform: translateY(100%);
-    opacity: 0;
+}
+
+/* Content Spacing for Mobile Navigation */
+@media screen and (max-width: 768px) {
+  main:not(:has(footer)), 
+  section:not(:has(footer)), 
+  .content-area:not(:has(footer)) {
+    margin-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
   }
   
-  .profile-menu-enter-active {
-    transform: translateY(0);
-    opacity: 1;
-    transition: all 300ms ease-out;
-  }
-  
-  .profile-menu-exit {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  
-  .profile-menu-exit-active {
-    transform: translateY(100%);
-    opacity: 0;
-    transition: all 250ms ease-in;
+  main:has(footer), 
+  section:has(footer), 
+  .content-area:has(footer) {
+    margin-bottom: 0;
   }
 }
 
-/* Better z-index stacking for mobile */
+/* Z-index Management */
 @media screen and (max-width: 768px) {
-  /* Main navbar stays on top */
   .main-navbar {
     z-index: 100;
   }
   
-  /* Profile navigation below main navbar */
   .profile-navigation {
     z-index: 60;
   }
   
-  /* Profile menu backdrop */
   .profile-backdrop {
     z-index: 50;
   }
   
-  /* Content stays below navigation */
   .profile-content {
     z-index: 10;
   }
 }
 
-/* Touch-friendly interactions */
+/* Touch-friendly Interactions */
 @media (hover: none) and (pointer: coarse) {
   .profile-menu-button:active {
     transform: scale(0.95);
@@ -325,84 +227,179 @@ html, body {
   }
 }
 
-/* Enhanced NFT Card Marketplace Styles */
-.nuvos-card {
-  background: rgba(31, 41, 55, 0.92);
-  backdrop-filter: blur(20px);
-  border: 1.5px solid var(--marketplace-border, rgba(124, 58, 237, 0.18));
-  border-radius: 1.25rem;
-  box-shadow: 0 4px 32px 0 rgba(124, 58, 237, 0.08);
-  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+/* Animations */
+.bottom-sheet-enter {
+  transform: translateY(100%);
+  opacity: 0;
 }
 
-.nuvos-card:hover {
-  background: linear-gradient(135deg, rgba(31,41,55,0.98) 60%, rgba(124,58,237,0.10) 100%);
-  border-color: var(--purple-primary, #7c3aed);
-  box-shadow: 0 12px 32px 0 rgba(124, 58, 237, 0.18);
+.bottom-sheet-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 300ms ease-out;
 }
 
-/* Mobile optimizations for marketplace */
-@media screen and (max-width: 768px) {
-  .nuvos-card {
-    border-radius: 0.75rem;
-  }
-  
-  /* Better touch targets on mobile */
-  .nuvos-card button {
-    min-height: 44px;
-    touch-action: manipulation;
-  }
-  
-  /* Prevent text from being too small on mobile */
-  .nuvos-card .text-xs {
-    font-size: 0.75rem;
-  }
-  
-  .nuvos-card .text-sm {
-    font-size: 0.875rem;
-  }
+.bottom-sheet-exit {
+  transform: translateY(0);
+  opacity: 1;
 }
 
-/* Enhanced mobile responsiveness for marketplace grid */
-@media screen and (max-width: 640px) {
-  .marketplace-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-  }
+.bottom-sheet-exit-active {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 300ms ease-in;
 }
 
-@media screen and (min-width: 641px) and (max-width: 1024px) {
-  .marketplace-grid {
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-  }
+.profile-menu-enter {
+  transform: translateY(100%);
+  opacity: 0;
 }
 
-@media screen and (min-width: 1025px) {
-  .marketplace-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+.profile-menu-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: all 300ms ease-out;
+}
+
+.profile-menu-exit {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.profile-menu-exit-active {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 250ms ease-in;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Better text readability */
-.text-truncate-multiline {
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.5s ease-out;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+/* Accessibility and Input Improvements */
+button {
+  min-height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+
+input, select, textarea {
+  font-size: 16px; /* Prevent zoom on iOS */
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--purple-primary);
+  outline-offset: 2px;
+}
+
+/* Utility Classes */
+.h-safe-area-inset-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+.pb-safe-area-mobile {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+/* Text Utilities */
+.line-clamp-1 {
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2; /* Standard property for compatibility */
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
 }
 
-/* Improved button spacing for mobile */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+}
+
+/* Background Utilities */
+.bg-nuvo-gradient {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
+}
+
+.bg-nuvo-gradient-text {
+  background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
+}
+
+/* Enhanced Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
+}
+
+/* Mobile Container Utilities */
 @media screen and (max-width: 768px) {
-  .nuvos-card .grid {
-    gap: 0.5rem;
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
   
-  .nuvos-card .grid.grid-cols-2 {
-    grid-template-columns: 1fr 1fr;
+  .marketplace-mobile-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media screen and (max-width: 375px) {
+  .marketplace-mobile-container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Landscape Mobile Optimization */
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .marketplace-mobile-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
   }
 }
 
@@ -673,3 +670,4 @@ select:focus-visible {
     padding: 0.75rem;
   }
 }
+    
