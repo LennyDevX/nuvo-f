@@ -25,7 +25,13 @@ class IPFSImageCache {
       return;
     }
     try {
-      const data = JSON.stringify(Array.from(this.cache.entries()));
+      // Usar replacer personalizado para manejar BigInt
+      const data = JSON.stringify(Array.from(this.cache.entries()), (key, val) => {
+        if (typeof val === 'bigint') {
+          return val.toString();
+        }
+        return val;
+      });
       localStorage.setItem('ipfs-image-cache', data);
     } catch (e) {
       console.error('Failed to save image cache to localStorage', e);
@@ -170,12 +176,54 @@ class IPFSImageCache {
     }
   }
 
-  // Get cache statistics
+  // Agregar método para obtener uso de memoria con manejo de BigInt
+  getMemoryUsage() {
+    let totalSize = 0;
+    
+    // Cache de imágenes
+    for (const [key, value] of this.cache) {
+      try {
+        const stringifiedValue = JSON.stringify(value, (k, val) => {
+          if (typeof val === 'bigint') {
+            return val.toString();
+          }
+          return val;
+        });
+        totalSize += stringifiedValue.length * 2;
+        totalSize += key.length * 2;
+      } catch (error) {
+        totalSize += 100; // Estimación básica
+        totalSize += key.length * 2;
+      }
+    }
+    
+    // Cache de metadata
+    for (const [key, value] of this.metadataCache) {
+      try {
+        const stringifiedValue = JSON.stringify(value, (k, val) => {
+          if (typeof val === 'bigint') {
+            return val.toString();
+          }
+          return val;
+        });
+        totalSize += stringifiedValue.length * 2;
+        totalSize += key.length * 2;
+      } catch (error) {
+        totalSize += 200; // Estimación para metadata
+        totalSize += key.length * 2;
+      }
+    }
+    
+    return totalSize;
+  }
+
+  // Get cache statistics con uso de memoria
   getStats() {
     return {
       imagesCached: this.cache.size,
       metadataCached: this.metadataCache.size,
-      pendingRequests: this.pendingRequests.size
+      pendingRequests: this.pendingRequests.size,
+      memoryUsage: this.getMemoryUsage()
     };
   }
 }

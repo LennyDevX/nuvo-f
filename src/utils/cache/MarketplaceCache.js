@@ -1,11 +1,62 @@
+import { logger } from '../debug/logger';
+import { cacheMetrics } from './CacheMetrics';
+import { CACHE_TTL, CLEANUP_CONFIG } from './cacheConfig';
+
 // Marketplace Cache Management System
 class MarketplaceCache {
   constructor() {
     this.cache = new Map();
     this.timestamps = new Map();
-    this.TTL = 5 * 60 * 1000; // 5 minutes default TTL
-    this.METADATA_TTL = 30 * 60 * 1000; // 30 minutes for metadata
-    this.LISTING_TTL = 2 * 60 * 1000; // 2 minutes for listings (more dynamic)
+    this.TTL = CACHE_TTL.DEFAULT;
+    this.METADATA_TTL = CACHE_TTL.NFT_METADATA;
+    this.LISTING_TTL = CACHE_TTL.MARKETPLACE_LISTINGS;
+    
+    // Registrar en el sistema de métricas
+    cacheMetrics.registerCache('marketplace', {
+      maxSize: 200,
+      domain: 'marketplace'
+    });
+    
+    // Limpieza progresiva
+    this.setupProgressiveCleanup();
+    
+    logger.debug('CACHE', 'MarketplaceCache initialized');
+  }
+
+  // Configurar limpieza progresiva
+  setupProgressiveCleanup() {
+    setInterval(() => {
+      this.progressiveCleanup();
+    }, CLEANUP_CONFIG.INTERVAL);
+  }
+
+  // Limpieza progresiva
+  progressiveCleanup() {
+    const startTime = Date.now();
+    const now = Date.now();
+    let cleaned = 0;
+    
+    const entries = Array.from(this.timestamps.entries());
+    
+    for (const [key, timestamp] of entries) {
+      if (Date.now() - startTime > CLEANUP_CONFIG.MAX_CLEANUP_TIME) {
+        break;
+      }
+      
+      if (cleaned >= CLEANUP_CONFIG.BATCH_SIZE) {
+        break;
+      }
+      
+      if (now - timestamp.created > timestamp.ttl) {
+        this.delete(key);
+        cleaned++;
+      }
+    }
+    
+    if (cleaned > 0) {
+      logger.throttledLog('DEBUG', 'CACHE', `Marketplace cleanup removed ${cleaned} expired entries`, null, 30000);
+      cacheMetrics.updateMemoryUsage(this.getMemoryUsage());
+    }
   }
 
   // Generate cache key
@@ -13,41 +64,73 @@ class MarketplaceCache {
     return `${type}_${identifier}_${contractAddress}`;
   }
 
-  // Set cache with custom TTL
+  // Set cache with custom TTL y métricas
   set(key, value, customTTL = null) {
+    const startTime = performance.now();
+    
     this.cache.set(key, value);
     this.timestamps.set(key, {
       created: Date.now(),
       ttl: customTTL || this.TTL
     });
+    
+    const responseTime = performance.now() - startTime;
+    cacheMetrics.recordSet('marketplace', this.cache.size);
+    
+    logger.throttledLog('DEBUG', 'CACHE', `Set marketplace cache key: ${key}`, { ttl: customTTL || this.TTL }, 10000);
   }
 
-  // Get from cache with TTL check
+  // Get from cache with TTL check y métricas
   get(key) {
-    if (!this.cache.has(key)) return null;
+    const startTime = performance.now();
+    
+    if (!this.cache.has(key)) {
+      const responseTime = performance.now() - startTime;
+      cacheMetrics.recordMiss('marketplace', responseTime);
+      return null;
+    }
     
     const timestamp = this.timestamps.get(key);
-    if (!timestamp) return null;
+    if (!timestamp) {
+      const responseTime = performance.now() - startTime;
+      cacheMetrics.recordMiss('marketplace', responseTime);
+      return null;
+    }
     
     const now = Date.now();
     if (now - timestamp.created > timestamp.ttl) {
       this.delete(key);
+      const responseTime = performance.now() - startTime;
+      cacheMetrics.recordMiss('marketplace', responseTime);
       return null;
     }
+    
+    const responseTime = performance.now() - startTime;
+    cacheMetrics.recordHit('marketplace', responseTime);
     
     return this.cache.get(key);
   }
 
-  // Delete cache entry
+  // Delete cache entry con métricas
   delete(key) {
-    this.cache.delete(key);
+    const deleted = this.cache.delete(key);
     this.timestamps.delete(key);
+    
+    if (deleted) {
+      cacheMetrics.recordDelete('marketplace', this.cache.size);
+      logger.throttledLog('DEBUG', 'CACHE', `Deleted marketplace cache key: ${key}`, null, 10000);
+    }
+    
+    return deleted;
   }
 
-  // Clear all cache
+  // Clear all cache con métricas
   clear() {
     this.cache.clear();
     this.timestamps.clear();
+    cacheMetrics.recordClear('marketplace');
+    
+    logger.info('CACHE', 'Marketplace cache cleared');
   }
 
   // Clear expired entries
@@ -60,10 +143,10 @@ class MarketplaceCache {
     }
   }
 
-  // Cache marketplace listings
+  // Cache marketplace listings con TTL configurado
   setMarketplaceListings(contractAddress, listings) {
     const key = this.generateKey('marketplace_listings', 'all', contractAddress);
-    this.set(key, listings, this.LISTING_TTL);
+    this.set(key, listings, CACHE_TTL.MARKETPLACE_LISTINGS);
   }
 
   getMarketplaceListings(contractAddress) {
@@ -71,10 +154,10 @@ class MarketplaceCache {
     return this.get(key);
   }
 
-  // Cache token metadata
+  // Cache token metadata con TTL configurado
   setTokenMetadata(tokenURI, metadata) {
     const key = this.generateKey('metadata', tokenURI, 'global');
-    this.set(key, metadata, this.METADATA_TTL);
+    this.set(key, metadata, CACHE_TTL.NFT_METADATA);
   }
 
   getTokenMetadata(tokenURI) {
@@ -82,10 +165,10 @@ class MarketplaceCache {
     return this.get(key);
   }
 
-  // Cache token listing status
+  // Cache token listing status con TTL configurado
   setTokenListing(contractAddress, tokenId, listingData) {
     const key = this.generateKey('token_listing', tokenId, contractAddress);
-    this.set(key, listingData, this.LISTING_TTL);
+    this.set(key, listingData, CACHE_TTL.TOKEN_LISTING);
   }
 
   getTokenListing(contractAddress, tokenId) {
@@ -93,10 +176,10 @@ class MarketplaceCache {
     return this.get(key);
   }
 
-  // Cache stats
+  // Cache stats con TTL configurado
   setMarketplaceStats(contractAddress, stats) {
     const key = this.generateKey('marketplace_stats', 'all', contractAddress);
-    this.set(key, stats, this.TTL);
+    this.set(key, stats, CACHE_TTL.MARKETPLACE_STATS);
   }
 
   getMarketplaceStats(contractAddress) {
@@ -104,22 +187,58 @@ class MarketplaceCache {
     return this.get(key);
   }
 
-  // Invalidate specific data
+  // Invalidate specific data con logging mejorado
   invalidateMarketplace(contractAddress) {
     const patterns = [
       `marketplace_listings_all_${contractAddress}`,
       `marketplace_stats_all_${contractAddress}`
     ];
     
+    let invalidated = 0;
     for (const pattern of patterns) {
-      this.delete(pattern);
+      if (this.delete(pattern)) {
+        invalidated++;
+      }
+    }
+    
+    if (invalidated > 0) {
+      logger.info('CACHE', `Invalidated ${invalidated} marketplace cache entries`, { contractAddress });
     }
   }
 
-  // Get cache info for debugging
+  // Obtener uso de memoria estimado con manejo de BigInt
+  getMemoryUsage() {
+    let totalSize = 0;
+    for (const [key, value] of this.cache) {
+      try {
+        // Función personalizada para manejar BigInt
+        const stringifiedValue = JSON.stringify(value, (key, val) => {
+          if (typeof val === 'bigint') {
+            return val.toString();
+          }
+          return val;
+        });
+        totalSize += stringifiedValue.length * 2; // UTF-16
+        totalSize += key.length * 2;
+      } catch (error) {
+        // Si falla la serialización, usar aproximación básica
+        console.warn('Failed to serialize marketplace cache value for memory calculation:', error);
+        totalSize += 150; // Estimación para datos de marketplace
+        totalSize += key.length * 2;
+      }
+    }
+    return totalSize;
+  }
+
+  // Get cache info for debugging con métricas mejoradas
   getCacheInfo() {
+    const metrics = cacheMetrics.getCacheMetrics('marketplace');
+    const memoryUsage = this.getMemoryUsage();
+    
     const info = {
       totalEntries: this.cache.size,
+      memoryUsage: cacheMetrics.formatBytes(memoryUsage),
+      metrics,
       entries: []
     };
     
@@ -141,10 +260,5 @@ class MarketplaceCache {
 
 // Export singleton instance
 export const marketplaceCache = new MarketplaceCache();
-
-// Cleanup expired entries every 5 minutes
-setInterval(() => {
-  marketplaceCache.clearExpired();
-}, 5 * 60 * 1000);
 
 export default marketplaceCache;
