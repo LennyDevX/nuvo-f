@@ -5,7 +5,7 @@ import { ethers } from 'ethers';
 import { FaArrowLeft, FaEthereum, FaHeart, FaShareAlt, FaTags, FaClock, FaUser, FaCheck, FaCopy } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
-import LoadingOverlay from '../../../ui/LoadingOverlay';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import IPFSImage from '../../../ui/IPFSImage';
 import useListNFT from '../../../../hooks/nfts/useListNFT';
@@ -400,7 +400,13 @@ const NFTDetail = () => {
       <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
         <SpaceBackground />
         <div className="container mx-auto px-4 py-20 flex justify-center items-center relative z-10">
-          <LoadingOverlay text="Loading NFT details..." />
+          <LoadingSpinner 
+            size="large"
+            variant="gradient"
+            text="Loading NFT details..."
+            showDots={true}
+            className="text-purple-400"
+          />
         </div>
       </div>
     );

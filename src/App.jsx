@@ -6,7 +6,7 @@ import { StakingProvider } from './context/StakingContext';
 import { ToastProvider } from './context/ToastContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { router } from './router/config';
-import LoadingSpinner from './components/LoadOverlay/LoadingSpinner';
+import LoadingSpinner from './components/ui/LoadingSpinner';
 import './styles/App.css';
 
 

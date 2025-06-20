@@ -4,8 +4,8 @@
   --vh: 1vh;
   --bg-color: #1a1a2e;
   --text-color: #ffffff;
-  --accent-color: #8A2BE2;
-  --purple-primary: #7c3aed;
+  --accent-color: #7c3aed;          /* Color morado principal - CAMBIAR AQUÍ */
+  --purple-primary: #7c3aed;        /* Color morado principal - CAMBIAR AQUÍ */
   --input-bg: rgba(255, 255, 255, 0.1);
   --placeholder-color: rgba(255, 255, 255, 0.5);
   --marketplace-border: rgba(124, 58, 237, 0.18);
@@ -348,13 +348,8 @@ select:focus-visible {
 }
 
 /* Background Utilities */
-.bg-nuvo-gradient {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
-}
 
-.bg-nuvo-gradient-text {
-  background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
-}
+
 
 /* Enhanced Scrollbar */
 ::-webkit-scrollbar {
@@ -670,4 +665,4 @@ select:focus-visible {
     padding: 0.75rem;
   }
 }
-    
+

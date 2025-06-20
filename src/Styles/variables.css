@@ -21,7 +21,7 @@
   --bottom-nav-height: 56px;
 
   /* Colors */
-  --purple-primary: #7c3aed;
+  --purple-primary: #7c3aed;        /* Color morado principal - CAMBIAR AQUÍ */
   --purple-secondary: rgba(124, 58, 237, 0.2);
   --purple-accent: rgba(124, 58, 237, 0.5);
   --background-dark: #111827;

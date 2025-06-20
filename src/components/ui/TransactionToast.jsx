@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { m, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheckCircle, FaExclamationCircle, FaSpinner, FaInfoCircle, FaExternalLinkAlt, FaTimes } from 'react-icons/fa';
 
 const icons = {

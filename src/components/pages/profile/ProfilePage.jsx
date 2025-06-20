@@ -8,6 +8,7 @@ import { FaUser, FaExclamationCircle, FaSync } from 'react-icons/fa';
 import { HiMenuAlt3 } from 'react-icons/hi';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import SideBar from './SideBar';
+import LoadingSpinner from '../../ui/LoadingSpinner';
 
 // Lazy load section components for code splitting
 const AccountOverview = lazy(() => import('./sections/AccountOverview'));
@@ -249,18 +250,13 @@ const ProfilePage = () => {
         <SpaceBackground customClass="" />
         <Navbar />
         <div className="pt-24 pb-16 px-4 relative z-10 max-w-7xl mx-auto flex justify-center items-center">
-          <div className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full border-4 border-purple-600/20"></div>
-              <div className="absolute inset-0 rounded-full border-t-4 border-l-4 border-purple-600 animate-spin"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <FaUser className="text-2xl text-purple-400" />
-              </div>
-            </div>
-            <p className="text-purple-300 text-xl font-medium">Loading profile data...</p>
-            <p className="text-purple-200/60 mt-2">Fetching your information from the blockchain</p>
-           
-          </div>
+          <LoadingSpinner 
+            size="xl" 
+            variant="orbit"
+            text="Loading profile data..."
+            showDots={true}
+            className="text-purple-400"
+          />
         </div>
       </div>
     );
@@ -477,3 +473,4 @@ const getSectionLabel = (section) => {
 };
 
 export default React.memo(ProfilePage);
+ 

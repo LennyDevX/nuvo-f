@@ -438,8 +438,19 @@ function MarketplaceDashboard(props) {
 
               {/* Content */}
               {loading ? (
-                <div className="flex justify-center items-center py-20">
-                  <LoadingSpinner size="large" />
+                <div className="flex flex-col justify-center items-center py-20 space-y-6">
+                  <LoadingSpinner 
+                    size="xl" 
+                    variant="orbit"
+                    text="Loading Marketplace"
+                    showDots={true}
+                    className="text-purple-400"
+                  />
+                  <div className="text-center max-w-md">
+                    <p className="text-white font-medium mb-2">Discovering NFTs...</p>
+                    <p className="text-gray-400 text-sm">Fetching marketplace data from blockchain</p>
+                    
+                  </div>
                 </div>
               ) : filteredNfts.length === 0 ? (
                 <EmptyState 

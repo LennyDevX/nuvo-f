@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaWallet } from 'react-icons/fa';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../../../context/WalletContext';
-import LoadingSpinner from '../../../LoadOverlay/LoadingSpinner';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
 import IPFSImage from '../../../ui/IPFSImage';
 
@@ -25,6 +25,7 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
       window.location.reload();
     }
   };
+
   // Handle NFT click to open modal
   const handleNFTClick = (nft) => {
     console.log('NFT clicked:', nft);
@@ -42,13 +43,8 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
     console.log('selectedNFT state changed:', selectedNFT);
   }, [selectedNFT]);
 
-  if (loading) {
-    return (
-      <div className="h-60 flex items-center justify-center">
-        <LoadingSpinner size="default" message="Loading your NFTs..." />
-      </div>
-    );
-  }
+  // Remove the loading state from here since it's now handled in the parent component
+  // The parent (NFTDashboard) will show the LoadingSpinner and won't render NFTCollection until loading is false
 
   if (error) {
     return <NFTErrorState error={error} onRetry={handleRetry} walletConnected={walletConnected} />;
@@ -202,3 +198,4 @@ const NFTCard = ({ nft, onClick }) => {
 };
 
 export default NFTCollection;
+

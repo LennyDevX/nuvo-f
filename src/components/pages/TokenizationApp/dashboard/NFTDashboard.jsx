@@ -9,6 +9,7 @@ import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
 
 const NFTDashboard = () => {
   const { account } = useContext(WalletContext);
@@ -174,6 +175,9 @@ const NFTDashboard = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
 
+  // Use a more reliable mobile detection
+  const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 1024);
+
   return (
     <div className="relative min-h-screen bg-nuvo-gradient pb-12">
       <SpaceBackground customClass="" />
@@ -239,12 +243,29 @@ const NFTDashboard = () => {
             
             {/* NFT Collection */}
             <div className="flex-1 nuvos-card backdrop-blur-md p-4 relative z-0">
-              <NFTCollection 
-                nfts={filteredNFTs}
-                loading={loading}
-                error={error}
-                onRetry={handleRefreshNFTs}
-              />
+              {/* Loading State - Matching MarketplaceDashboard pattern */}
+              {loading ? (
+                <div className="flex flex-col justify-center items-center py-20 space-y-6">
+                  <LoadingSpinner 
+                    size="xl" 
+                    variant="orbit"
+                    text="Loading Your NFTs"
+                    showDots={true}
+                    className="text-purple-400"
+                  />
+                  <div className="text-center max-w-md">
+                    <p className="text-white font-medium mb-2">Discovering your collection...</p>
+                    <p className="text-gray-400 text-sm">Fetching NFT data from blockchain</p>
+                  </div>
+                </div>
+              ) : (
+                <NFTCollection 
+                  nfts={filteredNFTs}
+                  loading={loading}
+                  error={error}
+                  onRetry={handleRefreshNFTs}
+                />
+              )}
             </div>
           </div>
         </div>

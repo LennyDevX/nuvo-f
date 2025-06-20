@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCSPCompliantImageURL } from '../../utils/blockchain/blockchainUtils';
+import LoadingSpinner from './LoadingSpinner';
 
 const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
 
@@ -14,9 +15,10 @@ const IPFSImage = ({
   style = {},
   onLoad = null,
   onError = null,
+  loading = "lazy",
   ...rest
 }) => {
-  const [loading, setLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(true);
   const [error, setError] = useState(false);
   const [imageSrc, setImageSrc] = useState('');
   const [fallbackIndex, setFallbackIndex] = useState(0);
@@ -41,7 +43,7 @@ const IPFSImage = ({
       // If all gateways fail, use the placeholder
       console.warn('All gateways failed for image:', src);
       setError(true);
-      setLoading(false);
+      setImageLoading(false);
       if (onError) onError();
     }
   };
@@ -51,12 +53,12 @@ const IPFSImage = ({
     if (!src) {
       console.log('No src provided, using placeholder');
       setImageSrc(placeholderSrc);
-      setLoading(false);
+      setImageLoading(false);
       setError(true);
       return;
     }
     
-    setLoading(true);
+    setImageLoading(true);
     setError(false);
     
     let newSrc;
@@ -94,31 +96,52 @@ const IPFSImage = ({
     setImageSrc(newSrc);
   }, [src, fallbackIndex, placeholderSrc]);
   
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setError(false);
+    if (onLoad) onLoad();
+  };
+
+  const handleImageError = () => {
+    if (fallbackIndex < gateways.length - 1) {
+      setFallbackIndex(prev => prev + 1);
+    } else {
+      setImageLoading(false);
+      setError(true);
+      if (onError) onError();
+    }
+  };
+
   return (
     <div className={`relative ${className}`} style={style}>
-      {/* Main image */}
-      <img 
-        src={error ? placeholderSrc : imageSrc}
-        alt={alt}
-        className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
-        loading="lazy"
-        onLoad={() => {
-          console.log(`Image loaded successfully: ${imageSrc}`);
-          setLoading(false);
-          if (onLoad) onLoad();
-        }}
-        onError={(e) => {
-          console.warn(`Image failed to load: ${imageSrc}`);
-          tryNextGateway();
-        }}
-        {...rest}
-      />
-      
-      {/* Loading indicator */}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+      {imageLoading && !error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+          <LoadingSpinner 
+            size="small" 
+            variant="ripple" 
+            className="text-purple-400"
+          />
         </div>
+      )}
+      
+      {error ? (
+        <img 
+          src={placeholderSrc} 
+          alt={alt}
+          className="w-full h-full object-cover"
+          {...rest}
+        />
+      ) : (
+        <img
+          src={imageSrc}
+          alt={alt}
+          loading={loading}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          className="w-full h-full object-cover"
+          style={{ opacity: imageLoading ? 0 : 1, transition: 'opacity 0.3s' }}
+          {...rest}
+        />
       )}
     </div>
   );

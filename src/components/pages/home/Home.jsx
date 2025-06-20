@@ -2,7 +2,7 @@ import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'reac
 import AnimationProvider from '../../animation/AnimationProvider';
 import HeroSection from './SmartStaking';
 import SpaceBackground from '../../effects/SpaceBackground';
-import LoadingFallback from '../../ui/LoadingFallback';
+import LoadingSpinner from '../../ui/LoadingSpinner';
 import lazyWithPreload from '../../../utils/performance/lazyWithPreload';
 
 // Load the Header first and NOT lazily
@@ -93,7 +93,16 @@ const Home = () => {
           <div className="relative z-10 overflow-x-hidden">
             <HeroSection />
             
-            <Suspense fallback={<LoadingFallback height="200px" />}>
+            <Suspense fallback={
+              <div className="flex justify-center py-8">
+                <LoadingSpinner 
+                  size="medium" 
+                  variant="ripple"
+                  text="Loading..."
+                  className="text-purple-400"
+                />
+              </div>
+            }>
               {loadingStrategy.shouldLoadComponents && (
                 <>
                   <TokenomicsSystem />

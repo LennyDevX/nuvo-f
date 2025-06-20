@@ -7,7 +7,13 @@ const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <LoadingSpinner size="large" />
+        <LoadingSpinner 
+          size="large" 
+          variant="gradient"
+          text="Loading NFTs"
+          showDots={true}
+          className="text-purple-400"
+        />
       </div>
     );
   }

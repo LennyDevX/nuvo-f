@@ -1,6 +1,7 @@
 import React, { useState, lazy, Suspense } from 'react';
 import { m, useScroll, useTransform } from 'framer-motion';
 import NFTHeroSection from './NFTHeroSection';
+import LoadingSpinner from '../../ui/LoadingSpinner';
 // Lazy load components that aren't immediately visible
 const NFTExplainerSection = lazy(() => import('./NFTExplainerSection'));
 const NFTCallToAction = lazy(() => import('./NFTCallToAction'));
@@ -10,7 +11,14 @@ import SpaceBackground from '../../effects/SpaceBackground';
 
 // Loading fallback component
 const LoadingFallback = () => (
-  <div className="p-4 text-center text-white">Loading...</div>
+  <div className="p-4 text-center flex justify-center">
+    <LoadingSpinner 
+      size="medium" 
+      variant="gradient"
+      text="Loading..."
+      className="text-purple-400"
+    />
+  </div>
 );
 
 const NFTHome = () => {

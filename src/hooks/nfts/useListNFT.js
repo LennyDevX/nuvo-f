@@ -12,12 +12,12 @@ export default function useListNFT() {
 
   // List NFT for sale
   const listNFT = useCallback(async ({ tokenId, price, category }) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    setTxHash(null);
-
     try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+      setTxHash(null);
+
       if (!window.ethereum) throw new Error('Wallet not found');
       if (!CONTRACT_ADDRESS || !ethers.isAddress(CONTRACT_ADDRESS)) throw new Error('Invalid contract address');
       

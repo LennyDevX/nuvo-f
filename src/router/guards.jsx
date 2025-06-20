@@ -1,5 +1,5 @@
 import React, { Suspense, useState, useEffect } from 'react';
-import LoadingSpinner from '../components/LoadOverlay/LoadingSpinner';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
 
 // Enhanced withSuspense with delayed loading state and timeout handling
 export const withSuspense = (component, options = {}) => {
@@ -53,16 +53,25 @@ const ProgressiveSuspense = ({ children, delay, timeout, fallback }) => {
       // Timeout state - show with warning
       return (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-4">
-          <LoadingSpinner size="default" />
+          <LoadingSpinner 
+            size="large" 
+            variant="orbit"
+            text="Still loading..."
+            showDots={true}
+          />
           <p className="text-amber-500 mt-4 text-center">
-            Still loading... This is taking longer than expected.
+            This is taking longer than expected.
           </p>
         </div>
       );
     }
     
     // Normal loading state
-    return fallback || <LoadingSpinner size="default" />;
+    return fallback || (
+      <div className="flex items-center justify-center min-h-[200px] p-4">
+        <LoadingSpinner size="default" variant="gradient" text="Loading..." />
+      </div>
+    );
   };
 
   return (

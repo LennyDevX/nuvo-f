@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
 import { FriendlyAlert } from "./ui/CommonComponents";
-import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
+import LoadingSpinner from "../../ui/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
 import StakingDashboard from "./StakingDashboard";
 import { useStaking } from "../../../context/StakingContext";
@@ -83,7 +83,16 @@ const DashboardStaking = () => {
     }
 
     if (isLoading) {
-      return <LoadingSpinner size="default" message="Loading dashboard..." />;
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner 
+            size="large" 
+            variant="orbit" 
+            text="Loading dashboard..." 
+            showDots={true}
+          />
+        </div>
+      );
     }
 
     return (
