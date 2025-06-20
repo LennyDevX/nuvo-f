@@ -2,11 +2,8 @@
 
 :root {
   --vh: 1vh;
-  --bg-color: #1a1a2e;
-  --text-color: #ffffff;
-  --accent-color: #7c3aed;          /* Color morado principal - CAMBIAR AQUÍ */
-  --purple-primary: #7c3aed;        /* Color morado principal - CAMBIAR AQUÍ */
-  --input-bg: rgba(255, 255, 255, 0.1);
+  --bg-color: #000000;
+  --text-color: #ffffff;     /* Color morado principal - CAMBIAR AQUÍ */
   --placeholder-color: rgba(255, 255, 255, 0.5);
   --marketplace-border: rgba(124, 58, 237, 0.18);
   --mobile-navbar-height: 64px;
@@ -400,7 +397,7 @@ select:focus-visible {
 
 /* Improved gradient backgrounds */
 .bg-nuvo-gradient {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f172a 100%);
+  background-color: #000000;
 }
 
 /* Enhanced button styles for marketplace */

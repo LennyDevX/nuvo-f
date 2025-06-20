@@ -1,9 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './components/App';
+import App from './App';
 import './Styles/index.css';
-import { ToastProvider } from './context/ToastContext';
-import { WalletProvider } from './context/WalletContext';
 
 // Performance monitoring
 const startTime = performance.now();
@@ -46,11 +44,7 @@ addResourceHints();
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <WalletProvider>
-      <ToastProvider>
-        <App />
-      </ToastProvider>
-    </WalletProvider>
+    <App />
   </React.StrictMode>
 );
 

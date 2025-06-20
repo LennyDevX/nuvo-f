@@ -7,7 +7,7 @@ import { ToastProvider } from './context/ToastContext';
 import ErrorBoundary from './components/ui/ErrorBoundary';
 import { router } from './router/config';
 import LoadingSpinner from './components/ui/LoadingSpinner';
-import './styles/App.css';
+import './Styles/index.css';
 
 
 function App() {

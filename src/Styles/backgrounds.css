@@ -2,7 +2,7 @@
   min-height: 100vh;
   /* Degradado animado con colores más sofisticados */
   background-color: #000000;
-  background-size: 400% 400%;
+  background-size: 200% 200%;
   animation: gradientAnimation 6s ease-in-out infinite;
   position: relative;
   overflow: hidden;
@@ -43,8 +43,8 @@
 }
 .bg-grid-pattern {
   background-image: 
-    linear-gradient(to right, rgba(139, 92, 246, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(139, 92, 246, 0.1) 1px, transparent 1px);
+    linear-gradient(to right, rgba(138, 92, 246, 0.075) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(138, 92, 246, 0.071) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 .glass-effect {
