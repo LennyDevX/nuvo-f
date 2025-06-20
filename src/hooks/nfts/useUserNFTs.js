@@ -3,10 +3,7 @@ import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
 import { fetchNFTs, fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
 import useProvider from '../blockchain/useProvider';
-
-// Cache time for log fetching to prevent excessive API calls
-const LOG_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in ms
-const logFetchCache = new Map();
+import { nftCollectionCache } from '../../utils/cache/NFTCollectionCache';
 
 // Directly access the environment variable and log it for debugging
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
@@ -33,20 +30,69 @@ export default function useUserNFTs(address) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(0);
+  const [cacheStatus, setCacheStatus] = useState(null);
   const fetchingRef = useRef(false); // To prevent concurrent fetches
   const logsInProgressRef = useRef(false); // Track if we're currently fetching logs
   const lastFetchTimeRef = useRef(0); // Track when we last did a full fetch
 
-  // Function to refresh NFTs
+  // Enhanced cache checking using NFTCollectionCache
+  const shouldFetchUserNFTs = useCallback((userAddress) => {
+    if (!userAddress) return false;
+    
+    if (fetchingRef.current) {
+      console.log("User NFT fetch already in progress, skipping");
+      return false;
+    }
+    
+    const cachedData = nftCollectionCache.getUserNFTs(userAddress, TOKENIZATION_ADDRESS);
+    const cacheStatus = nftCollectionCache.getUserCacheStatus(userAddress, TOKENIZATION_ADDRESS);
+    
+    if (cachedData && cacheStatus && !cacheStatus.expired) {
+      console.log("Using cached user NFTs data");
+      setNfts(cachedData);
+      setLoading(false);
+      setCacheStatus(`cached ${cacheStatus.age}s ago`);
+      return false;
+    }
+    
+    return true;
+  }, []);
+
+  // Function to refresh NFTs with cache invalidation
   const refreshNFTs = useCallback(() => {
-    // Only allow refreshes if enough time has passed since last fetch
     const now = Date.now();
-    if (now - lastFetchTimeRef.current > 10000) { // 10 seconds minimum between forced refreshes
+    if (now - lastFetchTimeRef.current > 5000) {
+      // Clear user NFT cache using new system
+      nftCollectionCache.invalidateUserData(address, TOKENIZATION_ADDRESS);
+      setCacheStatus(null);
       lastFetchTimeRef.current = now;
       setLastUpdated(now);
     } else {
       console.log("Refresh request throttled - too frequent");
     }
+  }, [address]);
+
+  // Enhanced metadata fetching using shared cache
+  const fetchMetadataWithCache = useCallback(async (tokenURI) => {
+    if (!tokenURI) {
+      return {
+        name: "Unknown NFT",
+        description: "Sin descripción",
+        image: DEFAULT_IMAGE,
+        attributes: []
+      };
+    }
+
+    // Use NFTCollectionCache for metadata
+    const cachedMetadata = nftCollectionCache.getTokenMetadata(tokenURI);
+    if (cachedMetadata) {
+      return cachedMetadata;
+    }
+
+    // Fetch and cache metadata
+    const metadata = await fetchTokenMetadata(tokenURI);
+    nftCollectionCache.setTokenMetadata(tokenURI, metadata);
+    return metadata;
   }, []);
 
   // Check if we should fetch logs based on cache
@@ -74,9 +120,8 @@ export default function useUserNFTs(address) {
   useEffect(() => {
     if (!address || !ethProvider) return;
     
-    // Skip if we're already fetching
-    if (fetchingRef.current) {
-      console.log("Fetch already in progress, skipping");
+    // Check if we should fetch based on cache
+    if (!shouldFetchUserNFTs(address)) {
       return;
     }
     
@@ -93,6 +138,7 @@ export default function useUserNFTs(address) {
       try {
         setLoading(true);
         setError(null);
+        setCacheStatus(null);
         
         // Double-check contract address validity
         if (!ethers.isAddress(TOKENIZATION_ADDRESS)) {
@@ -103,36 +149,18 @@ export default function useUserNFTs(address) {
         // Try to use our enhanced fetchNFTs function first
         if (ethProvider) {
           try {
-            console.log("Using enhanced fetchNFTs function with contract:", TOKENIZATION_ADDRESS);
+            console.log("Using enhanced fetchNFTs function with cache optimization");
             
-            // Set flag to indicate we're fetching NFTs
-            const cacheKey = `nfts_${address}_${TOKENIZATION_ADDRESS}`;
-            
-            // Use configured options to reduce log fetching
             const fetchedNfts = await fetchNFTs(address, ethProvider, {
               contractAddress: TOKENIZATION_ADDRESS,
               limit: 100,
               withMetadata: true,
-              skipLogs: !shouldFetchLogs(address) // Skip logs fetching if recently done
+              skipLogs: true
             });
             
-            if (shouldFetchLogs(address)) {
-              // Mark that we've fetched logs and cache the result
-              logsInProgressRef.current = true;
-              const logCacheKey = `logs_${address}_${TOKENIZATION_ADDRESS}`;
-              logFetchCache.set(logCacheKey, {
-                timestamp: Date.now(),
-                // Could store actual log data here if needed
-              });
-            }
-            
-            // Rest of the function processing the NFTs
             const filteredNfts = fetchedNfts.filter(nft => {
               const nftContract = nft.contract?.toLowerCase();
               const ourContract = TOKENIZATION_ADDRESS.toLowerCase();
-              if (nftContract) {
-                console.log(`Comparing NFT contract: ${nftContract} with our contract: ${ourContract}`);
-              }
               return nftContract === ourContract;
             });
             
@@ -146,24 +174,28 @@ export default function useUserNFTs(address) {
             });
             
             if (uniqueNfts.length > 0) {
-              console.log("Successfully filtered NFTs for our contract:", uniqueNfts.length);
+              console.log("Successfully loaded user NFTs from enhanced method:", uniqueNfts.length);
+              
+              // Cache the results using NFTCollectionCache
+              nftCollectionCache.setUserNFTs(address, TOKENIZATION_ADDRESS, uniqueNfts);
+              setCacheStatus('fresh data');
+              
               setNfts(uniqueNfts);
               setLoading(false);
               return;
-            } else {
-              console.log("No NFTs found for our contract using enhanced method, trying fallback");
             }
-            
-            // After we're done with logs processing
-            logsInProgressRef.current = false;
           } catch (enhancedError) {
             console.warn("Enhanced NFT fetch failed, falling back to contract:", enhancedError);
-            logsInProgressRef.current = false;
           }
         }
 
-        // Fallback to direct contract method
-        console.log("Using direct contract method to fetch NFTs from:", TOKENIZATION_ADDRESS);
+        // Fallback to direct contract method with optimization
+        console.log("Using optimized direct contract method");
+        
+        if (!window.ethereum) {
+          throw new Error("No se encontró una wallet de Ethereum");
+        }
+        
         
         // Connect to provider without shadowing
         if (!window.ethereum) {
@@ -196,19 +228,29 @@ export default function useUserNFTs(address) {
           console.log("User has", balance.toString(), "NFTs from our contract");
           
           if (balance && Number(balance) > 0) {
-            for (let i = 0; i < Number(balance); i++) {
+            // Use direct token access if available instead of iteration
+            if (contract.tokensOfOwner) {
               try {
-                const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-                console.log("Found token:", tokenId.toString());
-                if (tokenId) tokenIds.push(tokenId);
-              } catch (indexError) {
-                console.warn("Could not get token by index:", indexError);
+                const tokens = await contract.tokensOfOwner(address);
+                tokenIds = tokens.map(token => token);
+                console.log("Got tokens using tokensOfOwner:", tokenIds.length);
+              } catch (e) {
+                console.log("tokensOfOwner not available, using iteration");
+                // Fallback to iteration
+                for (let i = 0; i < Number(balance); i++) {
+                  try {
+                    const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+                    if (tokenId) tokenIds.push(tokenId);
+                  } catch (indexError) {
+                    console.warn("Could not get token by index:", indexError);
+                  }
+                }
               }
             }
           }
           
+          // Add creator tokens more efficiently
           try {
-            console.log("Checking for tokens created by user");
             if (contract.getTokensByCreator) {
               const createdTokens = await contract.getTokensByCreator(address);
               if (createdTokens && createdTokens.length) {
@@ -225,24 +267,25 @@ export default function useUserNFTs(address) {
             console.warn("Could not get creator tokens:", creatorError.message);
           }
         } catch (balanceError) {
-          if (balanceError.message && balanceError.message.includes("BAD_DATA") && 
-              balanceError.message.includes("resolver")) {
-            console.warn("ENS resolution error - ignoring:", balanceError.message);
-          } else {
-            console.error("Error checking token balance:", balanceError);
-          }
+          console.error("Error checking token balance:", balanceError);
         }
         
         if (!isMounted) return;
         
         if (tokenIds.length === 0) {
-          console.log("No tokens found from our contract for address:", address);
+          console.log("No tokens found for user");
+          const cacheKey = `user_nfts_${address}_${TOKENIZATION_ADDRESS}`;
+          userNFTCache.set(cacheKey, {
+            nfts: [],
+            timestamp: Date.now()
+          });
           setNfts([]);
           setLoading(false);
           return;
         }
         
-        const BATCH_SIZE = 5;
+        // Process tokens in optimized batches
+        const BATCH_SIZE = 8; // Reduced batch size for better responsiveness
         const results = [];
         
         for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
@@ -253,32 +296,34 @@ export default function useUserNFTs(address) {
             try {
               const tokenIdString = tokenId.toString();
               
-              const [tokenURI, tokenData, likes, owner] = await Promise.all([
+              const [tokenURI, tokenData, likes, owner] = await Promise.allSettled([
                 contract.tokenURI(tokenId),
-                contract.getListedToken(tokenId),
-                contract.getLikesCount(tokenId),
+                contract.getListedToken(tokenId).catch(() => null),
+                contract.getLikesCount(tokenId).catch(() => 0),
                 contract.ownerOf(tokenId)
               ]);
               
-              const metadata = await fetchTokenMetadata(tokenURI);
+              const metadata = await fetchMetadataWithCache(
+                tokenURI.status === 'fulfilled' ? tokenURI.value : null
+              );
               
               const uniqueId = `${TOKENIZATION_ADDRESS}-${tokenIdString}-${i}-${batchIndex}`;
 
               return {
                 tokenId: tokenIdString,
                 uniqueId,
-                tokenURI,
+                tokenURI: tokenURI.status === 'fulfilled' ? tokenURI.value : null,
                 contract: TOKENIZATION_ADDRESS,
                 name: metadata.name || `NFT #${tokenIdString}`,
                 description: metadata.description || "Sin descripción",
                 image: metadata.image ? ipfsToHttp(metadata.image) : DEFAULT_IMAGE,
                 attributes: metadata.attributes || [],
-                owner,
+                owner: owner.status === 'fulfilled' ? owner.value : address,
                 creator: address,
-                price: tokenData[3] ? tokenData[3] : ethers.parseEther("0"),
-                isForSale: tokenData[4],
-                likes: likes.toString(),
-                category: tokenData[6] || "collectibles"
+                price: tokenData.status === 'fulfilled' && tokenData.value ? tokenData.value[3] : ethers.parseEther("0"),
+                isForSale: tokenData.status === 'fulfilled' && tokenData.value ? tokenData.value[4] : false,
+                likes: likes.status === 'fulfilled' ? likes.value.toString() : "0",
+                category: tokenData.status === 'fulfilled' && tokenData.value ? tokenData.value[6] || "collectibles" : "collectibles"
               };
             } catch (err) {
               console.error(`Error processing token ${tokenId}:`, err);
@@ -293,6 +338,7 @@ export default function useUserNFTs(address) {
             if (validResults.length > 0) {
               results.push(...validResults);
               
+              // Update UI progressively for better UX
               if (isMounted) {
                 setNfts(prev => {
                   const nftMap = new Map(prev.map(nft => [nft.uniqueId, nft]));
@@ -308,11 +354,16 @@ export default function useUserNFTs(address) {
         
         if (isMounted) {
           const uniqueNfts = Array.from(new Map(results.map(nft => [nft.uniqueId, nft])).values());
-          console.log(`Final NFTs from contract: ${uniqueNfts.length}`);
+          console.log(`Final user NFTs: ${uniqueNfts.length}`);
+          
+          // Cache the final results using NFTCollectionCache
+          nftCollectionCache.setUserNFTs(address, TOKENIZATION_ADDRESS, uniqueNfts);
+          setCacheStatus('fresh data');
+          
           setNfts(uniqueNfts);
         }
       } catch (err) {
-        console.error("Error fetching Tokenization NFTs:", err);
+        console.error("Error fetching User NFTs:", err);
         if (isMounted) {
           let userFriendlyError = "Error al obtener tus NFTs";
           
@@ -336,7 +387,6 @@ export default function useUserNFTs(address) {
           fetchingRef.current = false;
           lastFetchTimeRef.current = Date.now();
         }
-        logsInProgressRef.current = false;
       }
     };
 
@@ -345,9 +395,8 @@ export default function useUserNFTs(address) {
     return () => {
       isMounted = false;
       abortController.abort();
-      // Don't reset fetchingRef here, as the cleanup might run during component re-renders
     };
-  }, [address, lastUpdated, ethProvider, shouldFetchLogs]);
+  }, [address, lastUpdated, ethProvider, shouldFetchUserNFTs, fetchMetadataWithCache]);
 
-  return { nfts, loading, error, refreshNFTs };
+  return { nfts, loading, error, refreshNFTs, cacheStatus };
 }

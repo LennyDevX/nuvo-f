@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useRef, useCallback } from 'react';
 import { uploadFileToIPFS, uploadJsonToIPFS } from '../utils/blockchain/blockchainUtils';
+import { imageCache } from '../utils/blockchain/imageCache';
 import useUserNFTs from '../hooks/nfts/useUserNFTs';
 import useMintNFT from '../hooks/nfts/useMintNFT';
 
@@ -32,7 +33,8 @@ export const TokenizationProvider = ({ children }) => {
     nfts, 
     loading: nftsLoading, 
     error: nftsError, 
-    refreshNFTs 
+    refreshNFTs,
+    cacheStatus 
   } = useUserNFTs(userAccount);
   
   const { 
@@ -65,15 +67,26 @@ export const TokenizationProvider = ({ children }) => {
     setMintedNFT(null);
     setMintingError(null);
     setIpfsImageUri(null);
-    setIpfsMetadataUri(null);
-  };
+    setIpfsMetadataUri(null);  };
   
-  // Function to upload image to IPFS
+  // Function to upload image to IPFS with caching
   const handleImageUpload = async (file) => {
     setIsUploading(true);
     try {
+      // Check if we already have this file cached by creating a simple hash
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+      const cached = imageCache.get(fileKey);
+      if (cached) {
+        setIpfsImageUri(cached);
+        return cached;
+      }
+      
       const imageUri = await uploadFileToIPFS(file);
       setIpfsImageUri(imageUri);
+      
+      // Cache the result
+      imageCache.set(fileKey, imageUri);
+      
       return imageUri;
     } catch (error) {
       console.error("Failed to upload image:", error);
@@ -83,12 +96,24 @@ export const TokenizationProvider = ({ children }) => {
     }
   };
   
-  // Function to upload metadata to IPFS
+  // Function to upload metadata to IPFS with caching
   const handleMetadataUpload = async (metadataObj) => {
     setIsUploading(true);
     try {
+      // Create a hash of the metadata for caching
+      const metadataKey = `metadata-${JSON.stringify(metadataObj)}`;
+      const cached = imageCache.get(metadataKey);
+      if (cached) {
+        setIpfsMetadataUri(cached);
+        return cached;
+      }
+      
       const metadataUri = await uploadJsonToIPFS(metadataObj);
       setIpfsMetadataUri(metadataUri);
+      
+      // Cache the result
+      imageCache.set(metadataKey, metadataUri);
+      
       return metadataUri;
     } catch (error) {
       console.error("Failed to upload metadata:", error);
@@ -135,6 +160,7 @@ export const TokenizationProvider = ({ children }) => {
         nftsLoading,
         nftsError,
         refreshNFTs,
+        cacheStatus,
         mintNFT,
         mintLoading,
         mintError,
@@ -152,12 +178,12 @@ export const useTokenization = () => {
   const context = useContext(TokenizationContext);
   if (context === undefined) {
     console.error("useTokenization must be used within a TokenizationProvider");
-    // Return default empty values to prevent destructuring errors
     return {
       nfts: [],
       nftsLoading: false,
       nftsError: null,
       refreshNFTs: () => console.warn("TokenizationProvider not available"),
+      cacheStatus: null,
       mintNFT: () => {
         console.warn("TokenizationProvider not available");
         return Promise.reject("TokenizationProvider not available");

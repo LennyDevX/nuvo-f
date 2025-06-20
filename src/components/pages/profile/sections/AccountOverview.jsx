@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import IPFSImage from '../../../ui/IPFSImage';
-import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 
 // Move constants outside component to prevent recreation
 const FALLBACK_IMAGES = [
@@ -15,16 +14,14 @@ const FALLBACK_IMAGES = [
   '/placeholder-nft.webp'
 ];
 
-// Extract NFTImage as a memoized component
+// Extract NFTImage as a memoized component - Remove getOptimizedImageUrl call
 const NFTImage = React.memo(({ src, alt, className }) => {
   return (
     <IPFSImage 
-      src={getOptimizedImageUrl(src)} 
+      src={src}
       alt={alt} 
       className={className}
       placeholderSrc={FALLBACK_IMAGES[0]}
-      onLoad={() => console.log('Account overview NFT image loaded')}
-      onError={() => console.warn('Account overview NFT image failed to load')}
       loading="lazy"
     />
   );
@@ -223,7 +220,7 @@ const AccountOverview = ({ account, balance, network }) => {
               <NFTPreviewList nfts={actualNfts} count={nftCount} />
               
               <Link 
-                to="/nfts"
+                to="/my-nfts"
                 className="inline-block text-sm text-purple-400 hover:text-purple-300 underline mt-2"
               >
                 View your NFT collection
@@ -252,3 +249,4 @@ const AccountOverview = ({ account, balance, network }) => {
 };
 
 export default React.memo(AccountOverview);
+

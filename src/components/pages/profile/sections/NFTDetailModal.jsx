@@ -95,12 +95,11 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
                   {/* Compact Image with consistent aspect ratio */}
                   <div className="w-20 h-20 rounded-lg overflow-hidden bg-gradient-to-br from-purple-900/30 to-black/50 flex items-center justify-center flex-shrink-0">
                     <IPFSImage 
-                      src={getOptimizedImageUrl(selectedNFT.image)} 
+                      src={selectedNFT.image} 
                       alt={selectedNFT.name || `NFT #${selectedNFT.tokenId}`} 
                       className="w-full h-full object-cover"
                       placeholderSrc={PLACEHOLDER_IMAGE}
-                      onLoad={() => console.log(`Modal image loaded for NFT ${selectedNFT.tokenId}`)}
-                      onError={() => console.warn(`Modal image failed for NFT ${selectedNFT.tokenId}`)}
+                      loading="lazy"
                     />
                   </div>
 

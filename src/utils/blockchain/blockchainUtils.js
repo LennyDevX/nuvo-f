@@ -6,6 +6,7 @@ import {
   markLogQueryInProgress
 } from './blockchainLogCache';
 import { getAlchemyApiKey, getAlchemyNftUrl } from './alchemy';
+import { imageCache } from './imageCache';
 
 // Enhanced ERC20 ABI with common functions
 const erc20Abi = [
@@ -29,7 +30,7 @@ const erc721Abi = [
 ];
 
 // Default image placeholder for NFTs and tokens
-export const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
+export const DEFAULT_PLACEHOLDER = "/LogoNuvos.webp";
 
 // Supported NFT APIs and their base URLs
 const NFT_API_CONFIG = {
@@ -291,27 +292,31 @@ export const ipfsToHttp = (uri, preferredGateway) => {
 };
 
 /**
- * Enhanced CSP-compliant image URL processor for marketplace
+ * Enhanced CSP-compliant image URL processor with caching
  */
 export const getCSPCompliantImageURL = (imageUrl) => {
   if (!imageUrl) return DEFAULT_PLACEHOLDER;
   
+  // Check cache first
+  const cached = imageCache.get(imageUrl);
+  if (cached) {
+    return cached;
+  }
+  
   try {
+    let processedUrl;
+    
     // Handle IPFS URLs
     if (imageUrl.startsWith('ipfs://')) {
       const hash = imageUrl.replace('ipfs://', '');
-      // Use Pinata gateway as primary for better reliability
-      return `https://gateway.pinata.cloud/ipfs/${hash}`;
+      processedUrl = `https://gateway.pinata.cloud/ipfs/${hash}`;
     }
-    
     // Handle raw IPFS hashes
-    if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)$/.test(imageUrl)) {
-      return `https://gateway.pinata.cloud/ipfs/${imageUrl}`;
+    else if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)$/.test(imageUrl)) {
+      processedUrl = `https://gateway.pinata.cloud/ipfs/${imageUrl}`;
     }
-    
     // Handle URLs that already contain IPFS gateways
-    if (imageUrl.includes('/ipfs/')) {
-      // If it's already a gateway URL, check if it's from a trusted source
+    else if (imageUrl.includes('/ipfs/')) {
       const trustedGateways = [
         'gateway.pinata.cloud',
         'ipfs.io',
@@ -322,36 +327,38 @@ export const getCSPCompliantImageURL = (imageUrl) => {
       
       const url = new URL(imageUrl);
       if (trustedGateways.some(gateway => url.hostname.includes(gateway))) {
-        return imageUrl; // Use as-is if from trusted gateway
+        processedUrl = imageUrl;
+      } else {
+        const ipfsMatch = imageUrl.match(/\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+        if (ipfsMatch) {
+          const hash = ipfsMatch[1];
+          const path = ipfsMatch[2] || '';
+          processedUrl = `https://gateway.pinata.cloud/ipfs/${hash}${path}`;
+        }
       }
-      
-      // Extract the IPFS hash and use our preferred gateway
-      const ipfsMatch = imageUrl.match(/\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
-      if (ipfsMatch) {
-        const hash = ipfsMatch[1];
-        const path = ipfsMatch[2] || '';
-        return `https://gateway.pinata.cloud/ipfs/${hash}${path}`;
-      }
     }
-    
-    // Handle HTTP/HTTPS URLs (ensure they're secure)
-    if (imageUrl.startsWith('http://')) {
-      // Convert to HTTPS for security
-      return imageUrl.replace('http://', 'https://');
+    // Handle HTTP/HTTPS URLs
+    else if (imageUrl.startsWith('http://')) {
+      processedUrl = imageUrl.replace('http://', 'https://');
     }
-    
-    if (imageUrl.startsWith('https://')) {
-      return imageUrl; // Already secure
+    else if (imageUrl.startsWith('https://')) {
+      processedUrl = imageUrl;
     }
-    
     // Handle relative URLs or data URLs
-    if (imageUrl.startsWith('/') || imageUrl.startsWith('data:')) {
-      return imageUrl;
+    else if (imageUrl.startsWith('/') || imageUrl.startsWith('data:')) {
+      processedUrl = imageUrl;
+    }
+    else {
+      console.warn('Unsupported image URL format:', imageUrl);
+      processedUrl = DEFAULT_PLACEHOLDER;
     }
     
-    // For any other format, return placeholder
-    console.warn('Unsupported image URL format:', imageUrl);
-    return DEFAULT_PLACEHOLDER;
+    // Cache the processed URL
+    if (processedUrl && processedUrl !== DEFAULT_PLACEHOLDER) {
+      imageCache.set(imageUrl, processedUrl);
+    }
+    
+    return processedUrl;
     
   } catch (error) {
     console.error('Error processing image URL:', error);
@@ -1561,13 +1568,5 @@ export async function selectBestIpfsGateway(cid) {
   return ipfsGatewayLatencies[cid];
 }
 
-export const cardemodule = {
-  isEnabled: true,
-  version: '1.0.0',
-  // Add any other properties that might be needed
-  init: () => {
-    console.log('Card module initialized');
-    return true;
-  }
-};
-
+export const cardemodule = {}
+ 

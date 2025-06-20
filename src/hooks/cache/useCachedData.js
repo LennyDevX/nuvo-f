@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { cacheData, getCachedData } from '../../utils/cacheUtils';
+import { cacheData, getCachedData } from '../../utils/cache/cacheUtils';
 // import { trackApiCall } from '...'; // TODO: Import or define trackApiCall
 
 // Helper: fetch with retry/backoff

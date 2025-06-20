@@ -207,7 +207,7 @@ const NFTDetail = () => {
     };
   }, [tokenId, account, walletConnected]);
   
-  // Helper function to get metadata from IPFS
+  // Helper function to get metadata from IPFS with enhanced caching
   const fetchMetadata = async (uri) => {
     try {
       if (!uri) {
@@ -219,489 +219,208 @@ const NFTDetail = () => {
         };
       }
       
-      // Check global metadata cache
+      // Use enhanced cache for metadata
       if (metadataCache.has(uri)) {
-        console.log("Using cached metadata for:", uri);
+        console.log("Using cached metadata for URI:", uri);
         return metadataCache.get(uri);
       }
-      
-      // Handle different URI formats
-      let url = uri;
-      
-      // Normalize IPFS URIs
-      if (uri.includes('ipfs')) {
-        if (uri.startsWith('ipfs://')) {
-          url = uri.replace('ipfs://', 'https://gateway.pinata.cloud/ipfs/');
-        }
+
+      const ipfsURL = getCSPCompliantImageURL(uri);
+      const response = await fetch(ipfsURL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      // Time control to avoid rate limiting errors
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Set timeout for request
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      try {
-        const response = await fetch(url, {
-          signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          throw new Error(`Error fetching metadata: ${response.statusText}`);
-        }
-        
-        const metadata = await response.json();
-        
-        // Save to cache
-        metadataCache.set(uri, metadata);
-        
-        return metadata;
-      } catch (fetchErr) {
-        clearTimeout(timeoutId);
-        console.error("Error in metadata fetch:", fetchErr);
-        return {
-          name: `NFT #${tokenId}`,
-          description: 'Error loading metadata',
-          image: '/NFT-X1.webp',
-          attributes: []
-        };
-      }
-    } catch (err) {
-      console.error("Error fetching metadata:", err);
+      const metadata = await response.json();
+
+      metadataCache.set(uri, metadata);
+      return metadata;
+    } catch (error) {
+      console.error("Error fetching metadata from IPFS:", error);
       return {
         name: `NFT #${tokenId}`,
-        description: 'Error loading metadata',
+        description: 'Error loading description.',
         image: '/NFT-X1.webp',
         attributes: []
       };
     }
   };
-  
-  // Function to like/unlike an NFT
-  const toggleLike = async () => {
-    if (!walletConnected) return;
+
+  const handleLike = async () => {
+    if (!walletConnected) {
+      setError("Please connect your wallet to like NFTs.");
+      return;
+    }
+    
+    if (hasLiked) {
+      setError("You have already liked this NFT.");
+      return;
+    }
     
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
         TokenizationAppABI.abi,
-        signer
+        provider
       );
       
-      // Check if contract has the function implemented
-      if (typeof contract.toggleLike !== 'function') {
-        console.warn("The toggleLike function is not implemented in the contract");
-        return;
-      }
+      // Send transaction to like the NFT
+      const tx = await contract.likeNFT(tokenId);
+      setLikesCount(prev => (parseInt(prev) + 1).toString());
+      setHasLiked(true);
       
-      const tx = await contract.toggleLike(tokenId, !hasLiked);
+      // Wait for transaction to be mined
       await tx.wait();
       
-      // Update local state
-      setHasLiked(!hasLiked);
-      setLikesCount(prev => !hasLiked ? String(Number(prev) + 1) : String(Math.max(0, Number(prev) - 1)));
+      console.log("NFT liked successfully:", txHash);
     } catch (err) {
-      console.error("Error liking/unliking:", err);
-      // Don't show error in UI, just log to console
+      console.error("Error liking NFT:", err);
+      setError("Failed to like NFT. Please try again later.");
     }
   };
   
-  // Function to buy an NFT
-  const buyNFT = async () => {
-    if (!walletConnected || !nft || !nft.isForSale) return;
+  const handleCopy = () => {
+    if (!nft) return;
     
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        TokenizationAppABI.abi,
-        signer
-      );
-      
-      const tx = await contract.buyToken(tokenId, {
-        value: nft.price
+    navigator.clipboard.writeText(`${window.location.origin}/nft/${nft.tokenId}`)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        console.error("Error copying link:", err);
+        setError("Failed to copy link. Please try again later.");
       });
-      
-      await tx.wait();
-      
-      // Reload data after purchase
-      window.location.reload();
-    } catch (err) {
-      console.error("Error buying NFT:", err);
-    }
   };
-
-  // Function to copy the URL to clipboard
-  const copyToClipboard = async () => {
-    try {
-      const url = window.location.href;
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
-    } catch (err) {
-      console.error("Error copying to clipboard:", err);
-    }
-  };
-
-  // Determine if NFT is listed
-  const isListed = nft && nft.price && Number(nft.price) > 0;
-
-  // Check if current user is the owner
-  const isOwner = account && nft && account.toLowerCase() === nft.owner.toLowerCase();
-
-  // Handler to list NFT
+  
   const handleListNFT = async (e) => {
     e.preventDefault();
+    
+    if (!walletConnected) {
+      setError("Please connect your wallet to list NFTs.");
+      return;
+    }
+    
     try {
-      // Enhanced validation
-      if (!nft?.tokenId) {
-        throw new Error("Invalid token ID");
-      }
+      const parsedPrice = ethers.parseEther(price);
       
-      if (!price || isNaN(parseFloat(price)) || parseFloat(price) <= 0) {
-        throw new Error("Price must be a positive number");
+      if (category === 'collectible') {
+        await listNFT(tokenId, parsedPrice, 0, 0);
+      } else {
+        // For other categories, you might want to add specific logic
+        await listNFT(tokenId, parsedPrice, 0, 0);
       }
-
-      if (parseFloat(price) < 0.001) {
-        throw new Error("Minimum price is 0.001 POL");
-      }
-
-      console.log('Attempting to list NFT:', {
-        tokenId: nft.tokenId,
-        price: price,
-        category: category || 'collectibles'
-      });
-
-      await listNFT({
-        tokenId: nft.tokenId,
-        price: price.toString(),
-        category: category || 'collectibles'
-      });
-      
-      setShowListForm(false);
-      setPrice('');
-      setCategory('collectibles');
-      
-      // Reload NFT data after successful listing
-      setTimeout(() => window.location.reload(), 2000);
     } catch (err) {
-      console.error('Error listing NFT:', err);
-      // Error is handled by the hook
+      console.error("Error listing NFT:", err);
+      setError("Failed to list NFT. Please try again later.");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
-        <SpaceBackground />
-        <div className="container mx-auto px-4 py-20 flex justify-center items-center relative z-10">
-          <LoadingSpinner 
-            size="large"
-            variant="gradient"
-            text="Loading NFT details..."
-            showDots={true}
-            className="text-purple-400"
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !nft) {
-    return (
-      <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
-        <SpaceBackground />
-        <div className="container mx-auto px-4 py-8 relative z-10">
-          <div className="max-w-3xl mx-auto bg-black/30 backdrop-blur-md p-8 rounded-xl border border-red-500/20 text-center shadow-xl">
-            <h1 className="text-3xl font-bold text-red-400 mb-4">Error</h1>
-            <p className="text-gray-300 mb-6">{error || "Could not load NFT"}</p>
-            <Link to="/my-nfts" className="px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-lg text-white font-medium inline-flex items-center transition-all">
-              <FaArrowLeft className="mr-2" /> Back to my collection
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Formatear el precio
-  const formattedPrice = nft.price ? ethers.formatEther(nft.price) : '0';
-  
-  // Formatear la fecha de listado
-  const listedDate = nft.listedTimestamp && nft.listedTimestamp !== '0' 
-    ? new Date(Number(nft.listedTimestamp) * 1000).toLocaleDateString() 
-    : 'Not listed';
-
   return (
-    <div className="min-h-screen pt-20 pb-16 bg-nuvo-gradient relative">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="relative min-h-screen pb-10"
+    >
       <SpaceBackground />
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-6xl mx-auto"
-        >
-          {/* Navegación */}
-          <div className="mb-6">
-            <Link to="/my-nfts" className="inline-flex items-center text-purple-300 hover:text-purple-200 transition-colors group">
-              <FaArrowLeft className="mr-2 group-hover:-translate-x-1 transition-transform" /> Back to my collection
-            </Link>
+      
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <Link to="/nft-marketplace" className="text-white flex items-center mb-6">
+          <FaArrowLeft className="mr-2" />
+          Back to Marketplace
+        </Link>
+        
+        {loading && <LoadingSpinner />}
+        
+        {error && (
+          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
+            {error}
           </div>
-          
-          {/* Contenido principal */}
-          <div className="bg-black/30 backdrop-blur-md rounded-xl border border-purple-500/20 overflow-hidden shadow-2xl hover:shadow-purple-900/10 transition-all">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-              {/* Image Section - Left side, smaller */}
-              <div className="w-80 flex-shrink-0">
-                <div className="aspect-square bg-black/40 rounded-xl overflow-hidden shadow-lg border border-purple-500/10">
-                  <IPFSImage 
-                    src={getOptimizedImageUrl(nft.image)} 
-                    alt={nft.name} 
-                    className="w-full h-full object-cover"
-                    placeholderSrc="/NFT-X1.webp"
-                    onLoad={() => console.log(`NFT ${nft.tokenId} image loaded`)}
-                    onError={() => console.warn(`NFT ${nft.tokenId} image failed to load`)}
-                  />
-                </div>
-                
-                {/* Acciones debajo de la imagen */}
-                <div className="mt-4 flex justify-between">
-                  <motion.button 
-                    onClick={toggleLike}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                      hasLiked 
-                        ? 'bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/30' 
-                        : 'bg-slate-700/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/30'
-                    }`}
-                  >
-                    <FaHeart className={hasLiked ? "text-red-400" : ""} /> {likesCount}
-                  </motion.button>
-                  
-                  <motion.button 
-                    onClick={copyToClipboard}
-                    whileTap={{ scale: 0.95 }}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
-                      copied 
-                        ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
-                        : 'bg-slate-700/50 text-gray-300 hover:bg-slate-700/70 border border-slate-600/30'
-                    }`}
-                  >
-                    {copied ? <FaCheck className="text-green-400" /> : <FaShareAlt />} 
-                    {copied ? 'Copied!' : 'Share'}
-                  </motion.button>
-                </div>
+        )}
+        
+        {nft && (
+          <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <div className="flex flex-col sm:flex-row">
+              <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-4">
+                <IPFSImage
+                  src={nft.image}
+                  alt={nft.name}
+                  className="rounded-lg w-full h-auto"
+                  width={400}
+                  height={400}
+                />
               </div>
               
-              {/* Lado derecho - Información */}
-              <div>
-                <div className="mb-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <span className="px-3 py-1 bg-purple-900/70 text-purple-200 text-xs rounded-full shadow-sm border border-purple-500/30">
-                      {nft.category || 'Collectible'}
-                    </span>
-                    <span className="text-gray-400 text-sm bg-black/30 px-3 py-1 rounded-full">Token ID: {nft.tokenId}</span>
-                  </div>
-                  <h1 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-purple-300 to-blue-300 bg-clip-text text-transparent">{nft.name}</h1>
-                  <p className="text-gray-300 mb-6 leading-relaxed">{nft.description}</p>
+              <div className="flex-grow">
+                <h1 className="text-3xl font-bold text-white mb-2">{nft.name}</h1>
+                
+                <div className="flex items-center text-gray-400 text-sm mb-4">
+                  <span className="mr-2">{`#${nft.tokenId}`}</span>
+                  <span className="mr-2"><FaEthereum className="inline mr-1" />{parseFloat(ethers.formatEther(nft.price)).toFixed(4)}</span>
+                  <span className="mr-2"><FaClock className="inline mr-1" />{new Date(nft.listedTimestamp * 1000).toLocaleString()}</span>
                 </div>
                 
-                <div className="space-y-4 mb-8 bg-black/20 p-4 rounded-xl border border-purple-500/10">
-                  <div className="flex justify-between py-2 border-b border-purple-500/10">
-                    <span className="text-gray-400 flex items-center"><FaUser className="mr-2 text-blue-400" /> Owner</span>
-                    <span className="text-white font-mono bg-black/30 px-2 py-1 rounded-md">{nft.owner.slice(0, 6)}...{nft.owner.slice(-4)}</span>
-                  </div>
-                  
-                  {nft.isForSale && (
-                    <div className="flex justify-between py-2 border-b border-purple-500/10">
-                      <span className="text-gray-400 flex items-center"><FaEthereum className="mr-2 text-purple-400" /> Price</span>
-                      <span className="text-white flex items-center bg-green-900/30 px-2 py-1 rounded-md border border-green-500/20">
-                        <FaEthereum className="mr-1 text-green-400" />
-                        {formattedPrice} POL
-                      </span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between py-2 border-b border-purple-500/10">
-                    <span className="text-gray-400 flex items-center"><FaClock className="mr-2 text-blue-400" /> Listed date</span>
-                    <span className="text-white flex items-center bg-black/30 px-2 py-1 rounded-md">
-                      {listedDate}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Atributos */}
-                {nft.attributes && nft.attributes.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                      <span className="w-1 h-6 bg-purple-500 rounded-full mr-2"></span>
-                      Attributes
-                    </h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      {nft.attributes.map((attr, index) => (
-                        <div key={index} className="bg-purple-900/20 rounded-lg p-3 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-                          <span className="text-purple-300 text-xs">{attr.trait_type}</span>
-                          <div className="text-white font-medium">{attr.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Botones de acción */}
-                <div className="space-y-3">
-                  {/* Buy button - only for non-owners when NFT is for sale */}
-                  {nft.isForSale && !isOwner && (
-                    <motion.button 
-                      onClick={buyNFT}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="btn-nuvo-base bg-nuvo-gradient-button w-full py-4 rounded-lg text-white font-medium flex items-center justify-center shadow-lg"
-                    >
-                      <FaEthereum className="mr-2" /> Buy for {formattedPrice} POL
-                    </motion.button>
-                  )}
-
-                  {/* Owner status button - only for owners */}
-                  {isOwner && (
-                    <div className="btn-nuvo-base btn-nuvo-success w-full py-4 rounded-lg text-white font-medium flex items-center justify-center shadow-lg cursor-default">
-                      <FaCheck className="mr-2" /> You own this NFT
-                    </div>
-                  )}
-                  
-                  {/* List for sale button - only for owners when not listed */}
-                  {isOwner && !nft.isForSale && (
-                    <motion.button 
-                      onClick={() => setShowListForm(true)}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full py-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg text-white font-medium flex items-center justify-center shadow-lg hover:shadow-green-500/20 transition-all"
-                    >
-                      <FaTags className="mr-2" /> List for sale
-                    </motion.button>
-                  )}
-                  
-                  {/* Not available button - for non-owners when not for sale */}
-                  {!isOwner && !nft.isForSale && (
-                    <button className="w-full py-4 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center opacity-70 cursor-not-allowed shadow-lg">
-                      Not available for sale
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Form to list NFT */}
-          {!isListed && isOwner && (
-            <div className="mt-8 p-6 bg-black/30 rounded-xl border border-purple-500/20 shadow-lg">
-              <h3 className="text-xl font-semibold text-white mb-4">List NFT for sale</h3>
-              
-              {showListForm ? (
-                <form onSubmit={handleListNFT} className="space-y-4">
-                  <div>
-                    <label className="block text-gray-300 text-sm mb-1">
-                      Price (POL):
-                    </label>
-                    <input
-                      type="number"
-                      min="0.001"
-                      step="0.001"
-                      value={price}
-                      onChange={e => setPrice(e.target.value)}
-                      required
-                      placeholder="e.g. 1.5"
-                      className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Minimum price: 0.001 POL</p>
-                  </div>
-                  <div>
-                    <label className="block text-gray-300 text-sm mb-1">
-                      Category:
-                    </label>
-                    <select
-                      value={category}
-                      onChange={e => setCategory(e.target.value)}
-                      className="w-full p-3 bg-black/40 rounded-lg border border-purple-500/20 focus:ring-2 focus:ring-purple-500 focus:outline-none transition-all text-white"
-                    >
-                      <option value="collectibles">Collectibles</option>
-                      <option value="art">Art</option>
-                      <option value="photography">Photography</option>
-                      <option value="music">Music</option>
-                      <option value="video">Video</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={listingLoading || !price}
-                      className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {listingLoading ? 'Listing...' : 'Confirm listing'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowListForm(false)}
-                      className="flex-1 py-3 bg-gray-700 rounded-lg text-white font-medium flex items-center justify-center transition-all hover:shadow-md"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-              
-                  {listingError && (
-                    <div className="p-3 bg-red-900/30 border border-red-500/30 rounded-lg">
-                      <p className="text-red-300 text-sm">{listingError}</p>
-                    </div>
-                  )}
-                  {listingSuccess && (
-                    <div className="p-3 bg-green-900/30 border border-green-500/30 rounded-lg">
-                      <p className="text-green-300 text-sm">NFT listed successfully</p>
-                    </div>
-                  )}
-                  {txHash && (
-                    <div className="mt-2">
-                      <a
-                        href={`https://polygonscan.com/tx/${txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 underline text-sm hover:text-blue-300"
-                      >
-                        View transaction on Polygonscan
-                      </a>
-                    </div>
-                  )}
-                </form>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <p className="text-gray-300 text-sm">
-                    This NFT is not listed for sale. You can list your NFT by setting a price and category.
-                  </p>
+                <div className="flex items-center mb-4">
                   <button
-                    onClick={() => setShowListForm(true)}
-                    className="py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg text-white font-semibold flex items-center justify-center transition-all hover:shadow-lg"
+                    onClick={handleLike}
+                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 mr-2 ${
+                      hasLiked ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'
+                    }`}
+                    disabled={listingLoading}
                   >
-                    List NFT for sale
+                    <FaHeart className="mr-2" />
+                    {hasLiked ? 'Liked' : 'Like'}
+                  </button>
+                  
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center px-4 py-2 bg-gray-700 text-gray-300 rounded-lg transition-all duration-300"
+                  >
+                    <FaCopy className="mr-2" />
+                    {copied ? 'Link Copied!' : 'Copy Link'}
                   </button>
                 </div>
-              )}
+                
+                <div className="text-gray-400 text-sm mb-4">
+                  Owner:{" "}
+                  <a
+                    href={`https://etherscan.io/address/${nft.owner}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline"
+                  >
+                    {nft.owner}
+                  </a>
+                </div>
+                
+                <div className="text-gray-400 text-sm mb-4">
+                  Seller:{" "}
+                  <a
+                    href={`https://etherscan.io/address/${nft.seller}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white underline"
+                  >
+                    {nft.seller}
+                  </a>
+                </div>
+                
+                <div className="text-gray-400 text-sm mb-4">
+                  Category:{" "}
+                  <span className="text-white">{nft.category}</span>
+                </div>
+                
+                <div className="text-gray-400 text-sm mb-4">
+                  Description:{" "}
+                  <p className="text-white">{nft.description || 'No description available'}</p>
+                </div>
+              </div>
             </div>
-          )}
-          
-          {/* Mensaje para no propietarios */}
-          {!isListed && !isOwner && (
-            <div className="mt-4 text-gray-400 text-sm">
-              Only the owner can list this NFT.
-            </div>
-          )}
-        </motion.div>
+          </div>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 };
 

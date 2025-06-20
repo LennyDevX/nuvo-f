@@ -1,8 +1,9 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback } from 'react';
 import { FiHeart, FiTag, FiDollarSign, FiUser, FiClock, FiCheck } from 'react-icons/fi';
 import IPFSImage from '../../../ui/IPFSImage';
 import OfferModal from './OfferModal';
 import { WalletContext } from '../../../../context/WalletContext';
+import { imageCache } from '../../../../utils/blockchain/imageCache';
 
 const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -42,10 +43,15 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
   };
 
-  // Get image URL from various possible sources
-  const getImageUrl = () => {
-    return nft.metadata?.image || nft.image || nft.imageUrl || null;
-  };
+  // Get image URL from various possible sources with caching
+  const getImageUrl = useCallback(() => {
+    const imageUrl = nft.metadata?.image || nft.image || nft.imageUrl;
+    if (!imageUrl) return null;
+    
+    // Use cached version if available
+    const cached = imageCache.get(imageUrl);
+    return cached || imageUrl;
+  }, [nft.metadata?.image, nft.image, nft.imageUrl]);
 
   return (
     <>
@@ -57,11 +63,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
             alt={nft.metadata?.name || `NFT #${nft.tokenId}`}
             className="nft-card-pro-image"
             placeholderSrc="/NFT-placeholder.webp"
-            onLoad={() => console.log(`NFT #${nft.tokenId} image loaded successfully`)}
-            onError={() => console.warn(`Failed to load image for NFT #${nft.tokenId}`, { 
-              metadata: nft.metadata,
-              imageUrl: getImageUrl() 
-            })}
+            loading="lazy"
           />
         </div>
 
@@ -183,3 +185,4 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
 };
 
 export default NFTCard;
+

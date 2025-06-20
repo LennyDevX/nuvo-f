@@ -5,6 +5,7 @@ import { m } from 'framer-motion';
 import { FaRedo, FaPlus } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
+import { useDeviceDetection } from '../../../../hooks/mobile/useDeviceDetection';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
@@ -18,8 +19,12 @@ const NFTDashboard = () => {
     nftsLoading: loading, 
     nftsError: error, 
     refreshNFTs, 
-    updateUserAccount 
+    updateUserAccount,
+    cacheStatus 
   } = useTokenization();
+  
+  // Get device detection data
+  const { isMobile } = useDeviceDetection();
   
   // Update TokenizationContext with current user account
   useEffect(() => {
@@ -188,6 +193,9 @@ const NFTDashboard = () => {
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">
                 NFT Dashboard
+                {cacheStatus && (
+                  <span className="ml-3 text-sm text-green-400">💾 {cacheStatus}</span>
+                )}
               </h1>
               <p className="text-gray-300">Manage and explore your digital assets</p>
             </div>
@@ -243,7 +251,7 @@ const NFTDashboard = () => {
             
             {/* NFT Collection */}
             <div className="flex-1 nuvos-card backdrop-blur-md p-4 relative z-0">
-              {/* Loading State - Matching MarketplaceDashboard pattern */}
+              {/* Loading State */}
               {loading ? (
                 <div className="flex flex-col justify-center items-center py-20 space-y-6">
                   <LoadingSpinner 
@@ -264,6 +272,7 @@ const NFTDashboard = () => {
                   loading={loading}
                   error={error}
                   onRetry={handleRefreshNFTs}
+                  cacheStatus={cacheStatus}
                 />
               )}
             </div>

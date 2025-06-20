@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../../context/WalletContext';
 import { useToast } from '../../../hooks/useToast';
@@ -10,6 +10,7 @@ import EmptyState from './components/EmptyState';
 import SpaceBackground from '../../effects/SpaceBackground';
 import contractABI from '../../../Abi/TokenizationApp.json';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
+import { marketplaceCache } from '../../../utils/cache/MarketplaceCache';
 
 const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -21,6 +22,7 @@ function MarketplaceDashboard(props) {
   const [nfts, setNfts] = useState([]);
   const [filteredNfts, setFilteredNfts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [backgroundRefreshing, setBackgroundRefreshing] = useState(false);
   const [stats, setStats] = useState({
     totalItems: 0,
     totalVolume: '0',
@@ -38,6 +40,10 @@ function MarketplaceDashboard(props) {
 
   // Mobile filters toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  
+  // Refs for preventing duplicate calls
+  const fetchingRef = useRef(false);
+  const lastFetchTime = useRef(0);
 
   // Get contract instance
   const getContract = useCallback(() => {
@@ -52,156 +58,296 @@ function MarketplaceDashboard(props) {
     return new ethers.Contract(TOKENIZATION_ADDRESS, contractABI.abi, signer);
   }, [provider, account]);
 
-  // Fetch metadata from IPFS - Enhanced to handle different URL formats
+  // Enhanced metadata fetching with cache
   const fetchMetadata = async (tokenURI) => {
     try {
       if (!tokenURI) {
         return {
-          name: `NFT #${tokenId}`,
+          name: `NFT #Unknown`,
           description: 'No hay descripción disponible',
           image: '/NFT-placeholder.webp',
           attributes: []
         };
       }
-      // Retry/backoff
+
+      // Check cache first
+      const cachedMetadata = marketplaceCache.getTokenMetadata(tokenURI);
+      if (cachedMetadata) {
+        console.log('Using cached metadata for:', tokenURI);
+        return cachedMetadata;
+      }
+
       let url = tokenURI;
       if (tokenURI.startsWith('ipfs://')) {
         const ipfsHash = tokenURI.replace('ipfs://', '');
         url = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
-      } else if (tokenURI.includes('/ipfs/')) {
-        url = tokenURI;
       }
+
       let metadata;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < 2; attempt++) { // Reduced retries
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
           const response = await fetch(url, {
             signal: controller.signal,
             headers: { 'Accept': 'application/json' }
           });
           clearTimeout(timeoutId);
-          if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           metadata = await response.json();
           break;
         } catch (fetchErr) {
-          if (attempt === 2) throw fetchErr;
-          await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+          if (attempt === 1) throw fetchErr;
+          await new Promise(r => setTimeout(r, 500));
         }
       }
-      if (metadata.image && metadata.image.startsWith('ipfs://')) {
-        const imageHash = metadata.image.replace('ipfs://', '');
-        metadata.image = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
+
+      // Fix IPFS image URLs consistently
+      if (metadata.image) {
+        if (metadata.image.startsWith('ipfs://')) {
+          const imageHash = metadata.image.replace('ipfs://', '');
+          metadata.image = `https://gateway.pinata.cloud/ipfs/${imageHash}`;
+        }
+        // Ensure the image URL is valid
+        console.log('Processed image URL:', metadata.image);
+      } else {
+        metadata.image = '/NFT-placeholder.webp';
       }
+
+      // Ensure all required fields exist
+      metadata.name = metadata.name || `NFT #Unknown`;
+      metadata.description = metadata.description || 'No description available';
+      metadata.attributes = metadata.attributes || [];
+
+      // Cache the result
+      marketplaceCache.setTokenMetadata(tokenURI, metadata);
       return metadata;
+
     } catch (err) {
       console.error("Error fetching metadata:", err);
-      return {
-        name: `NFT #${tokenId || 'Unknown'}`,
+      const fallbackMetadata = {
+        name: `NFT #Unknown`,
         description: 'Error al cargar metadatos',
         image: '/NFT-placeholder.webp',
         attributes: []
       };
+      // Cache fallback to prevent repeated failures
+      marketplaceCache.setTokenMetadata(tokenURI, fallbackMetadata);
+      return fallbackMetadata;
     }
   };
 
-  // Fetch marketplace data - Enhanced error handling
-  const fetchMarketplaceData = useCallback(async () => {
+  // Optimized marketplace data fetching
+  const fetchMarketplaceData = useCallback(async (forceRefresh = false) => {
+    // Prevent duplicate calls
+    if (fetchingRef.current) {
+      console.log('Fetch already in progress, skipping');
+      return;
+    }
+
+    // Check if we should use cache
+    if (!forceRefresh) {
+      const cachedListings = marketplaceCache.getMarketplaceListings(TOKENIZATION_ADDRESS);
+      const cachedStats = marketplaceCache.getMarketplaceStats(TOKENIZATION_ADDRESS);
+      
+      if (cachedListings && cachedStats) {
+        console.log('Using cached marketplace data');
+        setNfts(cachedListings);
+        setFilteredNfts(cachedListings);
+        setStats(cachedStats);
+        setLoading(false);
+        
+        // Start background refresh if cache is older than 1 minute
+        const now = Date.now();
+        if (now - lastFetchTime.current > 60000) {
+          setTimeout(() => {
+            setBackgroundRefreshing(true);
+            fetchMarketplaceData(true).finally(() => setBackgroundRefreshing(false));
+          }, 1000);
+        }
+        return;
+      }
+    }
+
+    fetchingRef.current = true;
+    
     try {
-      setLoading(true);
+      if (!forceRefresh) setLoading(true);
+      
       const contract = getContract();
       if (!contract) {
         console.warn('No contract available');
         return;
       }
 
-      console.log('Fetching marketplace data...');
+      console.log('Fetching marketplace data from blockchain...');
       
-      // Get all listed tokens - Enhanced iteration
-      const listedNfts = [];
-      let tokenId = 1;
-      let consecutiveErrors = 0;
-      const maxConsecutiveErrors = 5;
-      const maxTokens = 100; // Reasonable limit for testing
+      // Optimized token discovery using events (if available)
+      let listedNfts = [];
       
-      while (tokenId <= maxTokens && consecutiveErrors < maxConsecutiveErrors) {
-        try {
-          console.log(`Checking token ${tokenId}...`);
-          
-          const tokenData = await contract.getListedToken(tokenId);
-          
-          if (tokenData[4]) { // isListed
-            console.log(`Token ${tokenId} is listed, fetching details...`);
-            
-            const tokenURI = await contract.tokenURI(tokenId);
-            const metadata = await fetchMetadata(tokenURI);
-            
-            const nftData = {
-              tokenId: tokenData[0].toString(),
-              owner: tokenData[1],
-              seller: tokenData[2],
-              price: ethers.formatEther(tokenData[3]),
-              isListed: tokenData[4],
-              listedAt: tokenData[5].toString(),
-              category: tokenData[6],
-              tokenURI,
-              metadata,
-              // Add direct image access for compatibility
-              image: metadata.image,
-              name: metadata.name
-            };
-            
-            listedNfts.push(nftData);
-            console.log(`Added NFT ${tokenId} to marketplace:`, nftData);
-            consecutiveErrors = 0; // Reset error counter
-          } else {
-            console.log(`Token ${tokenId} exists but is not listed`);
-            consecutiveErrors = 0; // Reset error counter
-          }
-        } catch (error) {
-          consecutiveErrors++;
-          console.log(`Error with token ${tokenId} (${consecutiveErrors}/${maxConsecutiveErrors}):`, error.message);
-          
-          // If it's a "TokenDoesNotExist" error, we've probably reached the end
-          if (error.message.includes('TokenDoesNotExist') || 
-              error.message.includes('ERC721: invalid token ID') ||
-              error.message.includes('ERC721NonexistentToken')) {
-            console.log(`Reached end of tokens at ${tokenId}`);
-            break;
+      try {
+        // Try to get token range more efficiently
+        const totalSupplyMethod = contract.totalSupply || contract.getCurrentTokenId;
+        let maxTokenId = 100; // Default fallback
+        
+        if (totalSupplyMethod) {
+          try {
+            const totalSupply = await totalSupplyMethod();
+            maxTokenId = Math.min(Number(totalSupply) + 5, 200); // Add buffer but cap at 200
+            console.log(`Using total supply: ${maxTokenId} tokens to check`);
+          } catch (e) {
+            console.log('Could not get total supply, using default range');
           }
         }
-        tokenId++;
+
+        // Batch token checks for better performance
+        const BATCH_SIZE = 10;
+        let tokenId = 1;
+        let consecutiveErrors = 0;
+        const maxConsecutiveErrors = 5;
+        
+        while (tokenId <= maxTokenId && consecutiveErrors < maxConsecutiveErrors) {
+          const batch = [];
+          for (let i = 0; i < BATCH_SIZE && tokenId <= maxTokenId; i++, tokenId++) {
+            batch.push(tokenId);
+          }
+          
+          // Process batch in parallel
+          const batchPromises = batch.map(async (id) => {
+            try {
+              // Check cache first
+              const cachedListing = marketplaceCache.getTokenListing(TOKENIZATION_ADDRESS, id);
+              if (cachedListing && !forceRefresh) {
+                return cachedListing.isListed ? cachedListing : null;
+              }
+
+              const tokenData = await contract.getListedToken(id);
+              const listingData = {
+                tokenId: id,
+                tokenData,
+                isListed: tokenData[4],
+                checkedAt: Date.now()
+              };
+              
+              // Cache the result
+              marketplaceCache.setTokenListing(TOKENIZATION_ADDRESS, id, listingData);
+              
+              return tokenData[4] ? listingData : null;
+            } catch (error) {
+              if (error.message.includes('TokenDoesNotExist')) {
+                return 'END_OF_TOKENS';
+              }
+              throw error;
+            }
+          });
+          
+          try {
+            const batchResults = await Promise.allSettled(batchPromises);
+            let foundEndOfTokens = false;
+            
+            for (const result of batchResults) {
+              if (result.status === 'fulfilled') {
+                if (result.value === 'END_OF_TOKENS') {
+                  foundEndOfTokens = true;
+                  break;
+                } else if (result.value && result.value.isListed) {
+                  // Fetch metadata for listed tokens
+                  const { tokenData } = result.value;
+                  try {
+                    const tokenURI = await contract.tokenURI(result.value.tokenId);
+                    const metadata = await fetchMetadata(tokenURI);
+                    
+                    const nftData = {
+                      tokenId: tokenData[0].toString(),
+                      owner: tokenData[1],
+                      seller: tokenData[2],
+                      price: ethers.formatEther(tokenData[3]),
+                      isListed: tokenData[4],
+                      listedAt: tokenData[5].toString(),
+                      category: tokenData[6],
+                      tokenURI,
+                      metadata,
+                      image: metadata.image, // This should now have the correct URL
+                      name: metadata.name,
+                      description: metadata.description
+                    };
+                    
+                    listedNfts.push(nftData);
+                    console.log(`Added NFT ${result.value.tokenId} to marketplace`);
+                  } catch (metadataError) {
+                    console.warn(`Error fetching metadata for token ${result.value.tokenId}:`, metadataError);
+                  }
+                }
+                consecutiveErrors = 0;
+              } else {
+                consecutiveErrors++;
+              }
+            }
+            
+            if (foundEndOfTokens) {
+              console.log(`Reached end of tokens at batch starting with ${batch[0]}`);
+              break;
+            }
+            
+          } catch (batchError) {
+            console.error('Error processing batch:', batchError);
+            consecutiveErrors++;
+          }
+        }
+
+      } catch (error) {
+        console.error('Error in optimized token discovery:', error);
+        showToast('Error loading marketplace data', 'error');
       }
 
-      console.log(`Found ${listedNfts.length} listed NFTs:`, listedNfts);
+      console.log(`Found ${listedNfts.length} listed NFTs`);
+      
+      // Cache the results
+      marketplaceCache.setMarketplaceListings(TOKENIZATION_ADDRESS, listedNfts);
+      
       setNfts(listedNfts);
       setFilteredNfts(listedNfts);
       
-      // Calculate stats
-      calculateStats(listedNfts);
+      // Calculate and cache stats
+      const calculatedStats = calculateStatsOptimized(listedNfts);
+      marketplaceCache.setMarketplaceStats(TOKENIZATION_ADDRESS, calculatedStats);
+      setStats(calculatedStats);
+      
+      lastFetchTime.current = Date.now();
       
     } catch (error) {
       console.error('Error fetching marketplace data:', error);
-      showToast('Error loading marketplace data', 'error');
+      if (!forceRefresh) {
+        showToast('Error loading marketplace data', 'error');
+      }
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, [getContract, showToast]);
 
-  // Calculate marketplace statistics
-  const calculateStats = (nftList) => {
-    const totalItems = nftList.length;
+  // Optimized stats calculation
+  const calculateStatsOptimized = (nftList) => {
+    if (nftList.length === 0) {
+      return {
+        totalItems: 0,
+        totalVolume: '0',
+        floorPrice: '0',
+        owners: 0
+      };
+    }
+
     const prices = nftList.map(nft => parseFloat(nft.price)).filter(price => price > 0);
     const totalVolume = prices.reduce((sum, price) => sum + price, 0);
     const floorPrice = prices.length > 0 ? Math.min(...prices) : 0;
     const uniqueOwners = new Set(nftList.map(nft => nft.owner)).size;
 
-    setStats({
-      totalItems,
+    return {
+      totalItems: nftList.length,
       totalVolume: totalVolume.toFixed(2),
       floorPrice: floorPrice.toFixed(4),
       owners: uniqueOwners
-    });
+    };
   };
 
   // Apply filters to NFTs
@@ -297,10 +443,10 @@ function MarketplaceDashboard(props) {
       await tx.wait();
       showToast('NFT purchased successfully!', 'success');
       
-      // Refresh marketplace data
-      fetchMarketplaceData();
-      // Invalidate NFT cache for this tokenId
-      localStorage.removeItem(`nuvo-cache-nft-${tokenId}`);
+      // Invalidate cache and refresh
+      marketplaceCache.invalidateMarketplace(TOKENIZATION_ADDRESS);
+      marketplaceCache.delete(`token_listing_${tokenId}_${TOKENIZATION_ADDRESS}`);
+      fetchMarketplaceData(true);
       
     } catch (error) {
       console.error('Error buying NFT:', error);
@@ -331,10 +477,29 @@ function MarketplaceDashboard(props) {
     }
   };
 
-  // Efecto: recargar los NFTs cada vez que cambia la conexión de la wallet
+  // Manual refresh function
+  const handleManualRefresh = useCallback(() => {
+    marketplaceCache.invalidateMarketplace(TOKENIZATION_ADDRESS);
+    fetchMarketplaceData(true);
+  }, [fetchMarketplaceData]);
+
+  // Effect: Load marketplace data with throttling
   useEffect(() => {
     if (walletConnected && account && provider) {
-      fetchMarketplaceData();
+      const now = Date.now();
+      if (now - lastFetchTime.current > 5000) { // Throttle to every 5 seconds minimum
+        fetchMarketplaceData();
+      } else {
+        // Use cached data if available
+        const cachedListings = marketplaceCache.getMarketplaceListings(TOKENIZATION_ADDRESS);
+        if (cachedListings) {
+          setNfts(cachedListings);
+          setFilteredNfts(cachedListings);
+          setLoading(false);
+        } else {
+          fetchMarketplaceData();
+        }
+      }
     } else {
       setNfts([]);
       setFilteredNfts([]);
@@ -345,7 +510,6 @@ function MarketplaceDashboard(props) {
         owners: 0
       });
     }
-    // No disables eslint aquí, es correcto que dependa de estos valores
   }, [walletConnected, account, provider, fetchMarketplaceData]);
 
   // Conditionally render the not connected message
@@ -369,21 +533,25 @@ function MarketplaceDashboard(props) {
       <SpaceBackground customClass="" />
       <div className="container mx-auto px-3 md:px-4 py-6 md:py-8 relative z-10">
         <div className="flex flex-col space-y-6 md:space-y-8">
-          {/* Dashboard Header - Optimizado para mobile */}
+          {/* Dashboard Header - with cache status */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div className="text-center md:text-left">
               <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 tracking-tight">
                 NFT Marketplace
+                {backgroundRefreshing && (
+                  <span className="ml-3 text-sm text-yellow-400">🔄 Updating...</span>
+                )}
               </h1>
               <p className="text-gray-300 text-base md:text-lg">Discover, collect, and trade unique digital assets</p>
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
               <button 
-                onClick={() => fetchMarketplaceData()}
-                className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 text-sm md:text-base"
+                onClick={handleManualRefresh}
+                disabled={loading || fetchingRef.current}
+                className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 text-sm md:text-base disabled:opacity-50"
               >
-                🔄 Refresh Marketplace
+                🔄 {loading ? 'Loading...' : 'Refresh'}
               </button>
             </div>
           </div>

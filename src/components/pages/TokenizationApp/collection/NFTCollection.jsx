@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useContext, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaWallet } from 'react-icons/fa';
+import { FaEthereum, FaHeart, FaTags, FaExternalLinkAlt, FaWallet, FaClock } from 'react-icons/fa';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../../../context/WalletContext';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
@@ -12,7 +12,7 @@ import IPFSImage from '../../../ui/IPFSImage';
 const NFTDetailModal = lazy(() => import('../../../modals/NFTDetailModal'));
 
 
-const NFTCollection = ({ nfts, loading, error, onRetry }) => {
+const NFTCollection = ({ nfts, loading, error, onRetry, cacheStatus }) => {
   const { walletConnected, connectWallet } = useContext(WalletContext);
   const [selectedNFT, setSelectedNFT] = useState(null);
 
@@ -45,6 +45,18 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
 
   // Remove the loading state from here since it's now handled in the parent component
   // The parent (NFTDashboard) will show the LoadingSpinner and won't render NFTCollection until loading is false
+
+  // Show cache status if available
+  const renderCacheStatus = () => {
+    if (!cacheStatus) return null;
+    
+    return (
+      <div className="mb-4 text-xs text-gray-400 flex items-center gap-2">
+        <FaClock className="text-green-400" />
+        <span>Data loaded from cache ({cacheStatus})</span>
+      </div>
+    );
+  };
 
   if (error) {
     return <NFTErrorState error={error} onRetry={handleRetry} walletConnected={walletConnected} />;
@@ -85,10 +97,12 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
 
   return (
     <>
+      {renderCacheStatus()}
+      
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
         {nfts.map((nft) => (
           <NFTCard 
-            key={nft.id || `${nft.contractAddress}-${nft.tokenId}`} 
+            key={nft.uniqueId || `${nft.contractAddress}-${nft.tokenId}`} 
             nft={nft} 
             onClick={() => handleNFTClick(nft)}
           />
@@ -109,19 +123,66 @@ const NFTCollection = ({ nfts, loading, error, onRetry }) => {
   );
 };
 
-// NFT Card component - Minor styling updates for consistency
+// Enhanced NFT Card with image caching optimization
 const NFTCard = ({ nft, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const handleClick = () => {
     onClick(nft);
   };
   
-  // Format price nicely - memoize to avoid unnecessary calculations
+  // Memoize formatted price
   const formattedPrice = useMemo(() => {
     if (!nft.price || !ethers.formatEther) return "0.0000";
-    return parseFloat(ethers.formatEther(nft.price)).toFixed(4);
+    try {
+      return parseFloat(ethers.formatEther(nft.price)).toFixed(4);
+    } catch (e) {
+      return "0.0000";
+    }
   }, [nft.price]);
+
+  // Get the correct image URL with IPFS handling
+  const getImageUrl = useMemo(() => {
+    // Priority order: direct image, metadata.image, fallback
+    let imageUrl = nft.image || nft.metadata?.image;
+    
+    // Handle IPFS URLs consistently
+    if (imageUrl && imageUrl.startsWith('ipfs://')) {
+      const ipfsHash = imageUrl.replace('ipfs://', '');
+      imageUrl = `https://gateway.pinata.cloud/ipfs/${ipfsHash}`;
+    } else if (imageUrl && imageUrl.includes('/ipfs/')) {
+      // Already converted IPFS URL, use as is
+      imageUrl = imageUrl;
+    } else if (!imageUrl || imageError) {
+      // Use fallback if no image or error
+      imageUrl = '/NFT-placeholder.webp';
+    }
+    
+    return imageUrl;
+  }, [nft.image, nft.metadata?.image, imageError]);
+
+  // Get NFT name with fallback
+  const getNftName = useMemo(() => {
+    return nft.name || nft.metadata?.name || `NFT #${nft.tokenId || 'Unknown'}`;
+  }, [nft.name, nft.metadata?.name, nft.tokenId]);
+
+  // Get NFT description with fallback
+  const getNftDescription = useMemo(() => {
+    return nft.description || nft.metadata?.description || 'No description available';
+  }, [nft.description, nft.metadata?.description]);
+
+  const handleImageLoad = () => {
+    setImageLoaded(true);
+    setImageError(false);
+  };
+
+  const handleImageError = () => {
+    console.warn('Image failed to load:', getImageUrl);
+    setImageError(true);
+    setImageLoaded(true); // Still set to true to hide spinner
+  };
 
   return (
     <motion.div
@@ -132,14 +193,24 @@ const NFTCard = ({ nft, onClick }) => {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
-      {/* NFT Image with consistent aspect ratio */}
-      <div className="nft-collection-image-container">
-        <IPFSImage 
-          src={nft.image}
-          alt={nft.name || "NFT"} 
-          className="nft-collection-image"
+      {/* NFT Image with loading optimization */}
+      <div className="nft-collection-image-container relative aspect-square">
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gray-800 animate-pulse flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        
+        <img
+          src={getImageUrl}
+          alt={getNftName}
+          className={`w-full h-full object-cover transition-all duration-300 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-          placeholderSrc="/LogoNuvos.webp"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          loading="lazy"
         />
         
         {/* Sale Status Badge */}
@@ -158,7 +229,7 @@ const NFTCard = ({ nft, onClick }) => {
       
       {/* NFT Info */}
       <div className="p-3">
-        <h3 className="text-white font-medium text-sm truncate">{nft.name}</h3>
+        <h3 className="text-white font-medium text-sm truncate">{getNftName}</h3>
         
         {/* Price and Category */}
         <div className="flex justify-between items-center mt-2">
@@ -179,8 +250,8 @@ const NFTCard = ({ nft, onClick }) => {
             isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
-          <h3 className="text-white font-bold mb-1">{nft.name}</h3>
-          <p className="text-gray-300 text-xs mb-3 line-clamp-3">{nft.description}</p>
+          <h3 className="text-white font-bold mb-1">{getNftName}</h3>
+          <p className="text-gray-300 text-xs mb-3 line-clamp-3">{getNftDescription}</p>
           
           <button
             className="btn-nuvo-base bg-nuvo-gradient-button btn-sm btn-full mt-2 flex items-center justify-center gap-1"
