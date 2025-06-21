@@ -65,7 +65,7 @@ const HeroSection = () => {
       
       {/* Right side: Animated AI Logo */}
       <div className="w-full md:w-2/5 flex justify-center items-center">
-        <div className="w-full max-w-xs">
+        <div className="w-full max-w-xs  bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg border border-white/20">
           <AnimatedAILogo />
         </div>
       </div>

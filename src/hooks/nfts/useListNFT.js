@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import { mapCategoryToSpanish } from '../../utils/blockchain/blockchainUtils';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -55,20 +56,8 @@ export default function useListNFT() {
       }
 
       // Validate and map category to Spanish as the contract expects
-      const categoryMap = {
-        'collectible': 'collectibles',
-        'collectibles': 'collectibles',
-        'artwork': 'art',
-        'art': 'art',
-        'photography': 'photography',
-        'music': 'music',
-        'video': 'video'
-      };
-
-      const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-      const categoryValue = categoryMap[normalizedCategory] || 'collectibles';
-
-      console.log('Mapped category:', normalizedCategory, '->', categoryValue);
+      const categoryValue = mapCategoryToSpanish(category);
+      console.log('Mapped category:', category, '->', categoryValue);
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -188,4 +177,5 @@ export default function useListNFT() {
 
   return { listNFT, loading, error, success, txHash };
 }
+   
 

@@ -326,9 +326,12 @@ const NFTDetail = () => {
       <SpaceBackground />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <Link to="/nft-marketplace" className="text-white flex items-center mb-6">
-          <FaArrowLeft className="mr-2" />
-          Back to Marketplace
+        <Link 
+          to="/marketplace" 
+          className="inline-flex items-center gap-3 px-4 py-2 mb-6 bg-gray-800/60 hover:bg-gray-700/80 backdrop-blur-md border border-gray-600/40 hover:border-purple-500/50 rounded-lg text-white transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+        >
+          <FaArrowLeft className="text-purple-400" />
+          <span className="font-medium">Back to Marketplace</span>
         </Link>
         
         {loading && <LoadingSpinner />}
@@ -340,80 +343,181 @@ const NFTDetail = () => {
         )}
         
         {nft && (
-          <div className="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
-            <div className="flex flex-col sm:flex-row">
-              <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6">
+            {/* Image Section - Hidden on mobile, visible on desktop */}
+            <div className="hidden lg:block bg-gray-800 rounded-lg p-4 py-20 shadow-lg">
+              <div className="aspect-square w-full max-w-md mx-auto">
                 <IPFSImage
                   src={nft.image}
                   alt={nft.name}
-                  className="rounded-lg w-full h-auto"
-                  width={400}
-                  height={400}
+                  className="w-full h-full rounded-lg overflow-hidden"
+                  style={{ objectFit: 'cover' }}
                 />
               </div>
               
-              <div className="flex-grow">
-                <h1 className="text-3xl font-bold text-white mb-2">{nft.name}</h1>
+              {/* Desktop Action Buttons */}
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <button
+                  onClick={handleLike}
+                  className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-medium ${
+                    hasLiked 
+                      ? 'bg-red-600 text-white shadow-lg' 
+                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  }`}
+                  disabled={listingLoading}
+                >
+                  <FaHeart className="mr-2" />
+                  {hasLiked ? 'Liked' : 'Like'} ({likesCount})
+                </button>
                 
-                <div className="flex items-center text-gray-400 text-sm mb-4">
-                  <span className="mr-2">{`#${nft.tokenId}`}</span>
-                  <span className="mr-2"><FaEthereum className="inline mr-1" />{parseFloat(ethers.formatEther(nft.price)).toFixed(4)}</span>
-                  <span className="mr-2"><FaClock className="inline mr-1" />{new Date(nft.listedTimestamp * 1000).toLocaleString()}</span>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium"
+                >
+                  {copied ? <FaCheck className="mr-2" /> : <FaCopy className="mr-2" />}
+                  {copied ? 'Copied!' : 'Share'}
+                </button>
+              </div>
+            </div>
+            
+            {/* Details Section */}
+            <div className="bg-gray-800 rounded-lg p-4 lg:p-6 shadow-lg lg:col-span-1">
+              <div className="space-y-4 lg:space-y-6">
+                {/* Header */}
+                <div>
+                  <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">{nft.name}</h1>
+                  <div className="flex items-center text-gray-400 text-sm">
+                    <span className="bg-gray-700 px-3 py-1 rounded-full mr-3">#{nft.tokenId}</span>
+                    <span className="bg-purple-600 px-3 py-1 rounded-full text-white">{nft.category}</span>
+                  </div>
                 </div>
                 
-                <div className="flex items-center mb-4">
+                {/* Price Section with Mobile Image */}
+                <div className="bg-gray-700 rounded-lg p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Price Info */}
+                    <div className="flex-1">
+                      <span className="text-gray-400 font-medium block mb-2">Current Price</span>
+                      <div className="flex items-center text-xl lg:text-2xl font-bold text-white mb-2">
+                        <FaEthereum className="mr-2 text-blue-400" />
+                        {parseFloat(ethers.formatEther(nft.price)).toFixed(2)} POL
+                      </div>
+                      {nft.isForSale && (
+                        <div className="text-green-400 text-sm font-medium">
+                          <FaTags className="inline mr-1" />
+                          Available for purchase
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Mobile Image - only show on mobile */}
+                    <div className="lg:hidden w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
+                      <IPFSImage
+                        src={nft.image}
+                        alt={nft.name}
+                        className="w-full h-full rounded-lg overflow-hidden"
+                        style={{ objectFit: 'cover' }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Action Buttons */}
+                <div className="lg:hidden flex items-center justify-center gap-3">
                   <button
                     onClick={handleLike}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 mr-2 ${
-                      hasLiked ? 'bg-red-600 text-white' : 'bg-gray-700 text-gray-300'
+                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 font-medium text-sm ${
+                      hasLiked 
+                        ? 'bg-red-600 text-white shadow-lg' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                     disabled={listingLoading}
                   >
-                    <FaHeart className="mr-2" />
-                    {hasLiked ? 'Liked' : 'Like'}
+                    <FaHeart className="mr-1" />
+                    {hasLiked ? 'Liked' : 'Like'} ({likesCount})
                   </button>
                   
                   <button
                     onClick={handleCopy}
-                    className="flex items-center px-4 py-2 bg-gray-700 text-gray-300 rounded-lg transition-all duration-300"
+                    className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium text-sm"
                   >
-                    <FaCopy className="mr-2" />
-                    {copied ? 'Link Copied!' : 'Copy Link'}
+                    {copied ? <FaCheck className="mr-1" /> : <FaCopy className="mr-1" />}
+                    {copied ? 'Copied!' : 'Share'}
                   </button>
                 </div>
                 
-                <div className="text-gray-400 text-sm mb-4">
-                  Owner:{" "}
-                  <a
-                    href={`https://etherscan.io/address/${nft.owner}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white underline"
-                  >
-                    {nft.owner}
-                  </a>
-                </div>
+                {/* Description */}
+                {nft.description && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
+                    <p className="text-gray-300 leading-relaxed text-sm lg:text-base">{nft.description}</p>
+                  </div>
+                )}
                 
-                <div className="text-gray-400 text-sm mb-4">
-                  Seller:{" "}
-                  <a
-                    href={`https://etherscan.io/address/${nft.seller}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white underline"
-                  >
-                    {nft.seller}
-                  </a>
-                </div>
+                {/* Attributes */}
+                {nft.attributes && nft.attributes.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-3">Attributes</h3>
+                    <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                      {nft.attributes.map((attr, index) => (
+                        <div key={index} className="bg-gray-700 rounded-lg p-2 lg:p-3">
+                          <div className="text-gray-400 text-xs lg:text-sm uppercase tracking-wide">
+                            {attr.trait_type}
+                          </div>
+                          <div className="text-white font-medium mt-1 text-sm lg:text-base">
+                            {attr.value}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
-                <div className="text-gray-400 text-sm mb-4">
-                  Category:{" "}
-                  <span className="text-white">{nft.category}</span>
-                </div>
-                
-                <div className="text-gray-400 text-sm mb-4">
-                  Description:{" "}
-                  <p className="text-white">{nft.description || 'No description available'}</p>
+                {/* Owner & Seller Info */}
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-white">Details</h3>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-700">
+                      <span className="text-gray-400 flex items-center text-sm">
+                        <FaUser className="mr-2" />
+                        Owner
+                      </span>
+                      <a
+                        href={`https://etherscan.io/address/${nft.owner}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
+                      >
+                        {`${nft.owner.slice(0, 6)}...${nft.owner.slice(-4)}`}
+                      </a>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-2 border-b border-gray-700">
+                      <span className="text-gray-400 flex items-center text-sm">
+                        <FaTags className="mr-2" />
+                        Seller
+                      </span>
+                      <a
+                        href={`https://etherscan.io/address/${nft.seller}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
+                      >
+                        {`${nft.seller.slice(0, 6)}...${nft.seller.slice(-4)}`}
+                      </a>
+                    </div>
+                    
+                    <div className="flex items-center justify-between py-2">
+                      <span className="text-gray-400 flex items-center text-sm">
+                        <FaClock className="mr-2" />
+                        Listed
+                      </span>
+                      <span className="text-white text-xs lg:text-sm">
+                        {new Date(nft.listedTimestamp * 1000).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

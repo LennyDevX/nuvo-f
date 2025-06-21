@@ -7,6 +7,7 @@ import { WalletContext } from '../../../../context/WalletContext';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
 import NFTErrorState from './NFTErrorState';
 import IPFSImage from '../../../ui/IPFSImage';
+import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 
 const NFTDetailModal = lazy(() => import('../../../modals/NFTDetailModal'));
@@ -235,7 +236,7 @@ const NFTCard = ({ nft, onClick }) => {
         <div className="flex justify-between items-center mt-2">
           <div className="flex items-center text-gray-300 text-xs">
             <FaTags className="mr-1" />
-            <span>{nft.category || 'Collectible'}</span>
+            <span>{normalizeCategory(nft.category) || 'Collectible'}</span>
           </div>
           
           <div className="flex items-center text-green-400 text-xs font-semibold">

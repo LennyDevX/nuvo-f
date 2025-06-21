@@ -56,46 +56,32 @@ export const calculateEffectiveApy = (baseApy, daysStaked) => {
  * @returns {Object} Analysis results including score and recommendations
  */
 export const analyzeStakingPortfolio = (stakingData) => {
-  const {
-    userDeposits = [],
-    stakingStats = { pendingRewards: '0', totalStaked: '0' },
-    totalWithdrawn = 0,
-    rewardsClaimed = 0,
-    stakingConstants = {
-      HOURLY_ROI: 0.0001, // 0.01% hourly
-      MAX_ROI: 1.25, // 125%
-      MAX_DEPOSITS_PER_USER: 300
-    }
-  } = stakingData;
 
-  const results = {
-    score: 0,
-    performanceSummary: "Analysis pending.",
-    recommendations: [],
-    metrics: {},
-  };
-
-  if (!userDeposits || userDeposits.length === 0) {
-    results.performanceSummary = "No staking activity found. Start staking to get an analysis.";
-    results.recommendations.push("Visit the Staking Dashboard to make your first deposit.");
+  if (!stakingData || !stakingData.userDeposits || stakingData.userDeposits.length === 0) {
+    const results = {
+      score: 0,
+      performanceSummary: "No staking activity found. Start staking to get an analysis.",
+      recommendations: ["Visit the Staking Dashboard to make your first deposit."],
+      metrics: {}
+    };
     return results;
   }
 
   try {
     // Parse values safely
-    const totalStaked = safeParseAmount(stakingStats.totalStaked);
-    const pendingRewards = safeParseAmount(stakingStats.pendingRewards);
-    const depositCount = userDeposits.length;
-    const safeWithdrawn = safeParseAmount(totalWithdrawn);
-    const safeClaimed = safeParseAmount(rewardsClaimed);
-    const hourlyROI = stakingConstants.HOURLY_ROI;
+    const totalStaked = safeParseAmount(stakingData.stakingStats.totalStaked);
+    const pendingRewards = safeParseAmount(stakingData.stakingStats.pendingRewards);
+    const depositCount = stakingData.userDeposits.length;
+    const safeWithdrawn = safeParseAmount(stakingData.totalWithdrawn);
+    const safeClaimed = safeParseAmount(stakingData.rewardsClaimed);
+    const hourlyROI = stakingData.stakingConstants.HOURLY_ROI;
     const dailyROI = hourlyROI * 24; // Calculate daily ROI from hourly
-    const maxDeposits = stakingConstants.MAX_DEPOSITS_PER_USER;
+    const maxDeposits = stakingData.stakingConstants.MAX_DEPOSITS_PER_USER;
 
     // Find first deposit timestamp
-    const firstDepositTimestamp = userDeposits.reduce((earliest, deposit) =>
+    const firstDepositTimestamp = stakingData.userDeposits.reduce((earliest, deposit) =>
       deposit.timestamp < earliest ? deposit.timestamp : earliest,
-      userDeposits[0].timestamp
+      stakingData.userDeposits[0].timestamp
     );
     const now = Math.floor(Date.now() / 1000);
     const totalTimeStakedSeconds = now - firstDepositTimestamp;
@@ -211,3 +197,4 @@ export const analyzeStakingPortfolio = (stakingData) => {
 
   return results;
 };
+    

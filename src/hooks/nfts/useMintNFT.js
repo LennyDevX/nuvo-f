@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
-import { uploadFileToIPFS, uploadJsonToIPFS, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
+import { uploadFileToIPFS, uploadJsonToIPFS, ipfsToHttp, mapCategoryToSpanish, normalizeCategory } from '../../utils/blockchain/blockchainUtils';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -54,9 +54,10 @@ export default function useMintNFT() {
       
       console.log("Using contract address:", validatedContractAddress);
       
-      // Traducir la categoría al español si existe en el mapa
-      const translatedCategory = categoryMap[category.toLowerCase()] || 'collectible';
-      console.log("Translated category:", translatedCategory);
+      // Normalize the category to English first, then translate to Spanish for contract
+      const normalizedCategory = normalizeCategory(category);
+      const translatedCategory = mapCategoryToSpanish(normalizedCategory);
+      console.log("Category flow:", category, "->", normalizedCategory, "->", translatedCategory);
       
       let imageUri;
       let metadataUri;
@@ -69,17 +70,17 @@ export default function useMintNFT() {
         imageUri = await uploadFileToIPFS(file);
         console.log("Image uploaded, URI:", imageUri);
         
-        // Crear metadatos
+        // Crear metadatos - store the normalized English category in metadata
         const metadata = {
           name,
           description,
           image: imageUri,
           attributes: [
-            { trait_type: 'Category', value: category }
+            { trait_type: 'Category', value: normalizedCategory } // Store English category in metadata
           ]
         };
         
-        console.log("Creating metadata");
+        console.log("Creating metadata with normalized category:", normalizedCategory);
         metadataUri = await uploadJsonToIPFS(metadata);
         console.log("Metadata uploaded, URI:", metadataUri);
       } catch (ipfsError) {
@@ -134,7 +135,7 @@ export default function useMintNFT() {
       
       console.log("Calling contract.createNFT with:", {
         metadataUri,
-        category: translatedCategory,
+        category: translatedCategory, // Spanish for contract
         royalty: royaltyValue
       });
       

@@ -1345,16 +1345,49 @@ export const decodeContractError = (errorData) => {
 };
 
 /**
+ * Normalize category from Spanish to English for consistent display
+ * @param {string} category - Category in any language
+ * @returns {string} - English category name
+ */
+export const normalizeCategory = (category) => {
+  const categoryNormalizationMap = {
+    // Spanish to English
+    'coleccionables': 'collectible',
+    'arte': 'artwork',
+    'fotografia': 'photography',
+    'musica': 'music',
+    'video': 'video',
+    
+    // English (keep as is)
+    'collectible': 'collectible',
+    'artwork': 'artwork',
+    'photography': 'photography',
+    'music': 'music',
+    'video': 'video',
+    
+    // Fallback variations
+    'collectibles': 'collectible',
+    'art': 'artwork',
+    'photo': 'photography',
+    'item': 'collectible',
+    'document': 'collectible'
+  };
+
+  const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
+  return categoryNormalizationMap[normalizedCategory] || 'collectible';
+};
+
+/**
  * Get valid categories for NFT listing
  * @returns {Array} - Array of valid category mappings
  */
 export const getValidCategories = () => {
   return [
-    { key: 'coleccionables', label: 'Coleccionables', english: 'collectible' },
-    { key: 'arte', label: 'Arte', english: 'artwork' },
-    { key: 'fotografia', label: 'Fotografía', english: 'photography' },
-    { key: 'musica', label: 'Música', english: 'music' },
-    { key: 'video', label: 'Video', english: 'video' }
+    { key: 'collectible', label: 'Collectibles', spanish: 'coleccionables' },
+    { key: 'artwork', label: 'Artwork', spanish: 'arte' },
+    { key: 'photography', label: 'Photography', spanish: 'fotografia' },
+    { key: 'music', label: 'Music', spanish: 'musica' },
+    { key: 'video', label: 'Video', spanish: 'video' }
   ];
 };
 
@@ -1569,4 +1602,3 @@ export async function selectBestIpfsGateway(cid) {
 }
 
 export const cardemodule = {}
- 

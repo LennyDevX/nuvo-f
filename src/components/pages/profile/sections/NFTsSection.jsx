@@ -5,13 +5,12 @@ import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
-import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
+import { getOptimizedImageUrl, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 import IPFSImage from '../../../ui/IPFSImage';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
 
-// Updated NFTCard to match NFTCollection style
 const NFTCard = React.memo(({ nft, index, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -73,7 +72,7 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
         <div className="flex justify-between items-center mt-2">
           <div className="flex items-center text-gray-300 text-xs">
             <FaTags className="mr-1" />
-            <span>ID: #{nft.tokenId}</span>
+            <span>{normalizeCategory(nft.category) || 'Collectible'}</span>
           </div>
           
           {nft.isForSale && nft.price && (

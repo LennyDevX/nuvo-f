@@ -11,6 +11,7 @@ import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
+import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 const NFTDashboard = () => {
   const { account } = useContext(WalletContext);
@@ -87,8 +88,8 @@ const NFTDashboard = () => {
       : "0.00",
     // Use the stable reference value for recent activity
     recentActivity: recentActivity,
-    // Calculate unique categories
-    uniqueCategories: new Set(nfts.map(nft => nft.category || 'collectible')).size
+    // Calculate unique categories using normalized categories
+    uniqueCategories: new Set(nfts.map(nft => normalizeCategory(nft.category || 'collectible'))).size
   }), [nfts, recentActivity]);
 
   // Handle filter changes
