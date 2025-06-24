@@ -1469,3 +1469,14 @@ export const getAvailableCategories = () => {
     { value: 'utility', label: 'Utility' }
   ];
 };
+
+/**
+ * Get optimized image URL with fallbacks and CSP compliance
+ * This is an alias for getCSPCompliantImageURL for backwards compatibility
+ * 
+ * @param {string} imageUrl - Original image URL
+ * @returns {string} - Optimized and CSP-compliant image URL
+ */
+export const getOptimizedImageUrl = (imageUrl) => {
+  return getCSPCompliantImageURL(imageUrl);
+};

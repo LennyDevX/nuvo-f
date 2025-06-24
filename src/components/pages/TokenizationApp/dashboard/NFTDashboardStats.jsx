@@ -7,10 +7,11 @@ import {
   FiLayers,
   FiActivity
 } from 'react-icons/fi';
+import { FaRedo } from 'react-icons/fa';
 import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 // Use memo to prevent unnecessary re-renders
-const NFTDashboardStats = memo(({ stats, isMobile, nfts = [] }) => {
+const NFTDashboardStats = memo(({ stats, isMobile, nfts = [], onRefresh }) => {
   // Use a more reliable mobile detection
   const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 1024);
   
@@ -147,34 +148,45 @@ const NFTDashboardStats = memo(({ stats, isMobile, nfts = [] }) => {
         <m.div 
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="nuvos-marketplace-stat-card-compact group"
+          className="nuvos-marketplace-stat-card-compact group col-span-2 md:col-span-4"
         >
-          <div className="flex items-center gap-3">
-            <div className="nuvos-marketplace-stat-icon-container-compact bg-blue-500/10 border-blue-500/20">
-              <FiActivity className="w-4 h-4 md:w-5 md:h-5 text-blue-400 transition-transform duration-200 group-hover:scale-110" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="nuvos-marketplace-stat-icon-container-compact bg-blue-500/10 border-blue-500/20">
+                <FiActivity className="w-4 h-4 md:w-5 md:h-5 text-blue-400 transition-transform duration-200 group-hover:scale-110" />
+              </div>
+              
+              <div className="nuvos-marketplace-stat-content-compact">
+                <div className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent nuvos-marketplace-stat-value-compact">
+                  Activity Summary
+                </div>
+                <div className="flex gap-4 mt-1">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Listed</p>
+                    <p className="text-sm font-semibold text-green-400">
+                      {totalNFTs > 0 ? Math.round((listedNFTs / totalNFTs) * 100) : 0}%
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Network</p>
+                    <p className="text-sm font-semibold text-purple-400">Polygon</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Types</p>
+                    <p className="text-sm font-semibold text-pink-400">{actualUniqueCategories}</p>
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <div className="nuvos-marketplace-stat-content-compact flex-1 min-w-0">
-              <div className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent nuvos-marketplace-stat-value-compact">
-                Activity Summary
-              </div>
-              <div className="flex gap-4 mt-1">
-                <div className="text-center">
-                  <p className="text-xs text-gray-400">Listed</p>
-                  <p className="text-sm font-semibold text-green-400">
-                    {totalNFTs > 0 ? Math.round((listedNFTs / totalNFTs) * 100) : 0}%
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-gray-400">Network</p>
-                  <p className="text-sm font-semibold text-purple-400">Polygon</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-xs text-gray-400">Types</p>
-                  <p className="text-sm font-semibold text-pink-400">{actualUniqueCategories}</p>
-                </div>
-              </div>
-            </div>
+            {/* Refresh button aligned to the right */}
+            <button 
+              onClick={onRefresh}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 hover:text-purple-200 rounded border border-purple-500/30 hover:border-purple-400/50 transition-all duration-200 flex-shrink-0"
+            >
+              <FaRedo className="text-[10px]" />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
           </div>
         </m.div>
       )}

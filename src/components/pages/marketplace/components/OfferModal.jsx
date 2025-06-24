@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiX, FiDollarSign } from 'react-icons/fi';
 
-const OfferModal = ({ isOpen, onClose, onSubmit, nft }) => {
+const OfferModal = ({ isOpen, onClose, onSubmit, nft, loading = false }) => {
   const [offerAmount, setOfferAmount] = useState('');
   const [expirationDays, setExpirationDays] = useState(7);
 
@@ -17,15 +17,10 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div className={`fixed inset-0 z-50 ${isOpen ? 'flex' : 'hidden'} items-center justify-center p-4`}>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       
-      {/* Modal */}
-      <div className="relative nuvos-filters-container w-full max-w-md">
+      <div className="relative bg-gray-800 rounded-lg p-6 w-full max-w-md border border-purple-500/30">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-white">Make an Offer</h3>
@@ -88,20 +83,28 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft }) => {
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-3 bg-gray-600/80 hover:bg-gray-600 text-white font-semibold rounded-xl transition-colors border border-gray-500/30"
+              disabled={loading}
+              className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={!offerAmount || parseFloat(offerAmount) <= 0}
-              className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-primary to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 border border-purple-primary/30"
+              disabled={!offerAmount || loading}
+              className="flex-1 px-4 py-2 bg-nuvo-gradient-button text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Make Offer
+              {loading ? (
+                <>
+                  <LoadingSpinner size="small" variant="dots" />
+                  <span>Making Offer...</span>
+                </>
+              ) : (
+                'Make Offer'
+              )}
             </button>
           </div>
         </form>

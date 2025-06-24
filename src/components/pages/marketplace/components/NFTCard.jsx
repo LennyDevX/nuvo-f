@@ -2,13 +2,17 @@ import React, { useState, useContext, useCallback } from 'react';
 import { FiHeart, FiTag, FiDollarSign, FiUser, FiClock, FiCheck } from 'react-icons/fi';
 import IPFSImage from '../../../ui/IPFSImage';
 import OfferModal from './OfferModal';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
 import { WalletContext } from '../../../../context/WalletContext';
 import { imageCache } from '../../../../utils/blockchain/imageCache';
 import { getCategoryDisplayName } from '../../../../utils/blockchain/blockchainUtils';
 
-const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
+const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller, refreshing = false }) => {
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [offerLoading, setOfferLoading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
   const { account } = useContext(WalletContext);
 
   // Check if current user is the owner/seller
@@ -17,13 +21,23 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
     nft.seller?.toLowerCase() === account.toLowerCase()
   );
 
-  const handleBuy = () => {
-    onBuy(nft.tokenId, nft.price);
+  const handleBuy = async () => {
+    setBuyLoading(true);
+    try {
+      await onBuy(nft.tokenId, nft.price);
+    } finally {
+      setBuyLoading(false);
+    }
   };
 
-  const handleMakeOffer = (amount, days) => {
-    onMakeOffer(nft.tokenId, amount, days);
-    setShowOfferModal(false);
+  const handleMakeOffer = async (amount, days) => {
+    setOfferLoading(true);
+    try {
+      await onMakeOffer(nft.tokenId, amount, days);
+      setShowOfferModal(false);
+    } finally {
+      setOfferLoading(false);
+    }
   };
 
   const handleLike = () => {
@@ -56,7 +70,14 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
 
   return (
     <>
-      <div className="nft-card-pro group">
+      <div className={`nft-card-pro group relative ${refreshing ? 'opacity-75' : ''}`}>
+        {/* Refresh overlay for individual cards */}
+        {refreshing && (
+          <div className="absolute inset-0 bg-gray-900/30 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-lg">
+            <LoadingSpinner size="small" variant="dots" className="text-purple-400" />
+          </div>
+        )}
+
         {/* Image using IPFSImage component with consistent sizing */}
         <div className="nft-card-pro-image-container">
           <IPFSImage 
@@ -65,7 +86,17 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
             className="nft-card-pro-image"
             placeholderSrc="/NFT-placeholder.webp"
             loading="lazy"
+            onLoadStart={() => setImageLoading(true)}
+            onLoad={() => setImageLoading(false)}
+            onError={() => setImageLoading(false)}
           />
+          
+          {/* Image loading overlay */}
+          {imageLoading && (
+            <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center rounded-t-lg">
+              <LoadingSpinner size="small" variant="pulse" className="text-purple-400" />
+            </div>
+          )}
         </div>
 
         
@@ -136,19 +167,39 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
             <div className="nft-card-pro-actions">
               <button
                 onClick={handleBuy}
-                className="btn-nuvo-base bg-nuvo-gradient-button text-white font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:opacity-90"
+                disabled={buyLoading || refreshing}
+                className="btn-nuvo-base bg-nuvo-gradient-button text-white font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:opacity-90 disabled:opacity-50"
                 aria-label={`Buy NFT ${nft.metadata?.name || nft.tokenId} for ${formatPrice(nft.price)} POL`}
               >
-                <FiTag className="w-3 h-3" />
-                Buy
+                {buyLoading ? (
+                  <>
+                    <LoadingSpinner size="small" variant="dots" />
+                    <span className="ml-1">Buying...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiTag className="w-3 h-3" />
+                    Buy
+                  </>
+                )}
               </button>
               <button
                 onClick={() => setShowOfferModal(true)}
-                className="btn-nuvo-base btn-nuvo-outline text-purple-400 font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:bg-purple-500/10"
+                disabled={offerLoading || refreshing}
+                className="btn-nuvo-base btn-nuvo-outline text-purple-400 font-semibold rounded-lg px-3 py-2 flex items-center justify-center gap-2 flex-1 transition-all hover:bg-purple-500/10 disabled:opacity-50"
                 aria-label={`Make offer for NFT ${nft.metadata?.name || nft.tokenId}`}
               >
-                <FiDollarSign className="w-3 h-3" />
-                Offer
+                {offerLoading ? (
+                  <>
+                    <LoadingSpinner size="small" variant="dots" />
+                    <span className="ml-1">Offering...</span>
+                  </>
+                ) : (
+                  <>
+                    <FiDollarSign className="w-3 h-3" />
+                    Offer
+                  </>
+                )}
               </button>
             </div>
           ) : (
@@ -172,6 +223,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
         onClose={() => setShowOfferModal(false)}
         onSubmit={handleMakeOffer}
         nft={nft}
+        loading={offerLoading}
       />
     </>
   );

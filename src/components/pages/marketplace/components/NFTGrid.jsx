@@ -3,7 +3,7 @@ import NFTCard from './NFTCard';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
 
 // Añade la prop loading
-const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading }) => {
+const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading, refreshing = false }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -18,6 +18,14 @@ const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading }) => {
     );
   }
 
+  if (!nfts || nfts.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-400">No NFTs to display</p>
+      </div>
+    );
+  }
+
   return (
     <div className="nft-grid-pro">
       {nfts.map((nft) => (
@@ -28,6 +36,7 @@ const NFTGrid = ({ nfts, onBuy, onMakeOffer, currentAccount, loading }) => {
           onMakeOffer={onMakeOffer}
           isOwner={nft.owner?.toLowerCase() === currentAccount?.toLowerCase()}
           isSeller={nft.seller?.toLowerCase() === currentAccount?.toLowerCase()}
+          refreshing={refreshing}
         />
       ))}
     </div>

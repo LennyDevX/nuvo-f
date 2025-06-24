@@ -206,7 +206,7 @@ const NFTDashboard = () => {
       <SpaceBackground customClass="" />
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="flex flex-col space-y-6">
-          {/* Dashboard Header */}
+          {/* Dashboard Header - without refresh button */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">
@@ -225,18 +225,11 @@ const NFTDashboard = () => {
               >
                 <FaPlus className="text-sm" /> Mint NFTs
               </Link>
-              
-              <button 
-                onClick={handleRefreshNFTs} 
-                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
-              >
-                <FaRedo className="text-sm" /> Refresh NFTs
-              </button>
             </div>
           </div>
           
-          {/* Stats Overview */}
-          <NFTDashboardStats stats={stats} isMobile={true} nfts={nfts} />
+          {/* Stats Overview - with refresh button passed as prop */}
+          <NFTDashboardStats stats={stats} isMobile={true} nfts={nfts} onRefresh={handleRefreshNFTs} />
           
           {/* Mobile Filters Toggle */}
           <div className="lg:hidden">

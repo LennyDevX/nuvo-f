@@ -24,6 +24,7 @@ function MarketplaceDashboard(props) {
   const [filteredNfts, setFilteredNfts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [backgroundRefreshing, setBackgroundRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); // Add refreshing state for button
   const [stats, setStats] = useState({
     totalItems: 0,
     totalVolume: '0',
@@ -530,9 +531,14 @@ function MarketplaceDashboard(props) {
   };
 
   // Manual refresh function
-  const handleManualRefresh = useCallback(() => {
+  const handleManualRefresh = useCallback(async () => {
+    setRefreshing(true);
     marketplaceCache.invalidateMarketplace(TOKENIZATION_ADDRESS);
-    fetchMarketplaceData(true);
+    try {
+      await fetchMarketplaceData(true);
+    } finally {
+      setRefreshing(false);
+    }
   }, [fetchMarketplaceData]);
 
   // Effect: Load marketplace data with throttling
@@ -588,7 +594,7 @@ function MarketplaceDashboard(props) {
       <SpaceBackground customClass="" />
       <div className="container mx-auto px-3 md:px-4 py-6 md:py-8 relative z-10">
         <div className="flex flex-col space-y-6 md:space-y-8">
-          {/* Dashboard Header - with cache status */}
+          {/* Dashboard Header - without refresh button */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div className="text-center md:text-left">
               <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 tracking-tight">
@@ -598,16 +604,6 @@ function MarketplaceDashboard(props) {
                 )}
               </h1>
               <p className="text-gray-300 text-base md:text-lg">Discover, collect, and trade unique digital assets</p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
-              <button 
-                onClick={handleManualRefresh}
-                disabled={loading || fetchingRef.current}
-                className="flex items-center justify-center gap-2 px-4 md:px-6 py-3 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 text-sm md:text-base disabled:opacity-50"
-              >
-                🔄 {loading ? 'Loading...' : 'Refresh'}
-              </button>
             </div>
           </div>
           
@@ -640,12 +636,12 @@ function MarketplaceDashboard(props) {
               </div>
             </div>
             
-            {/* NFT Grid Container */}
+            {/* Results Area */}
             <div className="flex-1 min-w-0">
-              {/* Results Header - Moved BEFORE content */}
+              {/* Results Header - with refresh button */}
               {!loading && (
                 <div className="nuvos-marketplace-container mb-4 md:mb-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="nuvos-marketplace-stat-content-compact">
                       <h2 className="text-lg md:text-xl font-semibold text-white mb-1 nuvos-marketplace-stat-value-compact">
                         {filteredNfts.length} NFT{filteredNfts.length !== 1 ? 's' : ''} Found
@@ -654,58 +650,94 @@ function MarketplaceDashboard(props) {
                         Showing {Math.min(20, filteredNfts.length)} of {filteredNfts.length} results
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                      <span className="text-xs md:text-sm text-gray-500 font-medium">
-                        Page 1 of {Math.ceil(filteredNfts.length / 20)}
-                      </span>
-                      {Math.ceil(filteredNfts.length / 20) > 1 && (
-                        <div className="flex items-center gap-1 ml-2">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
-                          <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
-                        </div>
-                      )}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs md:text-sm text-gray-500 font-medium">
+                          Page 1 of {Math.ceil(filteredNfts.length / 20)}
+                        </span>
+                        {Math.ceil(filteredNfts.length / 20) > 1 && (
+                          <div className="flex items-center gap-1 ml-2">
+                            <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+                            <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                      <button 
+                        onClick={handleManualRefresh}
+                        disabled={loading || fetchingRef.current || refreshing}
+                        className="flex items-center justify-center gap-2 px-3 md:px-4 py-2 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 text-xs md:text-sm disabled:opacity-50 whitespace-nowrap relative"
+                      >
+                        {refreshing ? (
+                          <>
+                            <LoadingSpinner size="small" variant="dots" className="text-purple-400" />
+                            <span className="ml-1">Refreshing...</span>
+                          </>
+                        ) : (
+                          <>
+                            🔄 Refresh
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Content */}
-              {loading ? (
-                <div className="flex flex-col justify-center items-center py-20 space-y-6">
-                  <LoadingSpinner 
-                    size="xl" 
-                    variant="orbit"
-                    text="Loading Marketplace"
-                    showDots={true}
-                    className="text-purple-400"
-                  />
-                  <div className="text-center max-w-md">
-                    <p className="text-white font-medium mb-2">Discovering NFTs...</p>
-                    <p className="text-gray-400 text-sm">Fetching marketplace data from blockchain</p>
+              {/* Content with refresh overlay */}
+              <div className="relative">
+                {/* Refresh overlay - shown when refreshing but not initial loading */}
+                {refreshing && !loading && (
+                  <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+                    <div className="bg-gray-800/90 p-4 rounded-lg border border-purple-500/30">
+                      <LoadingSpinner 
+                        size="medium" 
+                        variant="orbit"
+                        text="Refreshing Marketplace"
+                        showDots={true}
+                        className="text-purple-400"
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : filteredNfts.length === 0 ? (
-                <EmptyState 
-                  message={nfts.length === 0 ? "No NFTs listed yet" : "No NFTs match your filters"}
-                  showFilters={nfts.length > 0}
-                />
-              ) : (
-                <NFTGrid 
-                  nfts={filteredNfts.slice(0, 20)}
-                  onBuy={buyNFT}
-                  onMakeOffer={makeOffer}
-                  currentAccount={account}
-                />
-              )}
-            </div>
-            
+                )}
+
+                {/* Main Content */}
+                {loading ? (
+                  <div className="flex flex-col justify-center items-center py-20 space-y-6">
+                    <LoadingSpinner 
+                      size="xl" 
+                      variant="orbit"
+                      text="Loading Marketplace"
+                      showDots={true}
+                      className="text-purple-400"
+                    />
+                    <div className="text-center max-w-md">
+                      <p className="text-white font-medium mb-2">Discovering NFTs...</p>
+                      <p className="text-gray-400 text-sm">Fetching marketplace data from blockchain</p>
+                    </div>
+                  </div>
+                ) : filteredNfts.length === 0 ? (
+                  <EmptyState 
+                    message={nfts.length === 0 ? "No NFTs listed yet" : "No NFTs match your filters"}
+                    showFilters={nfts.length > 0}
+                  />
+                ) : (
+                  <NFTGrid 
+                    nfts={filteredNfts.slice(0, 20)}
+                    onBuy={buyNFT}
+                    onMakeOffer={makeOffer}
+                    currentAccount={account}
+                    refreshing={refreshing}
+                  />
+                )}
+              </div>
+            </div>    
           </div>
-          
         </div>
       </div>
     </div>
   );
-};
+  
+}
 
 export default MarketplaceDashboard;
