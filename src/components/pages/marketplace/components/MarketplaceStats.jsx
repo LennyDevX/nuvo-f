@@ -1,54 +1,70 @@
 import React from 'react';
-import { FiTrendingUp, FiUsers, FiPackage, FiDollarSign } from 'react-icons/fi';
+import { FaEthereum, FaTag, FaUsers, FaCube } from 'react-icons/fa';
 
 const MarketplaceStats = ({ stats }) => {
-  const statItems = [
-    {
-      icon: FiPackage,
-      label: 'Total Items',
-      value: stats.totalItems.toLocaleString(),
-      color: 'text-purple-400'
-    },
-    {
-      icon: FiDollarSign,
-      label: 'Total Volume',
-      value: `${stats.totalVolume} POL`,
-      color: 'text-green-400'
-    },
-    {
-      icon: FiTrendingUp,
-      label: 'Floor Price',
-      value: `${stats.floorPrice} POL`,
-      color: 'text-blue-400'
-    },
-    {
-      icon: FiUsers,
-      label: 'Owners',
-      value: stats.owners.toLocaleString(),
-      color: 'text-pink-400'
-    }
-  ];
-
   return (
-    <div className="nuvos-marketplace-stats-grid">
-      {statItems.map((item, index) => (
-        <div
-          key={index}
-          className="nuvos-marketplace-stat-card"
-        >
-          <div className="nuvos-marketplace-stat-icon">
-            <item.icon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+    <div className="nuvos-marketplace-stats-container">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {/* Total Items */}
+        <div className="nuvos-marketplace-stat-card-compact">
+          <div className="nuvos-marketplace-stat-icon-container-compact">
+            <FaCube className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
           </div>
-          <div className="nuvos-marketplace-stat-content">
-            <div className="nuvos-marketplace-stat-value">
-              {item.value}
+          <div className="nuvos-marketplace-stat-content-compact">
+            <div className="nuvos-marketplace-stat-value-compact">
+              {stats.totalItems}
             </div>
-            <div className="nuvos-marketplace-stat-label">
-              {item.label}
+            <div className="nuvos-marketplace-stat-label-compact">
+              Listed NFTs
             </div>
           </div>
         </div>
-      ))}
+
+        {/* Total Volume */}
+        <div className="nuvos-marketplace-stat-card-compact">
+          <div className="nuvos-marketplace-stat-icon-container-compact">
+            <FaEthereum className="w-4 h-4 md:w-5 md:h-5 text-blue-400" />
+          </div>
+          <div className="nuvos-marketplace-stat-content-compact">
+            <div className="nuvos-marketplace-stat-value-compact">
+              {stats.totalVolume} POL
+            </div>
+            <div className="nuvos-marketplace-stat-label-compact">
+              Total Volume
+            </div>
+          </div>
+        </div>
+
+        {/* Floor Price */}
+        <div className="nuvos-marketplace-stat-card-compact">
+          <div className="nuvos-marketplace-stat-icon-container-compact">
+            <FaTag className="w-4 h-4 md:w-5 md:h-5 text-green-400" />
+          </div>
+          <div className="nuvos-marketplace-stat-content-compact">
+            <div className="nuvos-marketplace-stat-value-compact">
+              {stats.floorPrice} POL
+            </div>
+            <div className="nuvos-marketplace-stat-label-compact">
+              Floor Price
+            </div>
+          </div>
+        </div>
+
+        {/* Unique Owners */}
+        <div className="nuvos-marketplace-stat-card-compact">
+          <div className="nuvos-marketplace-stat-icon-container-compact">
+            <FaUsers className="w-4 h-4 md:w-5 md:h-5 text-pink-400" />
+          </div>
+          <div className="nuvos-marketplace-stat-content-compact">
+            <div className="nuvos-marketplace-stat-value-compact">
+              {stats.owners}
+            </div>
+            <div className="nuvos-marketplace-stat-label-compact">
+              Owners
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

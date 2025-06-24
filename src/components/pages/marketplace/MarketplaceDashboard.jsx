@@ -11,6 +11,7 @@ import SpaceBackground from '../../effects/SpaceBackground';
 import contractABI from '../../../Abi/TokenizationApp.json';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { marketplaceCache } from '../../../utils/cache/MarketplaceCache';
+import { normalizeCategory, getCategoryDisplayName, getAvailableCategories } from '../../../utils/blockchain/blockchainUtils';
 
 const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -151,7 +152,7 @@ function MarketplaceDashboard(props) {
       const cachedStats = marketplaceCache.getMarketplaceStats(TOKENIZATION_ADDRESS);
       
       if (cachedListings && cachedStats) {
-        console.log('Using cached marketplace data');
+        console.log('Using cached marketplace data', { listings: cachedListings.length, stats: cachedStats });
         setNfts(cachedListings);
         setFilteredNfts(cachedListings);
         setStats(cachedStats);
@@ -177,6 +178,16 @@ function MarketplaceDashboard(props) {
       const contract = getContract();
       if (!contract) {
         console.warn('No contract available');
+        setStats({
+          totalItems: 0,
+          totalVolume: '0',
+          floorPrice: '0',
+          owners: 0
+        });
+        setNfts([]);
+        setFilteredNfts([]);
+        setLoading(false);
+        fetchingRef.current = false;
         return;
       }
 
@@ -222,21 +233,24 @@ function MarketplaceDashboard(props) {
               }
 
               const tokenData = await contract.getListedToken(id);
+              console.log(`Token ${id} data:`, tokenData);
+              
               const listingData = {
                 tokenId: id,
                 tokenData,
-                isListed: tokenData[4],
+                isListed: tokenData[4], // Check the isListed boolean
                 checkedAt: Date.now()
               };
               
               // Cache the result
               marketplaceCache.setTokenListing(TOKENIZATION_ADDRESS, id, listingData);
               
-              return tokenData[4] ? listingData : null;
+              return tokenData[4] ? listingData : null; // Only return if actually listed
             } catch (error) {
               if (error.message.includes('TokenDoesNotExist')) {
                 return 'END_OF_TOKENS';
               }
+              console.warn(`Error checking token ${id}:`, error.message);
               throw error;
             }
           });
@@ -264,16 +278,17 @@ function MarketplaceDashboard(props) {
                       price: ethers.formatEther(tokenData[3]),
                       isListed: tokenData[4],
                       listedAt: tokenData[5].toString(),
-                      category: tokenData[6],
+                      category: normalizeCategory(tokenData[6]), // Normalize category here
+                      originalCategory: tokenData[6], // Keep original for debugging
                       tokenURI,
                       metadata,
-                      image: metadata.image, // This should now have the correct URL
+                      image: metadata.image,
                       name: metadata.name,
                       description: metadata.description
                     };
                     
                     listedNfts.push(nftData);
-                    console.log(`Added NFT ${result.value.tokenId} to marketplace`);
+                    console.log(`Added NFT ${result.value.tokenId} to marketplace with category: ${nftData.category}, price: ${nftData.price}`);
                   } catch (metadataError) {
                     console.warn(`Error fetching metadata for token ${result.value.tokenId}:`, metadataError);
                   }
@@ -310,6 +325,7 @@ function MarketplaceDashboard(props) {
       
       // Calculate and cache stats
       const calculatedStats = calculateStatsOptimized(listedNfts);
+      console.log('Calculated stats:', calculatedStats);
       marketplaceCache.setMarketplaceStats(TOKENIZATION_ADDRESS, calculatedStats);
       setStats(calculatedStats);
       
@@ -320,6 +336,13 @@ function MarketplaceDashboard(props) {
       if (!forceRefresh) {
         showToast('Error loading marketplace data', 'error');
       }
+      // Set empty stats on error
+      setStats({
+        totalItems: 0,
+        totalVolume: '0',
+        floorPrice: '0',
+        owners: 0
+      });
     } finally {
       setLoading(false);
       fetchingRef.current = false;
@@ -328,7 +351,9 @@ function MarketplaceDashboard(props) {
 
   // Optimized stats calculation
   const calculateStatsOptimized = (nftList) => {
-    if (nftList.length === 0) {
+    console.log('Calculating stats for NFTs:', nftList.length);
+    
+    if (!nftList || nftList.length === 0) {
       return {
         totalItems: 0,
         totalVolume: '0',
@@ -337,35 +362,61 @@ function MarketplaceDashboard(props) {
       };
     }
 
-    const prices = nftList.map(nft => parseFloat(nft.price)).filter(price => price > 0);
+    const prices = nftList
+      .map(nft => parseFloat(nft.price))
+      .filter(price => !isNaN(price) && price > 0);
+    
+    console.log('Valid prices found:', prices);
+    
     const totalVolume = prices.reduce((sum, price) => sum + price, 0);
     const floorPrice = prices.length > 0 ? Math.min(...prices) : 0;
-    const uniqueOwners = new Set(nftList.map(nft => nft.owner)).size;
+    const uniqueOwners = new Set(nftList.map(nft => nft.owner).filter(owner => owner)).size;
 
-    return {
+    const stats = {
       totalItems: nftList.length,
       totalVolume: totalVolume.toFixed(2),
       floorPrice: floorPrice.toFixed(4),
       owners: uniqueOwners
     };
+    
+    console.log('Final calculated stats:', stats);
+    return stats;
   };
 
   // Apply filters to NFTs
   useEffect(() => {
     let filtered = [...nfts];
+    
+    console.log('Applying filters:', filters);
+    console.log('Available NFTs:', nfts.map(nft => ({ id: nft.tokenId, category: nft.category, originalCategory: nft.originalCategory })));
 
-    // Category filter
+    // Category filter with improved matching
     if (filters.category !== 'all') {
-      filtered = filtered.filter(nft => 
-        nft.category.toLowerCase() === filters.category.toLowerCase()
-      );
+      const targetCategory = normalizeCategory(filters.category);
+      console.log('Filtering by category:', targetCategory);
+      
+      filtered = filtered.filter(nft => {
+        const nftCategory = normalizeCategory(nft.category);
+        const matches = nftCategory === targetCategory;
+        
+        if (!matches) {
+          console.log(`NFT ${nft.tokenId} category "${nftCategory}" doesn't match filter "${targetCategory}"`);
+        }
+        
+        return matches;
+      });
+      
+      console.log(`Filtered to ${filtered.length} NFTs for category "${targetCategory}"`);
     }
 
     // Search filter
     if (filters.searchTerm) {
+      const searchTerm = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(nft => 
-        nft.metadata?.name?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        nft.metadata?.description?.toLowerCase().includes(filters.searchTerm.toLowerCase())
+        nft.metadata?.name?.toLowerCase().includes(searchTerm) ||
+        nft.metadata?.description?.toLowerCase().includes(searchTerm) ||
+        nft.name?.toLowerCase().includes(searchTerm) ||
+        nft.description?.toLowerCase().includes(searchTerm)
       );
     }
 
@@ -397,6 +448,7 @@ function MarketplaceDashboard(props) {
         break;
     }
 
+    console.log('Final filtered NFTs:', filtered.length);
     setFilteredNfts(filtered);
   }, [nfts, filters]);
 
@@ -512,6 +564,9 @@ function MarketplaceDashboard(props) {
     }
   }, [walletConnected, account, provider, fetchMarketplaceData]);
 
+  // Get available categories for filters
+  const availableCategories = getAvailableCategories().map(cat => cat.value);
+
   // Conditionally render the not connected message
   if (!walletConnected || !account || !provider) {
     return (
@@ -580,29 +635,40 @@ function MarketplaceDashboard(props) {
                 <MarketplaceFilters 
                   filters={filters} 
                   setFilters={setFilters}
-                  categories={['all', 'arte', 'fotografia', 'musica', 'video', 'coleccionables']}
+                  categories={availableCategories}
                 />
               </div>
             </div>
             
             {/* NFT Grid Container */}
             <div className="flex-1 min-w-0">
-              {/* Results Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 nuvos-marketplace-results-panel">
-                <div>
-                  <h2 className="text-lg md:text-xl font-semibold text-white mb-1">
-                    {filteredNfts.length} NFT{filteredNfts.length !== 1 ? 's' : ''} Found
-                  </h2>
-                  <p className="text-gray-400 text-xs md:text-sm">
-                    Showing {Math.min(20, filteredNfts.length)} of {filteredNfts.length} results
-                  </p>
-                </div>
-                <div className="flex items-center gap-4 mt-2 sm:mt-0">
-                  <div className="text-xs md:text-sm text-gray-400">
-                    Page 1 of {Math.ceil(filteredNfts.length / 20)}
+              {/* Results Header - Moved BEFORE content */}
+              {!loading && (
+                <div className="nuvos-marketplace-container mb-4 md:mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                    <div className="nuvos-marketplace-stat-content-compact">
+                      <h2 className="text-lg md:text-xl font-semibold text-white mb-1 nuvos-marketplace-stat-value-compact">
+                        {filteredNfts.length} NFT{filteredNfts.length !== 1 ? 's' : ''} Found
+                      </h2>
+                      <p className="text-gray-400 text-xs md:text-sm nuvos-marketplace-stat-label-compact">
+                        Showing {Math.min(20, filteredNfts.length)} of {filteredNfts.length} results
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                      <span className="text-xs md:text-sm text-gray-500 font-medium">
+                        Page 1 of {Math.ceil(filteredNfts.length / 20)}
+                      </span>
+                      {Math.ceil(filteredNfts.length / 20) > 1 && (
+                        <div className="flex items-center gap-1 ml-2">
+                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+                          <div className="w-1.5 h-1.5 bg-gray-600 rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Content */}
               {loading ? (
@@ -617,7 +683,6 @@ function MarketplaceDashboard(props) {
                   <div className="text-center max-w-md">
                     <p className="text-white font-medium mb-2">Discovering NFTs...</p>
                     <p className="text-gray-400 text-sm">Fetching marketplace data from blockchain</p>
-                    
                   </div>
                 </div>
               ) : filteredNfts.length === 0 ? (
@@ -634,7 +699,9 @@ function MarketplaceDashboard(props) {
                 />
               )}
             </div>
+            
           </div>
+          
         </div>
       </div>
     </div>

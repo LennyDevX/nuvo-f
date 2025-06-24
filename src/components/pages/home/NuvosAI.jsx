@@ -244,7 +244,6 @@ const NuvosAI = () => {
               <span className="block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">
                 AI Assistant
               </span>
-              <span className="block text-white">NUVOS AI</span>
             </h2>
             
             <p className="text-xl text-gray-200 max-w-xl leading-relaxed">

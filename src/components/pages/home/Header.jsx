@@ -250,7 +250,7 @@ const Header = ({ openUpdatesModal }) => {
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
               <span className="inline-block pb-2">The Future  is</span>
               <br />
-              <span className="text-transparent gradient-text">Blockchain</span>
+              <span className=" text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">Blockchain</span>
             </h2>
 
             <p className="text-gray-300 text-lg leading-relaxed">

@@ -1155,6 +1155,7 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
     return `ipfs://${result.IpfsHash}`;
   } catch (error) {
     console.error("Error uploading to IPFS:", error);
+    // Re-throw error to be handled by caller
     throw error;
   }
 };
@@ -1345,260 +1346,126 @@ export const decodeContractError = (errorData) => {
 };
 
 /**
- * Normalize category from Spanish to English for consistent display
- * @param {string} category - Category in any language
- * @returns {string} - English category name
- */
-export const normalizeCategory = (category) => {
-  const categoryNormalizationMap = {
-    // Spanish to English
-    'coleccionables': 'collectible',
-    'arte': 'artwork',
-    'fotografia': 'photography',
-    'musica': 'music',
-    'video': 'video',
-    
-    // English (keep as is)
-    'collectible': 'collectible',
-    'artwork': 'artwork',
-    'photography': 'photography',
-    'music': 'music',
-    'video': 'video',
-    
-    // Fallback variations
-    'collectibles': 'collectible',
-    'art': 'artwork',
-    'photo': 'photography',
-    'item': 'collectible',
-    'document': 'collectible'
-  };
-
-  const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-  return categoryNormalizationMap[normalizedCategory] || 'collectible';
-};
-
-/**
- * Get valid categories for NFT listing
- * @returns {Array} - Array of valid category mappings
- */
-export const getValidCategories = () => {
-  return [
-    { key: 'collectible', label: 'Collectibles', spanish: 'coleccionables' },
-    { key: 'artwork', label: 'Artwork', spanish: 'arte' },
-    { key: 'photography', label: 'Photography', spanish: 'fotografia' },
-    { key: 'music', label: 'Music', spanish: 'musica' },
-    { key: 'video', label: 'Video', spanish: 'video' }
-  ];
-};
-
-/**
- * Map English category to Spanish for contract
- * @param {string} category - English category name
- * @returns {string} - Spanish category name expected by contract
+ * Mapping functions for categories
  */
 export const mapCategoryToSpanish = (category) => {
   const categoryMap = {
     'collectible': 'coleccionables',
-    'coleccionables': 'coleccionables',
-    'artwork': 'arte',
-    'arte': 'arte',
-    'photography': 'fotografia',
-    'fotografia': 'fotografia',
-    'music': 'musica',
-    'musica': 'musica',
+    'artwork': 'arte', 
+    'item': 'artículo',
+    'document': 'documento',
+    'realestate': 'inmuebles',
+    'art': 'arte',
+    'photo': 'fotografía',
+    'music': 'música',
     'video': 'video'
   };
-
-  const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-  return categoryMap[normalizedCategory] || 'coleccionables';
+  
+  return categoryMap[category?.toLowerCase()] || category || 'coleccionables';
 };
 
-/**
- * Validate NFT listing parameters
- * @param {Object} params - Listing parameters
- * @returns {Object} - Validation result
- */
-export const validateNFTListingParams = (params) => {
-  const { tokenId, price, category } = params;
-  const errors = [];
-
-  // Validate tokenId
-  if (!tokenId) {
-    errors.push('Token ID is required');
-  } else {
-    try {
-      const id = BigInt(tokenId);
-      if (id < 0) {
-        errors.push('Token ID must be positive');
-      }
-    } catch (e) {
-      errors.push('Invalid Token ID format');
-    }
-  }
-
-  // Validate price
-  if (!price) {
-    errors.push('Price is required');
-  } else {
-    const priceNum = parseFloat(price);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      errors.push('Price must be a positive number');
-    } else if (priceNum < 0.001) {
-      errors.push('Minimum price is 0.001 MATIC');
-    }
-  }
-
-  // Validate category
-  const validCategories = ['coleccionables', 'arte', 'fotografia', 'musica', 'video'];
-  if (category && !validCategories.includes(category.toLowerCase())) {
-    errors.push('Invalid category');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
+export const mapCategoryToEnglish = (category) => {
+  const categoryMap = {
+    'coleccionables': 'collectible',
+    'arte': 'art',
+    'artículo': 'item', 
+    'documento': 'document',
+    'inmuebles': 'realestate',
+    'fotografía': 'photo',
+    'música': 'music',
+    'video': 'video'
   };
+  
+  return categoryMap[category?.toLowerCase()] || category || 'collectible';
 };
 
-/**
- * Format contract error messages for user display
- * @param {Error} error - Contract error
- * @returns {string} - User-friendly error message
- */
-export const formatContractError = (error) => {
-  if (!error) return 'Unknown error occurred';
-
-  const message = error.message || error.toString();
-
-  // Common contract error patterns
-  if (message.includes('user rejected')) {
-    return 'Transaction was rejected by user';
-  }
+// Category normalization mapping - ensure all categories are in English
+const CATEGORY_MAPPING = {
+  // English (keep as is)
+  'collectible': 'collectible',
+  'art': 'art',
+  'photo': 'photo',
+  'music': 'music',
+  'video': 'video',
+  'document': 'document',
+  'game': 'game',
+  'utility': 'utility',
   
-  if (message.includes('insufficient funds')) {
-    return 'Insufficient funds for gas fees';
-  }
+  // Spanish to English mapping
+  'coleccionable': 'collectible',
+  'arte': 'art',
+  'foto': 'photo',
+  'musica': 'music',
+  'música': 'music',
+  'video': 'video',
+  'documento': 'document',
+  'juego': 'game',
+  'utilidad': 'utility',
   
-  if (message.includes('TokenNotForSale')) {
-    return 'This NFT is not currently for sale';
-  }
+  // Common variations
+  'collectibles': 'collectible',
+  'artwork': 'art',
+  'photograph': 'photo',
+  'photography': 'photo',
+  'videos': 'video',
+  'documents': 'document',
+  'gaming': 'game',
+  'games': 'game',
   
-  if (message.includes('Unauthorized')) {
-    return 'You are not authorized to perform this action';
-  }
-  
-  if (message.includes('TokenDoesNotExist')) {
-    return 'This NFT does not exist';
-  }
-  
-  if (message.includes('execution reverted')) {
-    return 'Transaction failed - contract requirements not met';
-  }
-  
-  if (message.includes('gas')) {
-    return 'Transaction failed due to gas issues';
-  }
-
-  // Return the original message if no pattern matches
-  return message;
+  // Default fallback
+  'other': 'collectible',
+  'others': 'collectible',
+  'misc': 'collectible',
+  'miscellaneous': 'collectible'
 };
 
-export const getOptimizedImageUrl = (imageUrl, options = {}) => {
-  const { 
-    preferredGateway = 'https://gateway.pinata.cloud/ipfs/',
-    fallbackGateways = [
-      'https://ipfs.io/ipfs/',
-      'https://cloudflare-ipfs.com/ipfs/',
-      'https://dweb.link/ipfs/'
-    ],
-    quality = 'high',
-    maxWidth = null
-  } = options;
-
-  if (!imageUrl) return null;
-
-  // Apply CSP compliance first
-  let optimizedUrl = getCSPCompliantImageURL(imageUrl);
-
-  // If it's an IPFS URL, optimize gateway selection
-  if (imageUrl.startsWith('ipfs://')) {
-    const hash = imageUrl.substring(7);
-    optimizedUrl = preferredGateway + hash;
-  } else if (imageUrl.includes('/ipfs/')) {
-    // Extract IPFS hash from gateway URL
-    const match = imageUrl.match(/\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)/);
-    if (match) {
-      optimizedUrl = preferredGateway + match[1];
-    }
+// Enhanced category normalization function
+export const normalizeCategory = (category) => {
+  if (!category || typeof category !== 'string') {
+    return 'collectible'; // default fallback
   }
-
-  return optimizedUrl;
+  
+  // Convert to lowercase and trim whitespace
+  const normalized = category.toLowerCase().trim();
+  
+  // Check if we have a direct mapping
+  if (CATEGORY_MAPPING[normalized]) {
+    return CATEGORY_MAPPING[normalized];
+  }
+  
+  // If no mapping found, return collectible as default
+  return 'collectible';
 };
 
-/**
- * Enhanced IPFS gateway selector with performance metrics
- * @param {string} ipfsHash - IPFS hash
- * @returns {Promise<string>} Best performing gateway URL
- */
-export const getBestIPFSGateway = async (ipfsHash) => {
-  const gateways = [
-    'https://gateway.pinata.cloud/ipfs/',
-    'https://ipfs.io/ipfs/',
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://nftstorage.link/ipfs/'
+// Get display name for categories (always in English)
+export const getCategoryDisplayName = (category) => {
+  const normalizedCategory = normalizeCategory(category);
+  
+  const displayNames = {
+    'collectible': 'Collectible',
+    'art': 'Art',
+    'photo': 'Photo',
+    'music': 'Music',
+    'video': 'Video',
+    'document': 'Document',
+    'game': 'Game',
+    'utility': 'Utility'
+  };
+  
+  return displayNames[normalizedCategory] || 'Collectible';
+};
+
+// Get all available categories in English
+export const getAvailableCategories = () => {
+  return [
+    { value: 'all', label: 'All Categories' },
+    { value: 'collectible', label: 'Collectible' },
+    { value: 'art', label: 'Art' },
+    { value: 'photo', label: 'Photo' },
+    { value: 'music', label: 'Music' },
+    { value: 'video', label: 'Video' },
+    { value: 'document', label: 'Document' },
+    { value: 'game', label: 'Game' },
+    { value: 'utility', label: 'Utility' }
   ];
-
-  // Simple implementation - return first gateway for now
-  // Could be enhanced with actual performance testing
-  return gateways[0] + ipfsHash;
 };
-
-// Helper: fetch with retry and backoff
-export async function fetchWithRetry(url, options = {}, retries = 2, backoff = 1000) {
-  let attempt = 0;
-  while (attempt <= retries) {
-    try {
-      const res = await fetch(url, options);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res;
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, backoff * Math.pow(2, attempt)));
-      attempt++;
-    }
-  }
-}
-
-// Dynamic IPFS gateway selection based on latency
-let ipfsGatewayLatencies = {};
-async function measureGatewayLatency(gateway, cid) {
-  const url = gateway + cid;
-  const start = performance.now();
-  try {
-    await fetch(url, { method: 'HEAD', mode: 'cors' });
-    return performance.now() - start;
-  } catch {
-    return Infinity;
-  }
-}
-export async function selectBestIpfsGateway(cid) {
-  const gateways = [
-    'https://nftstorage.link/ipfs/',
-    'https://cloudflare-ipfs.com/ipfs/',
-    'https://ipfs.io/ipfs/',
-    'https://dweb.link/ipfs/',
-    'https://ipfs.cf-ipfs.com/ipfs/'
-  ];
-  // Measure all in parallel, cache for session
-  if (!ipfsGatewayLatencies[cid]) {
-    const results = await Promise.all(gateways.map(gw => measureGatewayLatency(gw, cid)));
-    ipfsGatewayLatencies[cid] = gateways
-      .map((gw, i) => ({ gw, latency: results[i] }))
-      .sort((a, b) => a.latency - b.latency)
-      .map(x => x.gw);
-  }
-  return ipfsGatewayLatencies[cid];
-}
-
-export const cardemodule = {}

@@ -136,7 +136,7 @@ const SpaceBackground = ({ customClass = "", starDensity = "medium" }) => {
     <div className={`fixed inset-0 z-0 ${customClass}`}>
       
       {/* Vignette effect for depth - menos intensivo en mobile */}
-      <div className="absolute inset-0 bg-grid-pattern pointer-events-none"></div>
+      <div className="absolute inset-0 bg-nuvo-solid-gradient pointer-events-none"></div>
       
       {/* Star canvas */}
       <canvas 

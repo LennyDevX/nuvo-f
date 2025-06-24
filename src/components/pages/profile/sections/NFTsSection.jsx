@@ -7,6 +7,8 @@ import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import { getOptimizedImageUrl, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 import IPFSImage from '../../../ui/IPFSImage';
+// Importar el modal
+import NFTDetailModal from './NFTDetailModal';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
@@ -164,6 +166,11 @@ const NFTsSection = ({ account }) => {
   const handleNFTClick = useCallback((nft) => {
     setSelectedNFT(nft);
   }, []);
+
+  // Función para cerrar el modal
+  const handleCloseModal = useCallback(() => {
+    setSelectedNFT(null);
+  }, []);
   
   // Render grid matching NFTCollection layout
   const renderNFTGrid = useCallback(() => {
@@ -275,9 +282,17 @@ const NFTsSection = ({ account }) => {
           </div>
         )}
       </div>
+
+      {/* NFT Detail Modal */}
+      {selectedNFT && (
+        <NFTDetailModal
+          selectedNFT={selectedNFT}
+          onClose={handleCloseModal}
+          contractAddress={CONTRACT_ADDRESS}
+        />
+      )}
     </>
   );
 };
 
 export default React.memo(NFTsSection);
-      

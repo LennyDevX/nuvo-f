@@ -396,9 +396,7 @@ select:focus-visible {
 }
 
 /* Improved gradient backgrounds */
-.bg-nuvo-gradient {
-  background-color: #000000;
-}
+
 
 /* Enhanced button styles for marketplace */
 .btn-nuvo-base {
@@ -423,10 +421,7 @@ select:focus-visible {
   transform: translateY(-1px);
 }
 
-/* Background gradient for text */
-.bg-nuvo-gradient-text {
-  background: linear-gradient(135deg, #a855f7, #ec4899, #f97316);
-}
+
 
 /* Enhanced line clamp */
 .line-clamp-2 {

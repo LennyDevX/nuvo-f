@@ -1,8 +1,13 @@
 import React from 'react';
 import { FiSearch, FiFilter, FiDollarSign, FiTag } from 'react-icons/fi';
+import { getAvailableCategories, getCategoryDisplayName } from '../../../../utils/blockchain/blockchainUtils';
 
-const MarketplaceFilters = ({ filters, setFilters, categories, showMobileFilters, setShowMobileFilters }) => {
+const MarketplaceFilters = ({ filters, setFilters, categories = [], showMobileFilters, setShowMobileFilters }) => {
+  // Use the standardized categories from utils
+  const availableCategories = getAvailableCategories();
+
   const handleFilterChange = (key, value) => {
+    console.log(`Filter changed: ${key} = ${value}`);
     setFilters(prev => ({
       ...prev,
       [key]: value
@@ -75,7 +80,7 @@ const MarketplaceFilters = ({ filters, setFilters, categories, showMobileFilters
                 type="text"
                 placeholder="Search by name or description..."
                 value={filters.searchTerm}
-                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                 className="nuvos-marketplace-search-input"
               />
             </div>
@@ -86,19 +91,17 @@ const MarketplaceFilters = ({ filters, setFilters, categories, showMobileFilters
             <label className="nuvos-marketplace-filter-label">
               Category
             </label>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => handleFilterChange('category', category)}
-                  className={`nuvos-marketplace-filter-button ${
-                    filters.category === category ? 'active' : ''
-                  }`}
-                >
-                  {category === 'all' ? 'All' : category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
+            <select
+              value={filters.category}
+              onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+              className="nuvos-select"
+            >
+              {availableCategories.map(category => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           {/* Price Range */}

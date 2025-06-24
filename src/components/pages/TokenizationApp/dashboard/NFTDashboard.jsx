@@ -68,29 +68,46 @@ const NFTDashboard = () => {
   }, [refreshNFTs]);
 
   // Calculate collection stats with enhanced information
-  const stats = useMemo(() => ({
-    totalNFTs: nfts.length,
-    listedNFTs: nfts.filter(nft => nft.isForSale).length,
-    totalValue: nfts
-      .filter(nft => nft.isForSale && nft.price)
-      .reduce((total, nft) => {
-        const priceInEth = nft.price && ethers.formatEther ? ethers.formatEther(nft.price) : 0;
-        return total + parseFloat(priceInEth);
-      }, 0)
-      .toFixed(4),
-    // Calculate most valuable NFT
-    topNFTValue: nfts.length > 0 
-      ? nfts.reduce((max, nft) => {
-          if (!nft.price) return max;
-          const priceInEth = ethers.formatEther ? ethers.formatEther(nft.price) : 0;
-          return Math.max(max, parseFloat(priceInEth));
-        }, 0).toFixed(2)
-      : "0.00",
-    // Use the stable reference value for recent activity
-    recentActivity: recentActivity,
-    // Calculate unique categories using normalized categories
-    uniqueCategories: new Set(nfts.map(nft => normalizeCategory(nft.category || 'collectible'))).size
-  }), [nfts, recentActivity]);
+  const stats = useMemo(() => {
+    // Calculate unique categories properly with debugging
+    const categoriesSet = new Set();
+    console.log('Dashboard stats - processing NFTs:', nfts.length);
+    
+    nfts.forEach(nft => {
+      if (nft.category) {
+        const normalizedCategory = normalizeCategory(nft.category || 'collectible');
+        console.log(`Dashboard stats - NFT ${nft.tokenId}: "${nft.category}" -> "${normalizedCategory}"`);
+        categoriesSet.add(normalizedCategory);
+      }
+    });
+    
+    const uniqueCategoriesCount = categoriesSet.size;
+    console.log('Dashboard stats - unique categories:', Array.from(categoriesSet), 'count:', uniqueCategoriesCount);
+    
+    return {
+      totalNFTs: nfts.length,
+      listedNFTs: nfts.filter(nft => nft.isForSale).length,
+      totalValue: nfts
+        .filter(nft => nft.isForSale && nft.price)
+        .reduce((total, nft) => {
+          const priceInEth = nft.price && ethers.formatEther ? ethers.formatEther(nft.price) : 0;
+          return total + parseFloat(priceInEth);
+        }, 0)
+        .toFixed(4),
+      // Calculate most valuable NFT
+      topNFTValue: nfts.length > 0 
+        ? nfts.reduce((max, nft) => {
+            if (!nft.price) return max;
+            const priceInEth = ethers.formatEther ? ethers.formatEther(nft.price) : 0;
+            return Math.max(max, parseFloat(priceInEth));
+          }, 0).toFixed(2)
+        : "0.00",
+      // Use the stable reference value for recent activity
+      recentActivity: recentActivity,
+      // Fixed unique categories calculation
+      uniqueCategories: uniqueCategoriesCount
+    };
+  }, [nfts, recentActivity]);
 
   // Handle filter changes
   const handleFilterChange = (filterType, value) => {
@@ -219,7 +236,7 @@ const NFTDashboard = () => {
           </div>
           
           {/* Stats Overview */}
-          <NFTDashboardStats stats={stats} isMobile={true} />
+          <NFTDashboardStats stats={stats} isMobile={true} nfts={nfts} />
           
           {/* Mobile Filters Toggle */}
           <div className="lg:hidden">

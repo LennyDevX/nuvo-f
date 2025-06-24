@@ -54,6 +54,9 @@
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
+
+
+
 /* Secondary Button */
 .btn-nuvo-secondary {
   background: rgba(55, 65, 81, 0.8);
@@ -814,6 +817,14 @@
 .nft-detail-action-button {
   position: relative;
   overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .nft-detail-action-button::before {
@@ -831,25 +842,156 @@
   left: 100%;
 }
 
-/* NFT detail expand button */
-.nft-detail-expand-button:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.8);
-  outline-offset: 2px;
-  border-radius: 0.25rem;
+.nft-detail-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
-/* Focus management for better accessibility */
-.nuvos-marketplace-filter-button:focus-visible,
-.nft-badge-like:focus-visible,
-.nft-card-pro-actions button:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.8);
-  outline-offset: 2px;
+/* Enhanced NFT Like Button */
+.nft-like-button {
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
 }
 
-/* Mobile optimizations for filter buttons */
+.nft-like-button:hover:not(.liked):not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  transform: scale(1.05);
+}
+
+.nft-like-button.liked {
+  background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-color: #ef4444;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.nft-like-button.liked:hover {
+  background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%);
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.5);
+}
+
+.nft-like-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Enhanced NFT Share Button */
+.nft-share-button {
+  position: relative;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(79, 7, 247, 0.1);
+  color: #8b5cf6;
+}
+
+.nft-share-button:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.nft-share-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+/* Enhanced NFT Marketplace Button */
+.nft-marketplace-button {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.nft-marketplace-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.nft-marketplace-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.nft-marketplace-button:hover::before {
+  left: 100%;
+}
+
+.nft-marketplace-button:active {
+  transform: translateY(0);
+}
+
+/* Mobile optimizations for NFT detail buttons */
 @media (max-width: 640px) {
-  .nuvos-filter-button {
-    padding: 0.75rem 1rem;
+  .nft-detail-action-button {
+    padding: 0.75rem;
+    font-size: 0.75rem;
+    min-height: 44px;
+    border-radius: 0.625rem;
+  }
+  
+  .nft-marketplace-button {
+    padding: 0.875rem 1rem;
     font-size: 0.875rem;
+    min-height: 48px;
+  }
+}
+
+/* Loading state for action buttons */
+.nft-detail-action-button:disabled {
+  position: relative;
+  cursor: wait;
+}
+
+.nft-detail-action-button:disabled::before {
+  display: none;
+}
+
+/* Focus states for better accessibility */
+.nft-detail-action-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.4);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nft-detail-action-button {
+    border-width: 2px;
+  }
+  
+  .nft-like-button.liked {
+    background: #dc2626;
+    border-color: #dc2626;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .nft-detail-action-button,
+  .nft-detail-action-button::before {
+    transition: none;
+  }
+  
+  .nft-detail-action-button:hover {
+    transform: none;
   }
 }

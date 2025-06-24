@@ -4,6 +4,7 @@ import IPFSImage from '../../../ui/IPFSImage';
 import OfferModal from './OfferModal';
 import { WalletContext } from '../../../../context/WalletContext';
 import { imageCache } from '../../../../utils/blockchain/imageCache';
+import { getCategoryDisplayName } from '../../../../utils/blockchain/blockchainUtils';
 
 const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -67,26 +68,7 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
           />
         </div>
 
-        {/* Badges Section */}
-        <div className="nft-card-pro-badges-section">
-          <span className="nft-card-pro-badge nft-badge-category">
-            {nft.category || 'NFT'}
-          </span>
-          <button 
-            className="nft-card-pro-badge nft-badge-like"
-            onClick={handleLike}
-            aria-label={isLiked ? 'Remove from favorites' : 'Add to favorites'}
-            title={isLiked ? 'Remove from favorites' : 'Add to favorites'}
-          >
-            <FiHeart 
-              className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} 
-              style={{ fill: isLiked ? 'currentColor' : 'none' }}
-            />
-          </button>
-          <span className="nft-card-pro-badge nft-badge-id">
-            #{nft.tokenId}
-          </span>
-        </div>
+        
 
         {/* Content */}
         <div className="nft-card-pro-content">
@@ -110,6 +92,17 @@ const NFTCard = ({ nft, onBuy, onMakeOffer, isOwner, isSeller }) => {
               </div>
             </div>
           </div>
+
+          {/* Badges Section */}
+        <div className="nft-card-pro-badges-section">
+          <span className="nft-card-pro-badge nft-badge-category">
+            {getCategoryDisplayName(nft.category)}
+          </span>
+          
+          <span className="nft-card-pro-badge nft-badge-id">
+            #{nft.tokenId}
+          </span>
+        </div>
 
           {/* Owner Info */}
           <div className="nft-card-pro-info">

@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ethers } from 'ethers';
-import { FaArrowLeft, FaEthereum, FaHeart, FaShareAlt, FaTags, FaClock, FaUser, FaCheck, FaCopy } from 'react-icons/fa';
+import { FaArrowLeft, FaEthereum, FaHeart, FaShareAlt, FaTags, FaClock, FaUser, FaCheck, FaCopy, FaStore } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
 import IPFSImage from '../../../ui/IPFSImage';
 import useListNFT from '../../../../hooks/nfts/useListNFT';
-import { getCSPCompliantImageURL, getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
+import { getCSPCompliantImageURL, getOptimizedImageUrl, getCategoryDisplayName, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 // Agregar un simple sistema de caché para evitar llamadas repetidas
 const nftCache = new Map();
@@ -25,6 +26,7 @@ console.log("TokenizationApp Contract Address:", CONTRACT_ADDRESS);
 const NFTDetail = () => {
   const { tokenId } = useParams();
   const { account, walletConnected } = useContext(WalletContext);
+  const navigate = useNavigate();
   const [nft, setNft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,6 +36,10 @@ const NFTDetail = () => {
   const [showListForm, setShowListForm] = useState(false);
   const [price, setPrice] = useState('');
   const [category, setCategory] = useState('collectible');
+  // Add missing state variables
+  const [isLiking, setIsLiking] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  
   const { listNFT, loading: listingLoading, error: listingError, success: listingSuccess, txHash } = useListNFT();
   const callCountRef = useRef(0);
   const fetchingRef = useRef(false);
@@ -246,74 +252,113 @@ const NFTDetail = () => {
   };
 
   const handleLike = async () => {
-    if (!walletConnected) {
-      setError("Please connect your wallet to like NFTs.");
+    if (!walletConnected || !account || isLiking) {
+      toast.error('Please connect your wallet to like this NFT');
       return;
     }
     
-    if (hasLiked) {
-      setError("You have already liked this NFT.");
-      return;
-    }
-    
+    setIsLiking(true);
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
         TokenizationAppABI.abi,
-        provider
+        signer
       );
       
-      // Send transaction to like the NFT
-      const tx = await contract.likeNFT(tokenId);
-      setLikesCount(prev => (parseInt(prev) + 1).toString());
-      setHasLiked(true);
+      // Toggle like state
+      const newLikeState = !hasLiked;
       
-      // Wait for transaction to be mined
-      await tx.wait();
+      // Call smart contract function
+      const tx = await contract.toggleLike(tokenId, newLikeState);
       
-      console.log("NFT liked successfully:", txHash);
-    } catch (err) {
-      console.error("Error liking NFT:", err);
-      setError("Failed to like NFT. Please try again later.");
+      toast.info('Transaction submitted. Waiting for confirmation...');
+      
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      
+      if (receipt.status === 1) {
+        // Update local state
+        setHasLiked(newLikeState);
+        setLikesCount(prev => {
+          const currentCount = typeof prev === 'string' ? parseInt(prev) : prev;
+          return newLikeState ? currentCount + 1 : Math.max(0, currentCount - 1);
+        });
+        
+        toast.success(newLikeState ? 'NFT liked successfully!' : 'NFT unliked successfully!');
+      } else {
+        throw new Error('Transaction failed');
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      
+      if (error.code === 4001) {
+        toast.error('Transaction cancelled by user');
+      } else if (error.message?.includes('insufficient funds')) {
+        toast.error('Insufficient funds for transaction');
+      } else {
+        toast.error('Failed to update like. Please try again.');
+      }
+    } finally {
+      setIsLiking(false);
     }
   };
-  
-  const handleCopy = () => {
-    if (!nft) return;
+
+  // Add missing share function
+  const handleShare = async () => {
+    if (shareLoading) return;
     
-    navigator.clipboard.writeText(`${window.location.origin}/nft/${nft.tokenId}`)
-      .then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(err => {
-        console.error("Error copying link:", err);
-        setError("Failed to copy link. Please try again later.");
-      });
-  };
-  
-  const handleListNFT = async (e) => {
-    e.preventDefault();
-    
-    if (!walletConnected) {
-      setError("Please connect your wallet to list NFTs.");
-      return;
-    }
+    setShareLoading(true);
     
     try {
-      const parsedPrice = ethers.parseEther(price);
+      const shareUrl = `${window.location.origin}/nft/${tokenId}`;
+      const shareText = `Check out this amazing NFT: ${nft.name || `NFT #${tokenId}`}`;
       
-      if (category === 'collectible') {
-        await listNFT(tokenId, parsedPrice, 0, 0);
+      // Try native Web Share API first (mobile)
+      if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        await navigator.share({
+          title: nft.name || `NFT #${tokenId}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        toast.success('Shared successfully!');
       } else {
-        // For other categories, you might want to add specific logic
-        await listNFT(tokenId, parsedPrice, 0, 0);
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setCopied(true);
+        toast.success('Link copied to clipboard!');
+        
+        // Reset copied state after 3 seconds
+        setTimeout(() => setCopied(false), 3000);
       }
-    } catch (err) {
-      console.error("Error listing NFT:", err);
-      setError("Failed to list NFT. Please try again later.");
+    } catch (error) {
+      console.error('Error sharing:', error);
+      
+      if (error.name === 'AbortError') {
+        // User cancelled share dialog
+        toast.info('Share cancelled');
+      } else {
+        // Fallback: Try copying to clipboard
+        try {
+          const shareUrl = `${window.location.origin}/nft/${tokenId}`;
+          const shareText = `Check out this amazing NFT: ${nft.name || `NFT #${tokenId}`}`;
+          await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+          setCopied(true);
+          toast.success('Link copied to clipboard!');
+          setTimeout(() => setCopied(false), 3000);
+        } catch (clipboardError) {
+          toast.error('Failed to share. Please try again.');
+        }
+      }
+    } finally {
+      setShareLoading(false);
     }
+  };
+
+  // Add missing marketplace navigation function
+  const handleGoToMarketplace = () => {
+    navigate('/marketplace');
   };
 
   return (
@@ -331,7 +376,7 @@ const NFTDetail = () => {
           className="inline-flex items-center gap-3 px-4 py-2 mb-6 bg-gray-800/60 hover:bg-gray-700/80 backdrop-blur-md border border-gray-600/40 hover:border-purple-500/50 rounded-lg text-white transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
         >
           <FaArrowLeft className="text-purple-400" />
-          <span className="font-medium">Back to Marketplace</span>
+          <span className="font-medium text-white">Back to Marketplace</span>
         </Link>
         
         {loading && <LoadingSpinner />}
@@ -345,10 +390,10 @@ const NFTDetail = () => {
         {nft && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6">
             {/* Image Section - Hidden on mobile, visible on desktop */}
-            <div className="hidden lg:block bg-gray-800 rounded-lg p-4 py-20 shadow-lg">
+            <div className="hidden lg:block bg-gray-800/80 backdrop-blur-md rounded-lg p-4 py-20 shadow-lg border border-gray-700/50">
               <div className="aspect-square w-full max-w-md mx-auto">
                 <IPFSImage
-                  src={nft.image}
+                  src={getOptimizedImageUrl(nft.image)}
                   alt={nft.name}
                   className="w-full h-full rounded-lg overflow-hidden"
                   style={{ objectFit: 'cover' }}
@@ -359,53 +404,82 @@ const NFTDetail = () => {
               <div className="flex items-center justify-center gap-4 mt-6">
                 <button
                   onClick={handleLike}
-                  className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-medium ${
+                  disabled={isLiking}
+                  className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-medium nft-detail-action-button ${
                     hasLiked 
-                      ? 'bg-red-600 text-white shadow-lg' 
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      ? 'bg-red-600 text-white shadow-lg nft-like-button liked' 
+                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600 nft-like-button border border-gray-600'
                   }`}
-                  disabled={listingLoading}
                 >
-                  <FaHeart className="mr-2" />
-                  {hasLiked ? 'Liked' : 'Like'} ({likesCount})
+                  <div className="flex items-center gap-2">
+                    {isLiking ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FaHeart />
+                    )
+                    }
+                    <span className="text-white">{isLiking ? 'Loading...' : hasLiked ? 'Liked' : 'Like'} ({likesCount})</span>
+                  </div>
                 </button>
                 
                 <button
-                  onClick={handleCopy}
-                  className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium"
+                  onClick={handleShare}
+                  disabled={shareLoading}
+                  className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium nft-detail-action-button nft-share-button border border-purple-500"
                 >
-                  {copied ? <FaCheck className="mr-2" /> : <FaCopy className="mr-2" />}
-                  {copied ? 'Copied!' : 'Share'}
+                  <div className="flex items-center gap-2">
+                    {shareLoading ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : copied ? (
+                      <FaCheck />
+                    ) : (
+                      <FaCopy />
+                    )}
+                    <span className="text-white">{shareLoading ? 'Sharing...' : copied ? 'Copied!' : 'Share'}</span>
+                  </div>
                 </button>
               </div>
+
+              {/* Marketplace Button */}
+              <button
+                onClick={handleGoToMarketplace}
+                className="btn-nuvo-base bg-nuvo-gradient-button nft-marketplace-button mt-4 w-full"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <FaStore className="w-4 h-4" />
+                  <span className="text-white font-medium">Explore Marketplace</span>
+                </div>
+              </button>
             </div>
             
             {/* Details Section */}
-            <div className="bg-gray-800 rounded-lg p-4 lg:p-6 shadow-lg lg:col-span-1">
+            <div className="bg-gray-800/80 backdrop-blur-md rounded-lg p-4 lg:p-6 shadow-lg lg:col-span-1 border border-gray-700/50">
               <div className="space-y-4 lg:space-y-6">
                 {/* Header */}
                 <div>
                   <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">{nft.name}</h1>
-                  <div className="flex items-center text-gray-400 text-sm">
-                    <span className="bg-gray-700 px-3 py-1 rounded-full mr-3">#{nft.tokenId}</span>
-                    <span className="bg-purple-600 px-3 py-1 rounded-full text-white">{nft.category}</span>
+                  <div className="flex items-center text-gray-300 text-sm">
+                    <span className="bg-gray-700/80 px-3 py-1 rounded-full mr-3 text-white font-medium">#{nft.tokenId}</span>
+                    <span className="bg-purple-600 px-3 py-1 rounded-full text-white font-medium">
+                      {getCategoryDisplayName(nft.category)}
+                    </span>
                   </div>
                 </div>
                 
                 {/* Price Section with Mobile Image */}
-                <div className="bg-gray-700 rounded-lg p-4">
+                <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-4 border border-gray-600/50">
                   <div className="flex items-start justify-between gap-4">
                     {/* Price Info */}
                     <div className="flex-1">
-                      <span className="text-gray-400 font-medium block mb-2">Current Price</span>
+                      <span className="text-gray-200 font-medium block mb-2">Current Price</span>
                       <div className="flex items-center text-xl lg:text-2xl font-bold text-white mb-2">
                         <FaEthereum className="mr-2 text-blue-400" />
-                        {parseFloat(ethers.formatEther(nft.price)).toFixed(2)} POL
+                        <span className="text-white">{parseFloat(ethers.formatEther(nft.price)).toFixed(2)} POL</span>
                       </div>
                       {nft.isForSale && (
                         <div className="text-green-400 text-sm font-medium">
                           <FaTags className="inline mr-1" />
-                          Available for purchase
+                          <span className="text-green-400">Available for purchase</span>
                         </div>
                       )}
                     </div>
@@ -413,7 +487,7 @@ const NFTDetail = () => {
                     {/* Mobile Image - only show on mobile */}
                     <div className="lg:hidden w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
                       <IPFSImage
-                        src={nft.image}
+                        src={getOptimizedImageUrl(nft.image)}
                         alt={nft.name}
                         className="w-full h-full rounded-lg overflow-hidden"
                         style={{ objectFit: 'cover' }}
@@ -423,26 +497,54 @@ const NFTDetail = () => {
                 </div>
 
                 {/* Mobile Action Buttons */}
-                <div className="lg:hidden flex items-center justify-center gap-3">
+                <div className="lg:hidden space-y-3">
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={handleLike}
+                      disabled={isLiking}
+                      className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-300 font-medium text-sm nft-detail-action-button ${
+                        hasLiked 
+                          ? 'bg-red-600 text-white shadow-lg nft-like-button liked border border-red-500' 
+                          : 'bg-gray-700 text-gray-200 hover:bg-gray-600 nft-like-button border border-gray-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isLiking ? (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <FaHeart />
+                        )}
+                        <span className="text-white">{isLiking ? 'Loading' : hasLiked ? 'Liked' : 'Like'} ({likesCount})</span>
+                      </div>
+                    </button>
+                    
+                    <button
+                      onClick={handleShare}
+                      disabled={shareLoading}
+                      className="flex-1 flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium text-sm nft-detail-action-button nft-share-button border border-purple-500"
+                    >
+                      <div className="flex items-center gap-2">
+                        {shareLoading ? (
+                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : copied ? (
+                          <FaCheck />
+                        ) : (
+                          <FaCopy />
+                        )}
+                        <span className="text-white">{shareLoading ? 'Loading' : copied ? 'Copied!' : 'Share'}</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Marketplace Button */}
                   <button
-                    onClick={handleLike}
-                    className={`flex items-center px-4 py-2 rounded-lg transition-all duration-300 font-medium text-sm ${
-                      hasLiked 
-                        ? 'bg-red-600 text-white shadow-lg' 
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    }`}
-                    disabled={listingLoading}
+                    onClick={handleGoToMarketplace}
+                    className="btn-nuvo-base bg-nuvo-gradient-button nft-marketplace-button w-full"
                   >
-                    <FaHeart className="mr-1" />
-                    {hasLiked ? 'Liked' : 'Like'} ({likesCount})
-                  </button>
-                  
-                  <button
-                    onClick={handleCopy}
-                    className="flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium text-sm"
-                  >
-                    {copied ? <FaCheck className="mr-1" /> : <FaCopy className="mr-1" />}
-                    {copied ? 'Copied!' : 'Share'}
+                    <div className="flex items-center justify-center gap-2">
+                      <FaStore className="w-4 h-4" />
+                      <span className="text-white font-medium">Explore Marketplace</span>
+                    </div>
                   </button>
                 </div>
                 
@@ -450,7 +552,7 @@ const NFTDetail = () => {
                 {nft.description && (
                   <div>
                     <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
-                    <p className="text-gray-300 leading-relaxed text-sm lg:text-base">{nft.description}</p>
+                    <p className="text-gray-200 leading-relaxed text-sm lg:text-base">{nft.description}</p>
                   </div>
                 )}
                 
@@ -460,11 +562,11 @@ const NFTDetail = () => {
                     <h3 className="text-lg font-semibold text-white mb-3">Attributes</h3>
                     <div className="grid grid-cols-2 gap-2 lg:gap-3">
                       {nft.attributes.map((attr, index) => (
-                        <div key={index} className="bg-gray-700 rounded-lg p-2 lg:p-3">
-                          <div className="text-gray-400 text-xs lg:text-sm uppercase tracking-wide">
+                        <div key={index} className="bg-gray-700/80 border border-gray-600/50 rounded-lg p-2 lg:p-3">
+                          <div className="text-gray-200 text-xs lg:text-sm uppercase tracking-wide font-medium">
                             {attr.trait_type}
                           </div>
-                          <div className="text-white font-medium mt-1 text-sm lg:text-base">
+                          <div className="text-white font-semibold mt-1 text-sm lg:text-base">
                             {attr.value}
                           </div>
                         </div>
@@ -478,13 +580,13 @@ const NFTDetail = () => {
                   <h3 className="text-lg font-semibold text-white">Details</h3>
                   
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between py-2 border-b border-gray-700">
-                      <span className="text-gray-400 flex items-center text-sm">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-600">
+                      <span className="text-gray-200 flex items-center text-sm font-medium">
                         <FaUser className="mr-2" />
                         Owner
                       </span>
                       <a
-                        href={`https://etherscan.io/address/${nft.owner}`}
+                        href={`https://polygonscan.com/address/${nft.owner}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
@@ -493,13 +595,13 @@ const NFTDetail = () => {
                       </a>
                     </div>
                     
-                    <div className="flex items-center justify-between py-2 border-b border-gray-700">
-                      <span className="text-gray-400 flex items-center text-sm">
+                    <div className="flex items-center justify-between py-2 border-b border-gray-600">
+                      <span className="text-gray-200 flex items-center text-sm font-medium">
                         <FaTags className="mr-2" />
                         Seller
                       </span>
                       <a
-                        href={`https://etherscan.io/address/${nft.seller}`}
+                        href={`https://polygonscan.com/address/${nft.seller}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
@@ -509,11 +611,11 @@ const NFTDetail = () => {
                     </div>
                     
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-400 flex items-center text-sm">
+                      <span className="text-gray-200 flex items-center text-sm font-medium">
                         <FaClock className="mr-2" />
                         Listed
                       </span>
-                      <span className="text-white text-xs lg:text-sm">
+                      <span className="text-white text-xs lg:text-sm font-medium">
                         {new Date(nft.listedTimestamp * 1000).toLocaleDateString()}
                       </span>
                     </div>

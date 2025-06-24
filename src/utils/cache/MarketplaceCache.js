@@ -168,6 +168,11 @@ class MarketplaceCache {
   // Cache token listing status con TTL configurado
   setTokenListing(contractAddress, tokenId, listingData) {
     const key = this.generateKey('token_listing', tokenId, contractAddress);
+    // Ensure category is normalized when caching
+    if (listingData && listingData.category) {
+      const { normalizeCategory } = require('../blockchain/blockchainUtils');
+      listingData.normalizedCategory = normalizeCategory(listingData.category);
+    }
     this.set(key, listingData, CACHE_TTL.TOKEN_LISTING);
   }
 
@@ -195,6 +200,16 @@ class MarketplaceCache {
     ];
     
     let invalidated = 0;
+    
+    // Also invalidate individual token listings
+    for (const [key] of this.cache) {
+      if (key.includes(`token_listing`) && key.includes(contractAddress)) {
+        if (this.delete(key)) {
+          invalidated++;
+        }
+      }
+    }
+    
     for (const pattern of patterns) {
       if (this.delete(pattern)) {
         invalidated++;
