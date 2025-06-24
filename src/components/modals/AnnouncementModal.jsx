@@ -32,7 +32,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
             <div className="p-4 sm:p-6 sm:p-8"> 
               <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-4">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                  Nuvos Update Beta v4.0
+                  Nuvos Update Beta v4.1
                 </h2>
                 <span className="text-xs px-2 py-0.5 sm:py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex-shrink-0">
                   Major Release
@@ -51,21 +51,18 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                   <div className="bg-purple-500/10 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-500/20">
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📱</span>
-                        <span><span className="font-bold">New Mobile Design:</span> Complete mobile interface redesign with enhanced user experience and intuitive navigation.</span>
-                      </li>
-                      <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🖥️</span>
-                        <span><span className="font-bold">Desktop Improvements:</span> Enhanced desktop interface with better visual hierarchy and streamlined workflows.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛒</span>
+                        <span><span className="font-bold">New NFT Marketplace:</span> Complete marketplace implementation with capabilities to list, buy, and make offers on NFTs.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🎨</span>
-                        <span><span className="font-bold">NFT Dashboard:</span> Better desgin NFT management interface with improved functionality and visual appeal.</span>
+                        <span><span className="font-bold">Design Enhancements:</span> Improved visual coherence across the platform with a refreshed color palette and consistent UI elements.</span>
                       </li>
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">💰</span>
-                        <span><span className="font-bold">Staking Dashboard:</span> Enhanced staking interface with real-time analytics and improved user controls.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">✨</span>
+                        <span><span className="font-bold">Animation & Mobile:</span> Enhanced animations and comprehensive mobile optimization for a seamless experience across all devices.</span>
                       </li>
+
                     </ul>
                   </div>
                 </div>
@@ -98,10 +95,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔧</span>
                         <span><span className="font-bold">Code Modularization:</span> Internal codebase restructured for improved maintainability and future development.</span>
                       </li>
-                      <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">📚</span>
-                        <span><span className="font-bold">Library Updates:</span> All dependencies updated to latest stable versions for enhanced security and performance.</span>
-                      </li>
+                      
                     </ul>
                   </div>
                 </div>
