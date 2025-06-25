@@ -2,10 +2,21 @@ import React from 'react';
 import { FaCoins, FaWallet } from 'react-icons/fa';
 import { ActionButton } from '../../ui/CommonComponents';
 
+// Helper function for formatting dates
+const defaultFormatWithdrawDate = (timestamp) => {
+  if (!timestamp || timestamp === 0) return 'Never';
+  try {
+    return new Date(timestamp * 1000).toLocaleDateString();
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid Date';
+  }
+};
+
 const RewardsPanel = ({ 
   formattedRewards, 
   stakingStats, 
-  formatWithdrawDate, 
+  formatWithdrawDate = defaultFormatWithdrawDate, // Add default fallback
   hasRewards,
   totalStaked,
   isPending,

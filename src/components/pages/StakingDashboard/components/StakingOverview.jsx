@@ -7,7 +7,7 @@ import { ValueDisplay } from '../ui/CommonComponents';
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
   const { calculateRealAPY, getDetailedStakingStats } = useStaking();
-  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 88, dailyROI: 0.24 });
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 87.6, dailyROI: 2.4 }); // Corrected default
   const [detailedStats, setDetailedStats] = useState(null);
   
   // Calculate total staked
@@ -58,7 +58,7 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
   const timeBonesPercentage = timeBonus * 100;
   
   // Use dynamically calculated APY instead of hardcoded value
-  const baseAPY = dynamicAPY.baseAPY;
+  const baseAPY = dynamicAPY.baseAPY || 87.6; // Corrected default value
   const effectiveAPY = baseAPY + (timeBonesPercentage * 1.5);
   
   // Get monthly projected rewards if available
@@ -89,13 +89,13 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
         <div className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all">
           <div className="text-sm text-slate-400 mb-1">Effective APY</div>
           <div className="text-xl font-medium text-white">
-            {effectiveAPY.toFixed(2)} <span className="text-base text-slate-300">%</span>
+            {effectiveAPY.toFixed(1)} <span className="text-base text-slate-300">%</span>
             {dynamicAPY.verified && (
               <span className="text-xs ml-1 text-green-400 opacity-70">(blockchain verified)</span>
             )}
           </div>
           <div className="text-xs text-slate-500 mt-1">
-            Base: {baseAPY}% + Time Bonus: {timeBonesPercentage.toFixed(1)}%
+            Base: {baseAPY.toFixed(1)}% + Time Bonus: {timeBonesPercentage.toFixed(1)}%
           </div>
           {monthlyProjection && (
             <div className="text-xs text-indigo-400 mt-2">

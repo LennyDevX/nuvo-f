@@ -40,12 +40,17 @@ export function useStakingContract() {
   }, [window.ethereum]);
 
   const getSignerAddress = useCallback(async () => {
-    if (!browserProvider) return null;
+    if (!browserProvider) {
+      console.error('No browser provider available');
+      return null;
+    }
     try {
       const signer = await browserProvider.getSigner();
-      return await signer.getAddress();
+      const address = await signer.getAddress();
+      console.log('✅ Got signer address:', address);
+      return address;
     } catch (error) {
-      console.error("Error getting signer address:", error);
+      console.error("❌ Error getting signer address:", error);
       return null;
     }
   }, [browserProvider]);

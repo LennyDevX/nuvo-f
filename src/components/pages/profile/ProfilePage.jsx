@@ -157,7 +157,9 @@ const ProfilePage = () => {
   // Refresh staking data when connected
   useEffect(() => {
     if (walletConnected && account) {
-      refreshUserInfo(account).catch(console.error);
+      refreshUserInfo(account).catch(err => {
+        console.error("Error refreshing staking info:", err);
+      });
     }
   }, [walletConnected, account, refreshUserInfo]);
 
@@ -473,4 +475,4 @@ const getSectionLabel = (section) => {
 };
 
 export default React.memo(ProfilePage);
- 
+
