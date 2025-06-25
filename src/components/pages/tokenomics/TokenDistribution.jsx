@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { 
   PieChart, Pie, Cell, ResponsiveContainer, 
   Legend
@@ -66,7 +66,7 @@ const TokenDistribution = () => {
   ), []);
 
   return (
-    <motion.div
+    <m.div
       className="nuvos-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -171,7 +171,7 @@ const TokenDistribution = () => {
         </h3>
         {keyPointsContent}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

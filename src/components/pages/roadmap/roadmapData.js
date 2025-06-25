@@ -98,27 +98,28 @@ export const roadmapData = {
         progress: 70,
         phase: "Innovation Phase",
         items: [
-          { text: "Launch the Nuvos-Dashboard", status: "completed", date: "Apr 2025" },
-          { text: "Develop NFT system for digital products", status: "completed", date: "Apr 2025" },
-          { text: "Implement enhanced UI/UX designs for mobile", status: "completed", date: "May 2025" },
-          { text: "Implement chatbot with Gemini AI", status: "completed", date: "May 2025" },
-          { text: "Marketplace NFTs preview", status: "in-progress", date: "Jun 2025" },
-          { text: "Implement AI-Hub for advanced features", status: "in-progress", date: "Jun 2025" },
+          { text: "Launch the Nuvos Dashboard", status: "completed", date: "Apr 2025" },
+          { text: "Develop NFT system for the Nuvos platform", status: "completed", date: "Apr 2025" },
+          { text: "Implement enhanced UI/UX design for mobile", status: "completed", date: "May 2025" },
+          { text: "Integrate chatbot powered by Gemini AI", status: "completed", date: "May 2025" },
+          { text: "NFT Marketplace preview", status: "in-progress", date: "Jun 2025" },
+          { text: "Refine styles across the entire platform", status: "in-progress", date: "Jun 2025" },
           
         ]
       }
     ],
     "Q3": [
       {
-        title: "Smart Staking 2.0 & AI-Hub",
+        title: "Smart Contracts 2.0 & Tokenomics",
         icon: "🚀",
         status: "Planned",
         progress: 0,
         phase: "Update Phase",
         items: [
-          { text: "Testing Smart Staking 2.0", status: "pending", date: "Jul 2025" },
-          { text: "Prepare marketing strategies", status: "pending", date: "Aug 2025" },
-          { text: "Ai-Hub update ", status: "pending", date: "Sep 2025" },
+          { text: "Updat Smart Contracts to v2.0", status: "pending", date: "Jul 2025" },
+          { text: "New Tokenomics Contracts v2.0", status: "pending", date: "Jul 2025" },
+          { text: "Prepare initial marketing strategies", status: "pending", date: "Aug 2025" },
+          { text: "Review the styles, performance and purge   ", status: "pending", date: "Aug 2025" },
           { text: "AI-Hub integration with NFTs", status: "pending", date: "Sep 2025" },
           { text: "Nuvos AI Chat update", status: "pending", date: "Sep 2025" },
           { text: "Tokenomics update", status: "pending", date: "Sep 2025" }

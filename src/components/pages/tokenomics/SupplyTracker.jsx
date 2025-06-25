@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { m } from 'framer-motion';
 import { FaCoins } from 'react-icons/fa';
+import LoadingSpinner from '../../ui/LoadingSpinner';
 
 const SupplyTracker = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -97,7 +98,7 @@ const SupplyTracker = () => {
 
   // Memoize skeleton component for reuse
   const SkeletonLoader = useMemo(() => (
-    <div className="h-4 bg-purple-600/30 rounded animate-pulse w-3/4"></div>
+    <LoadingSpinner size="small" variant="pulse" />
   ), []);
 
   // Memoized progress bar component with smoother animations
@@ -112,7 +113,7 @@ const SupplyTracker = () => {
       
       <div className="h-3 sm:h-4 bg-gray-800/50 rounded-full overflow-hidden border border-purple-500/20">
         {isLoading ? (
-          <div className="h-full bg-gradient-to-r from-purple-900/50 to-purple-600/50 rounded-full animate-pulse"></div>
+          <LoadingSpinner size="small" variant="bars" className="h-full" />
         ) : (
           <m.div 
             className="h-full bg-gradient-to-r from-purple-500 via-purple-400 to-indigo-400 rounded-full
@@ -156,7 +157,7 @@ const SupplyTracker = () => {
         >
           <div className="text-gray-400 text-xs sm:text-sm mb-1">Total Supply</div>
           {isLoading ? (
-            <div className="mt-1 h-6">
+            <div className="mt-1 h-6 flex justify-center">
               {SkeletonLoader}
             </div>
           ) : (

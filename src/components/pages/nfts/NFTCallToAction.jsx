@@ -42,10 +42,10 @@ const NFTCallToAction = ({ onOpenModal }) => {
               >
                 <FaRocket />
               </m.div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-nuvo-gradient-text">Ready to Tokenize Your Assets?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-transparent bg-clip-text bg-nuvo-gradient-text">¿Listo para tokenizar tus activos?</h2>
               <p className="text-lg text-gray-300 mb-6">
-                Join our waitlist to be notified when our asset tokenization platform launches. 
-                Be among the first to bridge your physical world with digital possibilities.
+                Únete a nuestra lista de espera para ser notificado cuando nuestra plataforma de tokenización de activos se lance. 
+                Sé uno de los primeros en conectar tu mundo físico con las posibilidades digitales.
               </p>
             </div>
             
@@ -54,7 +54,7 @@ const NFTCallToAction = ({ onOpenModal }) => {
                 onClick={onOpenModal}
                 className="w-full px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-indigo-600 rounded-lg text-white font-medium transition-all transform hover:scale-105"
               >
-                Join Tokenization Waitlist
+                Unirme a la lista de espera para la tokenización
               </button>
             </div>
           </div>

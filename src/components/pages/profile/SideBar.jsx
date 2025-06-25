@@ -60,14 +60,7 @@ const SideBar = ({ activeIntegration, onSelectIntegration, isMobile = false, isE
       description: 'Play & earn',
       isBeta: true
     },
-    {
-      id: 'transactions',
-      name: 'Activity',
-      shortName: 'Activity',
-      icon: <FaHistory className="text-lg" />,
-      description: 'Transaction history',
-      isBeta: false
-    }
+    
   ];
 
   if (isMobile) {

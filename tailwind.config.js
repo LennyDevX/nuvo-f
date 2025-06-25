@@ -31,12 +31,7 @@ export default {
         '5xl': ['3rem', { lineHeight: '3.25rem' }],
         '6xl': ['3.75rem', { lineHeight: '4rem' }],
       },
-      colors: {
-        'gradient-start': '#161873cc',
-        'gradient-middle': '#401fb798', 
-        'gradient-end': '#673cb3be',
-        'button-hover': 'rgba(206, 7, 7, 0.776)',
-      },
+      
     },
   },
   plugins: [],

@@ -46,6 +46,7 @@ const NFTDetail = createLazyComponent(() => import('../components/pages/Tokeniza
 const TokenizationTool = createLazyComponent(() => import('../components/pages/TokenizationApp/MintNFT/TokenizationTool.jsx'));
 const ProfilePage = createLazyComponent(() => import('../components/pages/profile/ProfilePage'));
 const ChatPage = createLazyComponent(() => import('../components/pages/chat/ChatPage'));
+const MarketplaceDashboard = createLazyComponent(() => import('../components/pages/marketplace/MarketplaceDashboard'));
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -136,6 +137,11 @@ export const routes = [
   {
     path: "/profile",
     element: withSuspense(<MainLayout><ProfilePage /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/marketplace",
+    element: withSuspense(<MainLayout><MarketplaceDashboard /></MainLayout>),
     loader: async () => null
   }
 ];

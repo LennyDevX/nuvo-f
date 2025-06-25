@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion as m } from 'framer-motion';
 import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup, FaHeart, FaTags, FaEthereum } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
-
-// Lazy load the NFT detail modal component
-const NFTDetailModal = lazy(() => import('./NFTDetailModal'));
+import { getOptimizedImageUrl, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
+import IPFSImage from '../../../ui/IPFSImage';
+// Importar el modal
+import NFTDetailModal from './NFTDetailModal';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
 
-// Updated NFTCard to match NFTCollection style
 const NFTCard = React.memo(({ nft, index, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
   
@@ -37,24 +37,18 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleClick}
     >
-      {/* NFT Image */}
-      <div className="aspect-square relative overflow-hidden">
-        {nft.image ? (
-          <img 
-            src={nft.image} 
-            alt={nft.name || `NFT #${nft.tokenId}`} 
-            className="w-full h-full object-cover transition-transform duration-300"
-            style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
-            onError={(e) => {
-              e.target.src = PLACEHOLDER_IMAGE;
-            }}
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-purple-900/20">
-            <FaImage className="text-3xl text-purple-400" />
-          </div>
-        )}
+      {/* NFT Image with consistent aspect ratio */}
+      <div className="nft-profile-image-container">
+        <IPFSImage 
+          src={getOptimizedImageUrl(nft.image)}
+          alt={nft.name || `NFT #${nft.tokenId}`} 
+          className="nft-profile-image"
+          style={{ transform: isHovered ? 'scale(1.1)' : 'scale(1)' }}
+          placeholderSrc={PLACEHOLDER_IMAGE}
+          onLoad={() => console.log(`NFT ${nft.tokenId} loaded in profile`)}
+          onError={() => console.warn(`NFT ${nft.tokenId} failed to load in profile`)}
+          loading="lazy"
+        />
         
         {/* Sale Status Badge */}
         {nft.isForSale && nft.price && (
@@ -80,7 +74,7 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
         <div className="flex justify-between items-center mt-2">
           <div className="flex items-center text-gray-300 text-xs">
             <FaTags className="mr-1" />
-            <span>ID: #{nft.tokenId}</span>
+            <span>{normalizeCategory(nft.category) || 'Collectible'}</span>
           </div>
           
           {nft.isForSale && nft.price && (
@@ -105,7 +99,7 @@ const NFTCard = React.memo(({ nft, index, onClick }) => {
           </p>
           
           <button
-            className="btn-primary btn-sm btn-full mt-2 flex items-center justify-center gap-1"
+            className="btn-nuvo-base bg-nuvo-gradient-button btn-sm btn-full mt-2 flex items-center justify-center gap-1"
             onClick={(e) => {
               e.stopPropagation();
               handleClick();
@@ -171,6 +165,11 @@ const NFTsSection = ({ account }) => {
   // Use a stable callback that doesn't change on every render
   const handleNFTClick = useCallback((nft) => {
     setSelectedNFT(nft);
+  }, []);
+
+  // Función para cerrar el modal
+  const handleCloseModal = useCallback(() => {
+    setSelectedNFT(null);
   }, []);
   
   // Render grid matching NFTCollection layout
@@ -284,19 +283,13 @@ const NFTsSection = ({ account }) => {
         )}
       </div>
 
-      {/* NFT Detail Modal - Outside of card container */}
+      {/* NFT Detail Modal */}
       {selectedNFT && (
-        <Suspense fallback={
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80">
-            <div className="w-16 h-16 border-t-2 border-b-2 border-purple-500 rounded-full animate-spin"></div>
-          </div>
-        }>
-          <NFTDetailModal
-            selectedNFT={selectedNFT}
-            onClose={() => setSelectedNFT(null)}
-            contractAddress={CONTRACT_ADDRESS}
-          />
-        </Suspense>
+        <NFTDetailModal
+          selectedNFT={selectedNFT}
+          onClose={handleCloseModal}
+          contractAddress={CONTRACT_ADDRESS}
+        />
       )}
     </>
   );

@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { m } from 'framer-motion';
 import { useStaking } from '../../../../context/StakingContext';
 import { formatBalance } from '../../../../utils/blockchain/formatters';
 import { calculateTimeBonus } from '../../../../utils/staking/stakingAnalytics';
 import NetworkBadge from '../../../web3/NetworkBadge';
 import { ValueDisplay } from '../ui/CommonComponents';
+import { 
+  FiDollarSign, 
+  FiTrendingUp, 
+  FiActivity
+} from 'react-icons/fi';
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
   const { calculateRealAPY, getDetailedStakingStats } = useStaking();
-  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 88, dailyROI: 0.24 });
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 87.6, dailyROI: 2.4 }); // Corrected default
   const [detailedStats, setDetailedStats] = useState(null);
   
   // Calculate total staked
@@ -58,64 +64,119 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
   const timeBonesPercentage = timeBonus * 100;
   
   // Use dynamically calculated APY instead of hardcoded value
-  const baseAPY = dynamicAPY.baseAPY;
+  const baseAPY = dynamicAPY.baseAPY || 87.6; // Corrected default value
   const effectiveAPY = baseAPY + (timeBonesPercentage * 1.5);
   
   // Get monthly projected rewards if available
   const monthlyProjection = detailedStats?.projections?.oneMonth || null;
 
+  const stakingItems = [
+    {
+      label: 'Total Staked',
+      value: `${formatBalance(totalStaked)} POL`,
+      icon: FiDollarSign,
+      color: 'purple',
+      subtitle: 'Staked Amount'
+    },
+    {
+      label: 'Pending Rewards',
+      value: `${formatBalance(userInfo?.pendingRewards || stakingStats?.pendingRewards || '0')} POL`,
+      icon: FiTrendingUp,
+      color: 'green',
+      subtitle: 'Ready to Claim'
+    },
+    {
+      label: 'Effective APY',
+      value: `${effectiveAPY.toFixed(1)}%`,
+      icon: FiActivity,
+      color: 'blue',
+      subtitle: `Base APY: ${baseAPY.toFixed(1)}% + Bonus: ${timeBonesPercentage.toFixed(1)}%`,
+      verified: dynamicAPY.verified,
+      monthlyProjection
+    }
+  ];
+
+  const getColorClasses = (color) => {
+    const colors = {
+      purple: {
+        icon: 'text-purple-400',
+        bg: 'bg-purple-500/10',
+        border: 'border-purple-500/20',
+        gradient: 'from-purple-400 to-purple-600'
+      },
+      green: {
+        icon: 'text-green-400',
+        bg: 'bg-green-500/10',
+        border: 'border-green-500/20',
+        gradient: 'from-green-400 to-green-600'
+      },
+      blue: {
+        icon: 'text-blue-400',
+        bg: 'bg-blue-500/10',
+        border: 'border-blue-500/20',
+        gradient: 'from-blue-400 to-blue-600'
+      }
+    };
+    return colors[color] || colors.purple;
+  };
+
   return (
-    <div className="nuvos-card mb-8">
+    <div className="mb-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold text-white">Your Staking Portfolio</h2>
-        <NetworkBadge />
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <ValueDisplay 
-          label="Total Staked" 
-          value={formatBalance(totalStaked)}
-          suffix="POL" 
-          className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all"
-        />
-        
-        <ValueDisplay 
-          label="Pending Rewards" 
-          value={formatBalance(userInfo?.pendingRewards || stakingStats?.pendingRewards || '0')}
-          suffix="POL" 
-          className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all"
-        />
-        
-        <div className="p-4 bg-slate-800/30 rounded-xl border border-slate-700/20 hover:bg-slate-800/40 transition-all">
-          <div className="text-sm text-slate-400 mb-1">Effective APY</div>
-          <div className="text-xl font-medium text-white">
-            {effectiveAPY.toFixed(2)} <span className="text-base text-slate-300">%</span>
-            {dynamicAPY.verified && (
-              <span className="text-xs ml-1 text-green-400 opacity-70">(blockchain verified)</span>
-            )}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            Base: {baseAPY}% + Time Bonus: {timeBonesPercentage.toFixed(1)}%
-          </div>
-          {monthlyProjection && (
-            <div className="text-xs text-indigo-400 mt-2">
-              Est. monthly: {formatBalance(monthlyProjection)} POL
-            </div>
-          )}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+        {stakingItems.map((item, index) => {
+          const colorClasses = getColorClasses(item.color);
+          const IconComponent = item.icon;
+          
+          return (
+            <m.div
+              key={index}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              className="nuvos-marketplace-stat-card-compact group"
+            >
+              <div className="flex items-center gap-3">
+                <div className={`nuvos-marketplace-stat-icon-container-compact ${colorClasses.bg} ${colorClasses.border}`}>
+                  <IconComponent className={`w-4 h-4 md:w-5 md:h-5 ${colorClasses.icon} transition-transform duration-200 group-hover:scale-110`} />
+                </div>
+                
+                <div className="nuvos-marketplace-stat-content-compact flex-1 min-w-0">
+                  <div className={`nuvos-marketplace-stat-value-compact bg-gradient-to-r ${colorClasses.gradient} bg-clip-text text-transparent`}>
+                    {item.value}
+                    {item.verified && (
+                      <span className="text-xs ml-1 text-green-400 opacity-70">(verified)</span>
+                    )}
+                  </div>
+                  <div className="nuvos-marketplace-stat-label-compact">
+                    {item.subtitle}
+                  </div>
+                  {item.monthlyProjection && (
+                    <div className="text-xs text-indigo-400 mt-1">
+                      Est. monthly: {formatBalance(item.monthlyProjection)} POL
+                    </div>
+                  )}
+                </div>
+              </div>
+            </m.div>
+          );
+        })}
       </div>
       
       {/* Status Message */}
       {statusMessage && (
-        <div 
-          className={`mt-6 p-3 rounded-lg ${
+        <m.div 
+          whileHover={{ y: -2 }}
+          className={`mt-6 p-3 rounded-lg transition-all duration-200 ${
             statusMessage.type === 'error' ? 'bg-red-900/20 border border-red-500/40 text-red-400' :
             statusMessage.type === 'success' ? 'bg-green-900/20 border border-green-500/40 text-green-400' :
             'bg-blue-900/20 border border-blue-500/40 text-blue-400'
           }`}
         >
           {statusMessage.text}
-        </div>
+        </m.div>
       )}
     </div>
   );

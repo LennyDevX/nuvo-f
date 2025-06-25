@@ -11,19 +11,1246 @@
     will-change: transform, box-shadow;
     transform: translateZ(0);
     backdrop-filter: blur(10px);
+    /* Mobile optimizations */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
+
+  /* Mobile-first responsive padding */
+  @media (max-width: 640px) {
+    .nuvos-card {
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .nuvos-card {
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .nuvos-card {
+      padding: 1.75rem;
+      border-radius: 1.5rem;
+    }
+  }
+
   .nuvos-card:hover {
     border-color: rgba(139, 92, 246, 0.2);
     box-shadow: 0 8px 15px -5px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
   }
-  
-  /* Specific style for staking cards to ensure uniform height */
-  .nuvos-card.staking-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+
+  /* Mobile: reduce hover effects for better performance */
+  @media (hover: none) and (pointer: coarse) {
+    .nuvos-card:hover {
+      transform: none;
+      box-shadow: 0 4px 10px -3px rgba(0, 0, 0, 0.15);
+    }
   }
   
+  /* --- MARKETPLACE COMPONENTS SISTEMA RENOVADO --- */
   
+  /* Contenedor principal del marketplace */
+  .nuvos-marketplace-container {
+    background: linear-gradient(135deg, #1a0b2e 0%, #16051a 50%, #0f0514 100%);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    backdrop-filter: blur(20px);
+    box-shadow: 
+      0 8px 32px rgba(124, 58, 237, 0.12),
+      inset 0 1px 0 rgba(139, 92, 246, 0.1);
+  }
+
+  /* Mobile optimizations for marketplace container */
+  @media (max-width: 640px) {
+    .nuvos-marketplace-container {
+      padding: 1rem;
+      border-radius: 1rem;
+      backdrop-filter: blur(15px);
+      box-shadow: 
+        0 4px 20px rgba(124, 58, 237, 0.1),
+        inset 0 1px 0 rgba(139, 92, 246, 0.08);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .nuvos-marketplace-container {
+      padding: 1.25rem;
+    }
+  }
+
+  /* --- FILTROS Y BUSCADOR DEL MARKETPLACE --- */
+  
+  /* Panel de filtros del marketplace */
+  .nuvos-marketplace-filters {
+    background: linear-gradient(135deg, #1a0b2e 0%, #16051a 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 1.25rem;
+    padding: 1.25rem;
+    backdrop-filter: blur(15px);
+    box-shadow: 
+      0 4px 20px rgba(124, 58, 237, 0.15),
+      inset 0 1px 0 rgba(139, 92, 246, 0.08);
+  }
+
+  /* Grupo de filtros */
+  .nuvos-marketplace-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Etiquetas de filtros */
+  .nuvos-marketplace-filter-label {
+    color: #e5e7eb;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.025em;
+  }
+
+  /* Botones de filtro */
+  .nuvos-marketplace-filter-button {
+    padding: 0.75rem 1rem;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    color: #d1d5db;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .nuvos-marketplace-filter-button:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.5);
+    color: #ffffff;
+  }
+
+  .nuvos-marketplace-filter-button.active {
+    background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+    border-color: #8b5cf6;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+  }
+
+  /* Select de filtros */
+  .nuvos-marketplace-select {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .nuvos-marketplace-select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  }
+
+  /* Input de búsqueda del marketplace */
+  .nuvos-marketplace-search-container {
+    position: relative;
+    width: 100%;
+  }
+
+  .nuvos-marketplace-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+
+  .nuvos-marketplace-search-input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 2.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 0.5rem;
+    color: #ffffff;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .nuvos-marketplace-search-input:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+  }
+
+  .nuvos-marketplace-search-input::placeholder {
+    color: #9ca3af;
+  }
+
+  /* --- NFT CARDS OPTIMIZADAS --- */
+@layer components {
+  /* NFT Card Professional */
+  .nft-card-pro {
+    background: linear-gradient(135deg, #1a0b2e 0%, #0f0514 100%);
+    border-radius: 1rem;
+    box-shadow: 
+      0 4px 20px rgba(124, 58, 237, 0.15), 
+      0 1px 0 rgba(139, 92, 246, 0.08);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    min-height: 240px;
+    width: 100%;
+    position: relative;
+    /* Mobile optimizations */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  .nft-card-pro::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(236, 72, 153, 0.5), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .nft-card-pro:hover {
+    box-shadow: 
+      0 8px 30px rgba(124, 58, 237, 0.25), 
+      0 4px 12px rgba(236, 72, 153, 0.15);
+    border-color: rgba(236, 72, 153, 0.4);
+    transform: translateY(-3px) scale(1.02);
+  }
+
+  .nft-card-pro:hover::before {
+    opacity: 1;
+  }
+  
+  /* Badges Section - Like e ID intercambiados */
+  .nft-card-pro-badges-section {
+    padding: 0.4rem 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.3rem;
+    background: rgba(31, 41, 55, 0.4);
+    border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  }
+  
+  .nft-card-pro-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    border-radius: 0.4rem;
+    padding: 0.15rem 0.35rem;
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  
+  .nft-badge-category {
+    background: rgba(147, 51, 234, 0.85);
+    color: white;
+  }
+  
+  /* Like button mejorado - ahora en el centro */
+  .nft-badge-like {
+    background: rgba(239, 68, 68, 0.85);
+    color: white;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    user-select: none;
+    position: relative;
+  }
+  
+  .nft-badge-like:hover {
+    background: rgba(239, 68, 68, 1);
+    transform: scale(1.1);
+  }
+  
+  .nft-badge-like:active {
+    transform: scale(0.95);
+  }
+  
+  .nft-badge-like:focus-visible {
+    outline: 2px solid rgba(239, 68, 68, 0.5);
+    outline-offset: 2px;
+  }
+  
+  /* ID badge - ahora a la derecha */
+  .nft-badge-id {
+    background: rgba(59, 130, 246, 0.85);
+    color: white;
+  }
+  
+  /* Content Section simplificada - solo owner */
+  .nft-card-pro-content {
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex: 1;
+    min-height: 0;
+  }
+  
+  /* Header con precio en la misma fila */
+  .nft-card-pro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  .nft-card-pro-title-section {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .nft-card-pro-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+    margin: 0 0 0.2rem 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .nft-card-pro-desc {
+    color: #9ca3af;
+    font-size: 0.7rem;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin: 0;
+  }
+  
+  /* Precio compacto en la esquina superior derecha */
+  .nft-card-pro-price-compact {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    flex-shrink: 0;
+  }
+  
+  .nft-card-pro-price {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #10b981;
+  }
+  
+  .nft-card-pro-price-currency {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+  
+  /* Info Section simplificada - solo owner */
+  .nft-card-pro-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  
+  .nft-card-pro-owner-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .nft-card-pro-owner-label {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.65rem;
+    color: #9ca3af;
+    font-weight: 500;
+  }
+  
+  .nft-card-pro-owner {
+    font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 0.65rem;
+    color: #e5e7eb;
+    font-weight: 500;
+  }
+  
+  /* Time Section Compacta */
+  .nft-card-pro-time {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    font-size: 0.6rem;
+    color: #6b7280;
+    margin-top: auto;
+  }
+  
+  /* Actions Section Compacta */
+  .nft-card-pro-actions {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.3rem;
+  }
+  
+  /* NFT action button styles - REMOVED - moved to buttons.css */
+  
+  .nft-card-pro-status {
+    text-align: center;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.7rem;
+    padding: 0.4rem;
+    margin-top: 0.3rem;
+  }
+  
+  /* --- GRID LAYOUT OPTIMIZADO CON CARDS MÁS ANCHAS EN DESKTOP --- */
+  .nft-grid-pro {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 0.5rem;
+  }
+  
+  /* Tablet */
+  @media (min-width: 640px) {
+    .nft-grid-pro {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      padding: 1rem;
+    }
+  }
+  
+  /* Desktop Small - Cards más anchas */
+  @media (min-width: 1024px) {
+    .nft-grid-pro {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+  }
+  
+  /* Desktop Large - Cards aún más anchas */
+  @media (min-width: 1280px) {
+    .nft-grid-pro {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      padding: 2rem;
+    }
+  }
+  
+  /* Desktop XL - Máximo 4 columnas para mantener cards anchas */
+  @media (min-width: 1536px) {
+    .nft-grid-pro {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2.5rem;
+      padding: 2.5rem;
+    }
+  }
+}
+
+/* --- RESPONSIVE OPTIMIZATIONS MEJORADAS --- */
+/* Mobile: Ultra compacto */
+@media (max-width: 640px) {
+  .nft-card-pro {
+    min-height: 220px; /* Reducido aún más */
+    border-radius: 0.75rem;
+  }
+  
+  .nft-card-pro-content {
+    padding: 0.5rem;
+    gap: 0.3rem;
+  }
+  
+  .nft-card-pro-header {
+    gap: 0.4rem;
+  }
+  
+  .nft-card-pro-title {
+    font-size: 0.75rem;
+  }
+  
+  .nft-card-pro-desc {
+    font-size: 0.65rem;
+  }
+  
+  .nft-card-pro-price {
+    font-size: 0.8rem;
+  }
+  
+  .nft-card-pro-price-currency {
+    font-size: 0.65rem;
+  }
+  
+  /* Remove duplicate mobile toggle styles to prevent conflicts */
+  /* Keep only the main marketplace filter styles */
+
+  /* Toggle de filtros móvil - Enhanced specificity - REMOVED DUPLICATE */
+  /* .nuvos-marketplace-mobile-toggle styles removed to prevent conflicts */
+}
+
+/* Tablet: Tamaño medio compacto */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .nft-card-pro {
+    min-height: 280px; /* Reducido */
+  }
+  
+  .nft-card-pro-content {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  
+  .nft-card-pro-title {
+    font-size: 0.9rem;
+  }
+  
+  .nft-card-pro-desc {
+    font-size: 0.75rem;
+  }
+  
+  .nft-card-pro-price {
+    font-size: 0.95rem;
+  }
+}
+
+/* Desktop: Compacto pero legible */
+@media (min-width: 1024px) {
+  .nft-card-pro {
+    min-height: 340px; /* Reducido de 420px */
+    border-radius: 1.25rem;
+  }
+  
+  .nft-card-pro-content {
+    padding: 1rem;
+    gap: 0.7rem;
+  }
+  
+  .nft-card-pro-header {
+    gap: 0.7rem;
+  }
+  
+  .nft-card-pro-title {
+    font-size: 1rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.3;
+  }
+  
+  .nft-card-pro-desc {
+    font-size: 0.85rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.4;
+  }
+  
+  .nft-card-pro-price {
+    font-size: 1.1rem;
+  }
+  
+  .nft-card-pro-price-currency {
+    font-size: 0.85rem;
+  }
+  
+  /* ...existing desktop styles... */
+}
+
+/* Large Desktop: Máxima legibilidad pero compacto */
+@media (min-width: 1280px) {
+  .nft-card-pro {
+    min-height: 380px; /* Reducido de 460px */
+  }
+  
+  .nft-card-pro-content {
+    padding: 1.25rem;
+    gap: 0.8rem;
+  }
+  
+  .nft-card-pro-title {
+    font-size: 1.1rem;
+  }
+  
+  .nft-card-pro-desc {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  
+  .nft-card-pro-price {
+    font-size: 1.2rem;
+  }
+  
+  .nft-card-pro-price-currency {
+    font-size: 0.9rem;
+  }
+}
+
+/* --- INPUTS Y FILTROS PARA MARKETPLACE --- */
+@layer components {
+    .nuvos-input {
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.8) 0%, rgba(24, 18, 43, 0.9) 100%);
+        border: 1.5px solid rgba(139, 92, 246, 0.25);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+        width: 100%;
+        outline: none;
+    }
+
+    .nuvos-input:focus {
+        border-color: rgba(139, 92, 246, 0.6);
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.95) 0%, rgba(24, 18, 43, 1) 100%);
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2), 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .nuvos-input::placeholder {
+        color: rgba(156, 163, 175, 0.7);
+    }
+
+    .nuvos-input:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.9) 0%, rgba(24, 18, 43, 0.95) 100%);
+    }
+
+    /* Select/Dropdown estilo Nuvos */
+    .nuvos-select {
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.8) 0%, rgba(24, 18, 43, 0.9) 100%);
+        border: 1.5px solid rgba(139, 92, 246, 0.25);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        color: #fff;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a78bfa' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .nuvos-select:focus {
+        border-color: rgba(139, 92, 246, 0.6);
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.95) 0%, rgba(24, 18, 43, 1) 100%);
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2), 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .nuvos-select:hover {
+        border-color: rgba(139, 92, 246, 0.4);
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.9) 0%, rgba(24, 18, 43, 0.95) 100%);
+    }
+
+    .nuvos-select option {
+        background: #1f2937;
+        color: #fff;
+        padding: 0.5rem;
+    }
+
+    /* Contenedor de filtros */
+    .nuvos-filters-container {
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.6) 0%, rgba(24, 18, 43, 0.8) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        backdrop-filter: blur(15px);
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.1);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Grid de filtros */
+    .nuvos-filters-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    @media (min-width: 640px) {
+        .nuvos-filters-grid {
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1.25rem;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        .nuvos-filters-grid {
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 1.5rem;
+        }
+    }
+
+    /* Grupo de filtros */
+    .nuvos-filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .nuvos-filter-label {
+        color: #e5e7eb;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    /* Botones de filtro - REMOVED - moved to buttons.css */
+
+    /* Búsqueda con icono */
+    .nuvos-search-container {
+        position: relative;
+        width: 100%;
+    }
+
+    .nuvos-search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgb(156, 163, 175);
+        width: 1rem;
+        height: 1rem;
+    }
+
+    .nuvos-search-input {
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.8) 0%, rgba(24, 18, 43, 0.9) 100%);
+        border: 1.5px solid rgba(139, 92, 246, 0.25);
+        border-radius: 0.75rem;
+        padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+        color: white;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+        width: 100%;
+        outline: none;
+    }
+
+    .nuvos-search-input:focus {
+        border-color: rgba(139, 92, 246, 0.6);
+        background: linear-gradient(135deg, rgba(35, 32, 70, 0.95) 0%, rgba(24, 18, 43, 1) 100%);
+        box-shadow: 0 4px 16px rgba(124, 58, 237, 0.2), 0 0 0 3px rgba(139, 92, 246, 0.1);
+    }
+
+    .nuvos-search-input:focus + .nuvos-search-icon {
+        color: #a78bfa;
+    }
+
+    .nuvos-search-input::placeholder {
+        color: rgba(156, 163, 175, 0.7);
+    }
+
+    /* Range/Slider para precios */
+    .nuvos-range {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(90deg, rgba(139, 92, 246, 0.3) 0%, rgba(124, 58, 237, 0.5) 100%);
+        outline: none;
+        cursor: pointer;
+    }
+
+    .nuvos-range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+        cursor: pointer;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+    }
+
+    .nuvos-range::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+        cursor: pointer;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.4);
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+        .nuvos-filters-container {
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .nuvos-input,
+        .nuvos-select,
+        .nuvos-search-input {
+            font-size: 1rem; /* Prevent zoom on iOS */
+            padding: 0.875rem 1rem;
+        }
+
+        .nuvos-search-input {
+            padding-left: 3rem;
+        }
+
+        .nuvos-filter-button {
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+        }
+    }
+
+    /* Dark mode enhancements */
+    @media (prefers-color-scheme: dark) {
+        .nuvos-input,
+        .nuvos-select,
+        .nuvos-search-input {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.95) 100%);
+        }
+
+        .nuvos-filters-container {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.9) 100%);
+        }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: high) {
+        .nuvos-input,
+        .nuvos-select,
+        .nuvos-search-input {
+            border-width: 2px;
+        }
+
+        .nuvos-filter-button {
+            border-width: 2px;
+        }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+        .nuvos-input,
+        .nuvos-select,
+        .nuvos-search-input,
+        .nuvos-filter-button {
+            transition: none;
+        }
+    }
+}
+
+/* --- NFT IMAGE CONSISTENCY FIXES --- */
+@layer components {
+  /* Standardized NFT image container */
+  .nft-image-container {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Standardized NFT image */
+  .nft-image-standard {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Ensure all NFT card images maintain consistent aspect ratios */
+  .nft-card-pro-image-container {
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom right, rgba(17, 24, 39, 0.5), rgba(31, 41, 55, 0.5));
+  }
+  
+  .nft-card-pro-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  .nft-card-pro:hover .nft-card-pro-image {
+    transform: scale(1.05);
+  }
+  
+  /* Collection grid NFT images */
+  .nft-collection-image-container {
+    aspect-ratio: 1 / 1;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom right, rgba(88, 28, 135, 0.3), rgba(0, 0, 0, 0.5));
+  }
+  
+  .nft-collection-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  
+  /* Profile section NFT images */
+  .nft-profile-image-container {
+    aspect-ratio: 1 / 1;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(to bottom right, rgba(88, 28, 135, 0.4), rgba(0, 0, 0, 0.6));
+  }
+  
+  .nft-profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .nft-profile-image:hover {
+    transform: scale(1.05);
+  } 
+}
+
+/* --- ACCESSIBILITY AND PERFORMANCE ENHANCEMENTS --- */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .nuvos-card,
+  .nft-card-pro,
+  .nuvos-marketplace-filter-button,
+  .nuvos-marketplace-stat-card {
+    transition: none;
+  }
+
+  .nft-card-pro:hover,
+  .nuvos-card:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nuvos-card,
+  .nft-card-pro {
+    border-width: 2px;
+  }
+
+  .nuvos-marketplace-search-input,
+  .nuvos-marketplace-input,
+  .nuvos-marketplace-select {
+    border-width: 2px;
+  }
+}
+
+/* Dark mode optimizations */
+@media (prefers-color-scheme: dark) {
+  .nuvos-card,
+  .nft-card-pro {
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.4), 
+      0 1px 0 rgba(139, 92, 246, 0.1);
+  }
+}
+
+/* --- NFT DETAIL MODAL OPTIMIZATIONS --- */
+@layer components {
+  /* Optimized modal scrolling */
+  .nft-detail-modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+  }
+
+  .nft-detail-modal-content::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .nft-detail-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .nft-detail-modal-content::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 2px;
+  }
+
+  .nft-detail-modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+  }
+
+  /* Enhanced focus states for accessibility */
+  .nft-detail-expand-button:focus-visible {
+    outline: 2px solid rgba(139, 92, 246, 0.8);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Smooth transitions for expand/collapse */
+  .nft-description-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Mobile optimizations for NFT detail modal */
+  @media (max-width: 767px) {
+    .nft-detail-modal-content {
+      padding: 0.75rem;
+    }
+
+    /* Ensure proper spacing on very small screens */
+    @media (max-width: 375px) {
+      .nft-detail-modal-content {
+        padding: 0.5rem;
+      }
+    }
+  }
+
+  /* Enhanced button states for better UX - REMOVED - moved to buttons.css */
+
+  /* Ensure modal content doesn't overflow on very small screens */
+  @media (max-width: 320px) {
+    .nft-detail-modal-content {
+      font-size: 0.8rem;
+    }
+  }
+}
+
+/* --- MARKETPLACE STATS CARDS --- */
+
+
+/* --- MARKETPLACE STATS CARDS COMPACT VERSION --- */
+@layer components {
+  /* Stats container */
+  .nuvos-marketplace-stats-container {
+    margin-bottom: 1.5rem;
+  }
+
+  /* Compact stat card with horizontal layout */
+  .nuvos-marketplace-stat-card-compact {
+    background: linear-gradient(135deg, #1a0b2e 0%, #16051a 50%, #0f0514 100%);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 1rem;
+    padding: 0.75rem 1rem;
+    backdrop-filter: blur(15px);
+    box-shadow: 
+      0 4px 20px rgba(124, 58, 237, 0.12),
+      inset 0 1px 0 rgba(139, 92, 246, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    height: auto;
+    min-height: 4rem;
+  }
+
+  .nuvos-marketplace-stat-card-compact::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .nuvos-marketplace-stat-card-compact:hover {
+    transform: translateY(-2px);
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 
+      0 8px 30px rgba(124, 58, 237, 0.2),
+      inset 0 1px 0 rgba(139, 92, 246, 0.12);
+  }
+
+  .nuvos-marketplace-stat-card-compact:hover::before {
+    opacity: 1;
+  }
+
+  /* Compact icon container */
+  .nuvos-marketplace-stat-icon-container-compact {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  /* Compact content area */
+  .nuvos-marketplace-stat-content-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    text-align: left;
+  }
+
+  /* Compact stat value */
+  .nuvos-marketplace-stat-value-compact {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Compact stat label */
+  .nuvos-marketplace-stat-label-compact {
+    color: #9ca3af;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
+
+  /* Mobile optimizations */
+  @media (max-width: 640px) {
+    .nuvos-marketplace-stat-card-compact {
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.75rem;
+      min-height: 3.5rem;
+    }
+
+    .nuvos-marketplace-stat-icon-container-compact {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.375rem;
+    }
+
+    .nuvos-marketplace-stat-value-compact {
+      font-size: 0.875rem;
+    }
+
+    .nuvos-marketplace-stat-label-compact {
+      font-size: 0.65rem;
+    }
+  }
+
+  /* Tablet optimizations */
+  @media (min-width: 641px) and (max-width: 1023px) {
+    .nuvos-marketplace-stat-card-compact {
+      padding: 0.625rem 0.875rem;
+      min-height: 4rem;
+    }
+
+    .nuvos-marketplace-stat-icon-container-compact {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .nuvos-marketplace-stat-value-compact {
+      font-size: 0.95rem;
+    }
+
+    .nuvos-marketplace-stat-label-compact {
+      font-size: 0.675rem;
+    }
+  }
+
+  /* Desktop optimizations */
+  @media (min-width: 1024px) {
+    .nuvos-marketplace-stat-card-compact {
+      padding: 0.875rem 1.125rem;
+      border-radius: 1.25rem;
+      min-height: 4.5rem;
+    }
+
+    .nuvos-marketplace-stat-icon-container-compact {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 0.625rem;
+    }
+
+    .nuvos-marketplace-stat-value-compact {
+      font-size: 1.125rem;
+    }
+
+    .nuvos-marketplace-stat-label-compact {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* Large desktop optimizations */
+  @media (min-width: 1280px) {
+    .nuvos-marketplace-stat-card-compact {
+      padding: 1rem 1.25rem;
+      min-height: 5rem;
+    }
+
+    .nuvos-marketplace-stat-icon-container-compact {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 0.75rem;
+    }
+
+    .nuvos-marketplace-stat-value-compact {
+      font-size: 1.25rem;
+    }
+
+    .nuvos-marketplace-stat-label-compact {
+      font-size: 0.8rem;
+    }
+  }
+
+  /* Accessibility enhancements */
+  @media (prefers-reduced-motion: reduce) {
+    .nuvos-marketplace-stat-card-compact,
+    .nuvos-marketplace-stat-icon-container-compact {
+      transition: none;
+    }
+
+    .nuvos-marketplace-stat-card-compact:hover {
+      transform: none;
+    }
+  }
+
+  /* High contrast mode */
+  @media (prefers-contrast: high) {
+    .nuvos-marketplace-stat-card-compact {
+      border-width: 2px;
+    }
+
+    .nuvos-marketplace-stat-icon-container-compact {
+      border-width: 2px;
+    }
+  }
+
+}
 }

@@ -3,6 +3,7 @@ import { m, useReducedMotion } from 'framer-motion';
 import { FaRobot, FaBrain, FaComments, FaArrowRight, FaStar } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { useAnimationConfig } from '../../animation/AnimationProvider';
+import { imageCache } from '../../../utils/blockchain/imageCache';
 
 const NuvosAI = () => {
   const navigate = useNavigate();
@@ -44,13 +45,19 @@ const NuvosAI = () => {
     navigate('/chat');
   }, [navigate]);
 
-  // Handle image load
+  // Handle image load with caching
   const handleImageLoad = useCallback(() => {
     setIsImageLoaded(true);
     setImageError(false);
-  }, []);
+    
+    // Cache successful load
+    const currentSrc = imageSources[currentImageSrc];
+    if (currentSrc && imageCache) {
+      imageCache.set(`ai-bot-${currentImageSrc}`, currentSrc);
+    }
+  }, [currentImageSrc]);
 
-  // Handle image error - try next source
+  // Handle image error - try next source with caching
   const handleImageError = useCallback(() => {
     if (currentImageSrc < imageSources.length - 1) {
       setCurrentImageSrc(prev => prev + 1);
@@ -237,7 +244,6 @@ const NuvosAI = () => {
               <span className="block mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text">
                 AI Assistant
               </span>
-              <span className="block text-white">NUVOS AI</span>
             </h2>
             
             <p className="text-xl text-gray-200 max-w-xl leading-relaxed">

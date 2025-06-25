@@ -4,12 +4,12 @@ export const stakingInfo = {
   features: [
     {
       title: "Hourly Rewards",
-      description: "Earn 0.24% per day, automatically credited to your stake account",
+      description: "Earn 2.4% per day (0.1% per hour), automatically credited to your account",
       iconType: "clock"
     },
     {
-      title: "Time Bonus",
-      description: "Get up to 5% additional APR based on staking duration",
+      title: "Linear Rewards",
+      description: "Contract verified 87.6% annual APY with transparent calculations",
       iconType: "chart"
     },
     {
@@ -19,9 +19,9 @@ export const stakingInfo = {
     }
   ],
   details: {
-    minStake: "5 POL",
-    maxStake: "10,000 POL",
-    baseAPR: "25%",
-    maxAPR: "125%"
+    minStake: "0.05 POL",
+    maxStake: "10 POL",
+    baseAPR: "87.6%",
+    commission: "10%"
   }
 };

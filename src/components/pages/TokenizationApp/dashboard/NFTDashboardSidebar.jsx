@@ -29,7 +29,7 @@ const NFTDashboardSidebar = ({
   const [statusExpanded, setStatusExpanded] = useState(true);
 
   // Use mobile layout on smaller screens regardless of prop
-  const useMobileLayout = isMobile || window.innerWidth < 768;
+  const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 768);
 
   // Safely destructure stats with fallback to default values
   const {

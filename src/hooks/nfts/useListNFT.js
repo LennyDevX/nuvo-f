@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import { mapCategoryToSpanish } from '../../utils/blockchain/blockchainUtils';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -12,12 +13,12 @@ export default function useListNFT() {
 
   // List NFT for sale
   const listNFT = useCallback(async ({ tokenId, price, category }) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    setTxHash(null);
-
     try {
+      setLoading(true);
+      setError(null);
+      setSuccess(false);
+      setTxHash(null);
+
       if (!window.ethereum) throw new Error('Wallet not found');
       if (!CONTRACT_ADDRESS || !ethers.isAddress(CONTRACT_ADDRESS)) throw new Error('Invalid contract address');
       
@@ -55,22 +56,8 @@ export default function useListNFT() {
       }
 
       // Validate and map category to Spanish as the contract expects
-      const categoryMap = {
-        'collectible': 'coleccionables',
-        'coleccionables': 'coleccionables',
-        'artwork': 'arte',
-        'arte': 'arte',
-        'photography': 'fotografia',
-        'fotografia': 'fotografia',
-        'music': 'musica',
-        'musica': 'musica',
-        'video': 'video'
-      };
-
-      const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-      const categoryValue = categoryMap[normalizedCategory] || 'coleccionables';
-
-      console.log('Mapped category:', normalizedCategory, '->', categoryValue);
+      const categoryValue = mapCategoryToSpanish(category);
+      console.log('Mapped category:', category, '->', categoryValue);
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
@@ -190,3 +177,5 @@ export default function useListNFT() {
 
   return { listNFT, loading, error, success, txHash };
 }
+   
+

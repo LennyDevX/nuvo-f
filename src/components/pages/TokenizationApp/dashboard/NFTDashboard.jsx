@@ -1,14 +1,17 @@
 import React, { useState, useCallback, useEffect, useContext, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { FaRedo, FaPlus } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
+import { useDeviceDetection } from '../../../../hooks/mobile/useDeviceDetection';
 import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
+import LoadingSpinner from '../../../ui/LoadingSpinner';
+import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 const NFTDashboard = () => {
   const { account } = useContext(WalletContext);
@@ -17,8 +20,12 @@ const NFTDashboard = () => {
     nftsLoading: loading, 
     nftsError: error, 
     refreshNFTs, 
-    updateUserAccount 
+    updateUserAccount,
+    cacheStatus 
   } = useTokenization();
+  
+  // Get device detection data
+  const { isMobile } = useDeviceDetection();
   
   // Update TokenizationContext with current user account
   useEffect(() => {
@@ -61,29 +68,46 @@ const NFTDashboard = () => {
   }, [refreshNFTs]);
 
   // Calculate collection stats with enhanced information
-  const stats = useMemo(() => ({
-    totalNFTs: nfts.length,
-    listedNFTs: nfts.filter(nft => nft.isForSale).length,
-    totalValue: nfts
-      .filter(nft => nft.isForSale && nft.price)
-      .reduce((total, nft) => {
-        const priceInEth = nft.price && ethers.formatEther ? ethers.formatEther(nft.price) : 0;
-        return total + parseFloat(priceInEth);
-      }, 0)
-      .toFixed(4),
-    // Calculate most valuable NFT
-    topNFTValue: nfts.length > 0 
-      ? nfts.reduce((max, nft) => {
-          if (!nft.price) return max;
-          const priceInEth = ethers.formatEther ? ethers.formatEther(nft.price) : 0;
-          return Math.max(max, parseFloat(priceInEth));
-        }, 0).toFixed(2)
-      : "0.00",
-    // Use the stable reference value for recent activity
-    recentActivity: recentActivity,
-    // Calculate unique categories
-    uniqueCategories: new Set(nfts.map(nft => nft.category || 'collectible')).size
-  }), [nfts, recentActivity]);
+  const stats = useMemo(() => {
+    // Calculate unique categories properly with debugging
+    const categoriesSet = new Set();
+    console.log('Dashboard stats - processing NFTs:', nfts.length);
+    
+    nfts.forEach(nft => {
+      if (nft.category) {
+        const normalizedCategory = normalizeCategory(nft.category || 'collectible');
+        console.log(`Dashboard stats - NFT ${nft.tokenId}: "${nft.category}" -> "${normalizedCategory}"`);
+        categoriesSet.add(normalizedCategory);
+      }
+    });
+    
+    const uniqueCategoriesCount = categoriesSet.size;
+    console.log('Dashboard stats - unique categories:', Array.from(categoriesSet), 'count:', uniqueCategoriesCount);
+    
+    return {
+      totalNFTs: nfts.length,
+      listedNFTs: nfts.filter(nft => nft.isForSale).length,
+      totalValue: nfts
+        .filter(nft => nft.isForSale && nft.price)
+        .reduce((total, nft) => {
+          const priceInEth = nft.price && ethers.formatEther ? ethers.formatEther(nft.price) : 0;
+          return total + parseFloat(priceInEth);
+        }, 0)
+        .toFixed(4),
+      // Calculate most valuable NFT
+      topNFTValue: nfts.length > 0 
+        ? nfts.reduce((max, nft) => {
+            if (!nft.price) return max;
+            const priceInEth = ethers.formatEther ? ethers.formatEther(nft.price) : 0;
+            return Math.max(max, parseFloat(priceInEth));
+          }, 0).toFixed(2)
+        : "0.00",
+      // Use the stable reference value for recent activity
+      recentActivity: recentActivity,
+      // Fixed unique categories calculation
+      uniqueCategories: uniqueCategoriesCount
+    };
+  }, [nfts, recentActivity]);
 
   // Handle filter changes
   const handleFilterChange = (filterType, value) => {
@@ -174,16 +198,22 @@ const NFTDashboard = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const toggleMobileFilters = () => setShowMobileFilters(!showMobileFilters);
 
+  // Use a more reliable mobile detection
+  const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 1024);
+
   return (
     <div className="relative min-h-screen bg-nuvo-gradient pb-12">
       <SpaceBackground customClass="" />
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="flex flex-col space-y-6">
-          {/* Dashboard Header */}
+          {/* Dashboard Header - without refresh button */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2 text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">
                 NFT Dashboard
+                {cacheStatus && (
+                  <span className="ml-3 text-sm text-green-400">💾 {cacheStatus}</span>
+                )}
               </h1>
               <p className="text-gray-300">Manage and explore your digital assets</p>
             </div>
@@ -195,21 +225,14 @@ const NFTDashboard = () => {
               >
                 <FaPlus className="text-sm" /> Mint NFTs
               </Link>
-              
-              <button 
-                onClick={handleRefreshNFTs} 
-                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base btn-nuvo-outline text-white font-medium transition-all duration-200 border border-purple-500/30 hover:border-pink-400/50"
-              >
-                <FaRedo className="text-sm" /> Refresh NFTs
-              </button>
             </div>
           </div>
           
-          {/* Stats Overview - Pass true for isMobile on smaller screens */}
-          <NFTDashboardStats stats={stats} isMobile={true} />
+          {/* Stats Overview - with refresh button passed as prop */}
+          <NFTDashboardStats stats={stats} isMobile={true} nfts={nfts} onRefresh={handleRefreshNFTs} />
           
           {/* Mobile Filters Toggle */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button 
               onClick={toggleMobileFilters}
               className="w-full py-3 btn-nuvo-base btn-nuvo-outline flex items-center justify-center border border-purple-500/30 hover:border-pink-400/50 transition-all duration-200 font-medium"
@@ -219,30 +242,50 @@ const NFTDashboard = () => {
           </div>
           
           {/* Main Content */}
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Sidebar - Hidden on mobile unless toggled */}
-            <div className={`${showMobileFilters ? 'block' : 'hidden'} md:block md:w-64 flex-shrink-0`}>
-              <NFTDashboardSidebar 
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onSearchChange={handleSearchChange}
-                onSearchApply={() => setShowMobileFilters(false)}
-                searchValue={searchTerm}
-                onSortChange={handleSortChange}
-                activeView={activeView}
-                isMobile={true}
-                stats={stats} 
-              />
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Sidebar - Always visible on desktop, toggleable on mobile */}
+            <div className={`${showMobileFilters ? 'block' : 'hidden lg:block'} w-full lg:w-80 flex-shrink-0 relative z-10`}>
+              <div className="sticky top-6">
+                <NFTDashboardSidebar 
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onSearchChange={handleSearchChange}
+                  onSearchApply={() => setShowMobileFilters(false)}
+                  searchValue={searchTerm}
+                  onSortChange={handleSortChange}
+                  activeView={activeView}
+                  isMobile={window.innerWidth < 1024}
+                  stats={stats} 
+                />
+              </div>
             </div>
             
             {/* NFT Collection */}
-            <div className="flex-1 nuvos-card  backdrop-blur-md p-4 ">
-              <NFTCollection 
-                nfts={filteredNFTs}
-                loading={loading}
-                error={error}
-                onRetry={handleRefreshNFTs}
-              />
+            <div className="flex-1 nuvos-card backdrop-blur-md p-4 relative z-0">
+              {/* Loading State */}
+              {loading ? (
+                <div className="flex flex-col justify-center items-center py-20 space-y-6">
+                  <LoadingSpinner 
+                    size="xl" 
+                    variant="orbit"
+                    text="Loading Your NFTs"
+                    showDots={true}
+                    className="text-purple-400"
+                  />
+                  <div className="text-center max-w-md">
+                    <p className="text-white font-medium mb-2">Discovering your collection...</p>
+                    <p className="text-gray-400 text-sm">Fetching NFT data from blockchain</p>
+                  </div>
+                </div>
+              ) : (
+                <NFTCollection 
+                  nfts={filteredNFTs}
+                  loading={loading}
+                  error={error}
+                  onRetry={handleRefreshNFTs}
+                  cacheStatus={cacheStatus}
+                />
+              )}
             </div>
           </div>
         </div>

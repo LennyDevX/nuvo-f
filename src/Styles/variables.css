@@ -21,10 +21,10 @@
   --bottom-nav-height: 56px;
 
   /* Colors */
-  --purple-primary: #7c3aed;
+  --purple-primary: #7c3aed;        /* Color morado principal - CAMBIAR AQUÍ */
   --purple-secondary: rgba(124, 58, 237, 0.2);
   --purple-accent: rgba(124, 58, 237, 0.5);
-  --background-dark: #111827;
+  --background-dark: #000000;
   --surface-dark: #1f2937;
   --text-light: #f9fafb;
   --text-muted: #9ca3af;
@@ -34,6 +34,11 @@
   
   /* Mobile navbar height */
   --mobile-navbar-height: 64px;
+
+  /* Marketplace specific variables */
+  --marketplace-card-hover: rgba(124, 58, 237, 0.1);
+  --marketplace-border: rgba(124, 58, 237, 0.2);
+  --marketplace-gradient: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
 }
 
 @media (max-width: 768px) {

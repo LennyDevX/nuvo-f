@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getCSPCompliantImageURL } from '../../utils/blockchain/blockchainUtils';
+import { imageCache } from '../../utils/blockchain/imageCache';
+import LoadingSpinner from './LoadingSpinner';
 
-const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
+const DEFAULT_PLACEHOLDER = '/LogoNuvos.webp';
 
 /**
  * Component for handling IPFS images with proper loading states and CSP-compliant gateway fallbacks
@@ -14,96 +16,185 @@ const IPFSImage = ({
   style = {},
   onLoad = null,
   onError = null,
+  loading = "lazy",
   ...rest
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [imageSrc, setImageSrc] = useState('');
-  const [fallbackIndex, setFallbackIndex] = useState(0);
+  const [imageState, setImageState] = useState({
+    loading: true,
+    error: false,
+    currentSrc: placeholderSrc,
+    gatewayIndex: 0
+  });
   
-  // List of CSP-compliant gateways to try in order
-  const gateways = [
-    null, // First try the provided URL with CSP compliance
-    'https://ipfs.io/ipfs/',
+  const imgRef = useRef(null);
+  const mountedRef = useRef(true);
+  const loadAttemptRef = useRef(0);
+  
+  // Memoize the gateways list to prevent recreating on every render
+  const gateways = useMemo(() => [
     'https://gateway.pinata.cloud/ipfs/',
+    'https://ipfs.io/ipfs/',
     'https://cloudflare-ipfs.com/ipfs/',
-    'https://dweb.link/ipfs/'
-  ];
-  
-  // Try the next gateway when an image fails to load
-  const tryNextGateway = () => {
-    if (fallbackIndex < gateways.length - 1) {
-      setFallbackIndex(prevIndex => prevIndex + 1);
-    } else {
-      // If all gateways fail, use the placeholder
-      setError(true);
-      setLoading(false);
-      if (onError) onError();
-    }
-  };
-  
-  // Process the image URL when src or fallback index changes
-  useEffect(() => {
-    if (!src) {
-      setImageSrc(placeholderSrc);
-      setLoading(false);
-      setError(true);
-      return;
-    }
+    'https://dweb.link/ipfs/',
+    'https://nftstorage.link/ipfs/'
+  ], []);
+
+  // Memoize the processed URL to prevent recalculation
+  const processedUrl = useMemo(() => {
+    if (!src) return placeholderSrc;
     
-    setLoading(true);
-    setError(false);
+    const cacheKey = `${src}-${imageState.gatewayIndex}`;
+    const cached = imageCache.get(cacheKey);
+    if (cached) return cached;
     
-    let newSrc;
-    if (fallbackIndex === 0) {
-      // Use our CSP-compliant function first
-      newSrc = getCSPCompliantImageURL(src);
-    } else if (src.startsWith('ipfs://')) {
-      // If that fails, try the next gateway
-      newSrc = gateways[fallbackIndex] + src.substring(7);
-    } else if (/^Qm[1-9A-Za-z]{44}/.test(src) || /^bafy/.test(src)) {
-      // For raw CIDs
-      newSrc = gateways[fallbackIndex] + src;
+    let url;
+    
+    if (imageState.gatewayIndex === 0) {
+      url = getCSPCompliantImageURL(src);
     } else {
-      // For URLs, try to extract IPFS path if possible
-      const ipfsPathMatch = src.match(/\/ipfs\/(Qm[1-9A-Za-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
-      if (ipfsPathMatch) {
-        const cid = ipfsPathMatch[1];
-        const subpath = ipfsPathMatch[2] || '';
-        newSrc = gateways[fallbackIndex] + cid + subpath;
+      const gatewayIndex = imageState.gatewayIndex - 1;
+      if (gatewayIndex < gateways.length) {
+        if (src.startsWith('ipfs://')) {
+          const hash = src.substring(7);
+          url = gateways[gatewayIndex] + hash;
+        } else if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)$/.test(src)) {
+          url = gateways[gatewayIndex] + src;
+        } else {
+          const ipfsMatch = src.match(/\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+          if (ipfsMatch) {
+            const cid = ipfsMatch[1];
+            const subpath = ipfsMatch[2] || '';
+            url = gateways[gatewayIndex] + cid + subpath;
+          } else {
+            url = getCSPCompliantImageURL(src);
+          }
+        }
       } else {
-        // Not an IPFS URL
-        newSrc = src;
+        url = placeholderSrc;
       }
     }
     
-    setImageSrc(newSrc);
-  }, [src, fallbackIndex, placeholderSrc]);
-  
+    if (url && url !== placeholderSrc) {
+      imageCache.set(cacheKey, url);
+    }
+    
+    return url;
+  }, [src, imageState.gatewayIndex, gateways, placeholderSrc]);
+
+  // Handle image load success
+  const handleImageLoad = () => {
+    if (!mountedRef.current) return;
+    
+    setImageState(prev => ({
+      ...prev,
+      loading: false,
+      error: false,
+      currentSrc: processedUrl
+    }));
+    
+    if (onLoad) onLoad();
+  };
+
+  // Handle image load error
+  const handleImageError = () => {
+    if (!mountedRef.current) return;
+    
+    const nextGatewayIndex = imageState.gatewayIndex + 1;
+    const maxAttempts = gateways.length + 1;
+    
+    if (nextGatewayIndex >= maxAttempts) {
+      // All gateways exhausted, show placeholder
+      setImageState(prev => ({
+        ...prev,
+        loading: false,
+        error: true,
+        currentSrc: placeholderSrc,
+        gatewayIndex: nextGatewayIndex
+      }));
+      
+      if (onError) onError();
+    } else {
+      // Try next gateway
+      setImageState(prev => ({
+        ...prev,
+        gatewayIndex: nextGatewayIndex,
+        loading: true,
+        error: false
+      }));
+    }
+  };
+
+  // Main effect - only run when src changes
+  useEffect(() => {
+    mountedRef.current = true;
+    loadAttemptRef.current += 1;
+    const currentAttempt = loadAttemptRef.current;
+    
+    // Reset state when src changes
+    setImageState({
+      loading: true,
+      error: false,
+      currentSrc: processedUrl,
+      gatewayIndex: 0
+    });
+    
+    return () => {
+      mountedRef.current = false;
+      // Cancel this attempt if component unmounts
+      if (loadAttemptRef.current === currentAttempt) {
+        loadAttemptRef.current += 1;
+      }
+    };
+  }, [src]); // Only depend on src
+
+  // Update currentSrc when processedUrl changes
+  useEffect(() => {
+    if (!mountedRef.current) return;
+    
+    setImageState(prev => ({
+      ...prev,
+      currentSrc: processedUrl
+    }));
+  }, [processedUrl]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   return (
     <div className={`relative ${className}`} style={style}>
-      {/* Main image */}
-      <img 
-        src={error ? placeholderSrc : imageSrc}
-        alt={alt}
-        className={`w-full h-full transition-opacity duration-300 ${loading ? 'opacity-0' : 'opacity-100'}`}
-        loading="lazy"
-        onLoad={() => {
-          setLoading(false);
-          if (onLoad) onLoad();
-        }}
-        onError={() => tryNextGateway()}
-        {...rest}
-      />
-      
-      {/* Loading indicator */}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="w-8 h-8 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+      {imageState.loading && !imageState.error && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm">
+          <LoadingSpinner 
+            size="small" 
+            variant="ripple" 
+            className="text-purple-400"
+          />
         </div>
       )}
+      
+      <img
+        ref={imgRef}
+        src={imageState.currentSrc}
+        alt={alt}
+        loading={loading}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        className="w-full h-full object-cover"
+        style={{ 
+          opacity: imageState.loading ? 0 : 1, 
+          transition: 'opacity 0.3s ease-in-out' 
+        }}
+        {...rest}
+      />
     </div>
   );
 };
 
-export default IPFSImage;
+export default React.memo(IPFSImage, (prevProps, nextProps) => {
+  // Only re-render if src or alt changes
+  return prevProps.src === nextProps.src && prevProps.alt === nextProps.alt;
+});

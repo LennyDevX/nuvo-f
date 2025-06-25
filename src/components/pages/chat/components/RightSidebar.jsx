@@ -191,6 +191,19 @@ const RightSidebar = ({
         )}
       </AnimatePresence>
       
+      {/* Desktop blur overlay for main content */}
+      <AnimatePresence>
+        {isOpen && (
+          <m.div 
+            className="hidden md:block fixed inset-0 backdrop-blur-sm z-[150] pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: shouldReduceMotion ? 0.15 : 0.3 }}
+          />
+        )}
+      </AnimatePresence>
+      
       <AnimatePresence>
         {isOpen && (
           <m.div
@@ -296,7 +309,7 @@ const RightSidebar = ({
                       <div className="space-y-3 md:space-y-2">
                         <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 md:p-2.5 flex justify-between items-center border border-gray-600/30 shadow-sm">
                           <span className="text-gray-300 text-sm md:text-xs font-medium">Balance:</span>
-                          <span className="text-white font-semibold text-sm md:text-base truncate">{parseFloat(balance || 0).toFixed(4)} MATIC</span>
+                          <span className="text-white font-semibold text-sm md:text-base truncate">{parseFloat(balance || 0).toFixed(4)} POL</span>
                         </div>
                         <div className="bg-gray-700/50 backdrop-blur-sm rounded-xl p-3 md:p-2.5 flex justify-between items-center border border-gray-600/30 shadow-sm">
                           <span className="text-gray-300 text-sm md:text-xs font-medium">NFTs:</span>

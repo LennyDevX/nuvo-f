@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { ethers } from 'ethers';
 import { logger } from '../utils/debug/logger';
 
@@ -14,6 +14,15 @@ export const WalletContext = createContext({
     setWalletConnected: () => {},
     ensureProvider: async () => {},
 });
+
+// Custom hook to use the WalletContext
+export const useWallet = () => {
+    const context = useContext(WalletContext);
+    if (context === undefined) {
+        throw new Error('useWallet must be used within a WalletProvider');
+    }
+    return context;
+};
 
 export const WalletProvider = ({ children }) => {
     // Inicializar estados desde localStorage con comprobación más robusta
@@ -240,6 +249,61 @@ export const WalletProvider = ({ children }) => {
         return provider;
     }, [provider, account]);
 
+    // Nueva función para conectar la wallet manualmente
+    const connectWallet = useCallback(async () => {
+        if (window.ethereum) {
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                await provider.ready;
+                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+                if (accounts && accounts.length > 0) {
+                    const newAccount = accounts[0];
+                    setAccount(newAccount);
+                    setWalletConnected(true);
+                    setProvider(provider);
+
+                    // Actualiza balance y network
+                    const balance = await provider.getBalance(newAccount);
+                    setBalance(ethers.formatEther(balance));
+                    const network = await provider.getNetwork();
+                    const networkName = getNetworkName(network.chainId.toString());
+                    setNetwork(networkName);
+
+                    setupEventListeners(provider);
+                }
+            } catch (error) {
+                logger.error('WALLET', 'Error connecting wallet', error.message);
+                handleDisconnect();
+            }
+        } else {
+            logger.warn('WALLET', 'No Ethereum provider found');
+        }
+    }, [getNetworkName, setupEventListeners, handleDisconnect]);
+
+    // Efecto: actualiza el provider y datos al conectar la wallet
+    useEffect(() => {
+        if (window.ethereum && walletConnected && account) {
+            (async () => {
+                try {
+                    const provider = new ethers.BrowserProvider(window.ethereum);
+                    await provider.ready;
+                    setProvider(provider);
+
+                    // Actualiza balance y network
+                    const balance = await provider.getBalance(account);
+                    setBalance(ethers.formatEther(balance));
+                    const network = await provider.getNetwork();
+                    const networkName = getNetworkName(network.chainId.toString());
+                    setNetwork(networkName);
+
+                    setupEventListeners(provider);
+                } catch (error) {
+                    logger.error('WALLET', 'Error updating provider after connect', error.message);
+                }
+            })();
+        }
+    }, [walletConnected, account, getNetworkName, setupEventListeners]);
+
     const value = {
         account,
         balance,
@@ -252,6 +316,7 @@ export const WalletProvider = ({ children }) => {
         setWalletConnected,
         handleDisconnect,
         ensureProvider,
+        connectWallet, // <-- expone la función para conectar la wallet
     };
 
     return (

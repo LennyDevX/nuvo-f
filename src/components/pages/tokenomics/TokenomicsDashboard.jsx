@@ -3,7 +3,9 @@ import { m } from "framer-motion";
 import MainLayout from '../../layout/MainLayout';
 import TokenInfoModal from '../../modals/TokenInfoModal';
 import AnimationProvider from '../../animation/AnimationProvider';
-import SpaceBackground from '../../effects/SpaceBackground'; // Keep the import but use the simplified background
+import SpaceBackground from '../../effects/SpaceBackground';
+import LoadingSpinner from '../../ui/LoadingSpinner';
+
 // Lazily load components for better performance
 const TokenDistribution = lazy(() => import('./TokenDistribution'));
 const RevenueStreams = lazy(() => import('./RevenueStreams'));
@@ -14,7 +16,12 @@ const TokenomicsExplanation = lazy(() => import('./TokenomicsExplanation'));
 // Create loading fallback
 const LoadingFallback = () => (
   <div className="w-full h-32 sm:h-48 flex items-center justify-center bg-gradient-to-b from-purple-700/10 to-black/30 rounded-2xl">
-    <div className="text-purple-400 text-sm">Loading...</div>
+    <LoadingSpinner 
+      size="medium" 
+      variant="gradient"
+      text="Loading..."
+      className="text-purple-400"
+    />
   </div>
 );
 

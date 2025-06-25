@@ -60,15 +60,25 @@ export const globalRateLimiter = new RateLimiter();
 
 const pendingRequests = new Map();
 
-export function dedupRequest(key, requestFn) {
+export async function dedupRequest(key, requestFn, retries = 2, backoff = 1000) {
   if (pendingRequests.has(key)) {
     return pendingRequests.get(key);
   }
-  
-  const promise = requestFn().finally(() => {
+  const retryWrapper = async () => {
+    let attempt = 0;
+    while (attempt <= retries) {
+      try {
+        return await requestFn();
+      } catch (err) {
+        if (attempt === retries) throw err;
+        await new Promise(r => setTimeout(r, backoff * Math.pow(2, attempt)));
+        attempt++;
+      }
+    }
+  };
+  const promise = retryWrapper().finally(() => {
     pendingRequests.delete(key);
   });
-  
   pendingRequests.set(key, promise);
   return promise;
 }

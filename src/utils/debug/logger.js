@@ -8,6 +8,7 @@ const DEBUG_FLAGS = {
   STAKING: localStorage.getItem('debug_staking') === 'true' || import.meta.env.DEV,
   NFT: localStorage.getItem('debug_nft') === 'true' || import.meta.env.DEV,
   CHAT: localStorage.getItem('debug_chat') === 'true' || import.meta.env.DEV,
+  CACHE: localStorage.getItem('debug_cache') === 'true' || import.meta.env.DEV, // Agregado
   GENERAL: localStorage.getItem('debug_general') === 'true' || import.meta.env.DEV,
 };
 
@@ -136,6 +137,33 @@ class SmartLogger {
   }
 
   /**
+   * Cache-specific logging methods
+   */
+  cacheHit(cacheId, key, responseTime) {
+    return this.throttledLog('DEBUG', 'CACHE', `Hit [${cacheId}]: ${key}`, { responseTime: `${responseTime.toFixed(2)}ms` }, 15000);
+  }
+
+  cacheMiss(cacheId, key, responseTime) {
+    return this.throttledLog('DEBUG', 'CACHE', `Miss [${cacheId}]: ${key}`, { responseTime: `${responseTime.toFixed(2)}ms` }, 15000);
+  }
+
+  cacheSet(cacheId, key, ttl) {
+    return this.throttledLog('DEBUG', 'CACHE', `Set [${cacheId}]: ${key}`, { ttl: `${ttl}ms` }, 20000);
+  }
+
+  cacheEviction(cacheId, evictedKeys) {
+    return this.warn('CACHE', `Eviction [${cacheId}]`, { count: evictedKeys, reason: 'LRU cleanup' });
+  }
+
+  cacheMetrics(cacheId, metrics) {
+    return this.throttledLog('INFO', 'CACHE', `Metrics [${cacheId}]`, metrics, 60000); // Una vez por minuto
+  }
+
+  cacheInvalidation(cacheId, pattern, count) {
+    return this.info('CACHE', `Invalidated [${cacheId}]: ${pattern}`, { entriesRemoved: count });
+  }
+
+  /**
    * Helper methods
    */
   _hasValueChanged(oldValue, newValue, threshold = 0) {
@@ -173,7 +201,7 @@ class SmartLogger {
 export const logger = new SmartLogger();
 
 // Export convenience functions
-export const { debug, info, success, warn, error, walletInfo, walletChange } = logger;
+export const { debug, info, success, warn, error, walletInfo, walletChange, cacheHit, cacheMiss, cacheSet, cacheEviction, cacheMetrics, cacheInvalidation } = logger;
 
 // Export debug control functions
 export const debugControl = {

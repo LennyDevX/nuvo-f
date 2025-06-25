@@ -2,14 +2,14 @@ import React, { useEffect, useState, useContext } from "react";
 import { LazyMotion, domAnimation, m, AnimatePresence } from "framer-motion";
 import { WalletContext } from "../../../context/WalletContext";
 import { FriendlyAlert } from "./ui/CommonComponents";
-import { FaCoins } from 'react-icons/fa';
-import LoadingSpinner from "../../LoadOverlay/LoadingSpinner";
+import LoadingSpinner from "../../ui/LoadingSpinner";
 import SpaceBackground from "../../effects/SpaceBackground";
 import StakingDashboard from "./StakingDashboard";
 import { useStaking } from "../../../context/StakingContext";
+import NotConnectedMessage from "../../ui/NotConnectedMessage";
 
 const DashboardStaking = () => {
-  const { account, network, balance } = useContext(WalletContext);
+  const { account, network, balance, connectWallet } = useContext(WalletContext);
   const { state } = useStaking();
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,26 +74,25 @@ const DashboardStaking = () => {
   const renderDashboardContent = () => {
     if (!isConnected) {
       return (
-        <m.div
-          className="text-center py-20"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="mb-8">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-900/20">
-              <FaCoins className="h-10 w-10" />
-            </div>
-          </div>
-          <p className="text-lg text-slate-300 mb-4">
-            Connect your wallet to view your staking dashboard
-          </p>
-        </m.div>
+        <NotConnectedMessage
+          title="Smart Staking"
+          message="Connect your wallet to view your staking dashboard"
+          connectWallet={connectWallet}
+        />
       );
     }
 
     if (isLoading) {
-      return <LoadingSpinner size="default" message="Loading dashboard..." />;
+      return (
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSpinner 
+            size="large" 
+            variant="orbit" 
+            text="Loading dashboard..." 
+            showDots={true}
+          />
+        </div>
+      );
     }
 
     return (
@@ -124,21 +123,7 @@ const DashboardStaking = () => {
               animate="visible"
               className="mb-3 sm:mb-4 overflow-hidden"
             >
-              {Array.from("Smart Staking").map((char, index) => (
-                <m.span
-                  key={index}
-                  custom={index}
-                  variants={letterVariants}
-                  className="inline-block text-transparent bg-clip-text bg-nuvo-gradient-text
-                            text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold"
-                  style={{
-                    willChange: "transform, opacity",
-                    transform: "translateZ(0)"
-                  }}
-                >
-                  {char === ' ' ? '\u00A0' : char}
-                </m.span>
-              ))}
+              
             </m.div>
             <m.div
               initial={{ opacity: 0, y: 5 }}
@@ -146,12 +131,7 @@ const DashboardStaking = () => {
               transition={{ delay: 0.8, duration: 0.5 }}
               style={{ willChange: "opacity, transform" }}
             >
-              <p className="text-base sm:text-lg md:text-xl text-slate-300/80 max-w-2xl mx-auto mb-2 px-2">
-                Stake your tokens and earn rewards in our decentralized staking platform
-              </p>
-              <p className="text-sm md:text-base text-slate-400/60 px-2">
-                Manage your staking positions and track your rewards in real-time
-              </p>
+             
             </m.div>
           </m.div>
           <div className="container mx-auto">

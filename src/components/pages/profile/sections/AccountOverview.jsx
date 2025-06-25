@@ -4,6 +4,7 @@ import { FaUser, FaWallet, FaExternalLinkAlt, FaCopy, FaCheckCircle, FaCoins, Fa
 import { Link } from 'react-router-dom';
 import { useStaking } from '../../../../context/StakingContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
+import IPFSImage from '../../../ui/IPFSImage';
 
 // Move constants outside component to prevent recreation
 const FALLBACK_IMAGES = [
@@ -13,61 +14,24 @@ const FALLBACK_IMAGES = [
   '/placeholder-nft.webp'
 ];
 
-// Extract NFTImage as a memoized component
+// Extract NFTImage as a memoized component - Remove getOptimizedImageUrl call
 const NFTImage = React.memo(({ src, alt, className }) => {
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [fallbackIndex, setFallbackIndex] = useState(0);
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    // Reset state when src changes
-    setCurrentSrc(src);
-    setFallbackIndex(0);
-    setHasError(false);
-  }, [src]);
-
-  // Memoize the error handler to prevent recreation
-  const handleError = useCallback(() => {
-    if (currentSrc === src && fallbackIndex < FALLBACK_IMAGES.length) {
-      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
-      setFallbackIndex(prevIndex => prevIndex + 1);
-    } 
-    else if (fallbackIndex < FALLBACK_IMAGES.length) {
-      setCurrentSrc(FALLBACK_IMAGES[fallbackIndex]);
-      setFallbackIndex(prevIndex => prevIndex + 1);
-    } 
-    else {
-      setHasError(true);
-    }
-  }, [currentSrc, src, fallbackIndex]);
-
-  if (hasError) {
-    return (
-      <div className={`flex items-center justify-center ${className}`}>
-        <FaImage className="text-lg text-purple-400" />
-      </div>
-    );
-  }
-
   return (
-    <img 
-      src={currentSrc} 
+    <IPFSImage 
+      src={src}
       alt={alt} 
       className={className}
-      onError={handleError}
-      // Add width/height to prevent layout shifts
-      width="100%"
-      height="100%"
+      placeholderSrc={FALLBACK_IMAGES[0]}
       loading="lazy"
     />
   );
 });
 
-// NFT preview list component
+// NFT preview list component with consistent aspect ratios
 const NFTPreviewList = React.memo(({ nfts = [], count = 0 }) => (
   <div className="flex flex-wrap gap-2 mt-3 mb-2">
     {nfts.slice(0, 3).map((nft, idx) => (
-      <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30">
+      <div key={idx} className="w-12 h-12 rounded-md overflow-hidden bg-purple-900/30 flex-shrink-0">
         <NFTImage 
           src={nft.image} 
           alt={nft.name || `NFT #${nft.tokenId}`} 
@@ -76,7 +40,7 @@ const NFTPreviewList = React.memo(({ nfts = [], count = 0 }) => (
       </div>
     ))}
     {count > 3 && (
-      <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-md bg-purple-900/30 flex items-center justify-center flex-shrink-0">
         <span className="text-xs text-purple-300">+{count - 3}</span>
       </div>
     )}
@@ -256,7 +220,7 @@ const AccountOverview = ({ account, balance, network }) => {
               <NFTPreviewList nfts={actualNfts} count={nftCount} />
               
               <Link 
-                to="/nfts"
+                to="/my-nfts"
                 className="inline-block text-sm text-purple-400 hover:text-purple-300 underline mt-2"
               >
                 View your NFT collection
@@ -285,3 +249,4 @@ const AccountOverview = ({ account, balance, network }) => {
 };
 
 export default React.memo(AccountOverview);
+

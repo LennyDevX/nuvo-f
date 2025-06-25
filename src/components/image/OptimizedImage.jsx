@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { imageCache } from '../../utils/blockchain/imageCache';
 
 const OptimizedImage = ({ 
   src, 
@@ -133,9 +134,15 @@ const OptimizedImage = ({
     }
   }, [currentSrc]);
 
-  // Generate optimized src with quality parameter
+  // Generate optimized src with caching check
   const getOptimizedSrc = useCallback((originalSrc) => {
     if (!originalSrc) return '';
+    
+    // Check cache first
+    if (typeof imageCache !== 'undefined') {
+      const cached = imageCache.get(`optimized-${originalSrc}`);
+      if (cached) return cached;
+    }
     
     // Don't modify external URLs or data URLs
     if (originalSrc.startsWith('http') || originalSrc.startsWith('data:')) {
@@ -148,7 +155,14 @@ const OptimizedImage = ({
       if (!url.searchParams.has('q') && !url.searchParams.has('quality')) {
         url.searchParams.set('q', quality.toString());
       }
-      return url.toString();
+      const optimizedUrl = url.toString();
+      
+      // Cache the optimized URL
+      if (typeof imageCache !== 'undefined') {
+        imageCache.set(`optimized-${originalSrc}`, optimizedUrl);
+      }
+      
+      return optimizedUrl;
     } catch {
       // Fallback for relative paths
       return originalSrc;

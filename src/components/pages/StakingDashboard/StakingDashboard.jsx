@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useStaking } from '../../../context/StakingContext';
+import { WalletContext } from '../../../context/WalletContext';
+import SpaceBackground from '../../effects/SpaceBackground';
+import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { FriendlyAlert } from './ui/CommonComponents';
 
 // Import modular components
@@ -8,14 +11,17 @@ import StakingStats from './components/StakingStats';
 import StakingActions from './components/StakingActions';
 import TimeBonus from './components/TimeBonus';
 import RewardsProjection from './components/RewardsProjection';
+import HeroSection from './HeroSection';
 
-const StakingDashboard = ({ account }) => {
+const StakingDashboard = ({ account: propAccount }) => {
   const { 
     state, 
     STAKING_CONSTANTS,
     refreshUserInfo, 
   } = useStaking();
-  
+
+  const { account, walletConnected, connectWallet } = useContext(WalletContext);
+
   const [isPending, setIsPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
   
@@ -39,8 +45,27 @@ const StakingDashboard = ({ account }) => {
     setTimeout(() => setStatusMessage(null), 5000);
   }, []);
   
+  // Mostrar mensaje de no conectado si la wallet no está conectada
+  if (!walletConnected || !account) {
+    return (
+      <div className="relative min-h-screen bg-nuvo-gradient pb-12">
+        <SpaceBackground customClass="" />
+        <div className="container mx-auto px-3 md:px-4 py-8 relative z-10">
+          <NotConnectedMessage
+            title="Smart Staking"
+            message="Connect your wallet to view your staking dashboard"
+            connectWallet={connectWallet}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 pb-20 md:pb-8">
+      {/* Hero Section */}
+      <HeroSection />
+
       <div className="w-full space-y-4 sm:space-y-6">
         {/* Status Message Display */}
         {statusMessage && (
@@ -95,9 +120,6 @@ const StakingDashboard = ({ account }) => {
             currentTx={currentTx}
           />
         </div>
-        
-        {/* Contract Info - Positioned naturally below content */}
-        
       </div>
     </div>
   );

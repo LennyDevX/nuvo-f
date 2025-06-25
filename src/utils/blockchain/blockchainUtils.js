@@ -5,18 +5,27 @@ import {
   cacheLogResult,
   markLogQueryInProgress
 } from './blockchainLogCache';
-import { getAlchemyApiKey, getAlchemyNftUrl } from '../alchemy';
+import { getAlchemyApiKey, getAlchemyNftUrl } from './alchemy';
+import { imageCache } from './imageCache';
 
 // Enhanced ERC20 ABI with common functions
-const erc20Abi = [
+export const ERC20_ABI = [
+  // Transfer events
+  "event Transfer(address indexed from, address indexed to, uint256 value)",
+  "event Approval(address indexed owner, address indexed spender, uint256 value)",
+  
+  // Read functions
   "function balanceOf(address owner) view returns (uint256)",
   "function decimals() view returns (uint8)",
   "function symbol() view returns (string)",
   "function name() view returns (string)",
   "function totalSupply() view returns (uint256)",
-  "function transfer(address to, uint256 value) returns (bool)",
   "function allowance(address owner, address spender) view returns (uint256)",
-  "function approve(address spender, uint256 value) returns (bool)"
+  
+  // Write functions
+  "function transfer(address to, uint256 value) returns (bool)",
+  "function approve(address spender, uint256 value) returns (bool)",
+  "function transferFrom(address from, address to, uint256 value) returns (bool)"
 ];
 
 // ERC721 (NFT) ABI
@@ -29,7 +38,7 @@ const erc721Abi = [
 ];
 
 // Default image placeholder for NFTs and tokens
-export const DEFAULT_PLACEHOLDER = '/NFT-placeholder.webp';
+export const DEFAULT_PLACEHOLDER = "/LogoNuvos.webp";
 
 // Supported NFT APIs and their base URLs
 const NFT_API_CONFIG = {
@@ -291,61 +300,76 @@ export const ipfsToHttp = (uri, preferredGateway) => {
 };
 
 /**
- * Get a CSP and CORS/CORP compliant image URL
- * 
- * @param {string} originalUrl - Original image URL
- * @param {Array<string>} allowedDomains - List of CSP-allowed domains
- * @returns {string} - A usable image URL
+ * Enhanced CSP-compliant image URL processor with caching
  */
-export const getCSPCompliantImageURL = (originalUrl, allowedDomains = [
-  'ipfs.io',
-  'gateway.pinata.cloud',
-  'cloudflare-ipfs.com',
-  'nftstorage.link',
-  'dweb.link',
-  'cf-ipfs.com'
-]) => {
-  if (!originalUrl) return DEFAULT_PLACEHOLDER;
+export const getCSPCompliantImageURL = (imageUrl) => {
+  if (!imageUrl) return DEFAULT_PLACEHOLDER;
   
-  // If it's a data URL or relative URL, it's already compliant
-  if (originalUrl.startsWith('data:') || originalUrl.startsWith('/')) {
-    return originalUrl;
+  // Check cache first
+  const cached = imageCache.get(imageUrl);
+  if (cached) {
+    return cached;
   }
   
   try {
-    // If IPFS, use the gateway rotation system instead of just ipfs.io
-    if (originalUrl.startsWith('ipfs://')) {
-      return ipfsToHttp(originalUrl, 'https://nftstorage.link/ipfs/');
-    }
+    let processedUrl;
     
-    // If it starts with gateway.pinata.cloud, replace it with an alternative
-    if (originalUrl.includes('gateway.pinata.cloud')) {
-      const ipfsPath = originalUrl.split('/ipfs/')[1];
-      if (ipfsPath) {
-        return `https://nftstorage.link/ipfs/${ipfsPath}`;
+    // Handle IPFS URLs
+    if (imageUrl.startsWith('ipfs://')) {
+      const hash = imageUrl.replace('ipfs://', '');
+      processedUrl = `https://gateway.pinata.cloud/ipfs/${hash}`;
+    }
+    // Handle raw IPFS hashes
+    else if (/^(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)$/.test(imageUrl)) {
+      processedUrl = `https://gateway.pinata.cloud/ipfs/${imageUrl}`;
+    }
+    // Handle URLs that already contain IPFS gateways
+    else if (imageUrl.includes('/ipfs/')) {
+      const trustedGateways = [
+        'gateway.pinata.cloud',
+        'ipfs.io',
+        'cloudflare-ipfs.com',
+        'dweb.link',
+        'nftstorage.link'
+      ];
+      
+      const url = new URL(imageUrl);
+      if (trustedGateways.some(gateway => url.hostname.includes(gateway))) {
+        processedUrl = imageUrl;
+      } else {
+        const ipfsMatch = imageUrl.match(/\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
+        if (ipfsMatch) {
+          const hash = ipfsMatch[1];
+          const path = ipfsMatch[2] || '';
+          processedUrl = `https://gateway.pinata.cloud/ipfs/${hash}${path}`;
+        }
       }
     }
-    
-    // Check if URL is from an allowed domain
-    const url = new URL(originalUrl);
-    const domain = url.hostname;
-    
-    if (allowedDomains.some(allowed => domain.includes(allowed))) {
-      return originalUrl;
+    // Handle HTTP/HTTPS URLs
+    else if (imageUrl.startsWith('http://')) {
+      processedUrl = imageUrl.replace('http://', 'https://');
+    }
+    else if (imageUrl.startsWith('https://')) {
+      processedUrl = imageUrl;
+    }
+    // Handle relative URLs or data URLs
+    else if (imageUrl.startsWith('/') || imageUrl.startsWith('data:')) {
+      processedUrl = imageUrl;
+    }
+    else {
+      console.warn('Unsupported image URL format:', imageUrl);
+      processedUrl = DEFAULT_PLACEHOLDER;
     }
     
-    // Try to extract CID if it's another IPFS gateway
-    const pathMatch = url.pathname.match(/\/ipfs\/(Qm[1-9A-ZaZ]{44}|bafy[A-Za-z0-9]+)(\/.*)?/);
-    if (pathMatch) {
-      const cid = pathMatch[1];
-      const subpath = pathMatch[2] || '';
-      return `https://nftstorage.link/ipfs/${cid}${subpath}`;
+    // Cache the processed URL
+    if (processedUrl && processedUrl !== DEFAULT_PLACEHOLDER) {
+      imageCache.set(imageUrl, processedUrl);
     }
     
-    console.warn(`Image URL ${originalUrl} might violate CSP or CORP - using placeholder`);
-    return DEFAULT_PLACEHOLDER;
-  } catch (e) {
-    console.error("Error parsing URL:", e);
+    return processedUrl;
+    
+  } catch (error) {
+    console.error('Error processing image URL:', error);
     return DEFAULT_PLACEHOLDER;
   }
 };
@@ -1139,6 +1163,7 @@ export const uploadJsonToIPFS = async (data, options = {}) => {
     return `ipfs://${result.IpfsHash}`;
   } catch (error) {
     console.error("Error uploading to IPFS:", error);
+    // Re-throw error to be handled by caller
     throw error;
   }
 };
@@ -1329,138 +1354,137 @@ export const decodeContractError = (errorData) => {
 };
 
 /**
- * Get valid categories for NFT listing
- * @returns {Array} - Array of valid category mappings
- */
-export const getValidCategories = () => {
-  return [
-    { key: 'coleccionables', label: 'Coleccionables', english: 'collectible' },
-    { key: 'arte', label: 'Arte', english: 'artwork' },
-    { key: 'fotografia', label: 'Fotografía', english: 'photography' },
-    { key: 'musica', label: 'Música', english: 'music' },
-    { key: 'video', label: 'Video', english: 'video' }
-  ];
-};
-
-/**
- * Map English category to Spanish for contract
- * @param {string} category - English category name
- * @returns {string} - Spanish category name expected by contract
+ * Mapping functions for categories
  */
 export const mapCategoryToSpanish = (category) => {
   const categoryMap = {
     'collectible': 'coleccionables',
-    'coleccionables': 'coleccionables',
-    'artwork': 'arte',
-    'arte': 'arte',
-    'photography': 'fotografia',
-    'fotografia': 'fotografia',
-    'music': 'musica',
-    'musica': 'musica',
+    'artwork': 'arte', 
+    'item': 'artículo',
+    'document': 'documento',
+    'realestate': 'inmuebles',
+    'art': 'arte',
+    'photo': 'fotografía',
+    'music': 'música',
     'video': 'video'
   };
-
-  const normalizedCategory = category?.toLowerCase().trim() || 'collectible';
-  return categoryMap[normalizedCategory] || 'coleccionables';
+  
+  return categoryMap[category?.toLowerCase()] || category || 'coleccionables';
 };
 
-/**
- * Validate NFT listing parameters
- * @param {Object} params - Listing parameters
- * @returns {Object} - Validation result
- */
-export const validateNFTListingParams = (params) => {
-  const { tokenId, price, category } = params;
-  const errors = [];
-
-  // Validate tokenId
-  if (!tokenId) {
-    errors.push('Token ID is required');
-  } else {
-    try {
-      const id = BigInt(tokenId);
-      if (id < 0) {
-        errors.push('Token ID must be positive');
-      }
-    } catch (e) {
-      errors.push('Invalid Token ID format');
-    }
-  }
-
-  // Validate price
-  if (!price) {
-    errors.push('Price is required');
-  } else {
-    const priceNum = parseFloat(price);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      errors.push('Price must be a positive number');
-    } else if (priceNum < 0.001) {
-      errors.push('Minimum price is 0.001 MATIC');
-    }
-  }
-
-  // Validate category
-  const validCategories = ['coleccionables', 'arte', 'fotografia', 'musica', 'video'];
-  if (category && !validCategories.includes(category.toLowerCase())) {
-    errors.push('Invalid category');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
+export const mapCategoryToEnglish = (category) => {
+  const categoryMap = {
+    'coleccionables': 'collectible',
+    'arte': 'art',
+    'artículo': 'item', 
+    'documento': 'document',
+    'inmuebles': 'realestate',
+    'fotografía': 'photo',
+    'música': 'music',
+    'video': 'video'
   };
+  
+  return categoryMap[category?.toLowerCase()] || category || 'collectible';
+};
+
+// Category normalization mapping - ensure all categories are in English
+const CATEGORY_MAPPING = {
+  // English (keep as is)
+  'collectible': 'collectible',
+  'art': 'art',
+  'photo': 'photo',
+  'music': 'music',
+  'video': 'video',
+  'document': 'document',
+  'game': 'game',
+  'utility': 'utility',
+  
+  // Spanish to English mapping
+  'coleccionable': 'collectible',
+  'arte': 'art',
+  'foto': 'photo',
+  'musica': 'music',
+  'música': 'music',
+  'video': 'video',
+  'documento': 'document',
+  'juego': 'game',
+  'utilidad': 'utility',
+  
+  // Common variations
+  'collectibles': 'collectible',
+  'artwork': 'art',
+  'photograph': 'photo',
+  'photography': 'photo',
+  'videos': 'video',
+  'documents': 'document',
+  'gaming': 'game',
+  'games': 'game',
+  
+  // Default fallback
+  'other': 'collectible',
+  'others': 'collectible',
+  'misc': 'collectible',
+  'miscellaneous': 'collectible'
+};
+
+// Enhanced category normalization function
+export const normalizeCategory = (category) => {
+  if (!category || typeof category !== 'string') {
+    return 'collectible'; // default fallback
+  }
+  
+  // Convert to lowercase and trim whitespace
+  const normalized = category.toLowerCase().trim();
+  
+  // Check if we have a direct mapping
+  if (CATEGORY_MAPPING[normalized]) {
+    return CATEGORY_MAPPING[normalized];
+  }
+  
+  // If no mapping found, return collectible as default
+  return 'collectible';
+};
+
+// Get display name for categories (always in English)
+export const getCategoryDisplayName = (category) => {
+  const normalizedCategory = normalizeCategory(category);
+  
+  const displayNames = {
+    'collectible': 'Collectible',
+    'art': 'Art',
+    'photo': 'Photo',
+    'music': 'Music',
+    'video': 'Video',
+    'document': 'Document',
+    'game': 'Game',
+    'utility': 'Utility'
+  };
+  
+  return displayNames[normalizedCategory] || 'Collectible';
+};
+
+// Get all available categories in English
+export const getAvailableCategories = () => {
+  return [
+    { value: 'all', label: 'All Categories' },
+    { value: 'collectible', label: 'Collectible' },
+    { value: 'art', label: 'Art' },
+    { value: 'photo', label: 'Photo' },
+    { value: 'music', label: 'Music' },
+    { value: 'video', label: 'Video' },
+    { value: 'document', label: 'Document' },
+    { value: 'game', label: 'Game' },
+    { value: 'utility', label: 'Utility' }
+  ];
 };
 
 /**
- * Format contract error messages for user display
- * @param {Error} error - Contract error
- * @returns {string} - User-friendly error message
+ * Get optimized image URL with fallbacks and CSP compliance
+ * This is an alias for getCSPCompliantImageURL for backwards compatibility
+ * 
+ * @param {string} imageUrl - Original image URL
+ * @returns {string} - Optimized and CSP-compliant image URL
  */
-export const formatContractError = (error) => {
-  if (!error) return 'Unknown error occurred';
-
-  const message = error.message || error.toString();
-
-  // Common contract error patterns
-  if (message.includes('user rejected')) {
-    return 'Transaction was rejected by user';
-  }
-  
-  if (message.includes('insufficient funds')) {
-    return 'Insufficient funds for gas fees';
-  }
-  
-  if (message.includes('TokenNotForSale')) {
-    return 'This NFT is not currently for sale';
-  }
-  
-  if (message.includes('Unauthorized')) {
-    return 'You are not authorized to perform this action';
-  }
-  
-  if (message.includes('TokenDoesNotExist')) {
-    return 'This NFT does not exist';
-  }
-  
-  if (message.includes('execution reverted')) {
-    return 'Transaction failed - contract requirements not met';
-  }
-  
-  if (message.includes('gas')) {
-    return 'Transaction failed due to gas issues';
-  }
-
-  // Return the original message if no pattern matches
-  return message;
-};
-
-// Add the missing export that's causing the error
-export const cardemodule = {
-  isEnabled: true,
-  version: '1.0.0',
-  // Add any other properties that might be needed
-  init: () => {
-    console.log('Card module initialized');
-    return true;
-  }
+export const getOptimizedImageUrl = (imageUrl) => {
+  return getCSPCompliantImageURL(imageUrl);
 };

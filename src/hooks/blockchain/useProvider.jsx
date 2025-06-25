@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ethers } from "ethers";
 import { globalCache } from '../../utils/cache/CacheManager';
-import { getAlchemyRpcUrl, getAlchemyApiKey } from '../../utils/alchemy';
+import { getAlchemyRpcUrl, getAlchemyApiKey } from '../../utils/blockchain/alchemy';
 
 // Public RPC fallbacks if primary provider fails
 const PUBLIC_RPC_ENDPOINTS = {

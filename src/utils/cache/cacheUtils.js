@@ -63,3 +63,35 @@ export const clearCache = (key = null) => {
     return false;
   }
 };
+
+/**
+ * Prefetches a list of keys using a fetch function and caches them.
+ * @param {Array<string>} keys
+ * @param {Function} fetchFn
+ * @param {number} expiryMs
+ */
+export const prefetchCacheData = async (keys, fetchFn, expiryMs = DEFAULT_EXPIRY) => {
+  for (const key of keys) {
+    try {
+      const data = await fetchFn(key);
+      cacheData(key, data, expiryMs);
+    } catch (e) {
+      // Ignore prefetch errors
+    }
+  }
+};
+
+/**
+ * Clears all cache entries with a given prefix (group invalidation)
+ */
+export const clearCacheByPrefix = (prefix) => {
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith(CACHE_PREFIX + prefix))
+      .forEach(k => localStorage.removeItem(k));
+    return true;
+  } catch (error) {
+    console.error('Cache clear by prefix error:', error);
+    return false;
+  }
+};

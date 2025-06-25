@@ -15,11 +15,19 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
   
   useEffect(() => {
     // Fetch base APY once for consistent display
-    calculateRealAPY().then(data => {
-      if (data && data.baseAPY) {
-        setBaseAPY(data.baseAPY);
+    const fetchAPY = async () => {
+      try {
+        const data = await calculateRealAPY();
+        if (data && data.baseAPY) {
+          setBaseAPY(data.baseAPY);
+        }
+      } catch (error) {
+        console.error('Error fetching APY:', error);
+        setBaseAPY(87.6); // Fallback to contract verified rate
       }
-    });
+    };
+    
+    fetchAPY();
   }, [calculateRealAPY]);
   
   useEffect(() => {
@@ -98,9 +106,9 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
     if (projections) return projections;
     if (!userInfo || !userInfo.totalStaked) return null;
     
-    // Simple ROI calculation based on base APY
+    // Simple ROI calculation based on contract verified APY (87.6%)
     const totalStaked = parseFloat(userInfo.totalStaked);
-    const dailyRate = (baseAPY / 365) / 100;
+    const dailyRate = (87.6 / 365) / 100; // Use contract verified rate
     
     return {
       oneMonth: (totalStaked * dailyRate * 30).toFixed(4),
@@ -148,11 +156,11 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
           <div className="pt-4 border-t border-slate-700/30 text-xs text-slate-400">
             <div className="flex justify-between items-center py-2">
               <span>Base APY:</span>
-              <span className="text-white">{baseAPY}%</span>
+              <span className="text-white">87.6%</span>
             </div>
             
             <div className="text-xs mt-4 py-2 px-3 bg-indigo-900/20 rounded-lg border border-indigo-900/40">
-              <span className="text-indigo-400">Note:</span> Projections are estimates based on current staking amount and rates.
+              <span className="text-indigo-400">Note:</span> Projections based on contract verified 87.6% APY with linear rewards.
             </div>
           </div>
         </div>

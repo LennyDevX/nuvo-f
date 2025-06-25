@@ -1,6 +1,8 @@
 import React, { useMemo, useCallback } from 'react';
 import { m } from 'framer-motion';
 import NFTFeatures from './NFTFeatures';
+import OptimizedImage from '../../image/OptimizedImage';
+import { getOptimizedImageUrl } from '../../../utils/blockchain/blockchainUtils';
 
 const NFTHeroSection = () => {
   // Letra por letra animation - memoized for performance
@@ -87,14 +89,12 @@ const NFTHeroSection = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <m.div className="relative" initial={{ y: 0 }} animate={floatingAnimation}>
-                <m.img
-                  src="/NFT-X1.webp"
+                <OptimizedImage
+                  src={getOptimizedImageUrl("/NFT-X1.webp")}
                   alt="Nuvos Bot"
                   className="max-w-full h-auto rounded-xl max-h-[180px]"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.8 }}
                   style={{ willChange: "filter" }}
+                  loading="lazy"
                 />
                 
                 {/* Shadow effect and background remain the same */}
@@ -164,8 +164,8 @@ const NFTHeroSection = () => {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             <m.div className="relative" initial={{ y: 0 }} animate={floatingAnimation}>
-              <m.img
-                src="/NFT-X1.webp"
+              <OptimizedImage
+                src={getOptimizedImageUrl("/NFT-X1.webp")}
                 alt="Nuvos NFTs"
                 className="max-w-full h-auto rounded-2xl md:max-w-md"
                 initial={{ opacity: 0, scale: 0.9 }}
