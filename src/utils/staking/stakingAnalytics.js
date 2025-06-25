@@ -56,14 +56,19 @@ export const calculateEffectiveApy = (baseApy, daysStaked) => {
  * @returns {Object} Analysis results including score and recommendations
  */
 export const analyzeStakingPortfolio = (stakingData) => {
+  // Initialize results object at the beginning
+  const results = {
+    score: 0,
+    performanceSummary: "",
+    recommendations: [],
+    metrics: {}
+  };
 
   if (!stakingData || !stakingData.userDeposits || stakingData.userDeposits.length === 0) {
-    const results = {
-      score: 0,
-      performanceSummary: "No staking activity found. Start staking to get an analysis.",
-      recommendations: ["Visit the Staking Dashboard to make your first deposit."],
-      metrics: {}
-    };
+    results.score = 0;
+    results.performanceSummary = "No staking activity found. Start staking to get an analysis.";
+    results.recommendations = ["Visit the Staking Dashboard to make your first deposit."];
+    results.metrics = {};
     return results;
   }
 
@@ -197,4 +202,3 @@ export const analyzeStakingPortfolio = (stakingData) => {
 
   return results;
 };
-    
