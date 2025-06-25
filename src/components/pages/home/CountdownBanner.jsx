@@ -19,7 +19,7 @@ const CountdownBanner = () => {
 
   // Setup countdown timer
   useEffect(() => {
-    const targetDate = new Date('January 1, 2026 00:00:00').getTime();
+    const targetDate = new Date('January 1, 2027 00:00:00').getTime();
     
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -85,7 +85,7 @@ const CountdownBanner = () => {
           <h4 className="text-transparent bg-clip-text mt-2 bg-nuvo-gradient-text text-lg font-semibold">NUVOS Token Pre-Sale Countdown</h4>
         </div>
         <p className="text-gray-300 text-xs sm:text-sm text-center">
-          Mark your calendar for January 1, 2026 – The official NUVOS token pre-sale launch
+          Mark your calendar for January 1, 2027 – The official NUVOS token pre-sale launch
         </p>
       </div>
     </m.div>

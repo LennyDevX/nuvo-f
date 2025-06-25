@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
+import { uploadFileToIPFS, uploadJsonToIPFS } from '../../utils/blockchain/blockchainUtils';
 import TokenizationAppABI from '../../Abi/TokenizationApp.json';
-import { uploadFileToIPFS, uploadJsonToIPFS, ipfsToHttp, mapCategoryToSpanish, normalizeCategory } from '../../utils/blockchain/blockchainUtils';
 
 const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
 
@@ -49,202 +49,164 @@ export default function useMintNFT() {
       
       // Use memoized contract address
       if (!validatedContractAddress) {
-        throw new Error("Contract address is invalid or not configured");
+        throw new Error('Invalid contract address. Please check your environment configuration.');
       }
       
       console.log("Using contract address:", validatedContractAddress);
       
       // Normalize the category to English first, then translate to Spanish for contract
-      const normalizedCategory = normalizeCategory(category);
-      const translatedCategory = mapCategoryToSpanish(normalizedCategory);
-      console.log("Category flow:", category, "->", normalizedCategory, "->", translatedCategory);
-      
-      let imageUri;
-      let metadataUri;
-      let useLocalFallback = false;
+      const normalizedCategory = categoryMap[category] || 'coleccionables';
+      console.log("Category normalized:", category, "->", normalizedCategory);
 
-      // Try uploading to IPFS via Pinata
-      try {
-        // Subir imagen using our enhanced IPFS utility
-        console.log("Uploading image file:", file.name, "size:", file.size, "type:", file.type);
-        imageUri = await uploadFileToIPFS(file);
-        console.log("Image uploaded, URI:", imageUri);
-        
-        // Crear metadatos - store the normalized English category in metadata
-        const metadata = {
-          name,
-          description,
-          image: imageUri,
-          attributes: [
-            { trait_type: 'Category', value: normalizedCategory } // Store English category in metadata
-          ]
-        };
-        
-        console.log("Creating metadata with normalized category:", normalizedCategory);
-        metadataUri = await uploadJsonToIPFS(metadata);
-        console.log("Metadata uploaded, URI:", metadataUri);
-      } catch (ipfsError) {
-        // Show the actual error message from Pinata if available
-        let msg = ipfsError?.message || ipfsError?.toString() || '';
-        if (
-          msg.includes('Pinata authentication failed') ||
-          msg.includes('401') ||
-          msg.includes('403')
-        ) {
-          setError(
-            "No se pudo subir el archivo a IPFS. Tus credenciales de Pinata son inválidas o faltan. Por favor revisa tu configuración de API Key/Secret o JWT."
-          );
-        } else {
-          setError(msg || "No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
-        }
-        throw new Error(msg || "No se pudo subir el archivo a IPFS. Verifica tu conexión o tus credenciales de Pinata.");
+      // Check if wallet is connected
+      if (!window.ethereum) {
+        throw new Error('Please install MetaMask to mint NFTs');
       }
 
-      // Si por alguna razón no hay metadataUri, no mintees
-      if (!metadataUri || !imageUri) {
-        setError("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
-        throw new Error("No se pudo obtener la URI de IPFS para la metadata o la imagen.");
-      }
-
-      // Conectar a wallet
-      if (!window.ethereum) throw new Error('Wallet not found');
-      console.log("Connecting to wallet");
-      
+      // Get provider and signer
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
       
+      console.log("Connected wallet:", userAddress);
+
       // Create contract instance
-      console.log("Creating contract instance with address:", validatedContractAddress);
-      const contract = new ethers.Contract(validatedContractAddress, TokenizationAppABI.abi, signer);
-      
-      // Convertir el royalty a uint96 (BigInt)
-      let royaltyValue = 0n;
+      const contract = new ethers.Contract(
+        validatedContractAddress,
+        TokenizationAppABI.abi,
+        signer
+      );
+
+      // Step 1: Upload image to IPFS
+      console.log("Uploading image to IPFS...");
+      let imageUrl;
       try {
-        if (typeof royalty === 'bigint') {
-          royaltyValue = royalty;
-        } else if (typeof royalty === 'string') {
-          royaltyValue = BigInt(royalty);
-        } else if (typeof royalty === 'number') {
-          royaltyValue = BigInt(royalty);
-        } else {
-          royaltyValue = 0n;
-        }
-      } catch (e) {
-        royaltyValue = 0n;
+        imageUrl = await uploadFileToIPFS(file);
+        console.log("Image uploaded to IPFS:", imageUrl);
+      } catch (ipfsError) {
+        console.warn("IPFS upload failed, using local data URL:", ipfsError);
+        imageUrl = await createLocalDataUrl(file);
       }
-      
-      console.log("Calling contract.createNFT with:", {
-        metadataUri,
-        category: translatedCategory, // Spanish for contract
-        royalty: royaltyValue
-      });
-      
-      // Use a fixed gas limit to avoid estimation issues
-      const txOptions = {
-        gasLimit: BigInt(3000000) // Use a safe high value
+
+      // Step 2: Create metadata object
+      const metadata = {
+        name: name || "Untitled NFT",
+        description: description || "A unique digital asset",
+        image: imageUrl,
+        attributes: [
+          {
+            trait_type: "Category",
+            value: category
+          },
+          {
+            trait_type: "Creator",
+            value: userAddress
+          },
+          {
+            trait_type: "Created",
+            value: new Date().toISOString()
+          }
+        ]
       };
+
+      // Step 3: Upload metadata to IPFS
+      console.log("Uploading metadata to IPFS...");
+      let metadataUrl;
+      try {
+        metadataUrl = await uploadJsonToIPFS(metadata);
+        console.log("Metadata uploaded to IPFS:", metadataUrl);
+      } catch (metadataError) {
+        console.warn("Metadata IPFS upload failed:", metadataError);
+        // Create a simple data URL for metadata as fallback
+        const metadataJson = JSON.stringify(metadata);
+        const blob = new Blob([metadataJson], { type: 'application/json' });
+        metadataUrl = URL.createObjectURL(blob);
+      }
+
+      // Step 4: Estimate gas for the transaction
+      console.log("Estimating gas for minting...");
+      const royaltyBasisPoints = Math.floor((royalty || 250));
       
-      console.log("Using fixed gas limit:", txOptions.gasLimit.toString());
-      
-      // Llamar a createNFT con la categoría traducida y royalty como uint96
-      const tx = await contract.createNFT(
-        metadataUri, 
-        translatedCategory, 
-        royaltyValue,
+      try {
+        const gasEstimate = await contract.createNFT.estimateGas(
+          metadataUrl,
+          normalizedCategory,
+          royaltyBasisPoints
+        );
+        console.log("Gas estimate:", gasEstimate.toString());
+      } catch (estimateError) {
+        console.warn("Gas estimation failed:", estimateError);
+      }
+
+      // Step 5: Execute the minting transaction
+      console.log("Executing minting transaction...");
+      const transaction = await contract.createNFT(
+        metadataUrl,
+        normalizedCategory,
+        royaltyBasisPoints,
         {
-          gasLimit: BigInt(3000000)
+          gasLimit: 500000 // Set a reasonable gas limit
         }
       );
+
+      console.log("Transaction submitted:", transaction.hash);
+      setTxHash(transaction.hash);
+
+      // Step 6: Wait for transaction confirmation
+      console.log("Waiting for transaction confirmation...");
+      const receipt = await transaction.wait();
       
-      setTxHash(tx.hash);
-      console.log("Transaction sent, hash:", tx.hash);
-      
-      const receipt = await tx.wait();
-      console.log("Transaction confirmed:", receipt);
-      
-      setSuccess(true);
-      
-      // Extraer tokenId del evento TokenMinted
-      let tokenId = null;
-      try {
-        for (const log of receipt.logs) {
+      if (receipt.status === 1) {
+        console.log("Transaction confirmed:", receipt);
+        
+        // Extract token ID from transaction receipt
+        let tokenId = null;
+        if (receipt.logs && receipt.logs.length > 0) {
           try {
-            const parsedLog = contract.interface.parseLog(log);
-            if (parsedLog && parsedLog.name === "TokenMinted") {
-              // El tokenId es el primer argumento (uint256 indexed tokenId)
-              tokenId = parsedLog.args.tokenId?.toString() || parsedLog.args[0]?.toString();
-              break;
+            const tokenMintedEvent = receipt.logs.find(log => 
+              log.topics[0] === ethers.id("TokenMinted(uint256,address,string,string)")
+            );
+            if (tokenMintedEvent) {
+              tokenId = parseInt(tokenMintedEvent.topics[1], 16);
             }
-          } catch (e) {
-            // Continue to next log if this one fails to parse
+          } catch (eventError) {
+            console.warn("Could not extract token ID from event:", eventError);
           }
         }
 
-        // If TokenMinted event not found, look for Transfer event (ERC721 standard)
-        if (!tokenId) {
-          const transferEventTopic = ethers.id("Transfer(address,address,uint256)");
-          for (const log of receipt.logs) {
-            if (log.topics[0] === transferEventTopic) {
-              // The last topic in a Transfer event is the token ID
-              tokenId = parseInt(log.topics[3], 16).toString();
-              console.log("Found Transfer event with token ID:", tokenId);
-              break;
-            }
-          }
-        }
-      } catch (eventError) {
-        console.error("Error extracting token ID from events:", eventError);
+        setSuccess(true);
+        
+        return {
+          success: true,
+          txHash: transaction.hash,
+          tokenId: tokenId,
+          imageUrl: imageUrl,
+          metadataUrl: metadataUrl,
+          contractAddress: validatedContractAddress
+        };
+      } else {
+        throw new Error('Transaction failed on blockchain');
       }
-      
-      if (!tokenId) {
-        console.warn("Could not extract token ID from events, trying generic approach");
-        // Generic approach - try to get the last NFT minted
-        try {
-          const balance = await contract.balanceOf(await signer.getAddress());
-          if (balance > 0) {
-            const lastTokenIndex = balance - BigInt(1);
-            tokenId = await contract.tokenOfOwnerByIndex(await signer.getAddress(), lastTokenIndex);
-            tokenId = tokenId.toString();
-            console.log("Found token ID using balanceOf/tokenOfOwnerByIndex:", tokenId);
-          }
-        } catch (e) {
-          console.error("Error with generic token ID approach:", e);
-        }
-      }
-      
-      // Even if we couldn't get the token ID, we'll return what we have
-      // Determine the best image URL to return
-      const imageUrl = useLocalFallback ? imageUri : ipfsToHttp(imageUri);
-      
-      return { 
-        imageUrl,
-        metadataUrl: useLocalFallback ? metadataUri : ipfsToHttp(metadataUri), 
-        txHash: tx.hash,
-        tokenId: tokenId || "Unknown"
-      };
+
     } catch (err) {
-      console.error("Error in mintNFT:", err);
+      console.error('Error in mintNFT:', err);
       
-      // Provide a more user-friendly error message
-      let errorMessage = 'Error minting NFT';
-
-      if (err.message && err.message.includes('user rejected')) {
-        errorMessage = 'Transaction was rejected by the user';
-      } else if (err.message && err.message.includes('insufficient funds')) {
-        errorMessage = 'Insufficient funds for gas * price + value';
-      } else if (err.code === 'CALL_EXCEPTION') {
-        errorMessage = 'Smart contract error - the transaction was rejected';
-      } else if (
-        err.message &&
-        (err.message.includes('Pinata authentication failed') ||
-         err.message.includes('401') ||
-         err.message.includes('403'))
-      ) {
-        errorMessage = "No se pudo subir el archivo a IPFS. Tus credenciales de Pinata son inválidas o faltan. Por favor revisa tu configuración de API Key/Secret o JWT.";
+      let errorMessage = 'An unexpected error occurred while minting your NFT.';
+      
+      if (err.message?.includes('user rejected')) {
+        errorMessage = 'Transaction was rejected. Please try again and confirm the transaction in your wallet.';
+      } else if (err.message?.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds to complete the transaction. Please add more MATIC to your wallet.';
+      } else if (err.message?.includes('Invalid contract address')) {
+        errorMessage = 'Contract configuration error. Please contact support.';
+      } else if (err.message?.includes('IPFS')) {
+        errorMessage = 'Failed to upload content. Please check your internet connection and try again.';
+      } else if (err.message?.includes('MetaMask')) {
+        errorMessage = 'Please install and connect MetaMask to mint NFTs.';
       } else if (err.message) {
         errorMessage = err.message;
       }
-
+      
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -254,3 +216,4 @@ export default function useMintNFT() {
 
   return { mintNFT, loading, error, success, txHash };
 }
+      

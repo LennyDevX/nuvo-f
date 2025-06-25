@@ -125,7 +125,25 @@ export const TokenizationProvider = ({ children }) => {
 
   // Wrapper for mintNFT to maintain consistent interface
   const mintNFT = useCallback(async (nftData) => {
-    return await mintNFTHook(nftData);
+    try {
+      setMintingError(null);
+      setIsMinting(true);
+      
+      const result = await mintNFTHook(nftData);
+      
+      if (result && result.success) {
+        setMintedNFT(result);
+        return result;
+      } else {
+        throw new Error('Minting failed: No result returned');
+      }
+    } catch (error) {
+      console.error('Error in TokenizationContext mintNFT:', error);
+      setMintingError(error.message || 'Failed to mint NFT');
+      throw error;
+    } finally {
+      setIsMinting(false);
+    }
   }, [mintNFTHook]);
 
   return (
