@@ -11,10 +11,11 @@ import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
+import NotConnectedMessage from '../../../ui/NotConnectedMessage';
 import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 
 const NFTDashboard = () => {
-  const { account } = useContext(WalletContext);
+  const { account, walletConnected, connectWallet } = useContext(WalletContext);
   const { 
     nfts, 
     nftsLoading: loading, 
@@ -200,6 +201,22 @@ const NFTDashboard = () => {
 
   // Use a more reliable mobile detection
   const useMobileLayout = isMobile || (typeof window !== 'undefined' && window.innerWidth < 1024);
+
+  // Add wallet connection check similar to StakingDashboard
+  if (!walletConnected || !account) {
+    return (
+      <div className="relative min-h-screen bg-nuvo-gradient pb-12">
+        <SpaceBackground customClass="" />
+        <div className="container mx-auto px-4 py-8 relative z-10">
+          <NotConnectedMessage
+            title="NFT Dashboard"
+            message="Connect your wallet to view and manage your digital assets"
+            connectWallet={connectWallet}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-nuvo-gradient pb-12">

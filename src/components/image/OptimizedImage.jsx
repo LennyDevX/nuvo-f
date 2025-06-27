@@ -184,7 +184,7 @@ const OptimizedImage = ({
         <div 
           className="absolute inset-0"
           style={{ 
-            background: 'transparent',
+            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 1.5s infinite linear'
           }}

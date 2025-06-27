@@ -3,12 +3,12 @@
 @import "tailwindcss/utilities";
 @import "variables.css";
 @import "base.css";
-@import "cards.css";
-@import "buttons.css";
-@import "animations.css";
-@import "scrollbar.css";
 @import "backgrounds.css";
-/* Removed chat.css import as we're using Tailwind directly */
+@import "animations.css";
+@import "buttons.css";
+@import "cards.css";
+@import "chat.css";
+@import "scrollbar.css";
 
 
 

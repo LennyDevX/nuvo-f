@@ -4,7 +4,7 @@ import { WalletContext } from '../../context/WalletContext';
 
 const NetworkBadge = () => {
   const { network, account } = useContext(WalletContext);
-  
+
   // Get network name based on chainId
   const getNetworkName = (chainId) => {
     switch (chainId) {
@@ -55,14 +55,11 @@ const NetworkBadge = () => {
     return isCorrectNetwork ? 'bg-green-400' : 'bg-red-400';
   };
 
+  // Use styles similar to "Live Protocol" badge
   return (
-    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md 
-                    border border-slate-700/40 bg-slate-800/50 backdrop-blur-sm
-                    shadow-sm transition-all duration-300
-                    text-sm font-medium">
-      <span className={`h-2 w-2 rounded-full ${getStatusColor()} 
-                       shadow-sm shadow-${getStatusColor()}/50`}></span>
-      <span className="text-slate-300">
+    <div className="flex items-center gap-1 px-3 py-1 bg-slate-800/50 border border-slate-700/30 text-slate-300 text-xs rounded-full backdrop-blur-sm">
+      <span className={`w-2 h-2 rounded-full ${getStatusColor()} mr-1`} />
+      <span>
         {isConnected ? networkName : 'Not Connected'}
       </span>
     </div>

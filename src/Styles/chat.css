@@ -1,43 +1,13 @@
 /* Modern ChatGPT-style Chat Interface */
 
-/* CSS Variables */
+/* Chat-specific CSS Variables - Only unique ones */
 :root {
-  --header-height: 56px;
-  --mobile-navbar-height: 64px;
-  --chat-input-height: auto;
-  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --vh: 1vh;
   --keyboard-height: 0px;
-  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* Global chat container */
-.chat-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  width: 100%;
-  position: relative;
-  background: rgb(17, 24, 39);
-}
-
-/* Messages container improvements */
-.messages-container {
-  padding-bottom: 120px; /* More space for input area */
 }
 
 /* Mobile specific adjustments */
 @media (max-width: 768px) {
-  .chat-layout {
-    height: calc(100vh - var(--mobile-navbar-height));
-    margin-bottom: var(--mobile-navbar-height);
-  }
-  
-  /* Adjust messages container for mobile - more space for fixed input */
-  .messages-container {
-    padding-bottom: 180px; /* More space for fixed input */
-  }
-  
   /* Ensure chat input is always visible on mobile */
   .chat-input-mobile-container {
     position: fixed;
@@ -71,17 +41,6 @@
   .chat-input-mobile {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  
-  /* Fix viewport issues on mobile */
-  .mobile-viewport-fix {
-    height: calc(var(--vh, 1vh) * 100);
-    overflow: hidden;
-  }
-  
-  /* Ensure input stays visible when keyboard opens */
-  .mobile-keyboard-adjust {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 /* Desktop optimizations */
@@ -95,149 +54,33 @@
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
   }
   
-  /* Desktop sidebar buttons - Exact same height as input */
-  .desktop-sidebar-btn {
+  .desktop-sidebar-button {
     width: 48px;
-    height: 48px; /* Match input height exactly */
+    height: 48px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid rgba(139, 92, 246, 0.4);
     background: rgba(55, 65, 81, 0.8);
     backdrop-filter: blur(8px);
     flex-shrink: 0;
+    color: rgba(139, 92, 246, 1);
   }
   
-  /* Desktop input container alignment */
-  .desktop-input-flex {
-    display: flex;
-    align-items: center; /* Perfect center alignment */
-    gap: 12px;
-  }
-  
-  .desktop-sidebar-btn:hover {
+  .desktop-sidebar-button:hover {
     border-color: rgba(139, 92, 246, 0.6);
     background: rgba(55, 65, 81, 1);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.05);
   }
   
-  .desktop-sidebar-btn.active {
+  .desktop-sidebar-button.active {
     background: rgb(139, 92, 246);
     border-color: rgb(139, 92, 246);
     color: white;
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
   }
-}
-
-/* Input field improvements */
-.chat-input-field {
-  background: rgba(55, 65, 81, 0.95);
-  border: 2px solid rgba(139, 92, 246, 0.3);
-  border-radius: 12px;
-  padding: 12px 16px;
-  padding-right: 56px; /* Space for send button */
-  color: white;
-  transition: all 0.2s ease;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.chat-input-field:focus {
-  border-color: rgb(139, 92, 246);
-  background: rgba(55, 65, 81, 1);
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.1),
-    0 0 0 3px rgba(139, 92, 246, 0.1);
-}
-
-.chat-input-field::placeholder {
-  color: rgba(156, 163, 175, 0.7);
-}
-
-/* Send button improvements */
-.send-button {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: rgb(139, 92, 246);
-  border: none;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.25);
-}
-
-.send-button:hover:not(:disabled) {
-  background: rgb(124, 58, 237);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
-}
-
-.send-button:disabled {
-  background: rgba(107, 114, 128, 0.6);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Message bubbles improvements */
-.message-user {
-  justify-content: flex-end;
-  margin-bottom: 16px;
-}
-
-.message-ai {
-  justify-content: flex-start;
-  margin-bottom: 16px;
-}
-
-.message-content-user {
-  background: rgb(139, 92, 246);
-  color: white;
-  border-radius: 18px;
-  border-top-right-radius: 4px;
-  padding: 12px 16px;
-  max-width: 80%;
-  box-shadow: 0 2px 12px rgba(139, 92, 246, 0.25);
-}
-
-.message-content-ai {
-  background: rgba(31, 41, 55, 0.9);
-  color: rgb(243, 244, 246);
-  border-radius: 18px;
-  border-top-left-radius: 4px;
-  padding: 12px 16px;
-  max-width: 80%;
-  border: 1px solid rgba(139, 92, 246, 0.2);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* Avatar styling */
-.message-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.user-avatar {
-  background: rgb(139, 92, 246);
-  color: white;
-}
-
-.ai-avatar {
-  background: linear-gradient(135deg, rgb(139, 92, 246), rgb(219, 39, 119));
-  color: white;
 }
 
 /* Prose styling for markdown content */
@@ -317,67 +160,6 @@
   animation: bounce 1.4s infinite ease-in-out both;
 }
 
-/* Focus states for better accessibility */
-button:focus-visible,
-textarea:focus-visible,
-input:focus-visible {
-  outline: 2px solid rgb(139, 92, 246);
-  outline-offset: 2px;
-}
-
-/* Better text selection */
-::selection {
-  background-color: rgba(139, 92, 246, 0.2);
-}
-
-/* Safe area for notched devices */
-@supports (padding: max(0px)) {
-  @media (max-width: 768px) {
-    .chat-layout {
-      padding-bottom: max(var(--mobile-navbar-height), calc(var(--mobile-navbar-height) + var(--safe-area-bottom)));
-    }
-    
-    /* Mejoras para iPhone con notch */
-    .chat-input-mobile {
-      padding-bottom: max(1rem, env(safe-area-inset-bottom));
-    }
-  }
-}
-
-/* Optimización para teclados virtuales */
-@media screen and (max-height: 500px) {
-  .chat-messages {
-    height: calc(var(--vh, 1vh) * 100 - 200px);
-  }
-}
-
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  .animate-bounce {
-    animation: none;
-  }
-  
-  button {
-    transition: none;
-  }
-  
-  * {
-    scroll-behavior: auto !important;
-  }
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .prose code,
-  .prose pre {
-    border: 1px solid currentColor;
-  }
-  
-  button {
-    border: 2px solid currentColor;
-  }
-}
-
 /* Enhanced chat header buttons */
 .chat-header-button {
   width: 48px;
@@ -440,60 +222,17 @@ input:focus-visible {
   transform: translateY(0) scale(0.95);
 }
 
-/* Desktop input area button alignment */
-@media (min-width: 769px) {
-  .desktop-chat-controls {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  
-  .desktop-sidebar-button {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 2px solid rgba(139, 92, 246, 0.4);
-    background: rgba(55, 65, 81, 0.8);
-    backdrop-filter: blur(8px);
-    flex-shrink: 0;
-    color: rgba(139, 92, 246, 1);
-  }
-  
-  .desktop-sidebar-button:hover {
-    border-color: rgba(139, 92, 246, 0.6);
-    background: rgba(55, 65, 81, 1);
-    transform: translateY(-1px) scale(1.05);
-  }
-  
-  .desktop-sidebar-button.active {
-    background: rgb(139, 92, 246);
-    border-color: rgb(139, 92, 246);
-    color: white;
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
-  }
+/* Focus states for better accessibility */
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid rgb(139, 92, 246);
+  outline-offset: 2px;
 }
 
-/* Mobile specific button spacing */
-@media (max-width: 768px) {
-  .mobile-chat-header {
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  
-  .mobile-chat-center {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 1;
-    justify-content: center;
-  }
+/* Better text selection */
+::selection {
+  background-color: rgba(139, 92, 246, 0.2);
 }
 
 /* Focus states for accessibility */
@@ -502,4 +241,47 @@ input:focus-visible {
 .desktop-sidebar-button:focus-visible {
   outline: 2px solid rgb(139, 92, 246);
   outline-offset: 2px;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce {
+    animation: none;
+  }
+  
+  button {
+    transition: none;
+  }
+  
+  * {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .prose code,
+  .prose pre {
+    border: 1px solid currentColor;
+  }
+  
+  button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Safe area for notched devices */
+@supports (padding: max(0px)) {
+  @media (max-width: 768px) {
+    .chat-input-mobile {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* Optimización para teclados virtuales */
+@media screen and (max-height: 500px) {
+  .chat-messages {
+    height: calc(var(--vh, 1vh) * 100 - 200px);
+  }
 }

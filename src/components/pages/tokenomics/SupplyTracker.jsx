@@ -47,8 +47,8 @@ const SupplyTracker = () => {
       setSupplyData({
         totalSupply: '21,000,000',
         circulatingSupply: '1,000,000',
-        percentCirculating: 4.76,
-        remainingSupply: '20,000,000'
+        percentCirculating: 0,
+        remainingSupply: '21,000,000'
       });
     } catch (error) {
       console.error("Error fetching supply data:", error);
