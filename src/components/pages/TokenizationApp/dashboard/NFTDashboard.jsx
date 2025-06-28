@@ -6,13 +6,13 @@ import { FaRedo, FaPlus } from 'react-icons/fa';
 import { WalletContext } from '../../../../context/WalletContext';
 import { useTokenization } from '../../../../context/TokenizationContext';
 import { useDeviceDetection } from '../../../../hooks/mobile/useDeviceDetection';
-import NFTDashboardSidebar from './NFTDashboardSidebar';
 import NFTDashboardStats from './NFTDashboardStats';
 import NFTCollection from '../collection/NFTCollection';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
 import NotConnectedMessage from '../../../ui/NotConnectedMessage';
-import { normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
+import { normalizeCategory, getAvailableCategories } from '../../../../utils/blockchain/blockchainUtils';
+import NFTDashboardFilters from './NFTDashboardFilters';
 
 const NFTDashboard = () => {
   const { account, walletConnected, connectWallet } = useContext(WalletContext);
@@ -35,15 +35,18 @@ const NFTDashboard = () => {
     }
   }, [account, updateUserAccount]);
 
-  // State for filters
+  // Get standardized categories
+  const availableCategories = getAvailableCategories();
+
+  // State for filters - use standardized categories
   const [filters, setFilters] = useState({
-    categories: [
-      { label: 'Art', value: 'art', selected: false },
-      { label: 'Collectibles', value: 'collectible', selected: false },
-      { label: 'Music', value: 'music', selected: false },
-      { label: 'Photography', value: 'photography', selected: false },
-      { label: 'Virtual Worlds', value: 'virtual-world', selected: false },
-    ],
+    categories: availableCategories
+      .filter(cat => cat.value !== 'all') // Exclude 'all' option for checkboxes
+      .map(cat => ({ 
+        label: cat.label, 
+        value: cat.value, 
+        selected: false 
+      })),
     statuses: [
       { label: 'For Sale', value: 'forSale', selected: false },
       { label: 'Not Listed', value: 'notListed', selected: false },
@@ -152,7 +155,11 @@ const NFTDashboard = () => {
     // Apply category filters if any are selected
     const selectedCategories = filters.categories.filter(cat => cat.selected).map(cat => cat.value);
     if (selectedCategories.length > 0) {
-      result = result.filter(nft => selectedCategories.includes(nft.category));
+      result = result.filter(nft => {
+        const normalizedNFTCategory = normalizeCategory(nft.category || 'collectible');
+        console.log(`Filtering NFT ${nft.tokenId}: category "${nft.category}" -> normalized "${normalizedNFTCategory}", selected categories:`, selectedCategories);
+        return selectedCategories.includes(normalizedNFTCategory);
+      });
     }
     
     // Apply status filters if any are selected
@@ -263,7 +270,7 @@ const NFTDashboard = () => {
             {/* Sidebar - Always visible on desktop, toggleable on mobile */}
             <div className={`${showMobileFilters ? 'block' : 'hidden lg:block'} w-full lg:w-80 flex-shrink-0 relative z-10`}>
               <div className="sticky top-6">
-                <NFTDashboardSidebar 
+                <NFTDashboardFilters 
                   filters={filters}
                   onFilterChange={handleFilterChange}
                   onSearchChange={handleSearchChange}

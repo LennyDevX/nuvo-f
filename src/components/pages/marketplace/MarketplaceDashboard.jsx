@@ -388,16 +388,23 @@ function MarketplaceDashboard(props) {
   useEffect(() => {
     let filtered = [...nfts];
     
-    console.log('Applying filters:', filters);
-    console.log('Available NFTs:', nfts.map(nft => ({ id: nft.tokenId, category: nft.category, originalCategory: nft.originalCategory })));
+    console.log('Marketplace filtering:', {
+      totalNFTs: nfts.length,
+      filterCategory: filters.category,
+      nftCategories: nfts.map(nft => ({
+        id: nft.tokenId,
+        originalCategory: nft.originalCategory,
+        normalizedCategory: nft.category
+      }))
+    });
 
     // Category filter with improved matching
     if (filters.category !== 'all') {
       const targetCategory = normalizeCategory(filters.category);
-      console.log('Filtering by category:', targetCategory);
+      console.log('Filtering by normalized category:', targetCategory);
       
       filtered = filtered.filter(nft => {
-        const nftCategory = normalizeCategory(nft.category);
+        const nftCategory = nft.category; // Already normalized when fetched
         const matches = nftCategory === targetCategory;
         
         if (!matches) {
@@ -449,7 +456,7 @@ function MarketplaceDashboard(props) {
         break;
     }
 
-    console.log('Final filtered NFTs:', filtered.length);
+    console.log('Final filtered NFTs in marketplace:', filtered.length);
     setFilteredNfts(filtered);
   }, [nfts, filters]);
 

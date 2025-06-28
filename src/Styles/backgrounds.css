@@ -51,10 +51,14 @@
       #c084fc,
       #8b5cf6,
       #ec4899,
+      #c084fc,
+      #ffffff,
+      #8b5cf6,
+      #ec4899,
       #6366f1
     );
-    background-size: 200% 200%;
-    animation: gradientShift 5s ease-in-out infinite;
+    background-size: 300% 300%;
+    animation: gradientShift 10s ease-in-out infinite;
   }
 }
 
@@ -64,10 +68,14 @@
     #c084fc,
     #8b5cf6,
     #ec4899,
+    #c084fc,
+    #ffffff,
+    #8b5cf6,
+    #ec4899,
     #6366f1
   );
-  background-size: 200% 200%;
-  animation: gradientShift 5s ease-in-out infinite;
+  background-size: 300% 300%;
+  animation: gradientShift 8s ease-in-out infinite;
 }
 .bg-grid-pattern {
   background-image: 

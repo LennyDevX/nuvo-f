@@ -13,10 +13,18 @@ export default {
         'md': '768px',
         'lg': '1024px',
         'xl': '1280px',
+        '2xl': '1536px',
+        // Add tablet-specific breakpoints
+        'tablet': '640px',
+        'tablet-lg': '900px',
       },
       spacing: {
         '18': '4.5rem',
         '22': '5.5rem',
+        // Add more responsive spacing
+        '15': '3.75rem',
+        '17': '4.25rem',
+        '19': '4.75rem',
       },
       fontSize: {
         'xxs': '0.625rem',
