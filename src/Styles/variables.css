@@ -20,8 +20,8 @@
   --blur-default: 12px;
   --bottom-nav-height: 56px;
 
-  /* Colors */
-  --purple-primary: #7c3aed;        /* Color morado principal - CAMBIAR AQUÍ */
+  /* Colors - Primary Theme */
+  --purple-primary: #7c3aed;
   --purple-secondary: rgba(124, 58, 237, 0.2);
   --purple-accent: rgba(124, 58, 237, 0.5);
   --background-dark: #000000;
@@ -39,6 +39,30 @@
   --marketplace-card-hover: rgba(124, 58, 237, 0.1);
   --marketplace-border: rgba(124, 58, 237, 0.2);
   --marketplace-gradient: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%);
+  
+  /* Button Heights */
+  --btn-height-small: 36px;
+  --btn-height-middle: 48px;
+  --btn-height-big: 60px;
+  
+  /* Color RGB values for transparency effects */
+  --color-primary-rgb: 26, 26, 27;
+  --color-error-rgb: 255, 97, 135;
+  --color-border-disabled-rgb: 69, 72, 81;
+
+  /* Unified spacing system */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Unified border radius system */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -53,7 +77,11 @@
     --container-padding: 12px;
     --chat-spacing: 8px;
     --button-size: 36px;
-    /* Update mobile bottom spacing to only account for navbar */
     --mobile-bottom-spacing: calc(var(--mobile-navbar-height) + var(--safe-area-inset-bottom));
   }
+}
+
+[data-theme="dark"] {
+  --color-primary-rgb: 255, 232, 4;
+  --color-error-rgb: 255, 97, 135;
 }

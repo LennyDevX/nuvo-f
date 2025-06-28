@@ -74,14 +74,14 @@ const MarketplaceFilters = ({ filters, setFilters, categories = [], showMobileFi
             <label className="nuvos-marketplace-filter-label">
               Search NFTs
             </label>
-            <div className="nuvos-marketplace-search-container">
-              <FiSearch className="nuvos-marketplace-search-icon" />
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search by name or description..."
                 value={filters.searchTerm}
                 onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                className="nuvos-marketplace-search-input"
+                className="bg-black/40 border border-purple-500/30 rounded-lg px-10 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200 w-full"
               />
             </div>
           </div>
@@ -94,10 +94,21 @@ const MarketplaceFilters = ({ filters, setFilters, categories = [], showMobileFi
             <select
               value={filters.category}
               onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
-              className="nuvos-select"
+              className="bg-black/40 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200 w-full appearance-none cursor-pointer"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                color: 'white'
+              }}
             >
               {availableCategories.map(category => (
-                <option key={category.value} value={category.value}>
+                <option 
+                  key={category.value} 
+                  value={category.value}
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    color: 'white'
+                  }}
+                >
                   {category.label}
                 </option>
               ))}
@@ -116,14 +127,14 @@ const MarketplaceFilters = ({ filters, setFilters, categories = [], showMobileFi
                 placeholder="Min"
                 value={filters.priceRange.min}
                 onChange={(e) => handlePriceRangeChange('min', e.target.value)}
-                className="bg-black/30 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
+                className="bg-black/40 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
               />
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.priceRange.max}
                 onChange={(e) => handlePriceRangeChange('max', e.target.value)}
-                className="bg-black/30 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
+                className="bg-black/40 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white placeholder-gray-400 focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200"
               />
             </div>
           </div>
@@ -137,12 +148,48 @@ const MarketplaceFilters = ({ filters, setFilters, categories = [], showMobileFi
             <select
               value={filters.sortBy}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-              className="nuvos-marketplace-select"
+              className="bg-black/40 border border-purple-500/30 rounded-lg px-3 py-2.5 text-white focus:border-purple-400 focus:outline-none focus:ring-0 transition-all duration-200 w-full appearance-none cursor-pointer"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                color: 'white'
+              }}
             >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
+              <option 
+                value="newest"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  color: 'white'
+                }}
+              >
+                Newest First
+              </option>
+              <option 
+                value="oldest"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  color: 'white'
+                }}
+              >
+                Oldest First
+              </option>
+              <option 
+                value="price-low"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  color: 'white'
+                }}
+              >
+                Price: Low to High
+              </option>
+              <option 
+                value="price-high"
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                  color: 'white'
+                }}
+              >
+                Price: High to Low
+              </option>
             </select>
           </div>
         </div>

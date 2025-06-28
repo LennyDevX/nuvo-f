@@ -65,7 +65,7 @@ const Navbar = () => {
   // Memoize style classes to prevent recreating strings on every render
   const styles = useMemo(() => ({
     navLinkClasses: `
-      relative px-6 py-3 text-sm font-medium
+      relative px-3 md:px-4 lg:px-6 py-2.5 md:py-3 text-xs md:text-sm font-medium
       text-white rounded-lg
       transition-all duration-300
       bg-opacity-0 hover:bg-opacity-10
@@ -75,12 +75,13 @@ const Navbar = () => {
       hover:text-purple-400
       backdrop-blur-sm
       no-underline hover:no-underline
-      flex items-center gap-3
+      flex items-center gap-2 md:gap-3
       box-border
       before:absolute before:inset-0 before:rounded-lg
-      min-w-[120px] justify-center
+      min-w-[80px] md:min-w-[100px] lg:min-w-[120px] justify-center
+      whitespace-nowrap
     `,
-    navIconClasses: "w-4 h-4 text-purple-400/80",
+    navIconClasses: "w-3 h-3 md:w-4 md:h-4 text-purple-400/80 flex-shrink-0",
     mobileNavIconClasses: "w-5 h-5 text-purple-400/80",
     mobileMenuClasses: isOpen => `
       fixed inset-x-0 top-[4.25rem] z-50
@@ -89,7 +90,7 @@ const Navbar = () => {
         ? 'translate-y-0 opacity-100 pointer-events-auto' 
         : '-translate-y-full opacity-0 pointer-events-none'}
       bg-gradient-to-b from-black/95 to-black/90 backdrop-blur-lg
-      border-b border-purple-500/20 shadow-lg md:hidden
+      border-b border-purple-500/20 shadow-lg tablet:hidden
     `,
     mobileNavButtonClasses: (isActive) => `
       w-full flex items-center gap-3 px-4 py-3 rounded-lg
@@ -199,43 +200,45 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Mobile Bottom Navigation - Fixed positioning with proper z-index */}
-      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/95 backdrop-blur-sm border-t border-white/10 md:hidden safe-area-bottom">
-        <div className="flex justify-between items-center h-16 px-2">
-          {/* Main navigation items - only show first 4 */}
+      {/* Mobile Bottom Navigation - Enhanced responsive design */}
+      <nav className="fixed bottom-0 left-0 right-0 z-[100] bg-black/95 backdrop-blur-sm border-t border-white/10 tablet:hidden safe-area-bottom">
+        <div className="flex justify-between items-center h-14 xs:h-16 px-1 xs:px-2">
+          {/* Main navigation items - responsive sizing */}
           {navigationItems.slice(0, 4).map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <button
                 key={path}
                 onClick={() => handleNavigation(path)}
-                className={`flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all rounded-lg mx-0.5
+                className={`flex flex-col items-center justify-center flex-1 py-1.5 xs:py-2 px-0.5 xs:px-1 transition-all rounded-lg mx-0.5
                   ${isActive ? 'text-purple-400 bg-purple-500/10' : 'text-white/80'}
-                  hover:text-purple-300 active:bg-purple-500/20`}
+                  hover:text-purple-300 active:bg-purple-500/20
+                  min-w-0`}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <Icon className="w-5 h-5 mb-1" />
-                <span className="text-xs font-medium">{label}</span>
+                <Icon className="w-4 h-4 xs:w-5 xs:h-5 mb-0.5 xs:mb-1 flex-shrink-0" />
+                <span className="text-[10px] xs:text-xs font-medium truncate w-full text-center px-0.5">{label}</span>
               </button>
             );
           })}
           
-          {/* Fixed Menu Button with better icon */}
+          {/* Fixed Menu Button with better responsive sizing */}
           <button
             onClick={toggleMenu}
-            className={`flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all rounded-lg mx-0.5
+            className={`flex flex-col items-center justify-center flex-1 py-1.5 xs:py-2 px-0.5 xs:px-1 transition-all rounded-lg mx-0.5
               ${isOpen ? 'text-purple-400 bg-purple-500/20' : 'text-white/80'}
-              hover:text-purple-300 active:bg-purple-500/20`}
+              hover:text-purple-300 active:bg-purple-500/20
+              min-w-0`}
             aria-label="Más opciones"
             aria-expanded={isOpen}
             aria-controls="mobile-bottom-sheet"
           >
             {isOpen ? (
-              <FaTimes className="w-5 h-5 mb-1" />
+              <FaTimes className="w-4 h-4 xs:w-5 xs:h-5 mb-0.5 xs:mb-1" />
             ) : (
-              <HiMenuAlt3 className="w-5 h-5 mb-1" />
+              <HiMenuAlt3 className="w-4 h-4 xs:w-5 xs:h-5 mb-0.5 xs:mb-1" />
             )}
-            <span className="text-xs font-medium">Menú</span>
+            <span className="text-[10px] xs:text-xs font-medium">Menú</span>
           </button>
         </div>
         
@@ -243,7 +246,7 @@ const Navbar = () => {
         <div className="h-safe-area-inset-bottom bg-black/95"></div>
       </nav>
 
-      {/* Enhanced Bottom Sheet Menu with reorganized wallet section */}
+      {/* Enhanced Bottom Sheet Menu - no changes to existing code */}
       <div
         id="mobile-bottom-sheet"
         className={`
@@ -253,7 +256,7 @@ const Navbar = () => {
           bg-gradient-to-t from-black/98 to-black/95 backdrop-blur-xl
           border-t border-purple-500/30 shadow-2xl
           rounded-t-3xl
-          md:hidden
+          tablet:hidden
         `}
         style={{ 
           minHeight: '60vh', 
@@ -453,19 +456,20 @@ const Navbar = () => {
       {/* Backdrop for bottom sheet */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] md:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[150] tablet:hidden"
           onClick={toggleMenu}
           aria-hidden="true"
         />
       )}
 
-      {/* Desktop Navbar - Restaurar WalletConnect original */}
-      <nav className="hidden md:block fixed top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="flex justify-between items-center h-16">
-            <div onClick={handleLogoClick} className="cursor-pointer flex-shrink-0 mr-8">
+      {/* Enhanced Desktop Navbar with better responsive design */}
+      <nav className="hidden tablet:block fixed top-0 w-full z-[100] bg-black/95 backdrop-blur-sm border-b border-white/10 navbar-transition">
+        <div className="w-full px-3 tablet:px-4 md:px-6 lg:px-8 xl:px-12 2xl:px-16">
+          <div className="flex justify-between items-center h-14 tablet:h-15 md:h-16 lg:h-17">
+            {/* Logo with responsive sizing */}
+            <div onClick={handleLogoClick} className="cursor-pointer flex-shrink-0 mr-4 md:mr-6 lg:mr-8">
               <img 
-                className="h-10 w-auto md:h-12"
+                className="h-8 tablet:h-9 md:h-10 lg:h-12 w-auto transition-all duration-300"
                 src="/LogoNuvos.webp" 
                 alt="Nuvo Logo"
                 style={{
@@ -473,31 +477,41 @@ const Navbar = () => {
                 }}
               />
             </div>
-            <div className="flex items-center justify-center flex-grow space-x-6">
-              {navigationItems.slice(1).map(({ path, label, icon: Icon }) => (
-                <NavLink 
-                  key={path} 
-                  to={path} 
-                  prefetchStrategy="intent"
-                  className={styles.navLinkClasses}
-                  activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
-                >
-                  <Icon className={styles.navIconClasses} />
-                  {label}
-                </NavLink>
-              ))}
-              <div className="flex items-center ml-6">
+            
+            {/* Navigation items with responsive container */}
+            <div className="flex items-center justify-center flex-grow overflow-hidden">
+              <div className="flex items-center space-x-2 tablet:space-x-3 md:space-x-4 lg:space-x-6 xl:space-x-8">
+                {navigationItems.slice(1).map(({ path, label, icon: Icon }) => (
+                  <NavLink 
+                    key={path} 
+                    to={path} 
+                    prefetchStrategy="intent"
+                    className={styles.navLinkClasses}
+                    activeClassName="bg-purple-500/10 border-purple-500/50 text-purple-400"
+                  >
+                    <Icon className={styles.navIconClasses} />
+                    <span className="hidden md:inline">{label}</span>
+                  </NavLink>
+                ))}
+              </div>
+              
+              {/* Beta Badge with responsive sizing */}
+              <div className="flex items-center ml-3 md:ml-6 flex-shrink-0">
                 <BetaBadge 
                   pulsate={true} 
-                  className="border border-purple-400/30" 
+                  className="border border-purple-400/30 scale-75 md:scale-100" 
                 />
               </div>
             </div>
-            <div className="relative ml-8 flex-shrink-0">
-              <WalletConnect 
-                className="navbar-wallet"
-                onError={(error) => console.error('Desktop WalletConnect error:', error)}
-              />
+            
+            {/* Wallet Connect with responsive container */}
+            <div className="relative ml-3 md:ml-6 lg:ml-8 flex-shrink-0 min-w-0">
+              <div className="max-w-[120px] tablet:max-w-[140px] md:max-w-[160px] lg:max-w-none">
+                <WalletConnect 
+                  className="navbar-wallet text-xs tablet:text-sm"
+                  onError={(error) => console.error('Desktop WalletConnect error:', error)}
+                />
+              </div>
             </div>
           </div>
         </div>

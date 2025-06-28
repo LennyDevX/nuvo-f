@@ -1391,8 +1391,11 @@ export const mapCategoryToEnglish = (category) => {
 const CATEGORY_MAPPING = {
   // English (keep as is)
   'collectible': 'collectible',
+  'collectibles': 'collectible', // Normalize plural to singular
   'art': 'art',
+  'artwork': 'art', // Normalize artwork to art
   'photo': 'photo',
+  'photography': 'photo', // Normalize to photo
   'music': 'music',
   'video': 'video',
   'document': 'document',
@@ -1401,8 +1404,11 @@ const CATEGORY_MAPPING = {
   
   // Spanish to English mapping
   'coleccionable': 'collectible',
+  'coleccionables': 'collectible',
   'arte': 'art',
   'foto': 'photo',
+  'fotografia': 'photo',
+  'fotografía': 'photo',
   'musica': 'music',
   'música': 'music',
   'video': 'video',
@@ -1410,11 +1416,14 @@ const CATEGORY_MAPPING = {
   'juego': 'game',
   'utilidad': 'utility',
   
+  // Legacy mappings from smart contract
+  'item': 'collectible',
+  'consumer item': 'collectible',
+  'realestate': 'collectible',
+  'real estate': 'collectible',
+  
   // Common variations
-  'collectibles': 'collectible',
-  'artwork': 'art',
   'photograph': 'photo',
-  'photography': 'photo',
   'videos': 'video',
   'documents': 'document',
   'gaming': 'game',

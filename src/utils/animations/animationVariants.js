@@ -33,7 +33,7 @@ export const shimmerAnimation = {
     opacity: 1,
     transition: { 
       repeat: Infinity, 
-      duration: 3,
+      duration: 1.5,
       ease: 'linear'
     }
   }

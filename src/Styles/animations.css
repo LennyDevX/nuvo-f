@@ -6,19 +6,18 @@
   animation: float 3s ease-in-out infinite;
 }
 @keyframes pulse-glow {
-  0% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
-  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
-  100% { box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); }
+  0%, 100% { 
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.8);
+  }
+  100% { 
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+  }
 }
 .pulse-glow {
-  animation: pulse-glow 1s ease-in-out infinite;
-}
-@keyframes bounce-x {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(25%); }
-}
-.animate-bounce-x {
-  animation: bounce-x 1s infinite;
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 @keyframes gradientShift {
   0% { background-position: 0% 50% }
@@ -29,6 +28,12 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Mobile optimization for animations */
 @media (max-width: 767px) {
   .animate-float {
@@ -39,20 +44,14 @@
   }
 }
 
-/* Advanced Loading Spinner Animations */
-@keyframes spinGradient {
-  0% { 
-    transform: rotate(0deg);
-    background: conic-gradient(from 0deg, #7c3aed, #a855f7, #ec4899, #7c3aed);
-  }
-  50% { 
-    background: conic-gradient(from 180deg, #ec4899, #7c3aed, #a855f7, #ec4899);
-  }
-  100% { 
-    transform: rotate(360deg);
-    background: conic-gradient(from 360deg, #7c3aed, #a855f7, #ec4899, #7c3aed);
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float,
+  .pulse-glow {
+    animation: none;
   }
 }
+ 
 
 @keyframes rippleEffect {
   0% {
