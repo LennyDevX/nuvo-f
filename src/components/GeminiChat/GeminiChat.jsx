@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
 import AnimatedAILogo from '../effects/AnimatedAILogo';
 
-// Import modular components and core functionality
+// Import components
 import ChatMessages from './components/ChatMessages';
+import VirtualizedChatMessages from './components/VirtualizedChatMessages';
 import WelcomeScreen from './components/WelcomeScreen';
 import ChatInputArea from './components/ChatInputArea';
 import { useChatState } from '../../hooks/chat/useChatState';
@@ -22,14 +23,29 @@ const GeminiChat = ({
   const [isInitializing, setIsInitializing] = useState(true);
   const messageEndRef = useRef(null);
 
-  // Use the modularized chat state hook
+  // Use the enhanced chat state hook
   const {
     state,
     handleSendMessage: handleSendMessageCore,
     handleNewConversation: handleNewConversationCore,
     handleLoadConversation,
-    checkApiConnection
+    checkApiConnection,
+    getPerformanceStats
   } = useChatState({ shouldReduceMotion, isLowPerformance });
+
+  // Determine whether to use virtualization based on message count and performance
+  const shouldUseVirtualization = useMemo(() => {
+    const messageCount = state.messages.length;
+    const performanceStats = getPerformanceStats();
+    
+    // Use virtualization if:
+    // - More than 50 messages
+    // - Low performance mode is enabled
+    // - Many cache misses indicating memory pressure
+    return messageCount > 50 || 
+           isLowPerformance || 
+           (performanceStats.cache.hitRate < 0.3 && messageCount > 20);
+  }, [state.messages.length, isLowPerformance, getPerformanceStats]);
 
   // Auto-save conversation when messages change
   useEffect(() => {
@@ -147,6 +163,14 @@ const GeminiChat = ({
         </div>
       ) : state.messages.length === 0 ? (
         <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
+      ) : shouldUseVirtualization ? (
+        <VirtualizedChatMessages 
+          messages={state.messages}
+          isLoading={state.isLoading}
+          error={state.error}
+          shouldReduceMotion={shouldReduceMotion}
+          messageEndRef={messageEndRef}
+        />
       ) : (
         <ChatMessages 
           messages={state.messages}
@@ -170,6 +194,7 @@ const GeminiChat = ({
         rightSidebarOpen={rightSidebarOpen}
         onNewConversation={handleNewConversation}
         hasMessages={state.messages.length > 0}
+        isOnline={state.isOnline}
       />
     </div>
   );

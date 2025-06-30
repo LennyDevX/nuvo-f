@@ -1,12 +1,40 @@
-import { useReducer, useRef, useCallback, useEffect } from 'react';
+import { useReducer, useRef, useCallback, useEffect, useState } from 'react';
 import { debounce } from '../../utils/performance/debounce';
 import { chatReducer, initialChatState } from '../../components/GeminiChat/core/chatReducer';
 import { StreamingService } from '../../components/GeminiChat/core/streamingService';
+import { enhancedCache } from '../../components/GeminiChat/core/cacheManager';
 
 export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = false }) => {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
-  const responseCache = useRef(new Map());
   const streamingService = useRef(new StreamingService());
+  const retryCount = useRef(0);
+  const maxRetries = 3;
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // Enhanced offline/online detection
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      retryCount.current = 0;
+      dispatch({ type: 'SET_ERROR', payload: null });
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: 'You are offline. Messages will be sent when connection is restored.' 
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Format messages for API
   const formatMessagesForAPI = useCallback(() => {
@@ -16,7 +44,13 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }));
   }, [state.messages]);
 
-  // Process stream response with optimizations
+  // Enhanced cache key generation
+  const generateCacheKey = useCallback((userMessage, context = []) => {
+    const contextHash = context.slice(-5).map(m => m.text.substring(0, 50)).join('|');
+    return `${userMessage.text}_${btoa(contextHash).substring(0, 16)}`;
+  }, []);
+
+  // Process stream response with enhanced error handling
   const processStreamResponse = useCallback(async (response, userMessage) => {
     if (!response.body) {
       throw new Error('No stream available');
@@ -31,22 +65,39 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         onUpdate: (content) => dispatch({ type: 'UPDATE_STREAM', payload: content }),
         onFinish: (finalContent) => {
           dispatch({ type: 'FINISH_STREAM' });
-          // Cache successful response with proper content reference
+          
+          // Enhanced caching with context awareness
           if (finalContent && finalContent.length > 10 && finalContent.length < 15000) {
-            responseCache.current.set(userMessage.text, finalContent);
-            if (responseCache.current.size > 50) {
-              const firstKey = responseCache.current.keys().next().value;
-              responseCache.current.delete(firstKey);
-            }
+            const cacheKey = generateCacheKey(userMessage, state.messages);
+            const ttl = finalContent.length > 1000 ? 3600000 : 1800000; // Longer TTL for detailed responses
+            enhancedCache.set(cacheKey, finalContent, ttl);
           }
+          
+          retryCount.current = 0; // Reset retry count on success
         },
         onError: (error) => {
           console.error('Stream processing error:', error);
-          dispatch({ 
-            type: 'SET_ERROR', 
-            payload: "Connection interrupted. Please try again." 
-          });
-          dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
+          
+          if (retryCount.current < maxRetries && isOnline) {
+            retryCount.current++;
+            dispatch({ 
+              type: 'SET_ERROR', 
+              payload: `Connection issue. Retrying... (${retryCount.current}/${maxRetries})` 
+            });
+            
+            // Retry after delay
+            setTimeout(() => {
+              sendMessageDebounced(userMessage);
+            }, 2000 * retryCount.current);
+          } else {
+            dispatch({ 
+              type: 'SET_ERROR', 
+              payload: isOnline 
+                ? "Connection failed after multiple attempts. Please try again." 
+                : "You are offline. Please check your connection."
+            });
+            dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
+          }
         }
       });
     } catch (error) {
@@ -56,28 +107,40 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         payload: "Stream processing failed. Please try again." 
       });
     }
-  }, [isLowPerformance, shouldReduceMotion, state.messages.length]);
+  }, [isLowPerformance, shouldReduceMotion, state.messages.length, generateCacheKey, isOnline]);
 
-  // Send message with caching and debouncing
+  // Enhanced send message with better caching and offline support
   const sendMessageDebounced = useCallback(
     debounce(async (userMessage) => {
-      const cacheKey = userMessage.text;
+      // Check if offline
+      if (!isOnline) {
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: "You are offline. Please check your connection and try again." 
+        });
+        return;
+      }
+
+      const cacheKey = generateCacheKey(userMessage, state.messages);
       
-      // Check local cache first
-      if (responseCache.current.has(cacheKey)) {
-        const cachedResponse = responseCache.current.get(cacheKey);
+      // Check enhanced cache first
+      if (enhancedCache.has(cacheKey)) {
+        const cachedResponse = enhancedCache.get(cacheKey);
         dispatch({ type: 'START_STREAMING' });
         
-        // Simulate progressive loading for cached content
+        // Simulate progressive loading for cached content with better UX
         const words = cachedResponse.split(' ');
         let currentText = '';
         
-        for (let i = 0; i < words.length; i += 3) {
-          currentText += words.slice(i, i + 3).join(' ') + ' ';
+        const wordBatch = shouldReduceMotion ? 8 : 4;
+        const delay = shouldReduceMotion ? 30 : 50;
+        
+        for (let i = 0; i < words.length; i += wordBatch) {
+          currentText += words.slice(i, i + wordBatch).join(' ') + ' ';
           dispatch({ type: 'UPDATE_STREAM', payload: currentText.trim() });
           
-          if (!shouldReduceMotion) {
-            await new Promise(resolve => setTimeout(resolve, 50));  
+          if (!shouldReduceMotion && i < words.length - wordBatch) {
+            await new Promise(resolve => setTimeout(resolve, delay));  
           }
         }
         
@@ -87,8 +150,11 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
       
       dispatch({ type: 'SET_LOADING', payload: true });
 
-      // AbortController for cancellation
+      // Enhanced AbortController with timeout
       const abortController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+      }, 60000); // 60 second timeout
       
       if (window.currentGeminiRequest) {
         window.currentGeminiRequest.abort();
@@ -107,16 +173,23 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
           headers: { 
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache',
+            'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
           },
           body: JSON.stringify({ 
             messages: formattedMessages,
             stream: true,
             temperature: 0.7,
-            maxTokens: 3000
+            maxTokens: 3000,
+            metadata: {
+              cacheKey,
+              retryCount: retryCount.current
+            }
           }),
           signal: abortController.signal
         });
+        
+        clearTimeout(timeoutId);
         
         if (!response.ok) {
           throw new Error(`Server error: ${response.status} - ${response.statusText}`);
@@ -125,15 +198,31 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         await processStreamResponse(response, userMessage);
         
       } catch (error) {
+        clearTimeout(timeoutId);
+        
         if (error.name === 'AbortError') {
-          console.log('Request cancelled');
+          console.log('Request cancelled or timed out');
           return;
         }
         
         console.error('Error:', error);
+        
+        // Enhanced error handling with specific messages
+        let errorMessage = 'An error occurred. Please try again.';
+        
+        if (!isOnline) {
+          errorMessage = 'Connection lost. Please check your internet and try again.';
+        } else if (error.message.includes('429')) {
+          errorMessage = 'Too many requests. Please wait a moment before trying again.';
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Server error. Please try again in a few moments.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        }
+        
         dispatch({ 
           type: 'SET_ERROR', 
-          payload: `Error: ${error.message}. Please try again.` 
+          payload: errorMessage
         });
       } finally {
         if (window.currentGeminiRequest === abortController) {
@@ -141,10 +230,10 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         }
       }
     }, 300),
-    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion]
+    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion, generateCacheKey, state.messages, isOnline]
   );
 
-  // Message handlers
+  // Enhanced message handlers
   const handleSendMessage = useCallback((e, input, setInput) => {
     e.preventDefault();
     if (!input.trim() || state.isLoading) return;
@@ -176,9 +265,28 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }
   }, []);
 
+  // Enhanced cache management
+  const clearCache = useCallback(() => {
+    enhancedCache.clear();
+  }, []);
+
+  const getCacheStats = useCallback(() => {
+    return enhancedCache.getStats();
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      streamingService.current?.destroy();
+    };
+  }, []);
+
   return {
     // State
-    state,
+    state: {
+      ...state,
+      isOnline
+    },
     dispatch,
     
     // Handlers
@@ -190,11 +298,15 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     checkApiConnection,
     formatMessagesForAPI,
     
-    // Cache management
-    clearCache: () => responseCache.current.clear(),
-    getCacheStats: () => ({
-      size: responseCache.current.size,
-      keys: Array.from(responseCache.current.keys()).slice(0, 5)
+    // Enhanced cache management
+    clearCache,
+    getCacheStats,
+    
+    // Performance stats
+    getPerformanceStats: () => ({
+      cache: getCacheStats(),
+      retryCount: retryCount.current,
+      isOnline
     })
   };
 };
