@@ -298,7 +298,7 @@ const ProductTabs = () => {
                 transition={{ duration: animationEnabled ? 0.3 : 0 }}
                 className="text-4xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 text-transparent bg-clip-text"
               >
-                Nuv-NFTs: Elite NFT Collection
+                Nuv-NFTs: The Future of Digital Collectibles
               </motion.h2>
               <motion.p 
                 initial={animationEnabled ? { opacity: 0 } : { opacity: 1 }}
@@ -306,9 +306,8 @@ const ProductTabs = () => {
                 transition={{ duration: animationEnabled ? 0.3 : 0, delay: animationEnabled ? 0.1 : 0 }}
                 className="text-gray-300 text-lg mb-6 leading-relaxed"
               >
-                Nuv-NFTs es nuestra colección premium de NFTs, creada 100% con arte digital generado por IA. 
-                Los poseedores obtienen ventajas exclusivas dentro de Nuvos Cloud, aumentando su potencial de 
-                ganancias y desbloqueando recompensas especiales como airdrops, NFTs adicionales, merchandising y mucho más.
+                Nuv-NFTs are more than just digital art. They represent a new era of collectibles with real utility in the Nuvos ecosystem.
+                From exclusive rewards to enhanced earnings, these NFTs are designed to elevate your experience and engagement.
               </motion.p>
               <motion.div 
                 className="grid grid-cols-1 gap-4"

@@ -72,7 +72,7 @@ export const roadmapData = {
   "2025": {
     "Q1": [
       {
-        title: "Initial Phase",
+        title: "System Stability",
         icon: "🏗️",
         status: "Completed",
         progress: 100,
@@ -94,35 +94,34 @@ export const roadmapData = {
       {
         title: "Integration & Expansion",
         icon: "🎨",
-        status: "in-progress",
-        progress: 70,
+        status: "completed",
+        progress: 100,
         phase: "Innovation Phase",
         items: [
-          { text: "Launch the Nuvos Dashboard", status: "completed", date: "Apr 2025" },
+          { text: "Launch the NFTs Dashboard", status: "completed", date: "Apr 2025" },
           { text: "Develop NFT system for the Nuvos platform", status: "completed", date: "Apr 2025" },
           { text: "Implement enhanced UI/UX design for mobile", status: "completed", date: "May 2025" },
-          { text: "Integrate chatbot powered by Gemini AI", status: "completed", date: "May 2025" },
-          { text: "NFT Marketplace preview", status: "in-progress", date: "Jun 2025" },
-          { text: "Refine styles across the entire platform", status: "in-progress", date: "Jun 2025" },
+          { text: "Integrate a Chatbot powered by Gemini AI", status: "completed", date: "May 2025" },
+          { text: "NFT Marketplace preview", status: "completed", date: "Jun 2025" },
+          { text: "Refine styles across the entire platform", status: "completed", date: "Jun 2025" },
           
         ]
       }
     ],
     "Q3": [
       {
-        title: "Smart Contracts 2.0 & Tokenomics",
+        title: "Updates Smart Contracts",
         icon: "🚀",
-        status: "Planned",
-        progress: 0,
+        status: "in-progress",
+        progress: 25,
         phase: "Update Phase",
         items: [
-          { text: "Updat Smart Contracts to v2.0", status: "pending", date: "Jul 2025" },
-          { text: "New Tokenomics Contracts v2.0", status: "pending", date: "Jul 2025" },
+          { text: "Update Smart Contracts to v2.0", status: "in-progress", date: "Jul 2025" },
+          { text: "New Marketplaces Contracts v2.0", status: "in-progress", date: "Jul 2025" },
           { text: "Prepare initial marketing strategies", status: "pending", date: "Aug 2025" },
-          { text: "Review the styles, performance and purge   ", status: "pending", date: "Aug 2025" },
-          { text: "AI-Hub integration with NFTs", status: "pending", date: "Sep 2025" },
+          { text: "Performance and purge all bugs known", status: "pending", date: "Aug 2025" },
           { text: "Nuvos AI Chat update", status: "pending", date: "Sep 2025" },
-          { text: "Tokenomics update", status: "pending", date: "Sep 2025" }
+          { text: "Integrate AI-Hub with NFTs", status: "pending", date: "Sep 2025" }
         ]
       }
     ],

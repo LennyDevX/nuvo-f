@@ -37,8 +37,8 @@ const UploadImageStep = () => {
       className="space-y-4 sm:space-y-6"
     >
       <div className="text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Sube tu Imagen</h2>
-        <p className="text-sm sm:text-base text-gray-300">Selecciona una imagen para tu NFT</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Upload Image</h2>
+        <p className="text-sm sm:text-base text-gray-300">Select an image for your NFT</p>
       </div>
       
       {/* Mobile: Stack content, Desktop: Keep original layout */}
@@ -64,15 +64,15 @@ const UploadImageStep = () => {
             <FaImage className="text-purple-400 text-2xl sm:text-3xl lg:text-4xl mb-2 sm:mb-3" />
             
             <h3 className="text-white text-sm sm:text-base font-medium mb-1 sm:mb-2">
-              <span className="hidden sm:inline">Arrastra y suelta tu archivo aquí</span>
-              <span className="sm:hidden">Selecciona tu imagen</span>
+              <span className="hidden sm:inline">Drag and drop your file here</span>
+              <span className="sm:hidden">Select your image</span>
             </h3>
             <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
-              <span className="hidden sm:inline">O haz clic para seleccionar un archivo</span>
-              <span className="sm:hidden">Toca para elegir archivo</span>
+              <span className="hidden sm:inline">Or click to select a file</span>
+              <span className="sm:hidden">Tap to choose file</span>
             </p>
-            <p className="text-gray-500 text-xs mb-3 sm:mb-4">PNG, JPG, GIF o WEBP (Max. 10MB)</p>
-            
+            <p className="text-gray-500 text-xs mb-3 sm:mb-4">PNG, JPG, GIF or WEBP (Max. 10MB)</p>
+
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -80,7 +80,7 @@ const UploadImageStep = () => {
               onClick={() => fileInputRef.current?.click()}
             >
               <FaUpload /> 
-              <span className="text-sm sm:text-base">Seleccionar Archivo</span>
+              <span className="text-sm sm:text-base">Select File</span>
               <input 
                 type="file" 
                 ref={fileInputRef}
@@ -95,7 +95,7 @@ const UploadImageStep = () => {
         {/* Info box */}
         <div className="order-3 sm:order-none p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
           <p className="text-xs sm:text-sm text-purple-300">
-            Tu imagen será almacenada permanentemente en IPFS y vinculada a tu NFT en la blockchain.
+            Your image will be used to create your NFT. Ensure it meets the requirements for optimal display and utility within the Nuvos ecosystem.
           </p>
         </div>
       </div>

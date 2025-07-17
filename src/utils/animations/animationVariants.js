@@ -39,6 +39,18 @@ export const shimmerAnimation = {
   }
 };
 
+export const containerFadeIn = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: {
+      duration: 0.6,
+      staggerChildren: 0.1,
+      when: "beforeChildren"
+    }
+  }
+};
+
 // Helper function to get animation variants based on reduced motion preference
 export const getAccessibleAnimationVariants = (prefersReducedMotion = false) => {
   return {
@@ -63,18 +75,7 @@ export const getAccessibleAnimationVariants = (prefersReducedMotion = false) => 
         transition: { duration: 0.5 }
       }
     } : containerFadeIn,
-    
-    // Other accessible variants...
   };
-};
-
-export const containerFadeIn = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.5 }
-  }
 };
 
 export const staggerContainer = {

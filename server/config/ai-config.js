@@ -33,6 +33,19 @@ export const AVAILABLE_MODELS = {
     supportsStreaming: true,
     maxTokens: 8192,
     isPreview: true
+  },
+
+  'gemma-3n-e4b-it': {
+    name: 'gemma-3n-e4b-it',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 8192
+  },
+  'gemma-3n-e4b-it': {
+    name: 'gemma-3n-e2b-it',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 8192
   }
 };
 

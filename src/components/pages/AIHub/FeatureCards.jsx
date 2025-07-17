@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { FaChartLine, FaTools, FaRobot, FaArrowRight } from 'react-icons/fa';
+import { FaChartLine, FaComments, FaRobot, FaArrowRight } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useAnimationConfig } from '../../animation/AnimationProvider';
 import memoWithName from '../../../utils/performance/memoWithName';
@@ -67,16 +67,16 @@ const FeatureCards = () => {
       link: "#reward-optimizer"
     },
     {
-      title: "Trading Assistant",
-      description: "Smart analysis and recommendations for NUVOS token trading based on market conditions.",
-      icon: FaTools,
+      title: "Chat Assistant",
+      description: "AI-driven chat assistant for personalized support and information about the NUVOS ecosystem.",
+      icon: FaComments, // changed from FaChat to FaComments
       link: "#trading-assistant"
     },
     {
-      title: "Community Insights",
-      description: "AI-driven analysis of community sentiment and trending topics in the NUVOS ecosystem.",
+      title: "NFTs Utility",
+      description: "AI-driven analysis of NFT trends and market insights in the NUVOS ecosystem.",
       icon: FaRobot,
-      link: "#community-insights"
+      link: "#nfts-utility"
     }
   ];
 

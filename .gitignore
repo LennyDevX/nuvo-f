@@ -25,9 +25,13 @@ dist-ssr
 
 .vercel
 
-# Environment variables
-# Dotenv environment variables file
+# Environment files with real API keys
 .env
-.env.development.local
-.env.test.local
-.env.production.local
+.env.local
+.env.development
+.env.production
+.env.distribution
+
+# Keep the example files
+!.env.example
+!.env.distribution.example

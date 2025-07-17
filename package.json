@@ -14,7 +14,12 @@
     "start:api": "node server/index.js",
     "dev:api": "nodemon server/index.js",
     "dev:server": "nodemon server/index.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\""
+    "dev:full": "concurrently \"npm run dev\" \"npm run dev:server\"",
+    "distribute:tokens": "node --env-file=.env.distribution scripts/distributeTokens.js",
+    "distribute:dry-run": "AIRDROP_AMOUNT_PER_USER=0 node --env-file=.env.distribution scripts/distributeTokens.js",
+    "distribute:airdrop": "node --env-file=.env scripts/distributeAirdrop.js",
+    "distribute:airdrop-dry": "node --env-file=.env scripts/distributeAirdrop.js --dry-run",
+    "export:wallets": "node scripts/exportWallets.js"
   },
   "dependencies": {
     "@dodoex/widgets": "^3.1.0",

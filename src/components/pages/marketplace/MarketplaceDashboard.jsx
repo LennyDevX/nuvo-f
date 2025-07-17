@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { FaPlus } from 'react-icons/fa';
 import { ethers } from 'ethers';
 import { WalletContext } from '../../../context/WalletContext';
 import { useToast } from '../../../hooks/useToast';
@@ -601,7 +603,7 @@ function MarketplaceDashboard(props) {
       <SpaceBackground customClass="" />
       <div className="container mx-auto px-3 md:px-4 py-6 md:py-8 relative z-10">
         <div className="flex flex-col space-y-6 md:space-y-8">
-          {/* Dashboard Header - without refresh button */}
+          {/* Dashboard Header - with mint button */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div className="text-center md:text-left">
               <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 tracking-tight">
@@ -612,7 +614,21 @@ function MarketplaceDashboard(props) {
               </h1>
               <p className="text-gray-300 text-base md:text-lg">Discover, collect, and trade unique digital assets</p>
             </div>
+            
+            {/* Add Mint NFT Button */}
+            <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+              <Link 
+                to="/tokenize"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base bg-nuvo-gradient-button text-white font-medium transition-all duration-200 border border-purple-500/20 hover:border-pink-500/30"
+              >
+                <FaPlus className="text-sm" /> Mint NFTs
+              </Link>
+            </div>
           </div>
+            
+          
+
+          
           
           {/* Stats Overview */}
           {stats && <MarketplaceStats stats={stats} />}

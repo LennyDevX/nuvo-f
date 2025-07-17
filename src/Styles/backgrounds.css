@@ -58,7 +58,7 @@
       #6366f1
     );
     background-size: 300% 300%;
-    animation: gradientShift 10s ease-in-out infinite;
+    animation: gradientShift 12s ease-in-out infinite;
   }
 }
 
@@ -75,8 +75,24 @@
     #6366f1
   );
   background-size: 300% 300%;
-  animation: gradientShift 8s ease-in-out infinite;
+  animation: gradientShift 12s ease-in-out infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  /* Asegurar visibilidad */
+  opacity: 1 !important;
+  visibility: visible !important;
 }
+
+/* Fallback para navegadores que no soportan background-clip */
+@supports not (-webkit-background-clip: text) {
+  .bg-nuvo-gradient-text {
+    color: #8b5cf6;
+    -webkit-text-fill-color: #8b5cf6;
+  }
+}
+
 .bg-grid-pattern {
   background-image: 
     linear-gradient(to right, rgba(104, 43, 247, 0.094) 1px, transparent 1px),

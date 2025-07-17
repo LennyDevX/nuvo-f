@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaGift, FaChartLine, FaQuestionCircle, FaCheckCircle, FaTimes, FaArrowRight, FaShieldAlt, FaMoneyBillWave, FaDatabase } from 'react-icons/fa';
+import { FaGift, FaChartLine, FaQuestionCircle, FaCheckCircle, FaTimes, FaArrowRight, FaShieldAlt, FaMoneyBillWave, FaDatabase, FaImage, FaPalette } from 'react-icons/fa';
 import { useAnimationConfig } from '../../animation/AnimationProvider';
 import memoWithName from '../../../utils/performance/memoWithName';
 import useIntersectionObserver from '../../../hooks/performance/useIntersectionObserver';
@@ -145,6 +145,12 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
       label: 'Smart Staking', 
       icon: <FaChartLine />,
       onClick: () => handleTabChange('staking')
+    },
+    { 
+      id: 'nft', 
+      label: 'NFT Platform', 
+      icon: <FaImage />,
+      onClick: () => handleTabChange('nft')
     },
     { 
       id: 'faq', 
@@ -372,6 +378,267 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                     >
                       <FaChartLine /> Go to Staking Dashboard
                     </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentActiveTab === 'nft' && (
+            <motion.div {...motionProps}>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-white text-center">NUVOS NFT Platform</h2>
+              
+              <div className="space-y-4 sm:space-y-6">
+                {/* What are NFTs Section */}
+                <div className="p-3 sm:p-6 bg-black/20 rounded-xl">
+                  <h3 className="text-lg sm:text-xl font-medium text-white mb-3 sm:mb-4 flex items-center gap-3">
+                    <FaImage className="text-purple-400" />
+                    What are NFTs?
+                  </h3>
+                  <p className="text-gray-300 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base">
+                    Non-Fungible Tokens (NFTs) are unique digital assets stored on the blockchain that represent ownership of digital or physical items. Unlike cryptocurrencies, each NFT is one-of-a-kind and cannot be exchanged on a like-for-like basis.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    { [
+                      { title: "Unique Ownership", desc: "Verifiable proof of ownership on the blockchain" },
+                      { title: "Digital Authenticity", desc: "Tamper-proof certificates of authenticity" },
+                      { title: "Transferable", desc: "Easily trade, sell, or transfer to other users" },
+                      { title: "Programmable", desc: "Smart contracts enable automatic royalties and features" }
+                    ].map((item, index) => (
+                      <motion.div 
+                        key={index}
+                        className="flex items-start gap-3"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 + index * 0.1 }}
+                      >
+                        <div className="mt-1 text-purple-400 flex-shrink-0">
+                          <FaCheckCircle />
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-white font-medium text-xs sm:text-sm md:text-base">{item.title}</h4>
+                          <p className="text-xs md:text-sm text-gray-400 break-words">{item.desc}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Create NFTs Section */}
+                <div className="p-3 sm:p-6 bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-xl border border-purple-500/20">
+                  <h3 className="text-lg sm:text-xl font-medium text-white mb-3 sm:mb-4 flex items-center gap-3">
+                    <FaPalette className="text-green-400" />
+                    Create Your NFTs on NUVOS
+                  </h3>
+                  <p className="text-gray-300 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base">
+                    Our tokenization platform makes it easy to create, mint, and manage your NFTs. Transform your digital art, collectibles, or any unique asset into a blockchain-verified NFT.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Creation Process */}
+                    <div>
+                      <h4 className="text-white font-medium mb-4 text-sm md:text-base">🚀 NFT Creation Process:</h4>
+                      <ol className="space-y-3">
+                        { [
+                          { step: "Upload Asset", desc: "Upload your image, video, or digital file" },
+                          { step: "Add Metadata", desc: "Include name, description, and properties" },
+                          { step: "Set Royalties", desc: "Configure creator royalties for future sales" },
+                          { step: "Mint on Polygon", desc: "Deploy your NFT to the blockchain" },
+                          { step: "List for Sale", desc: "Optional: List on marketplace immediately" }
+                        ].map((item, index) => (
+                          <motion.li 
+                            key={index}
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 + index * 0.1 }}
+                          >
+                            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-xs font-medium text-white">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h5 className="text-white font-medium text-xs md:text-sm">{item.step}</h5>
+                              <p className="text-gray-400 text-xs">{item.desc}</p>
+                            </div>
+                          </motion.li>
+                        ))}
+                      </ol>
+                    </div>
+                    
+                    {/* Benefits */}
+                    <div>
+                      <h4 className="text-white font-medium mb-4 text-sm md:text-base">💎 Platform Benefits:</h4>
+                      <div className="space-y-3">
+                        { [
+                          { icon: "⚡", title: "Low Gas Fees", desc: "Mint on Polygon for minimal costs" },
+                          { icon: "🔒", title: "Secure Storage", desc: "IPFS integration for permanent storage" },
+                          { icon: "🎨", title: "Easy Tools", desc: "User-friendly creation interface" },
+                          { icon: "💰", title: "Instant Marketplace", desc: "Immediate access to our marketplace" }
+                        ].map((item, index) => (
+                          <motion.div 
+                            key={index}
+                            className="flex items-start gap-3 p-3 bg-black/30 rounded-lg"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
+                            whileHover={{ scale: 1.02 }}
+                          >
+                            <span className="text-lg">{item.icon}</span>
+                            <div>
+                              <h5 className="text-white font-medium text-xs md:text-sm">{item.title}</h5>
+                              <p className="text-gray-400 text-xs">{item.desc}</p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full btn-nuvo-base bg-nuvo-gradient-button font-medium text-white py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm"
+                      onClick={() => window.location.href = '/tokenize'}
+                    >
+                      <FaPalette className="text-lg" /> Start Creating NFTs
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Marketplace Section */}
+                <div className="p-3 sm:p-6 bg-gradient-to-r from-blue-900/20 to-purple-900/20 rounded-xl border border-blue-500/20">
+                  <h3 className="text-lg sm:text-xl font-medium text-white mb-3 sm:mb-4 flex items-center gap-3">
+                    <FaShieldAlt className="text-blue-400" />
+                    NUVOS NFT Marketplace
+                  </h3>
+                  <p className="text-gray-300 mb-3 sm:mb-4 text-xs sm:text-sm md:text-base">
+                    Buy, sell, and trade NFTs in our integrated marketplace. Discover unique digital assets and connect with creators and collectors worldwide.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* For Sellers */}
+                    <div className="bg-black/30 rounded-lg p-4">
+                      <h4 className="text-green-400 font-medium mb-3 text-sm md:text-base flex items-center gap-2">
+                        <FaMoneyBillWave />
+                        For Sellers
+                      </h4>
+                      <ul className="space-y-2 text-xs md:text-sm">
+                        { [
+                          "List your NFTs for fixed price sales",
+                          "Set minimum bid for auction-style sales",
+                          "Receive offers from interested buyers",
+                          "Automatic royalty distribution",
+                          "Real-time marketplace analytics"
+                        ].map((item, index) => (
+                          <motion.li 
+                            key={index}
+                            className="flex items-start gap-2 text-gray-300"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 + index * 0.1 }}
+                          >
+                            <span className="text-green-400 mt-1">•</span>
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    {/* For Buyers */}
+                    <div className="bg-black/30 rounded-lg p-4">
+                      <h4 className="text-blue-400 font-medium mb-3 text-sm md:text-base flex items-center gap-2">
+                        <FaDatabase />
+                        For Buyers
+                      </h4>
+                      <ul className="space-y-2 text-xs md:text-sm">
+                        { [
+                          "Browse curated NFT collections",
+                          "Make offers on any listed NFT",
+                          "Instant purchase with POL tokens",
+                          "Verify authenticity and ownership",
+                          "Access to exclusive drops and launches"
+                        ].map((item, index) => (
+                          <motion.li 
+                            key={index}
+                            className="flex items-start gap-2 text-gray-300"
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 + index * 0.1 }}
+                          >
+                            <span className="text-blue-400 mt-1">•</span>
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="btn-nuvo-outline py-3 px-4 rounded-lg font-medium text-white flex items-center justify-center gap-2 text-sm"
+                      onClick={() => window.location.href = '/marketplace'}
+                    >
+                      <FaShieldAlt className="text-lg" /> Explore Marketplace
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="btn-nuvo-outline py-3 px-4 rounded-lg font-medium text-white flex items-center justify-center gap-2 text-sm"
+                      onClick={() => window.location.href = '/my-nfts'}
+                    >
+                      <FaImage className="text-lg" /> My NFT Collection
+                    </motion.button>
+                  </div>
+                </div>
+
+                {/* Getting Started Guide */}
+                <div className="p-3 sm:p-6 bg-gradient-to-r from-pink-900/20 to-purple-900/20 rounded-xl border border-pink-500/20">
+                  <h3 className="text-lg sm:text-xl font-medium text-white mb-3 sm:mb-4 flex items-center gap-3">
+                    <FaArrowRight className="text-pink-400" />
+                    Getting Started Guide
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    { [
+                      {
+                        step: "1",
+                        title: "Connect Wallet",
+                        description: "Link your MetaMask or compatible wallet to access all NFT features",
+                        color: "purple"
+                      },
+                      {
+                        step: "2", 
+                        title: "Create or Browse",
+                        description: "Either mint your own NFT or explore existing collections in the marketplace",
+                        color: "pink"
+                      },
+                      {
+                        step: "3",
+                        title: "Trade & Collect",
+                        description: "Buy, sell, make offers, and build your unique NFT collection",
+                        color: "blue"
+                      }
+                    ].map((item, index) => (
+                      <motion.div 
+                        key={index}
+                        className="text-center p-4 bg-black/30 rounded-lg"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                        whileHover={{ scale: 1.05, y: -5 }}
+                      >
+                        <div className={`w-12 h-12 mx-auto mb-3 rounded-full bg-${item.color}-500/20 flex items-center justify-center border border-${item.color}-500/30`}>
+                          <span className={`text-${item.color}-400 font-bold text-lg`}>{item.step}</span>
+                        </div>
+                        <h4 className="text-white font-medium mb-2 text-sm md:text-base">{item.title}</h4>
+                        <p className="text-gray-400 text-xs md:text-sm leading-relaxed">{item.description}</p>
+                      </motion.div>
+                    ))}
                   </div>
                 </div>
               </div>
