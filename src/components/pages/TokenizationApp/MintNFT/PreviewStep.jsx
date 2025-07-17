@@ -119,7 +119,8 @@ const PreviewStep = () => {
         name: metadata.name,
         description: metadata.description,
         category: metadata.category,
-        royalty
+        royalty,
+        quantity: metadata.quantity || 1  // Pasar cantidad
       });
       
       if (!result) throw new Error('Minting failed');
@@ -206,6 +207,10 @@ const PreviewStep = () => {
                     `${account.slice(0, 6)}...${account.slice(-4)}` : 
                     'Connect wallet'}
                 </p>
+              </div>
+              <div>
+                <span className="text-gray-400 text-xs sm:text-sm">Quantity:</span>
+                <p className="text-white text-sm sm:text-base">{metadata.quantity || 1} copies</p>
               </div>
             </div>
           </div>

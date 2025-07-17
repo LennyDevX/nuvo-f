@@ -15,9 +15,9 @@ export const TokenizationProvider = ({ children }) => {
   const [metadata, setMetadata] = useState({
     name: '',
     description: '',
-    attributes: [{ trait_type: 'Physical Condition', value: 'Excellent' }],
     category: 'collectible',
     physicalLocation: '',
+    quantity: 1  // Agregar cantidad
   });
   const [isMinting, setIsMinting] = useState(false);
   const [mintingError, setMintingError] = useState(null);
@@ -60,9 +60,9 @@ export const TokenizationProvider = ({ children }) => {
     setMetadata({
       name: '',
       description: '',
-      attributes: [{ trait_type: 'Physical Condition', value: 'Excellent' }],
       category: 'collectible',
       physicalLocation: '',
+      quantity: 1
     });
     setMintedNFT(null);
     setMintingError(null);

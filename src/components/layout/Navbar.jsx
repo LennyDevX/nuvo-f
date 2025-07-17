@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FaUsers } from 'react-icons/fa';
 import NavLink from '../navigation/NavLink';
 import WalletConnect from '../web3/WalletConnect';
 import BetaBadge from '../ui/BetaBadge';
@@ -107,12 +108,13 @@ const Navbar = () => {
     return `${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`;
   }, []);
 
-  // Updated navigation items with Home button
+  // Updated navigation items with Creators button
   const navigationItems = useMemo(() => [
     { path: '/', label: 'Home', icon: FaHome },
     { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/marketplace', label: 'Marketplace', icon: FaStoreAlt },
+    { path: '/creators', label: 'Creators', icon: FaUsers },
     { path: '/tokenomics', label: 'Token', icon: FaChartPie },
     { path: '/chat', label: 'Chat', icon: FaComments },
   ], []);

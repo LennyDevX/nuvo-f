@@ -100,6 +100,23 @@ const MetadataStep = () => {
             />
           </div>
           
+          <div>
+            <label className="block text-sm font-medium text-purple-300 mb-1 sm:mb-2">
+              Quantity to Mint
+            </label>
+            <input
+              type="number"
+              name="quantity"
+              min="1"
+              max="1000"
+              value={metadata.quantity || 1}
+              onChange={handleMetadataChange}
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white transition-all text-sm sm:text-base"
+              placeholder="1"
+            />
+            <p className="text-xs text-gray-400 mt-1">Number of identical copies to create</p>
+          </div>
+          
           {/* Info box más sutil */}
           <div className="p-3 sm:p-4 bg-white/5 backdrop-blur-sm rounded-lg border border-white/10">
             <p className="text-xs sm:text-sm text-blue-300 flex items-start">
