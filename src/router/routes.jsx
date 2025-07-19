@@ -48,6 +48,7 @@ const ProfilePage = createLazyComponent(() => import('../components/pages/profil
 const ChatPage = createLazyComponent(() => import('../components/pages/chat/ChatPage'));
 const MarketplaceDashboard = createLazyComponent(() => import('../components/pages/marketplace/MarketplaceDashboard'));
 const CreatorsHome = createLazyComponent(() => import('../components/pages/creators/Home'));
+const ListingsManager = createLazyComponent(() => import('../components/pages/TokenizationApp/components/ListingsManager.jsx'));
 
 // Routes configuration with React Router's native prefetching via loaders
 export const routes = [
@@ -123,6 +124,11 @@ export const routes = [
   {
     path: "/my-nfts",
     element: withSuspense(<MainLayout><NFTDashboard /></MainLayout>),
+    loader: async () => null
+  },
+  {
+    path: "/my-nfts/listings",
+    element: withSuspense(<MainLayout><ListingsManager /></MainLayout>),
     loader: async () => null
   },
   {

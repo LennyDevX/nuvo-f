@@ -10,12 +10,12 @@ import MarketplaceStats from './components/MarketplaceStats';
 import LoadingSpinner from '../../ui/LoadingSpinner';
 import EmptyState from './components/EmptyState';
 import SpaceBackground from '../../effects/SpaceBackground';
-import contractABI from '../../../Abi/TokenizationApp.json';
+import contractABI from '../../../Abi/Marketplace.json';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { marketplaceCache } from '../../../utils/cache/MarketplaceCache';
 import { normalizeCategory, getCategoryDisplayName, getAvailableCategories } from '../../../utils/blockchain/blockchainUtils';
 
-const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 
 function MarketplaceDashboard(props) {
   const { account, provider, walletConnected, connectWallet } = useContext(WalletContext);

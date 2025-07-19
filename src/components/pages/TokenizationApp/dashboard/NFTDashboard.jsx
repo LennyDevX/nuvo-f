@@ -249,6 +249,12 @@ const NFTDashboard = () => {
               >
                 <FaPlus className="text-sm" /> Mint NFTs
               </Link>
+              <Link
+                to="/my-nfts/listings"
+                className="flex items-center justify-center gap-2 px-6 py-2.5 btn-nuvo-base btn-nuvo-primary-solid text-white font-medium transition-all duration-200 border border-blue-700/20 hover:border-blue-800/30"
+              >
+                View NFTs
+              </Link>
             </div>
           </div>
           

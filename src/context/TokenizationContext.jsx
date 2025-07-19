@@ -3,8 +3,16 @@ import { uploadFileToIPFS, uploadJsonToIPFS } from '../utils/blockchain/blockcha
 import { imageCache } from '../utils/blockchain/imageCache';
 import useUserNFTs from '../hooks/nfts/useUserNFTs';
 import useMintNFT from '../hooks/nfts/useMintNFT';
+import MarketplaceABI from '../Abi/Marketplace.json';
 
 const TokenizationContext = createContext();
+
+// Marketplace contract configuration
+const MARKETPLACE_CONFIG = {
+  address: import.meta.env.VITE_TOKENIZATION_ADDRESS_V2,
+  abi: MarketplaceABI.abi,
+  fallbackAddress: "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582"
+};
 
 export const TokenizationProvider = ({ children }) => {
   // State management
@@ -184,7 +192,10 @@ export const TokenizationProvider = ({ children }) => {
         mintError,
         mintTxHash,
         updateUserAccount,
-        userAccount
+        userAccount,
+        
+        // Marketplace configuration for V2
+        marketplaceConfig: MARKETPLACE_CONFIG
       }}
     >
       {children}

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../Abi/Marketplace.json';
 import { fetchNFTs, fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
 import useProvider from '../blockchain/useProvider';
 import { nftCollectionCache } from '../../utils/cache/NFTCollectionCache';
 
-// Directly access the environment variable and log it for debugging
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 console.log('Raw TOKENIZATION CONTRACT ADDRESS from env:', CONTRACT_ADDRESS);
 
 // Make sure the address is valid by removing any surrounding whitespace
@@ -16,8 +17,8 @@ const cleanedAddress = CONTRACT_ADDRESS ? CONTRACT_ADDRESS.trim() : '';
 const isValidAddress = ethers.isAddress(cleanedAddress);
 console.log('Is tokenization address valid format?', isValidAddress);
 
-// Use the valid address or fallback
-const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
+// Use the valid address or fallback to V2 address
+const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
 console.log('Final TOKENIZATION_ADDRESS being used:', TOKENIZATION_ADDRESS);
 
 // Default image placeholder
@@ -218,7 +219,7 @@ export default function useUserNFTs(address) {
         
         const contract = new ethers.Contract(
           TOKENIZATION_ADDRESS,
-          TokenizationAppABI.abi,
+          MarketplaceABI.abi,
           browserProvider
         );
         
@@ -274,11 +275,8 @@ export default function useUserNFTs(address) {
         
         if (tokenIds.length === 0) {
           console.log("No tokens found for user");
-          const cacheKey = `user_nfts_${address}_${TOKENIZATION_ADDRESS}`;
-          userNFTCache.set(cacheKey, {
-            nfts: [],
-            timestamp: Date.now()
-          });
+          // Cambia userNFTCache por nftCollectionCache
+          nftCollectionCache.setUserNFTs(address, TOKENIZATION_ADDRESS, []);
           setNfts([]);
           setLoading(false);
           return;

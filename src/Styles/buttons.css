@@ -54,6 +54,21 @@
   box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
+/* Solid Primary Button (e.g., List NFT) */
+.btn-nuvo-primary-solid {
+  background-color: #2563eb; /* blue-600 */
+  color: white;
+  border: 1px solid #1d4ed8; /* blue-700 */
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-nuvo-primary-solid:hover {
+  background-color: #1d4ed8; /* blue-700 */
+  border-color: #1e40af; /* blue-800 */
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+}
+
 /* Secondary Button */
 .btn-nuvo-secondary {
   background: rgba(55, 65, 81, 0.8);
@@ -69,6 +84,51 @@
   color: white;
   transform: translateY(-1px) scale(1.02);
   box-shadow: 0 6px 20px rgba(139, 92, 246, 0.2);
+}
+
+/* Action Buttons (Like, Share) */
+.btn-nuvo-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid #4b5563; /* gray-600 */
+  background-color: #374151; /* gray-700 */
+  color: #d1d5db; /* gray-300 */
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-nuvo-action:hover {
+  background-color: #4b5563; /* gray-600 */
+  border-color: #6b7280; /* gray-500 */
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-nuvo-action.active-like {
+  background-color: #dc2626; /* red-600 */
+  border-color: #b91c1c; /* red-700 */
+  color: white;
+}
+
+.btn-nuvo-action.active-like:hover {
+  background-color: #b91c1c; /* red-700 */
+}
+
+.btn-nuvo-action.share {
+  background-color: #7c3aed; /* purple-600 */
+  border-color: #6d28d9; /* purple-700 */
+  color: white;
+}
+
+.btn-nuvo-action.share:hover {
+  background-color: #6d28d9; /* purple-700 */
+  border-color: #5b21b6; /* purple-800 */
 }
 
 /* Outline Button */
@@ -109,6 +169,8 @@
   color: white;
   transform: scale(1.05);
 }
+
+
 
 /* NFT Like Badge */
 .nft-badge-like {
@@ -184,4 +246,27 @@
   .btn-nuvo-base:hover {
     transform: none;
   }
+}
+
+.btn-nuvo-success {
+  background: linear-gradient(
+    135deg,
+    #94dfa4 0%,      /* verde muy claro (casi blanco) */
+    #6ad590 20%,     /* verde pastel */
+    #4ade80 45%,     /* verde esmeralda */
+    #22c55e 70%,     /* verde mediano */
+    #16a34a 85%,     /* verde intenso */
+    #ffffff 100%     /* blanco */
+  );
+  color: #134e1e;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 4px 16px 0 rgba(34, 197, 94, 0.18);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-nuvo-success:hover {
+  filter: brightness(1.07) saturate(1.1);
+  border-color: #4ade80;
+  color: #0f3d1c;
+  transform: translateY(-1px) scale(1.03);
 }

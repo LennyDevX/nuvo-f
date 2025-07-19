@@ -97,7 +97,7 @@ const ProfilePage = () => {
         
         const [nftResult, txResult, tokenResult] = await Promise.allSettled([
           fetchNFTs(account, provider, {
-            contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS,
+            contractAddress: import.meta.env.VITE_TOKENIZATION_ADDRESS_V2,
             signal
           }).catch(err => {
             if (!signal.aborted) console.error("Error fetching NFTs:", err);

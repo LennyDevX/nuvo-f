@@ -8,11 +8,11 @@ import { WalletContext } from '../../../../context/WalletContext';
 import IPFSImage from '../../../ui/IPFSImage';
 import { getOptimizedImageUrl } from '../../../../utils/blockchain/blockchainUtils';
 import { createPortal } from 'react-dom';
-import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../../../Abi/Marketplace.json';
 
 // Constants
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2 || "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
 
 /**
  * Modal component for displaying detailed NFT information
@@ -65,7 +65,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const contract = new ethers.Contract(
         contractAddress || CONTRACT_ADDRESS, 
-        TokenizationAppABI.abi, 
+        MarketplaceABI.abi, 
         provider
       );
 
@@ -106,7 +106,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress }) => {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         contractAddress || CONTRACT_ADDRESS, 
-        TokenizationAppABI.abi, 
+        MarketplaceABI.abi, 
         signer
       );
 
