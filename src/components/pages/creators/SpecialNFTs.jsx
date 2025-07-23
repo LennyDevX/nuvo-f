@@ -120,7 +120,7 @@ const UtilityTier = memoWithName(({ tier, index, animationEnabled }) => {
         whileHover={animationEnabled ? { scale: 1.02 } : {}}
         whileTap={animationEnabled ? { scale: 0.98 } : {}}
       >
-        Mint {tier.name} NFT
+        {tier.buttonText || `Mint ${tier.name} NFT`}
       </motion.button>
     </motion.div>
   );
@@ -172,54 +172,74 @@ const SpecialNFTs = () => {
   const utilityTiers = [
     {
       name: "Creator",
-      description: "Essential benefits for emerging creators",
-      price: "0.05 POL",
-      supply: "2,000",
+      description: "The perfect starting point for new creators to join our ecosystem.",
+      price: "Free",
+      supply: "Unlimited Access",
       icon: <FaStar />,
       iconBg: "bg-blue-500/20",
       highlighted: false,
       features: [
-        "Basic revenue sharing (2%)",
-        "Access to creator community",
-        "Monthly educational webinars",
-        "Standard support priority",
-        "Basic collaboration tools"
-      ]
+        "Access to the creator community",
+        "Basic platform tools",
+        "Entry to educational content",
+        "Standard support",
+        "A path to grow with us"
+      ],
+      buttonText: "Get Started"
     },
     {
-      name: "Professional",
-      description: "Advanced features for established creators",
-      price: "0.1 POL",
-      supply: "1,000",
+      name: "VIP Member",
+      description: "One-time payment for lifetime access to exclusive benefits and our creator fund.",
+      price: "1000 POL",
+      supply: "Limited Edition NFTs",
       icon: <FaGem />,
       iconBg: "bg-purple-500/20",
       highlighted: true,
       features: [
+        "Special Edition Nuvos NFT",
+        "Access to the Creator Fund",
         "Enhanced revenue sharing (5%)",
-        "Priority brand partnership access",
-        "Advanced analytics dashboard",
-        "Premium support and consulting",
-        "Exclusive events and networking",
-        "Professional development courses"
-      ]
+        "Priority partnership opportunities",
+        "Exclusive community channels",
+        "Advanced analytics dashboard"
+      ],
+      buttonText: "Mint VIP NFT"
     },
     {
-      name: "Elite",
-      description: "Premium tier for top-tier creators",
-      price: "0.2 POL",
-      supply: "500",
+      name: "Premium Creator",
+      description: "Monthly subscription for dedicated support and collaboration with the Nuvos team.",
+      price: "100 POL / month",
+      supply: "Subscription-based",
       icon: <FaCrown />,
       iconBg: "bg-gold-500/20",
       highlighted: false,
       features: [
-        "Maximum revenue sharing (10%)",
-        "Personal brand manager access",
-        "Custom collaboration opportunities",
-        "VIP support and white-glove service",
-        "Exclusive mastermind groups",
-        "Direct platform influence voting",
-        "Legacy protection services"
-      ]
+        "All VIP Member benefits",
+        "Direct collaboration with Nuvos",
+        "Personalized growth strategy support",
+        "Featured on Nuvos platforms",
+        "Top-tier support & consulting",
+        "Influence platform development"
+      ],
+      buttonText: "Subscribe Now"
+    },
+    {
+      name: "Selected",
+      description: "For established influencers and brand ambassadors, by invitation or application.",
+      price: "By Invitation",
+      supply: "Exclusive Partnership",
+      icon: <FaGift />,
+      iconBg: "bg-cyan-500/20",
+      highlighted: false,
+      features: [
+        "Highest level of benefits",
+        "Official Brand Ambassador status",
+        "Direct support from Nuvos Cloud",
+        "Co-marketing campaigns",
+        "Customized partnership terms",
+        "Shape the future of Nuvos"
+      ],
+      buttonText: "Apply for Partnership"
     }
   ];
 
@@ -302,7 +322,7 @@ const SpecialNFTs = () => {
         </motion.div>
 
         {/* Utility tiers grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
           {utilityTiers.map((tier, index) => (
             <UtilityTier 
               key={tier.name}

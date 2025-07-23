@@ -146,7 +146,7 @@ const HeroSection = () => {
         >
           {[
             { label: "Categories", value: "4", icon: <FaPalette /> },
-            { label: "Benefits", value: "10", icon: <FaStar /> },
+            { label: "Benefits", value: "6", icon: <FaStar /> },
             { label: "Support", value: "24/7", icon: <FaHeadset /> },
             { label: "Community", value: "Active", icon: <FaUsers /> }
           ].map((stat, index) => (

@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa';
 import { useAnimationConfig } from '../../animation/AnimationProvider';
 import memoWithName from '../../../utils/performance/memoWithName';
+import { useNavigate } from 'react-router-dom';
 
 const FeatureCard = memoWithName(({ feature, index, animationEnabled }) => {
   const cardVariants = animationEnabled ? {
@@ -90,6 +91,7 @@ const BenefitStep = memoWithName(({ step, index, animationEnabled }) => {
 const NFTsInfo = () => {
   const { shouldReduceMotion, isLowPerformance } = useAnimationConfig();
   const animationEnabled = !shouldReduceMotion && !isLowPerformance;
+  const navigate = useNavigate();
 
   const nftFeatures = [
     {
@@ -150,14 +152,12 @@ const NFTsInfo = () => {
   ];
 
   const nuvosAdvantages = [
-    "🎨 Access to advanced creation tools",
-    "💰 2% revenue sharing on all platform transactions",
-    "🎯 Priority in collaborations and brand partnerships",
-    "📊 Advanced analytics to optimize your content and rewards",
-    "🎪 Exclusive invitations to events and workshops",
-    "🤝 Personalized mentoring with established creators",
-    "🔮 Early access to new platform features",
-    "👑 Verified badge as Premium Creator on all platforms"
+    "💰 5% annual profit sharing from platform revenue.",
+    "👑 A unique 'Nuvos Fan' badge on your profile.",
+    "🔮 Early access to new features and beta tests.",
+    "🎪 Exclusive access to a private fan-only community channel.",
+    "🎁 Eligibility for future airdrops and special events.",
+    "❤️ Show your support and help shape the future of Nuvos."
   ];
 
   const containerVariants = animationEnabled ? {
@@ -196,12 +196,11 @@ const NFTsInfo = () => {
         >
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
             <span className="text-transparent bg-clip-text bg-nuvo-gradient-text">
-              Nuvos NFTs Special Edition
+              Nuvos Fan Edition NFT
             </span>
           </h2>
           <p className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            Discover how our unique NFTs can revolutionize your career as a digital creator and 
-            give you access to a complete ecosystem of tools and opportunities.
+            Discover the power of utility NFTs. Our Fan Edition NFT is a real-world example of how you can earn rewards and benefits by supporting the platforms you love.
           </p>
         </motion.div>
 
@@ -274,13 +273,11 @@ const NFTsInfo = () => {
             <div className="text-center mb-8">
               <h3 className="text-3xl md:text-4xl font-bold mb-4">
                 <span className="text-transparent bg-clip-text bg-nuvo-gradient-text">
-                  Your Exclusive Digital Work Of Art
+                  Your Stake in Our Success
                 </span>
               </h3>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                As a token of support for your creative work, you'll be able to acquire a unique and special NFT 
-                that will grant you full access to our ecosystem and make you part of the 
-                exclusive Nuvos Digital Creators program.
+                As a token of our appreciation, we've launched the Fan Edition NFT. It's a unique digital asset that identifies you as a core supporter and grants you a share in the platform's success.
               </p>
             </div>
 
@@ -303,28 +300,32 @@ const NFTsInfo = () => {
               </div>
 
               <div className="flex flex-col justify-center">
-                <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 p-6 rounded-xl border border-purple-500/30 text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaLock className="text-3xl text-white" />
+                <div className="p-6 rounded-xl border border-purple-500/30 text-center bg-transparent">
+                  <div className="w-60 h-60 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden  bg-transparent">
+                    <img
+                      src="/NuvosToken.webp"
+                      alt="NFT Premium Creator"
+                      className="w-full h-full object-contain"
+                      style={{ maxWidth: '100%', maxHeight: '100%' }}
+                    />
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-3">NFT Premium Creator</h4>
+                  <h4 className="text-2xl font-bold text-white mb-3">Nuvos Fan Edition NFT</h4>
                   <p className="text-gray-300 mb-4">
-                    Limited edition for verified creators
+                    Limited edition for our core supporters.
                   </p>
-                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text mb-4">
-                    0.25 POL
+                  <div className="text-3xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text mb-4">
+                    5% Annual Profit Share
                   </div>
                   <p className="text-sm text-purple-300 mb-6">
                     Only 1,000 NFTs available
                   </p>
-                  <motion.button
+                  <button
                     className="w-full btn-nuvo-base bg-nuvo-gradient-button text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
-                    whileHover={animationEnabled ? { scale: 1.02 } : {}}
-                    whileTap={animationEnabled ? { scale: 0.98 } : {}}
+                    onClick={() => navigate('/nft/1')}
                   >
-                    <FaGem />
-                    Get My Exclusive NFT
-                  </motion.button>
+                    Acquire on Marketplace
+                    <FaArrowRight />
+                  </button>
                 </div>
               </div>
             </div>

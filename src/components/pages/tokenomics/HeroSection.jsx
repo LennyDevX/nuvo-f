@@ -1,9 +1,9 @@
 import React from 'react';
 import { m } from 'framer-motion';
-import { FaRocket, FaLock, FaUsers } from 'react-icons/fa';
+import { FaKey, FaUsers, FaMagic } from 'react-icons/fa';
 import OptimizedImage from '../../image/OptimizedImage';
 
-const HeroSection = ({ onOpenTokenModal }) => {
+const HeroSection = ({ onOpenNFTModal }) => {
   // Container variants for the whole section
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -34,7 +34,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
       opacity: 1,
       x: 0,
       transition: {
-        delay: i * 0.1,
+        delay: i * 0.05, // Faster stagger
         duration: 0.3,
         ease: "easeIn"
       }
@@ -128,7 +128,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
               animate="visible"
               className="mb-2 sm:mb-4 overflow-hidden"
             >
-              {Array.from("NUVOS Token").map((char, index) => (
+              {Array.from("Nuvos NFT Collections").map((char, index) => (
                 <m.span
                   key={index}
                   custom={index}
@@ -147,7 +147,7 @@ const HeroSection = ({ onOpenTokenModal }) => {
               transition={{ delay: 0.8, duration: 0.8 }}
               className="text-xs sm:text-base md:text-lg lg:text-xl mt-1 sm:mt-2 text-gray-200 leading-snug"
             >
-              Powering Our Digital Ecosystem Today
+              Your Key to the Creator Economy
             </m.p>
 
             <m.div 
@@ -157,13 +157,12 @@ const HeroSection = ({ onOpenTokenModal }) => {
               className="mt-2 sm:mt-4"
             >
               <p className="text-gray-300 text-xs sm:text-sm md:text-base leading-relaxed">
-                Experience NUVOS, the active cornerstone of our ecosystem with a fixed supply of 21M tokens.
-                <span className="hidden sm:inline"> Delivering sustainability, transparency, and community-driven growth across the Nuvos Cloud platform.</span>
+                Each NFT is a unique key to our ecosystem, unlocking powerful utilities and benefits. All collections grant identical access, with new designs released seasonally.
               </p>
             </m.div>
           </m.div>
 
-          {/* Token Image - right side on all devices */}
+          {/* NFT Image - right side on all devices */}
           <m.div 
             className="flex-shrink-0 flex justify-center items-center"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -180,12 +179,12 @@ const HeroSection = ({ onOpenTokenModal }) => {
                 variants={coinRotateVariants}
                 animate="animate"
                 style={{ 
-                  filter: 'drop-shadow(0 0 8px rgba(139, 92, 246, 0.6))'
+                  filter: 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.7))'
                 }}
               >
                 <OptimizedImage
-                  src="/NuvosToken.png"
-                  alt="NUVOS Token"
+                  src="/NuvosNFT.png"
+                  alt="Nuvos NFT Collection"
                   priority={true}
                   quality={90}
                   className="w-full h-full object-contain"
@@ -203,21 +202,22 @@ const HeroSection = ({ onOpenTokenModal }) => {
           className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mt-4 sm:mt-6 lg:mt-8"
         >
           {[
-          {
-            icon: <FaLock className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
-            title: "Fixed Supply",
-            description: "21M tokens maximum supply"
-          },
-          {
-            icon: <FaRocket className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
-            title: "Active Utility",
-            description: "Powering Nuvos Cloud ecosystem"
-          },
-          {
-            icon: <FaUsers className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
-            title: "Community Governed",
-            description: "Token holders participate in governance"
-          }].map((item, index) => (
+            {
+              icon: <FaMagic className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
+              title: "Seasonal Collections",
+              description: "New themed NFTs every 4 months"
+            },
+            {
+              icon: <FaKey className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
+              title: "Unlockable Utilities",
+              description: "Access to our DeFi ecosystem"
+            },
+            {
+              icon: <FaUsers className="text-purple-400 text-base sm:text-2xl lg:text-3xl mb-1 sm:mb-3" />,
+              title: "Creator-Centric",
+              description: "Monetize your work with crypto"
+            }
+          ].map((item, index) => (
             <m.div 
               key={index} 
               className={`card-purple-gradient card-purple-wrapper flex flex-col items-center text-center p-2 sm:p-4 lg:p-5
@@ -243,9 +243,9 @@ const HeroSection = ({ onOpenTokenModal }) => {
             className="text-white px-6 sm:px-8 py-3 sm:py-3 text-sm sm:text-base
               font-semibold transition-all duration-300 btn-nuvo-base bg-nuvo-gradient-button 
               shadow-md hover:shadow-lg w-full sm:w-auto max-w-xs"
-            onClick={onOpenTokenModal}
+            onClick={onOpenNFTModal}
           >
-            Learn More
+            Explore Collections
           </m.button>
         </m.div>
       </div>

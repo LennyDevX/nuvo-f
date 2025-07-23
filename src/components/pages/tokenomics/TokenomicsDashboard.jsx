@@ -1,17 +1,17 @@
 import React, { useState, useCallback, useMemo, lazy, Suspense } from "react";
 import { m } from "framer-motion";
 import MainLayout from '../../layout/MainLayout';
-import TokenInfoModal from '../../modals/TokenInfoModal';
+import NFTInfoModal from '../../modals/TokenInfoModal';
 import AnimationProvider from '../../animation/AnimationProvider';
 import SpaceBackground from '../../effects/SpaceBackground';
 import LoadingSpinner from '../../ui/LoadingSpinner';
 
 // Lazily load components for better performance
-const TokenDistribution = lazy(() => import('./TokenDistribution'));
-const RevenueStreams = lazy(() => import('./RevenueStreams'));
+const UtilitySpectrum = lazy(() => import('./TokenDistribution'));
+const EcosystemValueFlow = lazy(() => import('./RevenueStreams'));
 const HeroSection = lazy(() => import("./HeroSection"));
-const SupplyTracker = lazy(() => import('./SupplyTracker'));
-const TokenomicsExplanation = lazy(() => import('./TokenomicsExplanation'));
+const CollectionTracker = lazy(() => import('./SupplyTracker'));
+const NFTnomicsModel = lazy(() => import('./TokenomicsExplanation'));
 
 // Create loading fallback
 const LoadingFallback = () => (
@@ -25,16 +25,16 @@ const LoadingFallback = () => (
   </div>
 );
 
-const TokenomicsDashboard = () => {
-  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+const NFTnomicsDashboard = () => {
+  const [isNFTModalOpen, setIsNFTModalOpen] = useState(false);
 
   // Optimize modal handlers with useCallback
-  const handleOpenTokenModal = useCallback(() => {
-    setIsTokenModalOpen(true);
+  const handleOpenNFTModal = useCallback(() => {
+    setIsNFTModalOpen(true);
   }, []);
 
-  const handleCloseTokenModal = useCallback(() => {
-    setIsTokenModalOpen(false);
+  const handleCloseNFTModal = useCallback(() => {
+    setIsNFTModalOpen(false);
   }, []);
 
   // Memoize SpaceBackground component to prevent re-renders
@@ -52,52 +52,52 @@ const TokenomicsDashboard = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="w-full pt-8 sm:pt-12 lg:pt-16 pb-4 relative z-10"
-            key="tokenomics-dashboard-main"
+            key="nft-nomics-dashboard-main"
           >
             <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
               {/* Hero Section */}
               <div className="mb-4 sm:mb-6 lg:mb-8">
                 <Suspense fallback={<LoadingFallback />}>
-                  <HeroSection onOpenTokenModal={handleOpenTokenModal} />
+                  <HeroSection onOpenNFTModal={handleOpenNFTModal} />
                 </Suspense>
               </div>
 
-              {/* Supply Tracker */}
+              {/* Collection Tracker */}
               <div className="mb-3 sm:mb-4 lg:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
-                  <SupplyTracker />
+                  <CollectionTracker />
                 </Suspense>
               </div>
               
               {/* Main Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6 mb-3 sm:mb-4 lg:mb-6">
                 <Suspense fallback={<LoadingFallback />}>
-                  <TokenDistribution />
+                  <UtilitySpectrum />
                 </Suspense>
                 <Suspense fallback={<LoadingFallback />}>
-                  <RevenueStreams />
+                  <EcosystemValueFlow />
                 </Suspense>
               </div>
 
               
 
-              {/* Tokenomics Explanation */}
+              {/* NFT-nomics Model Explanation */}
               <Suspense fallback={<LoadingFallback />}>
-                <TokenomicsExplanation />
+                <NFTnomicsModel />
               </Suspense>
             </div>
           </m.div>
         </div>
 
-        {/* Token Info Modal - Now at the page level */}
-        <TokenInfoModal 
-          isOpen={isTokenModalOpen} 
-          onClose={handleCloseTokenModal} 
-          key="token-info-modal"
+        {/* NFT Info Modal - Now at the page level */}
+        <NFTInfoModal 
+          isOpen={isNFTModalOpen} 
+          onClose={handleCloseNFTModal} 
+          key="nft-info-modal"
         />
       </AnimationProvider>
     </MainLayout>
   );
 };
 
-export default React.memo(TokenomicsDashboard);
+export default React.memo(NFTnomicsDashboard);

@@ -302,7 +302,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold border transition-all duration-200 ${
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold btn-nuvo-base btn-nuvo-outline transition-all duration-200 ${
                     hasLiked
                       ? 'bg-red-600 text-white border-red-600 shadow'
                       : 'bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700'
@@ -318,7 +318,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
                 <button
                   onClick={handleShare}
                   disabled={shareLoading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold border border-purple-600 bg-purple-700 text-white hover:bg-purple-800 transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold btn-nuvo-base btn-nuvo-outline transition-all duration-200"
                 >
                   {shareLoading ? (
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
@@ -340,17 +340,18 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
                 </button>
                 <button
                   onClick={handleShowListForm}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold border border-green-600 bg-green-700 text-white hover:bg-green-800 transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold btn-nuvo-base btn-nuvo-primary text-white hover:bg-green-800 transition-all duration-200"
+                  disabled={selectedNFT.isForSale}
                 >
                   <FaChevronUp />
-                  <span>Listar NFT</span>
+                  <span>{selectedNFT.isForSale ? 'Already Listed' : 'Listar NFT'}</span>
                 </button>
               </div>
               {/* List NFT Form */}
               {showListForm && (
                 <form onSubmit={handleListNFT} className="bg-gray-800/90 p-4 rounded-lg mt-2 border border-gray-700">
                   <div className="mb-2">
-                    <label className="block text-xs text-gray-300 mb-1">Precio (POL)</label>
+                    <label className="block text-xs text-gray-300 mb-1">Price (POL)</label>
                     <input
                       type="number"
                       min="0"
@@ -362,7 +363,7 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
                     />
                   </div>
                   <div className="mb-2">
-                    <label className="block text-xs text-gray-300 mb-1">Categoría</label>
+                    <label className="block text-xs text-gray-300 mb-1">Category</label>
                     <input
                       type="text"
                       value={listCategory}
@@ -409,14 +410,14 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
             {/* Description */}
             {selectedNFT.description && (
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Descripción</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">Description</h3>
                 <p className="text-gray-200 leading-relaxed text-base">{selectedNFT.description}</p>
               </div>
             )}
             {/* Attributes */}
             {selectedNFT.attributes && selectedNFT.attributes.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-white mb-2">Atributos</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">Attributes</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {selectedNFT.attributes.map((attr, index) => (
                     <div key={index} className="bg-gray-800/80 border border-gray-700 rounded-lg p-2">
@@ -442,8 +443,8 @@ const NFTDetailModal = ({ selectedNFT, onClose, contractAddress, onListNFT }) =>
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white transition-colors rounded-lg px-4 py-2.5 font-medium text-sm w-full mt-2"
               onClick={onClose}
             >
-              <FaImage className="text-sm" /> 
-              Ver Detalles
+              <FaImage className="text-sm" />
+              View Details
             </Link>
           </div>
         </div>

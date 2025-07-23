@@ -1,57 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { m } from 'framer-motion';
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
-  Legend
-} from 'recharts';
-import { 
-  tokenDistributionData, 
-  tokenDistributionDetails,
-  pieChartStyle,
-} from '../../../utils/chart/chartConfig';
-import { chartColors, gradientDefs } from '../../../utils/chart/chartSetup';
+import { m, AnimatePresence } from 'framer-motion';
+import InteractiveDataDisplay from '../../ui/InteractiveDataDisplay';
 
-const TokenDistribution = () => {
+const nftUtilityData = [
+  { name: 'DeFi Access', value: 30, colorKey: 'purple' },
+  { name: 'Creator Tools', value: 25, colorKey: 'blue' },
+  { name: 'Exclusive Content', value: 20, colorKey: 'green' },
+  { name: 'Community Benefits', value: 15, colorKey: 'amber' },
+  { name: 'Physical Rewards', value: 10, colorKey: 'pink' },
+];
+
+const nftUtilityDetails = {
+  'DeFi Access': 'Unlock powerful financial tools within our creator-focused DeFi ecosystem.',
+  'Creator Tools': 'Access a suite of proprietary tools to create, manage, and monetize your digital assets.',
+  'Exclusive Content': 'Gain entry to limited content, early releases, and unique digital experiences.',
+  'Community Benefits': 'Participate in governance, join exclusive channels, and collaborate with other creators.',
+  'Physical Rewards': 'Redeem your NFT for limited-edition merchandise, event tickets, and more.',
+};
+
+const UtilitySpectrum = () => {
   const [activeIndex, setActiveIndex] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
 
-  // Check for mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    
-    // Throttled resize handler
-    let timeoutId = null;
-    const handleResize = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(checkMobile, 100);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
-
-  // Create a unique ID for this chart's gradient definitions
-  const chartId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-  
-  // Get selected category info
-  const selectedCategory = activeIndex !== null ? tokenDistributionData[activeIndex] : null;
+  const selectedCategory = activeIndex !== null ? nftUtilityData[activeIndex] : null;
 
   // Memoize key points content with specific colors for each element
   const keyPointsItems = [
-    { color: 'text-purple-600', text: '20% allocated to staking rewards' },
-    { color: 'text-blue-400', text: '15% treasury allocation' },
-    { color: 'text-pink-400', text: '20% community incentives' },
-    { color: 'text-amber-400', text: '15% marketing' },
-    { color: 'text-green-400', text: '20% development' },
-    { color: 'text-pink-500', text: '10% founder & team' },
+    { color: 'text-purple-400', text: 'NFTs act as a key to the ecosystem' },
+    { color: 'text-blue-400', text: 'Access to creator-focused DeFi tools' },
+    { color: 'text-green-400', text: 'Monetize digital and physical work' },
+    { color: 'text-amber-400', text: 'Join a collaborative community' },
+    { color: 'text-pink-400', text: 'Unlock exclusive real-world rewards' },
+    { color: 'text-purple-300', text: 'All collections share the same benefits' },
   ];
 
   const keyPointsContent = useMemo(() => (
@@ -72,102 +51,52 @@ const TokenDistribution = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between">
-        <h2 className="text-xl font-bold text-white mb-4 tracking-wide">Token Distribution</h2>
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+        <div className="flex-grow w-full">
+          <h2 className="text-xl font-bold text-white mb-4 tracking-wide">NFT Utility Spectrum</h2>
+          <InteractiveDataDisplay 
+            data={nftUtilityData}
+            onSelectItem={setActiveIndex}
+          />
+        </div>
         
-        {/* Selected category info panel */}
-        {selectedCategory && (
-          <div className="bg-[#1a1333]/50 border-l-2 border-purple-600 pl-3 py-1 mb-4 md:mb-0 w-full md:max-w-[220px] transition-all">
-            <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
-            <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
-            <div className="text-xs text-gray-300 opacity-80 line-clamp-2">
-              {tokenDistributionDetails[selectedCategory.name] || ""}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="aspect-square h-[300px] md:h-[330px] mx-auto">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            {/* Custom gradient definitions */}
-            <defs>
-              {Object.values(gradientDefs(chartId)).map((gradient, gradIdx) => (
-                <linearGradient 
-                  key={gradient.id || `gradient-${gradIdx}`} 
-                  id={gradient.id || `gradient-${gradIdx}`} 
-                  x1={gradient.x1} y1={gradient.y1} 
-                  x2={gradient.x2} y2={gradient.y2}
+        <div className="w-full md:w-[220px] md:min-w-[220px] flex-shrink-0">
+          <h3 className="text-base font-bold text-white mb-2 md:text-left opacity-80">Details</h3>
+          <div className="bg-[#1a1333]/50 border border-purple-500/20 rounded-lg p-3 transition-all h-[120px] flex flex-col justify-center">
+            <AnimatePresence mode="wait">
+              {selectedCategory ? (
+                <m.div 
+                  key={selectedCategory.name}
+                  initial={{opacity: 0, y: 10}} 
+                  animate={{opacity: 1, y: 0}} 
+                  exit={{opacity: 0, y: -10}}
+                  transition={{duration: 0.2}}
                 >
-                  {gradient.stops.map((stop, i) => (
-                    <stop 
-                      key={`${gradient.id || gradIdx}-stop-${i}`} 
-                      offset={stop.offset} 
-                      stopColor={stop.color} 
-                      stopOpacity={stop.opacity || 1} 
-                    />
-                  ))}
-                </linearGradient>
-              ))}
-            </defs>
-            
-            {/* Main pie chart */}
-            <Pie
-              data={tokenDistributionData}
-              cx="50%"
-              cy="50%"
-              {...pieChartStyle}
-              isAnimationActive={true}
-              dataKey="value"
-              onClick={(_, idx) => setActiveIndex(idx === activeIndex ? null : idx)}
-            >
-              {tokenDistributionData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color}
-                  stroke="rgba(0,0,0,0.2)"
-                  strokeWidth={0.5}
-                  style={{ 
-                    opacity: activeIndex === null || activeIndex === index ? 1 : 0.4,
-                    filter: activeIndex === index ? 'brightness(1.2)' : 'none',
-                    transition: 'all 0.3s',
-                    transform: activeIndex === index ? 'scale(1.05)' : 'scale(1)',
-                    transformOrigin: '50% 50%'
-                  }}
-                />
-              ))}
-            </Pie>
-
-            {/* Simple legend */}
-            <Legend 
-              layout="horizontal" 
-              verticalAlign="bottom" 
-              align="center"
-              formatter={(value, entry, idx) => (
-                <span
-                  style={{
-                    color: activeIndex === idx ? '#ffffff' : 'rgb(209, 213, 219)',
-                    fontSize: isMobile ? 11 : 13,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    padding: '2px 4px',
-                    borderRadius: '2px',
-                    background: activeIndex === idx ? 'rgba(124, 58, 237, 0.2)' : 'transparent'
-                  }}
-                  onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                  <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
+                  <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
+                  <div className="text-xs text-gray-300 opacity-80 line-clamp-3">
+                    {nftUtilityDetails[selectedCategory.name] || ""}
+                  </div>
+                </m.div>
+              ) : (
+                <m.div 
+                  key="placeholder"
+                  initial={{opacity: 0}} 
+                  animate={{opacity: 1}} 
+                  exit={{opacity: 0}}
+                  className="text-sm text-gray-400"
                 >
-                  {value}
-                </span>
+                  Hover over an item to see details.
+                </m.div>
               )}
-              iconSize={isMobile ? 8 : 10}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
       
-      <div className="mt-4 md:mt-6">
-        <h3 className="text-xl font-semibold text-purple-400 mb-2 tracking-wide">
-          Key Points
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold text-purple-400 mb-3 tracking-wide">
+          Key Benefits
         </h3>
         {keyPointsContent}
       </div>
@@ -175,4 +104,5 @@ const TokenDistribution = () => {
   );
 };
 
-export default React.memo(TokenDistribution);
+export default React.memo(UtilitySpectrum);
+           

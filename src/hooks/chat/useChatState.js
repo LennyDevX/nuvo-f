@@ -192,7 +192,23 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         clearTimeout(timeoutId);
         
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+          // Try to get error details from response
+          let errorText = '';
+          try {
+            errorText = await response.text();
+          } catch (err) {}
+          console.error('Gemini API error:', response.status, response.statusText, errorText);
+          // Mejorar el manejo de errores 500
+          if (response.status === 500) {
+            // Try to parse JSON error if available
+            let errorMsg = errorText;
+            try {
+              const json = JSON.parse(errorText);
+              errorMsg = json.details || json.error || errorText;
+            } catch (e) {}
+            throw new Error(`Gemini API error 500: ${errorMsg}`);
+          }
+          throw new Error(`Server error: ${response.status} - ${response.statusText} - ${errorText}`);
         }
         
         await processStreamResponse(response, userMessage);
@@ -209,8 +225,11 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         
         // Enhanced error handling with specific messages
         let errorMessage = 'An error occurred. Please try again.';
-        
-        if (!isOnline) {
+
+        // Mostrar detalles si es error 500
+        if (error.message?.includes('Gemini API error 500')) {
+          errorMessage = error.message;
+        } else if (!isOnline) {
           errorMessage = 'Connection lost. Please check your internet and try again.';
         } else if (error.message.includes('429')) {
           errorMessage = 'Too many requests. Please wait a moment before trying again.';
@@ -219,7 +238,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         } else if (error.message.includes('timeout')) {
           errorMessage = 'Request timed out. Please try again.';
         }
-        
+
         dispatch({ 
           type: 'SET_ERROR', 
           payload: errorMessage

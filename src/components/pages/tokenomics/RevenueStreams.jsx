@@ -1,56 +1,34 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion as m } from 'framer-motion';
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
-  Legend 
-} from 'recharts';
-import { 
-  revenueStreamsData, 
-  revenueStreamsDetails,
-  pieChartStyle,
-} from '../../../utils/chart/chartConfig';
-import { chartColors, gradientDefs, safePieAnimationConfig } from '../../../utils/chart/chartSetup';
+import React, { useState, useMemo } from 'react';
+import { m, AnimatePresence } from 'framer-motion';
+import InteractiveDataDisplay from '../../ui/InteractiveDataDisplay';
 
-const RevenueStreams = () => {
+const ecosystemValueData = [
+  { name: 'Primary Sales', value: 40, colorKey: 'blue' },
+  { name: 'Secondary Royalties', value: 30, colorKey: 'green' },
+  { name: 'Platform Fees', value: 20, colorKey: 'amber' },
+  { name: 'Partnerships', value: 10, colorKey: 'purple' },
+];
+
+const ecosystemValueDetails = {
+  'Primary Sales': 'Revenue from the initial minting of NFTs in each seasonal collection.',
+  'Secondary Royalties': 'A percentage of every secondary market sale is reinvested into the ecosystem.',
+  'Platform Fees': 'Fees from utilizing advanced features and tools within the Nuvos Cloud platform.',
+  'Partnerships': 'Collaborations with brands and other projects that bring value to the ecosystem.',
+};
+
+const EcosystemValueFlow = () => {
   const [activeIndex, setActiveIndex] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
   
-  // Create a unique ID for this chart's gradient definitions
-  const chartId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-
-  // Check for mobile device
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    
-    let timeoutId = null;
-    const handleResize = () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(checkMobile, 100);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, []);
-
-  // Get selected category info
-  const selectedCategory = activeIndex !== null ? revenueStreamsData[activeIndex] : null;
+  const selectedCategory = activeIndex !== null ? ecosystemValueData[activeIndex] : null;
   
   // Strategy items array
   const strategyItems = [
-    { color: 'text-blue-400', text: 'Diversified revenue sources' },
-    { color: 'text-green-400', text: 'Sustainable yield generation' },
-    { color: 'text-amber-400', text: 'Risk-managed operations' },
-    { color: 'text-purple-400', text: 'Strategic partnerships' },
-    { color: 'text-pink-500', text: 'Long term investment' },
-    { color: 'text-pink-400', text: 'Strategic BTC Reserve' },
+    { color: 'text-blue-400', text: 'Fuel growth via primary sales' },
+    { color: 'text-green-400', text: 'Fund development with royalties' },
+    { color: 'text-amber-400', text: 'Enhance platform via fees' },
+    { color: 'text-purple-400', text: 'Expand utility with partnerships' },
+    { color: 'text-pink-500', text: 'Long-term value for holders' },
+    { color: 'text-pink-400', text: 'Sustainable ecosystem model' },
   ];
 
   // Memoize strategy list for consistent rendering
@@ -72,99 +50,52 @@ const RevenueStreams = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
-      <div className="flex flex-col md:flex-row items-center justify-between">
-        <h2 className="text-xl font-bold text-white mb-4">Revenue Streams</h2>
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+        <div className="flex-grow w-full">
+          <h2 className="text-xl font-bold text-white mb-4">Ecosystem Value Flow</h2>
+          <InteractiveDataDisplay 
+            data={ecosystemValueData}
+            onSelectItem={setActiveIndex}
+          />
+        </div>
         
-        {/* Selected category info panel */}
-        {selectedCategory && (
-          <div className="bg-[#1a1333]/50 border-l-2 border-purple-600 pl-3 py-1 mb-4 md:mb-0 w-full md:max-w-[220px] transition-all">
-            <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
-            <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
-            <div className="text-xs text-gray-300 opacity-80 line-clamp-2">
-              {revenueStreamsDetails[selectedCategory.name] || ""}
-            </div>
-          </div>
-        )}
-      </div>
-      
-      <div className="aspect-square h-[300px] md:h-[330px] mx-auto">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            {/* Custom gradient definitions */}
-            <defs>
-              {Object.values(gradientDefs(chartId)).map((gradient, gradIdx) => (
-                <linearGradient 
-                  key={gradient.id || `gradient-${gradIdx}`} 
-                  id={gradient.id || `gradient-${gradIdx}`} 
-                  x1={gradient.x1} y1={gradient.y1} 
-                  x2={gradient.x2} y2={gradient.y2}
+        <div className="w-full md:w-[220px] md:min-w-[220px] flex-shrink-0">
+          <h3 className="text-base font-bold text-white mb-2 md:text-left opacity-80">Details</h3>
+          <div className="bg-[#1a1333]/50 border border-purple-500/20 rounded-lg p-3 transition-all h-[120px] flex flex-col justify-center">
+            <AnimatePresence mode="wait">
+              {selectedCategory ? (
+                <m.div 
+                  key={selectedCategory.name}
+                  initial={{opacity: 0, y: 10}} 
+                  animate={{opacity: 1, y: 0}} 
+                  exit={{opacity: 0, y: -10}}
+                  transition={{duration: 0.2}}
                 >
-                  {gradient.stops.map((stop, i) => (
-                    <stop 
-                      key={`${gradient.id || gradIdx}-stop-${i}`} 
-                      offset={stop.offset} 
-                      stopColor={stop.color} 
-                      stopOpacity={stop.opacity || 1} 
-                    />
-                  ))}
-                </linearGradient>
-              ))}
-            </defs>
-            <Pie
-              data={revenueStreamsData}
-              cx="50%"
-              cy="50%"
-              {...pieChartStyle}
-              {...safePieAnimationConfig}
-              dataKey="value"
-              onClick={(_, idx) => setActiveIndex(idx === activeIndex ? null : idx)}
-            >
-              {revenueStreamsData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.color}
-                  stroke="rgba(0,0,0,0.2)"
-                  strokeWidth={0.5}
-                  style={{ 
-                    opacity: activeIndex === null || activeIndex === index ? 1 : 0.4,
-                    filter: activeIndex === index ? 'brightness(1.2)' : 'none',
-                    transition: 'all 0.3s',
-                    transform: activeIndex === index ? 'scale(1.05)' : 'scale(1)',
-                    transformOrigin: '50% 50%'
-                  }}
-                />
-              ))}
-            </Pie>
-            {/* Simple legend */}
-            <Legend 
-              layout="horizontal" 
-              verticalAlign="bottom" 
-              align="center"
-              formatter={(value, entry, idx) => (
-                <span
-                  style={{
-                    color: activeIndex === idx ? '#ffffff' : 'rgb(209, 213, 219)',
-                    fontSize: isMobile ? 11 : 13,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    padding: '2px 4px',
-                    borderRadius: '2px',
-                    background: activeIndex === idx ? 'rgba(124, 58, 237, 0.2)' : 'transparent'
-                  }}
-                  onClick={() => setActiveIndex(idx === activeIndex ? null : idx)}
+                  <div className="text-sm text-purple-300 font-bold">{selectedCategory.name}</div>
+                  <div className="text-lg font-extrabold text-white">{selectedCategory.value}%</div>
+                  <div className="text-xs text-gray-300 opacity-80 line-clamp-3">
+                    {ecosystemValueDetails[selectedCategory.name] || ""}
+                  </div>
+                </m.div>
+              ) : (
+                <m.div 
+                  key="placeholder"
+                  initial={{opacity: 0}} 
+                  animate={{opacity: 1}} 
+                  exit={{opacity: 0}}
+                  className="text-sm text-gray-400"
                 >
-                  {value}
-                </span>
+                  Hover over an item to see details.
+                </m.div>
               )}
-              iconSize={isMobile ? 8 : 10}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
       
-      <div className="mt-4 md:mt-6">
-        <h3 className="text-xl font-semibold text-purple-400 mb-2">
-          Strategy
+      <div className="mt-6">
+        <h3 className="text-xl font-semibold text-purple-400 mb-3">
+          Value Strategy
         </h3>
         {strategyList}
       </div>
@@ -172,4 +103,5 @@ const RevenueStreams = () => {
   );
 };
 
-export default React.memo(RevenueStreams);
+export default React.memo(EcosystemValueFlow);
+     
