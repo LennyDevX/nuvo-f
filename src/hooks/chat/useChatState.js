@@ -36,12 +36,30 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     };
   }, []);
 
-  // Format messages for API
+  // Formatea mensajes para API Gemini multimodal
   const formatMessagesForAPI = useCallback(() => {
-    return state.messages.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
+    return state.messages.map(msg => {
+      const parts = [];
+      if (msg.text) {
+        parts.push({ text: msg.text });
+      }
+      if (msg.image) {
+        // Gemini SDK espera imágenes como objetos { inlineData: { mimeType, data } }
+        const match = /^data:(image\/\w+);base64,(.*)$/.exec(msg.image);
+        if (match) {
+          parts.push({
+            inlineData: {
+              mimeType: match[1],
+              data: match[2]
+            }
+          });
+        }
+      }
+      return {
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts
+      };
+    });
   }, [state.messages]);
 
   // Enhanced cache key generation
@@ -163,10 +181,27 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
 
       try {
         const apiUrl = '/server/gemini';
-        const formattedMessages = [...formatMessagesForAPI(), {
-          role: 'user',
-          parts: [{ text: userMessage.text }]
-        }];
+        // Si el mensaje tiene imagen, ajusta el formato
+        const formattedMessages = [...formatMessagesForAPI()];
+        if (userMessage.text || userMessage.image) {
+          const parts = [];
+          if (userMessage.text) parts.push({ text: userMessage.text });
+          if (userMessage.image) {
+            const match = /^data:(image\/\w+);base64,(.*)$/.exec(userMessage.image);
+            if (match) {
+              parts.push({
+                inlineData: {
+                  mimeType: match[1],
+                  data: match[2]
+                }
+              });
+            }
+          }
+          formattedMessages.push({
+            role: 'user',
+            parts
+          });
+        }
         
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -255,12 +290,23 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
   // Enhanced message handlers
   const handleSendMessage = useCallback((e, input, setInput) => {
     e.preventDefault();
-    if (!input.trim() || state.isLoading) return;
+    if (!input || state.isLoading) return;
 
-    const userMessage = { text: input.trim(), sender: 'user' };
+    // Si input es objeto multimodal (con imagen), asegúrate de incluir texto y imagen
+    let userMessage;
+    if (typeof input === 'object' && (input.image || input.text)) {
+      userMessage = {
+        text: input.text?.trim() || '',
+        sender: 'user',
+        image: input.image || null
+      };
+    } else {
+      userMessage = { text: input.trim(), sender: 'user' };
+    }
+
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
     setInput('');
-    
+
     sendMessageDebounced(userMessage);
   }, [state.isLoading, sendMessageDebounced]);
 
@@ -329,3 +375,4 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     })
   };
 };
+

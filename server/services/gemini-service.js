@@ -100,8 +100,19 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
   if (typeof contents === 'string' && contents.includes('Compara estos dos textos y analiza:')) {
     patchedContents = `${contents}\n\nAsegúrate de mencionar explícitamente las palabras "similitud", "diferencias" y "temas" en tu análisis.`;
   }
+  // Detectar multimodalidad: si contents es array y contiene inlineData
+  if (Array.isArray(contents)) {
+    // Si algún part tiene inlineData, es multimodal
+    const hasImage = contents.some(msg =>
+      Array.isArray(msg.parts) && msg.parts.some(part => part.inlineData)
+    );
+    if (hasImage) {
+      // No modificar el contenido, solo pasarlo al modelo
+      patchedContents = contents;
+    }
+  }
   // Validate and get safe model
-  const safeModel = getSafeModel(model);
+  const safeModel = getSafeModel(model || 'gemini-2.5-flash-preview-04-17');
   const modelInfo = getModelInfo(safeModel);
   
   // Verificar caché
@@ -386,3 +397,4 @@ export function createOptimizedGeminiStream(geminiStream, options = {}) {
     }
   });
 }
+

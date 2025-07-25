@@ -83,8 +83,7 @@ function optimizeMessages(messages, maxMessages = 20) {
 
 export async function generateContent(req, res, next) {
   try {
-    const { prompt, model, messages, temperature, maxTokens, stream } = req.body;
-    
+    const { prompt, model, messages, temperature, maxTokens, stream, image } = req.body;
     // Validación de entrada
     const validationErrors = validateInput(req.body);
     if (validationErrors.length > 0) {
@@ -93,12 +92,54 @@ export async function generateContent(req, res, next) {
         details: validationErrors 
       });
     }
-    
-    // Optimización inteligente mejorada para conversaciones largas
-    let contents = messages && Array.isArray(messages) && messages.length > 0
-      ? optimizeMessages(messages, 25) // Aumentado a 25 para mejor contexto
-      : prompt;
-    
+
+    // Validación de tamaño de imagen (máx 5MB)
+    if (image && typeof image === 'string') {
+      const base64Length = image.length - (image.indexOf(',') + 1);
+      const imageSize = Math.ceil(base64Length * 3 / 4); // Aproximación
+      if (imageSize > 5 * 1024 * 1024) {
+        return res.status(413).json({
+          error: 'La imagen es demasiado grande (máx 5MB). Usa una imagen más pequeña.'
+        });
+      }
+    }
+
+    // Detectar multimodalidad (imagen en el mensaje)
+    let contents;
+    if (messages && Array.isArray(messages) && messages.length > 0) {
+      // Si el último mensaje tiene texto y/o imagen, prepara contenido multimodal
+      const lastMsg = messages[messages.length - 1];
+      if (lastMsg.image || lastMsg.text) {
+        const parts = [];
+        if (lastMsg.text) parts.push({ text: lastMsg.text });
+        if (lastMsg.image) {
+          // Extrae el mimeType si está presente, si no usa png por defecto
+          const mimeMatch = lastMsg.image.match(/^data:(image\/\w+);base64,/);
+          const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+          parts.push({ inlineData: { mimeType, data: lastMsg.image.replace(/^data:image\/\w+;base64,/, '') } });
+        }
+        contents = [
+          ...optimizeMessages(messages.slice(0, -1), 24),
+          {
+            role: lastMsg.role || 'user',
+            parts
+          }
+        ];
+      } else {
+        contents = optimizeMessages(messages, 25);
+      }
+    } else if (image) {
+      // Si viene imagen directa en el body
+      contents = [
+        { role: 'user', parts: [
+          ...(prompt ? [{ text: prompt }] : []),
+          { inlineData: { mimeType: 'image/png', data: image.replace(/^data:image\/\w+;base64,/, '') } }
+        ]}
+      ];
+    } else {
+      contents = prompt;
+    }
+
     // Parámetros adaptativos basados en el tipo de contenido
     const isComplexQuery = typeof contents === 'string' 
       ? contents.length > 200 || contents.includes('explain') || contents.includes('analyze')
@@ -226,6 +267,8 @@ export async function generateContent(req, res, next) {
     res.json({
       message: 'Respuesta de Gemini generada correctamente',
       response: response.text,
+      // Si el modelo devuelve imagen, inclúyela
+      image: response.image || null,
       metadata: {
         model: model || 'default',
         tokensUsed: response.usage?.totalTokens || 0,

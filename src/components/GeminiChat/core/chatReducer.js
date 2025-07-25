@@ -10,7 +10,14 @@ export const chatReducer = (state, action) => {
     case 'ADD_USER_MESSAGE':
       return {
         ...state,
-        messages: [...state.messages, action.payload],
+        messages: [
+          ...state.messages,
+          {
+            ...action.payload,
+            // Si el mensaje tiene imagen, se incluye
+            image: action.payload.image || undefined
+          }
+        ],
         isLoading: true,
         error: null
       };

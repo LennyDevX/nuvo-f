@@ -11,6 +11,8 @@ import ChatInputArea from './components/ChatInputArea';
 import { useChatState } from '../../hooks/chat/useChatState';
 import { conversationManager } from './core/conversationManager';
 
+const DEFAULT_MULTIMODAL_MODEL = 'gemini-2.5-flash-preview-04-17'; // O el que soporte imágenes
+
 const GeminiChat = ({ 
   shouldReduceMotion = false, 
   isLowPerformance = false,
@@ -75,17 +77,42 @@ const GeminiChat = ({
     return () => { isMounted = false; };
   }, [checkApiConnection]);
 
-  // Wrapper handlers that include input management
-  const handleSendMessage = useCallback((e) => {
-    handleSendMessageCore(e, input, setInput);
-  }, [handleSendMessageCore, input]);
+  const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
+  // Nuevo handler para enviar imagen
+  const handleSendImage = useCallback(async (text, imageFile) => {
+    if (!imageFile) return;
+    if (imageFile.size > MAX_IMAGE_SIZE) {
+      alert('La imagen es demasiado grande (máx 5MB). Usa una imagen más pequeña.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const imageBase64 = reader.result;
+      const userMessage = {
+        text: text?.trim() || '',
+        sender: 'user',
+        image: imageBase64
+      };
+      handleSendMessageCore({ preventDefault: () => {} }, userMessage, setInput);
+    };
+    reader.readAsDataURL(imageFile);
+  }, [handleSendMessageCore, setInput]);
+
+  // Wrapper para handleSendMessage que soporta multimodalidad
+  const handleSendMessage = useCallback((e, inputOverride, setInputOverride) => {
+    if (typeof inputOverride === 'object' && inputOverride.image) {
+      handleSendMessageCore(e, inputOverride, setInputOverride || setInput);
+    } else {
+      handleSendMessageCore(e, input, setInput);
+    }
+  }, [handleSendMessageCore, input, setInput]);
+
+  // Wrapper handlers that include input management
   const handleNewConversation = useCallback(() => {
-    // Save current conversation if it has messages
     if (state.messages.length > 0) {
       conversationManager.saveConversationToStorage(state.messages);
     }
-    
     handleNewConversationCore();
     setInput('');
   }, [state.messages, handleNewConversationCore]);
@@ -102,13 +129,11 @@ const GeminiChat = ({
         e.preventDefault();
         handleNewConversation();
       }
-      
       if (e.key === 'Escape') {
         if (leftSidebarOpen) toggleLeftSidebar();
         if (rightSidebarOpen) toggleRightSidebar();
       }
     };
-    
     document.addEventListener('keydown', handleKeyboard);
     return () => document.removeEventListener('keydown', handleKeyboard);
   }, [handleNewConversation, leftSidebarOpen, rightSidebarOpen, toggleLeftSidebar, toggleRightSidebar]);
@@ -125,7 +150,6 @@ const GeminiChat = ({
         >
           <FaBars className="w-5 h-5" />
         </button>
-        
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-semibold text-white">
             NUVOS <span className="text-purple-400">AI</span>
@@ -140,7 +164,6 @@ const GeminiChat = ({
             </button>
           )}
         </div>
-        
         <button
           onClick={toggleRightSidebar}
           className={`btn-nuvo-base btn-nuvo-sm ${rightSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
@@ -164,7 +187,7 @@ const GeminiChat = ({
       ) : state.messages.length === 0 ? (
         <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
       ) : shouldUseVirtualization ? (
-        <VirtualizedChatMessages 
+        <VirtualizedChatMessages
           messages={state.messages}
           isLoading={state.isLoading}
           error={state.error}
@@ -195,9 +218,12 @@ const GeminiChat = ({
         onNewConversation={handleNewConversation}
         hasMessages={state.messages.length > 0}
         isOnline={state.isOnline}
+        onSendImage={handleSendImage}
       />
     </div>
   );
 };
 
 export default memoWithName(GeminiChat);
+
+

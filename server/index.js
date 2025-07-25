@@ -10,7 +10,8 @@ const port = env.port;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+// Cambia el límite de JSON a 2MB
+app.use(express.json({ limit: '2mb' }));
 
 // Rutas API
 app.use('/server', routes);

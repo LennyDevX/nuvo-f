@@ -78,6 +78,11 @@ export const cspConfig = {
       'https://*.firebaseapp.com',
       'https://*.vercel.app',
       'https://*.vercel.com'
+    ],
+    'worker-src': [
+      "'self'",
+      'blob:',
+      'data:'
     ]
   }
 };

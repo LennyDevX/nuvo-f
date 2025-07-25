@@ -1,6 +1,8 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FaPaperPlane, FaBars, FaUserCircle, FaStop, FaEllipsisV, FaUpload, FaSearch, FaBrain, FaImage, FaCode, FaMicrophone } from 'react-icons/fa';
 
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB, ajusta el valor si lo necesitas
+
 const ChatInputArea = ({
   input,
   setInput,
@@ -12,7 +14,8 @@ const ChatInputArea = ({
   leftSidebarOpen = false,
   rightSidebarOpen = false,
   onNewConversation,
-  hasMessages = false
+  hasMessages = false,
+  onSendImage // <-- Nuevo prop para enviar imagen
 }) => {
   const inputRef = useRef(null);
   const textareaRef = useRef(null);
@@ -21,6 +24,13 @@ const ChatInputArea = ({
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const fileInputRef = useRef(null);
+  const [inputValue, setInputValue] = React.useState('');
+
+  const MAX_IMAGE_SIZE_MB = 5;
+  const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+  const MAX_FILE_SIZE_MB = 4; // Puedes ajustar este límite según tu backend
 
   // Detect mobile device
   useEffect(() => {
@@ -88,25 +98,47 @@ const ChatInputArea = ({
     }
   }, [isMobile]);
 
-  // Enhanced message send handler
-  const handleSendMessage = useCallback((e) => {
-    e.preventDefault();
-    
-    // Blur input to close keyboard and show navbar
-    if (isMobile && inputRef.current) {
-      inputRef.current.blur();
-      
-      // Force show navbar immediately
-      const mobileNavbar = document.querySelector('nav.fixed.bottom-0');
-      if (mobileNavbar) {
-        mobileNavbar.style.transform = 'translateY(0%)';
-        mobileNavbar.style.transition = 'transform 0.3s ease-out';
-      }
+  // Unify submission logic into a single handler
+  const handleSubmit = useCallback((event) => {
+    event.preventDefault();
+    if ((!input.trim() && !selectedImage) || isLoading || isInitializing) {
+      return;
+    }
+
+    if (selectedImage) {
+      // If there's an image, use the onSendImage prop from the parent
+      onSendImage(input, selectedImage);
+    } else {
+      // Otherwise, use the standard onSendMessage prop
+      onSendMessage(event);
+    }
+
+    // Reset the selected image and file input after submission
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    // The parent component is responsible for clearing the text input
+  }, [input, selectedImage, isLoading, isInitializing, onSendImage, onSendMessage]);
+
+  // Handle key press (Enter to send, Shift+Enter for new line)
+  const handleKeyPress = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
     
-    // Call the original send message function
-    onSendMessage(e);
-  }, [isMobile, onSendMessage]);
+    // Smart keyboard shortcuts
+    if (e.key === 'Escape') {
+      inputRef.current?.blur();
+      setShowFeaturesMenu(false);
+    }
+    
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      e.preventDefault();
+      onNewConversation?.();
+    }
+  }, [handleSubmit, onNewConversation]);
 
   // Enhanced mobile virtual keyboard handling
   useEffect(() => {
@@ -199,25 +231,6 @@ const ChatInputArea = ({
     }
   }, [setInput]);
 
-  // Handle key press (Enter to send, Shift+Enter for new line)
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSendMessage(e);
-    }
-    
-    // Smart keyboard shortcuts
-    if (e.key === 'Escape') {
-      inputRef.current?.blur();
-      setShowFeaturesMenu(false);
-    }
-    
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-      e.preventDefault();
-      onNewConversation?.();
-    }
-  }, [onSendMessage, onNewConversation]);
-
   // Future features list
   const futureFeatures = [
     { id: 'upload', icon: FaUpload, label: 'Upload Files', description: 'Share documents and images' },
@@ -234,6 +247,39 @@ const ChatInputArea = ({
     setShowFeaturesMenu(false);
     // TODO: Implement feature handlers
   }, []);
+
+  // Maneja la selección de imagen
+  const handleImageChange = useCallback((e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Solo imágenes permitidas
+      if (!file.type.startsWith('image/')) return;
+      if (file.size > MAX_IMAGE_SIZE) {
+        alert('La imagen es demasiado grande (máx 5MB). Usa una imagen más pequeña.');
+        return;
+      }
+      setSelectedImage(file);
+    }
+  }, []);
+
+  // Elimina la imagen seleccionada
+  const handleRemoveImage = useCallback(() => {
+    setSelectedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }, []);
+
+  // Limita el tamaño de los archivos/imágenes que puedes enviar desde el frontend
+  function handleFileChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      const fileSizeMB = file.size / (1024 * 1024);
+      if (fileSizeMB > MAX_FILE_SIZE_MB) {
+        alert(`El archivo es demasiado grande. Máximo permitido: ${MAX_FILE_SIZE_MB} MB`);
+        return;
+      }
+      // ...continúa con el procesamiento normal del archivo...
+    }
+  }
 
   return (
     <>
@@ -299,7 +345,7 @@ const ChatInputArea = ({
         }}
       >
         <div className="max-w-4xl mx-auto px-3 py-2 md:p-4">
-          <form onSubmit={handleSendMessage} className="relative">
+          <form onSubmit={handleSubmit} className="relative">
             <div className="flex items-center gap-2 md:gap-3">
               {/* Left sidebar toggle - Desktop only */}
               <button
@@ -478,10 +524,54 @@ const ChatInputArea = ({
                   )}
                 </div>
                 
-                {/* Send button - Always visible */}
+                {/* Botón para subir imagen */}
+                <button
+                  type="button"
+                  className="
+                    flex items-center justify-center
+                    w-12 h-12 md:w-10 md:h-10 rounded-xl
+                    bg-gray-500/30 hover:bg-gray-600 text-gray-300 hover:text-white
+                    border-2 border-purple-800/20 hover:border-purple-500/50
+                    transition-all duration-200 ease-out
+                    shadow-lg hover:shadow-xl hover:scale-105 active:scale-95
+                    touch-manipulation
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
+                  "
+                  aria-label="Upload image"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isInitializing}
+                >
+                  <FaImage className="w-5 h-5" />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+
+                {/* Preview de imagen seleccionada */}
+                {selectedImage && (
+                  <div className="relative flex items-center ml-2">
+                    <img
+                      src={URL.createObjectURL(selectedImage)}
+                      alt="preview"
+                      className="w-12 h-12 object-cover rounded-xl border border-purple-500/30 shadow"
+                    />
+                    <button
+                      type="button"
+                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                      onClick={handleRemoveImage}
+                      aria-label="Remove image"
+                    >×</button>
+                  </div>
+                )}
+
+                {/* Send button - ahora usa handleSendMultimodal */}
                 <button
                   type="submit"
-                  disabled={!input.trim() || isLoading || isInitializing}
+                  disabled={(!input.trim() && !selectedImage) || isLoading || isInitializing}
                   className={`
                     flex items-center justify-center 
                     w-12 h-12 md:w-10 md:h-10 rounded-xl
@@ -489,21 +579,15 @@ const ChatInputArea = ({
                     shadow-lg hover:shadow-xl
                     touch-manipulation
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                    ${!input.trim() || isLoading || isInitializing
+                    ${(!input.trim() && !selectedImage) || isLoading || isInitializing
                       ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
-                      : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 hover:scale-105 active:scale-95 border-2 border-purple-500/50 hover:border-purple-400/70'
+                      : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pinkk -700 hover:to-purple-800 border-purple-500 hover:border-purple-600 scale-105'
                     }
                   `}
-                  aria-label={isLoading ? "Stop generation" : "Send message"}
                 >
-                  {isLoading ? (
-                    <FaStop className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                  ) : (
-                    <FaPaperPlane className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
-                  )}
+                  <FaPaperPlane className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
                 </button>
               </div>
-
               {/* Right sidebar toggle - Desktop only */}
               <button
                 type="button"
@@ -524,7 +608,6 @@ const ChatInputArea = ({
                 <FaUserCircle className="w-4 h-4 " />
               </button>
             </div>
-            
             {/* Hidden help text for screen readers */}
             <div id="input-help" className="sr-only">
               Press Enter to send, Shift+Enter for new line, Ctrl+N for new conversation
@@ -537,3 +620,5 @@ const ChatInputArea = ({
 };
 
 export default ChatInputArea;
+                
+              

@@ -19,7 +19,6 @@ const debounce = (func, delay) => {
 // Optimized Message Item with stable keys
 const MessageItem = memo(({ message, index, shouldReduceMotion }) => {
   const isUser = message.sender === 'user';
-  
   return (
     <div 
       className={`flex w-full mb-6 px-4 md:px-6 ${isUser ? 'justify-end' : ''}`}
@@ -30,6 +29,15 @@ const MessageItem = memo(({ message, index, shouldReduceMotion }) => {
           <>
             <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-2xl rounded-tr-sm px-4 py-3 shadow-lg border border-purple-500/20">
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
+              {/* Mostrar imagen si existe */}
+              {message.image && (
+                <img
+                  src={message.image}
+                  alt="user-upload"
+                  className="mt-2 rounded-lg max-w-xs max-h-48 border border-purple-500/30 shadow"
+                  style={{ objectFit: 'cover' }}
+                />
+              )}
             </div>
             <div className="flex-shrink-0 mt-1">
               <div className="w-10 h-10 bg-gradient-to-br from-purple-500/80 via-pink-500/80 to-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
@@ -52,6 +60,15 @@ const MessageItem = memo(({ message, index, shouldReduceMotion }) => {
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {message.text}
                   </ReactMarkdown>
+                  {/* Mostrar imagen si existe en respuesta del modelo */}
+                  {message.image && (
+                    <img
+                      src={message.image}
+                      alt="ai-upload"
+                      className="mt-2 rounded-lg max-w-xs max-h-48 border border-purple-500/30 shadow"
+                      style={{ objectFit: 'cover' }}
+                    />
+                  )}
                 </div>
               </Suspense>
             </div>
@@ -296,3 +313,4 @@ if (typeof document !== 'undefined') {
 }
 
 export default memo(ChatMessages);
+
