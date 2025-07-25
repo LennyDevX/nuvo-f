@@ -8,22 +8,29 @@ import {
 import { streamText } from '../utils/stream-utils.js';
 import { getMetrics } from '../middlewares/logger.js';
 
-// Validador de entrada mejorado
+// === Configuración ===
+const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB, cambiar aquí para ajustar el límite
+
+// === Utilidades ===
+/**
+ * Valida la entrada del usuario para generación de contenido Gemini.
+ * @param {object} data - Datos recibidos en el body.
+ * @returns {string[]} Lista de errores descriptivos.
+ */
 function validateInput(data) {
   const errors = [];
-  
   if (!data.prompt && (!data.messages || !Array.isArray(data.messages) || data.messages.length === 0)) {
-    errors.push('Se requiere un prompt o historial de mensajes válido');
+    errors.push('Debes proporcionar un prompt o un historial de mensajes válido. Ejemplo: { prompt: "¿Cuál es la capital de Francia?" }');
   }
-  
-  if (data.temperature !== undefined && (data.temperature < 0 || data.temperature > 2)) {
-    errors.push('Temperature debe estar entre 0 y 2');
+  if (data.temperature !== undefined && (typeof data.temperature !== 'number' || data.temperature < 0 || data.temperature > 2)) {
+    errors.push('El parámetro "temperature" debe ser un número entre 0 y 2. Ejemplo: { temperature: 0.8 }');
   }
-  
-  if (data.maxTokens !== undefined && (data.maxTokens < 1 || data.maxTokens > 8192)) {
-    errors.push('maxTokens debe estar entre 1 y 8192');
+  if (data.maxTokens !== undefined && (typeof data.maxTokens !== 'number' || data.maxTokens < 1 || data.maxTokens > 8192)) {
+    errors.push('El parámetro "maxTokens" debe ser un número entre 1 y 8192. Ejemplo: { maxTokens: 2048 }');
   }
-  
+  if (data.image && typeof data.image !== 'string') {
+    errors.push('El campo "image" debe ser una cadena en formato base64.');
+  }
   return errors;
 }
 
@@ -81,6 +88,10 @@ function optimizeMessages(messages, maxMessages = 20) {
   ];
 }
 
+/**
+ * Genera contenido usando Gemini.
+ * POST /api/gemini/generate
+ */
 export async function generateContent(req, res, next) {
   try {
     const { prompt, model, messages, temperature, maxTokens, stream, image } = req.body;
@@ -93,13 +104,13 @@ export async function generateContent(req, res, next) {
       });
     }
 
-    // Validación de tamaño de imagen (máx 5MB)
+    // Validación de tamaño de imagen (configurable)
     if (image && typeof image === 'string') {
       const base64Length = image.length - (image.indexOf(',') + 1);
       const imageSize = Math.ceil(base64Length * 3 / 4); // Aproximación
-      if (imageSize > 5 * 1024 * 1024) {
+      if (imageSize > IMAGE_SIZE_LIMIT) {
         return res.status(413).json({
-          error: 'La imagen es demasiado grande (máx 5MB). Usa una imagen más pequeña.'
+          error: `La imagen es demasiado grande (máx ${(IMAGE_SIZE_LIMIT / (1024 * 1024)).toFixed(1)}MB). Usa una imagen más pequeña.`
         });
       }
     }
@@ -165,8 +176,7 @@ export async function generateContent(req, res, next) {
         res.setHeader('X-Accel-Buffering', 'no'); // Nginx
         res.setHeader('X-Content-Type-Options', 'nosniff');
         
-        // CORS para streaming
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        // CORS para streaming (ya incluido arriba)
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
         
         // Detectar características del cliente
@@ -189,24 +199,19 @@ export async function generateContent(req, res, next) {
         
         // Pipe el stream al response
         const reader = optimizedStream.getReader();
-        
+
         const pump = async () => {
           try {
             while (true) {
               const { done, value } = await reader.read();
-              
               if (done) {
                 res.end();
                 break;
               }
-              
-              // Verificar si el cliente sigue conectado
               if (res.destroyed || res.writableEnded) {
-                reader.cancel();
+                await reader.cancel();
                 break;
               }
-              
-              // Escribir chunk con manejo de backpressure
               if (!res.write(value)) {
                 await new Promise((resolve) => {
                   res.once('drain', resolve);
@@ -216,31 +221,35 @@ export async function generateContent(req, res, next) {
               }
             }
           } catch (error) {
+            // Mejor manejo de errores en streaming
             console.error('Error in streaming pump:', error);
-            if (!res.destroyed) {
-              res.status(500).end('Stream error');
+            if (!res.headersSent) {
+              res.status(500).end('Stream error: ' + (error.message || 'Error desconocido'));
+            } else {
+              res.end('Stream error: ' + (error.message || 'Error desconocido'));
             }
           }
         };
-        
-        // Manejar desconexión del cliente
+
         req.on('close', () => {
           reader.cancel().catch(console.error);
         });
-        
         req.on('aborted', () => {
           reader.cancel().catch(console.error);
         });
-        
+
         return pump();
-        
+
       } catch (streamError) {
+        // Mejor manejo de errores en streaming
         console.error('Stream setup error:', streamError);
         if (!res.headersSent) {
           return res.status(500).json({ 
-            error: 'Failed to initialize stream',
+            error: 'No se pudo inicializar el stream',
             message: streamError.message 
           });
+        } else {
+          res.end('Stream setup error: ' + (streamError.message || 'Error desconocido'));
         }
       }
     }
@@ -280,6 +289,10 @@ export async function generateContent(req, res, next) {
   }
 }
 
+/**
+ * Genera contenido usando Gemini (GET).
+ * GET /api/gemini/generate
+ */
 export async function generateContentGet(req, res, next) {
   try {
     const prompt = req.query.prompt;
@@ -300,6 +313,10 @@ export async function generateContentGet(req, res, next) {
   }
 }
 
+/**
+ * Llama funciones usando Gemini Function Calling.
+ * POST /api/gemini/function-calling
+ */
 export async function functionCalling(req, res, next) {
   try {
     const { 
@@ -328,6 +345,10 @@ export async function functionCalling(req, res, next) {
   }
 }
 
+/**
+ * Devuelve el estado de salud del API.
+ * GET /api/gemini/health
+ */
 export function getHealthStatus(req, res) {
   res.json({
     status: 'ok',
@@ -335,6 +356,10 @@ export function getHealthStatus(req, res) {
   });
 }
 
+/**
+ * Endpoint de prueba.
+ * GET /api/gemini/hello
+ */
 export function helloCheck(req, res) {
   res.json({ 
     message: 'Gemini API is running', 
@@ -343,6 +368,10 @@ export function helloCheck(req, res) {
   });
 }
 
+/**
+ * Limpia la caché de Gemini.
+ * POST /api/gemini/clear-cache
+ */
 export function clearCache(req, res) {
   try {
     clearGeminiCache();
@@ -355,6 +384,10 @@ export function clearCache(req, res) {
   }
 }
 
+/**
+ * Lista los modelos disponibles de Gemini.
+ * GET /api/gemini/models
+ */
 export function getAvailableModels(req, res) {
   res.json({
     models: [
@@ -378,19 +411,23 @@ export function getAvailableModels(req, res) {
         description: 'Fast and efficient for most tasks'
       },
       {
-        name: 'gemini-2.5-flash-preview-04-17',
-        displayName: 'Gemini 2.5 Flash (Preview)',
+        name: 'gemini-2.5-flash',
+        displayName: 'Gemini 2.5 Flash',
         isDefault: true, // ← Cambiar a true
         isStable: false,
         isPreview: true,
-        description: 'Experimental model - may be unstable'
+        description: 'Stable model - optimized for speed and quality'
       }
     ],
-    default: 'gemini-2.5-flash-preview-04-17', // ← Ya está correcto
-    note: 'Preview models may experience issues and automatically fallback to stable models'
+    default: 'gemini-2.5-flash', // ← Ya está correcto
+    note: 'Stable models are recommended for production use. Preview models may experience issues and automatically fallback to stable models.'
   });
 }
 
+/**
+ * Analiza un texto usando Gemini.
+ * POST /api/gemini/analyze
+ */
 export async function analyzeText(req, res, next) {
   try {
     const { text, analysisType = 'general', detailedAnalysis = false } = req.body;
@@ -507,7 +544,10 @@ export async function analyzeText(req, res, next) {
   }
 }
 
-// Nueva función para análisis comparativo
+/**
+ * Compara dos textos usando Gemini.
+ * POST /api/gemini/compare
+ */
 export async function compareTexts(req, res, next) {
   try {
     const { text1, text2, comparisonType = 'similarity' } = req.body;
@@ -560,6 +600,10 @@ export async function compareTexts(req, res, next) {
   }
 }
 
+/**
+ * Devuelve estadísticas de uso del API.
+ * GET /api/gemini/usage
+ */
 export function getUsageStats(req, res) {
   const stats = getMetrics();
   res.json({
