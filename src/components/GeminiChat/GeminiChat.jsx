@@ -5,9 +5,8 @@ import AnimatedAILogo from '../effects/AnimatedAILogo';
 
 // Import components
 import ChatMessages from './components/ChatMessages';
-import VirtualizedChatMessages from './components/VirtualizedChatMessages';
 import WelcomeScreen from './components/WelcomeScreen';
-import ChatInputArea from './components/ChatInputArea';
+import ChatInputArea from './components/ChatInputArea/index';
 import { useChatState } from '../../hooks/chat/useChatState';
 import { conversationManager } from './core/conversationManager';
 
@@ -23,8 +22,7 @@ const GeminiChat = ({
 }) => {
   const [input, setInput] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
-  const messageEndRef = useRef(null);
-
+  
   // Use the enhanced chat state hook
   const {
     state,
@@ -34,20 +32,6 @@ const GeminiChat = ({
     checkApiConnection,
     getPerformanceStats
   } = useChatState({ shouldReduceMotion, isLowPerformance });
-
-  // Determine whether to use virtualization based on message count and performance
-  const shouldUseVirtualization = useMemo(() => {
-    const messageCount = state.messages.length;
-    const performanceStats = getPerformanceStats();
-    
-    // Use virtualization if:
-    // - More than 50 messages
-    // - Low performance mode is enabled
-    // - Many cache misses indicating memory pressure
-    return messageCount > 50 || 
-           isLowPerformance || 
-           (performanceStats.cache.hitRate < 0.3 && messageCount > 20);
-  }, [state.messages.length, isLowPerformance, getPerformanceStats]);
 
   // Auto-save conversation when messages change
   useEffect(() => {
@@ -186,21 +170,12 @@ const GeminiChat = ({
         </div>
       ) : state.messages.length === 0 ? (
         <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
-      ) : shouldUseVirtualization ? (
-        <VirtualizedChatMessages
-          messages={state.messages}
-          isLoading={state.isLoading}
-          error={state.error}
-          shouldReduceMotion={shouldReduceMotion}
-          messageEndRef={messageEndRef}
-        />
       ) : (
         <ChatMessages 
           messages={state.messages}
           isLoading={state.isLoading}
           error={state.error}
           shouldReduceMotion={shouldReduceMotion}
-          messageEndRef={messageEndRef}
         />
       )}
 
@@ -225,5 +200,4 @@ const GeminiChat = ({
 };
 
 export default memoWithName(GeminiChat);
-
-
+         

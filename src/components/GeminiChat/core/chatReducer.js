@@ -14,6 +14,7 @@ export const chatReducer = (state, action) => {
           ...state.messages,
           {
             ...action.payload,
+            timestamp: new Date().toISOString(), // Add timestamp
             // Si el mensaje tiene imagen, se incluye
             image: action.payload.image || undefined
           }
@@ -25,7 +26,7 @@ export const chatReducer = (state, action) => {
     case 'START_STREAMING':
       return {
         ...state,
-        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true }]
+        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true, timestamp: new Date().toISOString() }]
       };
       
     case 'UPDATE_STREAM':
