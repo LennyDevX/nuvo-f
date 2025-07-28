@@ -211,7 +211,7 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
     return (
         <div 
             ref={containerRef}
-            className="flex-1 overflow-y-auto px-0 bg-gray-900 relative"
+            className="flex-1 overflow-y-auto px-0 chat-background relative"
             style={{ 
                 height: 'calc(100vh - 140px)',
                 maxHeight: 'calc(100vh - 140px)',

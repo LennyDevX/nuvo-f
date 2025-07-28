@@ -4,6 +4,16 @@
 :root {
   --vh: 1vh;
   --keyboard-height: 0px;
+  --chat-background-light: #ffffff; /* Default light background */
+  --chat-background-dark: #19142d3b;  /* Default dark background */
+}
+
+.chat-background {
+  background-color: var(--chat-background-dark);
+}
+
+.dark .chat-background {
+  background-color: var(--chat-background-dark);
 }
 
 /* Mobile specific adjustments */
@@ -170,7 +180,7 @@
   justify-content: center;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid rgba(139, 92, 246, 0.3);
-  background: rgba(55, 65, 81, 0.8);
+  background: rgba(0, 0, 0, 0.8);
   color: rgba(139, 92, 246, 1);
   backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

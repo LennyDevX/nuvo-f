@@ -113,9 +113,9 @@ const GeminiChat = ({
   }, [handleNewConversation, leftSidebarOpen, rightSidebarOpen, toggleLeftSidebar, toggleRightSidebar]);
 
   return (
-    <div className="flex flex-col h-full bg-gray-900">
+    <div className="flex flex-col h-full chat-background">
       {/* Mobile Header - Navbar Style */}
-      <div className="md:hidden flex items-center justify-between p-3 border-b border-purple-500/20 bg-gray-900/95 backdrop-blur-md sticky top-0 z-10">
+      <div className="md:hidden flex items-center justify-between p-3 border-b border-purple-500/20 chat-background/95 backdrop-blur-md sticky top-0 z-10">
         {/* Left-side buttons */}
         <div className="flex items-center gap-2">
           <button
