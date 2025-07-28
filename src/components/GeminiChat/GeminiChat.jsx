@@ -26,40 +26,31 @@ const GeminiChat = ({
   // Use the enhanced chat state hook
   const {
     state,
+    dispatch,
     handleSendMessage: handleSendMessageCore,
     handleNewConversation: handleNewConversationCore,
-    handleLoadConversation,
-    checkApiConnection,
-    getPerformanceStats
+    checkApiConnection
   } = useChatState({ shouldReduceMotion, isLowPerformance });
 
-  // Auto-save conversation when messages change
-  useEffect(() => {
-    if (state.messages.length > 0) {
-      const timeoutId = setTimeout(() => {
-        conversationManager.saveConversationToStorage(state.messages);
-      }, 1000);
-      
-      return () => clearTimeout(timeoutId);
-    }
-  }, [state.messages]);
 
-  // Check API connection on mount
+
+  // Check API connection on mount and handle initialization
   useEffect(() => {
     let isMounted = true;
-    
+
     const initializeChat = async () => {
       await checkApiConnection();
-      
       if (isMounted) {
-        setTimeout(() => setIsInitializing(false), 400);
+        // The loading of conversation is now handled inside useChatState
+        // We just need to wait for the state to settle.
+        setIsInitializing(false);
       }
     };
-    
+
     initializeChat();
-    
+
     return () => { isMounted = false; };
-  }, [checkApiConnection]);
+  }, [checkApiConnection]); // Depend on messages to react to history loading
 
   const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -94,12 +85,9 @@ const GeminiChat = ({
 
   // Wrapper handlers that include input management
   const handleNewConversation = useCallback(() => {
-    if (state.messages.length > 0) {
-      conversationManager.saveConversationToStorage(state.messages);
-    }
     handleNewConversationCore();
     setInput('');
-  }, [state.messages, handleNewConversationCore]);
+  }, [handleNewConversationCore]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion) => {
@@ -124,20 +112,18 @@ const GeminiChat = ({
 
   return (
     <div className="flex flex-col h-full bg-gray-900">
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between p-4 border-b border-purple-500/20 bg-gray-900/95 backdrop-blur-md">
-        <button
-          onClick={toggleLeftSidebar}
-          className={`btn-nuvo-base btn-nuvo-sm ${leftSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
-          aria-label="Toggle AI tools menu"
-          aria-expanded={leftSidebarOpen}
-        >
-          <FaBars className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-semibold text-white">
-            NUVOS <span className="text-purple-400">AI</span>
-          </h1>
+      {/* Mobile Header - Navbar Style */}
+      <div className="md:hidden flex items-center justify-between p-3 border-b border-purple-500/20 bg-gray-900/95 backdrop-blur-md sticky top-0 z-10">
+        {/* Left-side buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleLeftSidebar}
+            className={`btn-nuvo-base btn-nuvo-sm ${leftSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
+            aria-label="Toggle AI tools menu"
+            aria-expanded={leftSidebarOpen}
+          >
+            <FaBars className="w-5 h-5" />
+          </button>
           {state.messages.length > 0 && (
             <button
               onClick={handleNewConversation}
@@ -148,14 +134,25 @@ const GeminiChat = ({
             </button>
           )}
         </div>
-        <button
-          onClick={toggleRightSidebar}
-          className={`btn-nuvo-base btn-nuvo-sm ${rightSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
-          aria-label="Toggle profile menu"
-          aria-expanded={rightSidebarOpen}
-        >
-          <FaUserCircle className="w-5 h-5" />
-        </button>
+
+        {/* Centered Title */}
+        <div className="flex-1 text-center">
+          <h1 className="text-lg font-semibold text-white truncate">
+            NUVOS <span className="text-purple-400">AI</span>
+          </h1>
+        </div>
+
+        {/* Right-side button */}
+        <div className="flex items-center">
+            <button
+            onClick={toggleRightSidebar}
+            className={`btn-nuvo-base btn-nuvo-sm ${rightSidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
+            aria-label="Toggle profile menu"
+            aria-expanded={rightSidebarOpen}
+            >
+            <FaUserCircle className="w-5 h-5" />
+            </button>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -173,8 +170,9 @@ const GeminiChat = ({
       ) : (
         <ChatMessages 
           messages={state.messages}
-          isLoading={state.isLoading}
+          status={state.status}
           error={state.error}
+          dispatch={dispatch} 
           shouldReduceMotion={shouldReduceMotion}
         />
       )}
@@ -184,7 +182,7 @@ const GeminiChat = ({
         input={input}
         setInput={setInput}
         onSendMessage={handleSendMessage}
-        isLoading={state.isLoading}
+        status={state.status}
         isInitializing={isInitializing}
         toggleLeftSidebar={toggleLeftSidebar}
         toggleRightSidebar={toggleRightSidebar}

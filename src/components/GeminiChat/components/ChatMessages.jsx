@@ -29,8 +29,24 @@ const TypingIndicator = memo(() => (
     </div>
 ));
 
-// Error component
-const ErrorMessage = memo(({ error }) => (
+// Error component with retry
+const ErrorMessage = memo(({ error, onRetry }) => (
+    <div className="flex w-full mb-4 px-4 md:px-6">
+        <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-4 text-red-300 text-sm shadow-lg backdrop-blur-sm flex flex-col gap-2">
+            <span>{typeof error === 'string' ? error : error.message}</span>
+            {onRetry && (
+                <button 
+                    onClick={onRetry}
+                    className="bg-red-500/50 hover:bg-red-500/70 text-white font-bold py-1 px-3 rounded-md text-xs self-start transition-colors duration-200"
+                >
+                    Retry
+                </button>
+            )}
+        </div>
+    </div>
+));
+
+const OldErrorMessage = memo(({ error }) => (
     <div className="flex w-full mb-4 px-4 md:px-6">
         <div className="bg-red-900/30 border border-red-500/50 rounded-xl p-4 text-red-300 text-sm shadow-lg backdrop-blur-sm">
             {error}
@@ -54,8 +70,9 @@ const processMessagesForGrouping = (messages) => {
 
 const ChatMessages = ({
     messages = [],
-    isLoading = false,
+    status = 'idle',
     error = null,
+    dispatch,
     shouldReduceMotion = false,
 }) => {
     const containerRef = useRef(null);
@@ -134,6 +151,12 @@ const ChatMessages = ({
     }, [messageEndRef, shouldReduceMotion]);
 
     // Handle scroll for non-virtualized version
+    const handleRetry = useCallback(() => {
+        if (error && typeof error.onRetry === 'function') {
+            error.onRetry();
+        }
+    }, [error]);
+
     const handleScrollLocal = useCallback((e) => {
         const container = e.target;
         const threshold = 100;
@@ -146,16 +169,21 @@ const ChatMessages = ({
     }, [handleScroll]);
 
     const renderMessageList = () => {
+        const isLoading = status === 'waiting_for_response' || status === 'streaming';
         const allItems = [...groupedMessages];
-        if (isLoading) allItems.push({ type: 'loading' });
-        if (error) allItems.push({ type: 'error', text: error });
+        if (isLoading) allItems.push({ type: 'loading', id: 'loading-indicator' });
+        // Error is now attached to a message, but we might have a general error.
+        // Let's display a general error if present.
+        const generalError = typeof error === 'string' ? error : null;
+        if (generalError) allItems.push({ type: 'error', text: generalError, id: 'general-error' });
+
 
         if (shouldUseVirtualization) {
             const VirtualMessageItem = ({ index, style }) => {
                 const item = allItems[index];
                 if (!item) return null;
                 if (item.type === 'loading') return <div style={style}><TypingIndicator /></div>;
-                if (item.type === 'error') return <div style={style}><ErrorMessage error={item.text} /></div>;
+                if (item.type === 'error') return <div style={style}><ErrorMessage error={item.text} onRetry={handleRetry} /></div>;
 
                 return (
                     <div style={style}>
@@ -197,7 +225,8 @@ const ChatMessages = ({
                 ))}
                 
                 {isLoading && <TypingIndicator />}
-                {error && <ErrorMessage error={error} />}
+                {/* We now show errors on the message itself, but can keep a general error fallback */}
+                {error && typeof error === 'string' && <ErrorMessage error={error} onRetry={handleRetry} />}
                 
                 {/* Extra spacing for mobile to ensure content is not hidden */}
                 <div className="h-12 md:h-6"></div>

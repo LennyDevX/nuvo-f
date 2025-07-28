@@ -34,6 +34,14 @@ const CopyButton = ({ text }) => {
 };
 
 // New component for rendering code blocks with syntax highlighting
+const CustomParagraph = ({ children }) => {
+  const text = React.Children.toArray(children).join('');
+  if (text.toLowerCase().includes('ingredientes:') || text.toLowerCase().includes('instrucciones:')) {
+    return <p className="recipe-section">{children}</p>;
+  }
+  return <p>{children}</p>;
+};
+
 const CodeBlock = memo(({ node, inline, className, children, ...props }) => {
   const match = /language-(\w+)/.exec(className || '');
   const language = match ? match[1] : 'text';
@@ -142,6 +150,7 @@ const MessageItem = memo(({ message, shouldReduceMotion, isFirstInGroup, isLastI
                   remarkPlugins={[remarkGfm]}
                   components={{
                     code: CodeBlock,
+                    p: CustomParagraph,
                   }}
                 >
                   {message.text}

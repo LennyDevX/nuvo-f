@@ -151,7 +151,8 @@ export class StreamingService {
     this.webWorker = null;
   }
 
-  async processStream({ response, dispatch, isLowPerformance, shouldReduceMotion, onUpdate, onFinish, onError }) {
+  async processStream({ response, dispatch, isLowPerformance, shouldReduceMotion, onUpdate, onFinish, onError, lastMessage, setInput }) {
+    console.log('Starting stream processing...');
     const reader = response.body.getReader();
     let fullResponse = '';
     let accumulatedChunk = '';
@@ -182,15 +183,20 @@ export class StreamingService {
       });
     };
     
-    // Initialize streaming
-    dispatch({ type: 'START_STREAMING' });
     this.activeStreams.add(reader);
     
     try {
+      // Initialize streaming after we know the stream is valid
+      dispatch({ type: 'START_STREAMING' });
+
       while (true) {
         const { value, done } = await reader.read();
+        console.log(`Read from stream: done=${done}, value size=${value?.length}`);
         
-        if (done) break;
+        if (done) {
+          console.log('Stream finished.');
+          break;
+        }
         
         chunkIndex++;
         
@@ -249,31 +255,41 @@ export class StreamingService {
       
       // Final update and cache the result
       if (frameId) cancelAnimationFrame(frameId);
+      console.log('Finalizing stream with content:', fullResponse);
       onUpdate(fullResponse);
       onFinish(fullResponse);
       
       // Cache successful response with TTL
-      if (fullResponse && fullResponse.length > 10 && fullResponse.length < 15000) {
-        const cacheKey = `response_${Date.now()}`;
-        enhancedCache.set(cacheKey, fullResponse, 1800000); // 30 minutes TTL
-      }
+        if (fullResponse && lastMessage?.conversationId) {
+             enhancedCache.set(lastMessage.conversationId, fullResponse, 3600000); // Cache with conversationId for 1 hour
+        }
       
     } catch (error) {
-      if (frameId) cancelAnimationFrame(frameId);
-      
-      if (error.name === 'AbortError') {
-        console.log('Stream cancelled by user');
-        return;
-      }
-      
-      onError(error);
+        if (frameId) cancelAnimationFrame(frameId);
+        console.error('Streaming error:', error);
+        if (error.name === 'AbortError') {
+            console.log('Stream cancelled by user');
+            return;
+        }
+
+        const onRetry = () => {
+            dispatch({ type: 'REMOVE_LAST_MESSAGE' });
+            if (lastMessage && lastMessage.sender === 'user') {
+                setInput(lastMessage.text);
+            }
+        };
+
+        onError(error, onRetry, lastMessage.id);
+
     } finally {
+      console.log('Cleaning up stream resources.');
       this.activeStreams.delete(reader);
       try {
         reader.releaseLock();
       } catch (e) {
         // Reader already released
       }
+      dispatch({ type: 'FINISH_STREAM' });
     }
   }
 

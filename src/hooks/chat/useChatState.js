@@ -3,13 +3,18 @@ import { debounce } from '../../utils/performance/debounce';
 import { chatReducer, initialChatState } from '../../components/GeminiChat/core/chatReducer';
 import { StreamingService } from '../../components/GeminiChat/core/streamingService';
 import { enhancedCache } from '../../components/GeminiChat/core/cacheManager';
+import { conversationManager } from '../../components/GeminiChat/core/conversationManager';
 
 export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = false }) => {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
-  const streamingService = useRef(new StreamingService());
+  const streamingService = useRef(null);
+  if (!streamingService.current) {
+    streamingService.current = new StreamingService();
+  }
   const retryCount = useRef(0);
   const maxRetries = 3;
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [conversationId, setConversationId] = useState(null);
 
   // Enhanced offline/online detection
   useEffect(() => {
@@ -35,6 +40,37 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  useEffect(() => {
+    const lastConversation = conversationManager.loadLastConversation();
+    if (lastConversation) {
+      dispatch({ type: 'LOAD_CONVERSATION', payload: lastConversation });
+      setConversationId(lastConversation.id);
+    }
+  }, []); // Run only once on mount
+
+  const debouncedSave = useCallback(
+    debounce((messages, id) => {
+      conversationManager.saveConversationToStorage(messages, id);
+    }, 500), // Debounce de 500ms
+    []
+  );
+
+  useEffect(() => {
+    if (state.messages.length > 0) {
+      debouncedSave(state.messages, conversationId);
+    }
+
+    const handleBeforeUnload = () => {
+        conversationManager.saveConversationToStorage(state.messages, conversationId);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [state.messages, conversationId, debouncedSave]);
 
   // Formatea mensajes para API Gemini multimodal
   const formatMessagesForAPI = useCallback(() => {
@@ -69,7 +105,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
   }, []);
 
   // Process stream response with enhanced error handling
-  const processStreamResponse = useCallback(async (response, userMessage) => {
+  const processStreamResponse = useCallback(async (response, userMessage, setInput) => {
     if (!response.body) {
       throw new Error('No stream available');
     }
@@ -82,41 +118,23 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         shouldReduceMotion,
         onUpdate: (content) => dispatch({ type: 'UPDATE_STREAM', payload: content }),
         onFinish: (finalContent) => {
-          dispatch({ type: 'FINISH_STREAM' });
-          
-          // Enhanced caching with context awareness
-          if (finalContent && finalContent.length > 10 && finalContent.length < 15000) {
-            const cacheKey = generateCacheKey(userMessage, state.messages);
-            const ttl = finalContent.length > 1000 ? 3600000 : 1800000; // Longer TTL for detailed responses
-            enhancedCache.set(cacheKey, finalContent, ttl);
-          }
-          
           retryCount.current = 0; // Reset retry count on success
-        },
-        onError: (error) => {
-          console.error('Stream processing error:', error);
-          
-          if (retryCount.current < maxRetries && isOnline) {
-            retryCount.current++;
-            dispatch({ 
-              type: 'SET_ERROR', 
-              payload: `Connection issue. Retrying... (${retryCount.current}/${maxRetries})` 
-            });
-            
-            // Retry after delay
-            setTimeout(() => {
-              sendMessageDebounced(userMessage);
-            }, 2000 * retryCount.current);
-          } else {
-            dispatch({ 
-              type: 'SET_ERROR', 
-              payload: isOnline 
-                ? "Connection failed after multiple attempts. Please try again." 
-                : "You are offline. Please check your connection."
-            });
-            dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
+          const finalMessages = [...state.messages];
+          const lastMsg = finalMessages[finalMessages.length - 1];
+          if (lastMsg?.isStreaming) {
+            lastMsg.text = finalContent;
+            lastMsg.isStreaming = false;
           }
-        }
+          conversationManager.saveConversationToStorage(finalMessages, conversationId);
+        },
+        onError: (error, onRetry, messageId) => {
+          dispatch({ 
+            type: 'SET_ERROR', 
+            payload: { error, onRetry, messageId }
+          });
+        },
+        lastMessage: userMessage,
+        setInput
       });
     } catch (error) {
       console.error('Error in processStreamResponse:', error);
@@ -129,7 +147,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
 
   // Enhanced send message with better caching and offline support
   const sendMessageDebounced = useCallback(
-    debounce(async (userMessage) => {
+    debounce(async (userMessage, setInput) => {
       // Check if offline
       if (!isOnline) {
         dispatch({ 
@@ -246,37 +264,31 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
           throw new Error(`Server error: ${response.status} - ${response.statusText} - ${errorText}`);
         }
         
-        await processStreamResponse(response, userMessage);
+        await processStreamResponse(response, userMessage, setInput);
         
       } catch (error) {
         clearTimeout(timeoutId);
-        
         if (error.name === 'AbortError') {
           console.log('Request cancelled or timed out');
-          return;
+          return; // Early exit
         }
         
-        console.error('Error:', error);
-        
-        // Enhanced error handling with specific messages
-        let errorMessage = 'An error occurred. Please try again.';
+        console.error('Error sending message:', error);
 
-        // Mostrar detalles si es error 500
-        if (error.message?.includes('Gemini API error 500')) {
-          errorMessage = error.message;
-        } else if (!isOnline) {
-          errorMessage = 'Connection lost. Please check your internet and try again.';
-        } else if (error.message.includes('429')) {
-          errorMessage = 'Too many requests. Please wait a moment before trying again.';
-        } else if (error.message.includes('500')) {
-          errorMessage = 'Server error. Please try again in a few moments.';
-        } else if (error.message.includes('timeout')) {
-          errorMessage = 'Request timed out. Please try again.';
-        }
+        const onRetry = () => {
+            dispatch({ type: 'REMOVE_LAST_MESSAGE' });
+            if (userMessage) {
+                setInput(userMessage.text);
+            }
+        };
 
         dispatch({ 
           type: 'SET_ERROR', 
-          payload: errorMessage
+          payload: { 
+            message: `Failed to send message: ${error.message}`,
+            onRetry,
+            messageId: userMessage.id
+           }
         });
       } finally {
         if (window.currentGeminiRequest === abortController) {
@@ -307,7 +319,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
     setInput('');
 
-    sendMessageDebounced(userMessage);
+    sendMessageDebounced(userMessage, setInput);
   }, [state.isLoading, sendMessageDebounced]);
 
   const handleNewConversation = useCallback(() => {

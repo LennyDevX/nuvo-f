@@ -3,7 +3,7 @@ import { FaImage } from 'react-icons/fa';
 
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB
 
-const ImageUpload = ({ selectedImage, setSelectedImage, isLoading, isInitializing }) => {
+const ImageUpload = ({ selectedImage, setSelectedImage, isDisabled }) => {
     const fileInputRef = useRef(null);
 
     const handleImageChange = useCallback((e) => {
@@ -39,7 +39,7 @@ const ImageUpload = ({ selectedImage, setSelectedImage, isLoading, isInitializin
                 "
                 aria-label="Upload image"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isLoading || isInitializing}
+                disabled={isDisabled}
             >
                 <FaImage className="w-5 h-5" />
             </button>

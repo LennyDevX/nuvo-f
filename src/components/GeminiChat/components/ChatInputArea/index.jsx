@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { FaPaperPlane, FaBars, FaUserCircle } from 'react-icons/fa';
+import { FaPaperPlane, FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
 import FeaturesMenu from './FeaturesMenu';
 import ImageUpload from './ImageUpload';
 import MainInput from './MainInput';
@@ -8,7 +8,8 @@ const ChatInputArea = ({
   input,
   setInput,
   onSendMessage,
-  isLoading = false,
+  status = 'idle',
+  isOnline = true,
   isInitializing = false,
   toggleLeftSidebar,
   toggleRightSidebar,
@@ -79,10 +80,12 @@ const ChatInputArea = ({
     }
   }, [isMobile]);
 
+  const isDisabled = status === 'waiting_for_response' || status === 'streaming' || isInitializing || !isOnline;
+
   // Unify submission logic into a single handler
   const handleSubmit = useCallback((event) => {
     event.preventDefault();
-    if ((!input.trim() && !selectedImage) || isLoading || isInitializing) {
+    if ((!input.trim() && !selectedImage) || isDisabled) {
       return;
     }
 
@@ -97,7 +100,7 @@ const ChatInputArea = ({
     // Reset the selected image and file input after submission
     setSelectedImage(null);
     // The parent component is responsible for clearing the text input
-  }, [input, selectedImage, isLoading, isInitializing, onSendImage, onSendMessage]);
+  }, [input, selectedImage, isDisabled, onSendImage, onSendMessage]);
 
   // Handle key press (Enter to send, Shift+Enter for new line)
   const handleKeyPress = useCallback((e) => {
@@ -286,6 +289,23 @@ const ChatInputArea = ({
                 <FaBars className="w-4 h-4" />
               </button>
 
+              {hasMessages && (
+                <button
+                  type="button"
+                  onClick={onNewConversation}
+                  className={`
+                    hidden md:flex items-center justify-center
+                    w-12 h-12 rounded-xl transition-all duration-200 ease-out
+                    border-2 shadow-lg flex-shrink-0
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
+                    bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 border-purple-500 text-white shadow-purple-500/30 scale-105
+                  `}
+                  aria-label="Start new conversation"
+                >
+                  <FaPlus className="w-4 h-4" />
+                </button>
+              )}
+
               {/* Input container - Mobile optimized */}
               <MainInput
                 ref={inputRef}
@@ -294,7 +314,8 @@ const ChatInputArea = ({
                 onKeyPress={handleKeyPress}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
-                isLoading={isLoading}
+                status={status}
+                isDisabled={isDisabled}
                 isInitializing={isInitializing}
                 isKeyboardOpen={isKeyboardOpen}
               />
@@ -308,14 +329,13 @@ const ChatInputArea = ({
                 <ImageUpload
                   selectedImage={selectedImage}
                   setSelectedImage={setSelectedImage}
-                  isLoading={isLoading}
-                  isInitializing={isInitializing}
+                  isDisabled={isDisabled}
                 />
 
                 {/* Send button - ahora usa handleSendMultimodal */}
                 <button
                   type="submit"
-                  disabled={(!input.trim() && !selectedImage) || isLoading || isInitializing}
+                  disabled={(!input.trim() && !selectedImage) || isDisabled}
                   className={`
                     flex items-center justify-center 
                     w-12 h-12 md:w-10 md:h-10 rounded-xl
@@ -323,7 +343,7 @@ const ChatInputArea = ({
                     shadow-lg hover:shadow-xl
                     touch-manipulation
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                    ${(!input.trim() && !selectedImage) || isLoading || isInitializing
+                    ${(!input.trim() && !selectedImage) || isDisabled
                       ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
                       : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pinkk -700 hover:to-purple-800 border-purple-500 hover:border-purple-600 scale-105'
                     }

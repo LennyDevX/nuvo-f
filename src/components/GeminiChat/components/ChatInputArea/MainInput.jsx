@@ -6,8 +6,8 @@ const MainInput = React.forwardRef(({
     onKeyPress,
     onFocus,
     onBlur,
-    isLoading,
-    isInitializing,
+    status,
+    isDisabled,
     isKeyboardOpen,
 }, forwardedRef) => {
     const textareaRef = useRef(null);
@@ -37,7 +37,7 @@ const MainInput = React.forwardRef(({
                 onKeyDown={onKeyPress}
                 onFocus={onFocus}
                 onBlur={onBlur}
-                placeholder="Message"
+                placeholder={status === 'waiting_for_response' || status === 'streaming' ? 'Nuvos está pensando...' : 'Escribe tu mensaje...'}
                 className={`
                     w-full resize-none rounded-xl 
                     border-2 border-purple-800/20 
@@ -64,7 +64,7 @@ const MainInput = React.forwardRef(({
                     outline: 'none',
                     lineHeight: '1.2'
                 }}
-                disabled={isLoading || isInitializing}
+                disabled={isDisabled}
                 aria-label="Chat message input"
                 aria-describedby="input-help"
             />
