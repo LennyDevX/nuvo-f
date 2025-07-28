@@ -88,96 +88,97 @@ const MessageItem = memo(
     isTyping,
     showRegenerateButton,
   }) => {
-  const isUser = message.sender === 'user';
-  const timestamp = message.timestamp
-    ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    : '';
+    const isUser = message.sender === 'user';
+    const timestamp = message.timestamp
+      ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      : '';
 
-  // Refined bubble styles
-  const messageBubbleClasses = isUser
-    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
-    : 'bg-gray-800/95 backdrop-blur-sm text-gray-100';
+    // Refined bubble styles
+    const messageBubbleClasses = isUser
+      ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
+      : 'bg-gray-800/95 backdrop-blur-sm text-gray-100';
 
-  // Refined group border radius
-  const groupClasses = isLastInGroup
-    ? ''
-    : (isUser ? 'rounded-br-xl' : 'rounded-bl-xl');
+    // Refined group border radius
+    const groupClasses = message.isLastInGroup
+      ? ''
+      : (isUser ? 'rounded-br-xl' : 'rounded-bl-xl');
 
-  return (
-    <div
-      className={`group flex w-full px-2 md:px-4 ${isUser ? 'justify-end' : ''} ${isLastInGroup ? 'mb-2' : 'mb-0.5'}`}
-    >
-      <div className={`flex max-w-[92%] md:max-w-[78%] gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
-        <div className="flex-shrink-0 self-end w-8 h-8 md:w-9 md:h-9">
-          {isLastInGroup && (
-            isUser ? (
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-purple-500/80 via-pink-500/80 to-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow border border-white/10">
-                <FaUser size={13} className="text-white/90" />
-              </div>
+    return (
+      <div
+        className={`group flex w-full px-2 md:px-4 ${isUser ? 'justify-end' : ''} ${message.isLastInGroup ? 'mb-2' : 'mb-0.5'}`}
+      >
+        <div className={`flex max-w-[92%] md:max-w-[78%] gap-2 ${isUser ? 'flex-row-reverse' : ''}`}>
+          <div className="flex-shrink-0 self-end w-8 h-8 md:w-9 md:h-9">
+            {message.isLastInGroup && (
+              isUser ? (
+                <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-purple-500/80 via-pink-500/80 to-red-500/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow border border-white/10">
+                  <FaUser size={13} className="text-white/90" />
+                </div>
+              ) : (
+                <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow border border-white/10">
+                  <Suspense fallback={<div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse" />}>
+                    <AnimatedAILogo reduced={true} isThinking={message.isStreaming} size="xs" />
+                  </Suspense>
+                </div>
+              )
+            )}
+          </div>
+          
+          <div className={`
+            relative
+            px-3 py-2 md:px-4 md:py-2.5
+            shadow border border-purple-500/15
+            rounded-2xl
+            ${messageBubbleClasses}
+            ${groupClasses}
+            transition-all
+            text-[0.97rem] md:text-base
+            leading-snug
+            whitespace-pre-line
+            break-words
+            max-w-full
+            min-w-[32px]
+          `}>
+            {isUser ? (
+              <>
+                <p className="text-[0.97rem] md:text-base leading-snug break-words">{message.text}</p>
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="user-upload"
+                    className="mt-1 rounded-lg max-w-[180px] max-h-[120px] border border-purple-500/20 shadow"
+                    style={{ objectFit: 'cover' }}
+                  />
+                )}
+              </>
             ) : (
-              <div className="w-8 h-8 md:w-9 md:h-9 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow border border-white/10">
-                <Suspense fallback={<div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse" />}>
-                  <AnimatedAILogo reduced={true} isThinking={message.isStreaming} size="xs" />
-                </Suspense>
+              <Suspense fallback={<p className="text-[0.97rem] leading-snug text-gray-100">{message.text}</p>}>
+                <div className="prose prose-sm md:prose-base prose-invert max-w-none 
+                                prose-p:my-1 prose-ul:my-2 prose-li:my-0.5 
+                                prose-strong:text-purple-300 prose-a:text-pink-400 hover:prose-a:text-pink-300">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: CodeBlock,
+                      p: CustomParagraph,
+                    }}
+                  >
+                    {message.text}
+                  </ReactMarkdown>
+                  {message.isStreaming && <BlinkingCursor />}
+                </div>
+              </Suspense>
+            )}
+            {message.isLastInGroup && timestamp && (
+              <div className="text-xs text-gray-400/70 text-right mt-0.5 -mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {timestamp}
               </div>
-            )
-          )}
-        </div>
-        
-        <div className={`
-          relative
-          px-3 py-2 md:px-4 md:py-2.5
-          shadow border border-purple-500/15
-          rounded-2xl
-          ${messageBubbleClasses}
-          ${groupClasses}
-          transition-all
-          text-[0.97rem] md:text-base
-          leading-snug
-          whitespace-pre-line
-          break-words
-          max-w-full
-          min-w-[32px]
-        `}>
-          {isUser ? (
-            <>
-              <p className="text-[0.97rem] md:text-base leading-snug break-words">{message.text}</p>
-              {message.image && (
-                <img
-                  src={message.image}
-                  alt="user-upload"
-                  className="mt-1 rounded-lg max-w-[180px] max-h-[120px] border border-purple-500/20 shadow"
-                  style={{ objectFit: 'cover' }}
-                />
-              )}
-            </>
-          ) : (
-            <Suspense fallback={<p className="text-[0.97rem] leading-snug text-gray-100">{message.text}</p>}>
-              <div className="prose prose-sm md:prose-base prose-invert max-w-none 
-                              prose-p:my-1 prose-ul:my-2 prose-li:my-0.5 
-                              prose-strong:text-purple-300 prose-a:text-pink-400 hover:prose-a:text-pink-300">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    code: CodeBlock,
-                    p: CustomParagraph,
-                  }}
-                >
-                  {message.text}
-                </ReactMarkdown>
-                {message.isStreaming && <BlinkingCursor />}
-              </div>
-            </Suspense>
-          )}
-          {isLastInGroup && timestamp && (
-            <div className="text-xs text-gray-400/70 text-right mt-0.5 -mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {timestamp}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 export default MessageItem;

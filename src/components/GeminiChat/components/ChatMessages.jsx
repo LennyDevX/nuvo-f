@@ -74,7 +74,6 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
     const listRef = useRef(null);
     const [listHeight, setListHeight] = useState(400);
     const [isAtBottom, setIsAtBottom] = useState(true);
-    const [isMobile, setIsMobile] = useState(false);
 
     const shouldUseVirtualization = messages.length > VIRTUALIZATION_THRESHOLD;
 
@@ -89,29 +88,7 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
     const stableMessages = useMemo(() => groupedMessages, [groupedMessages]);
 
     // Mobile detection and viewport height setup
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-        
-        const setVH = () => {
-            const vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        };
 
-        checkMobile();
-        setVH();
-        
-        window.addEventListener('resize', checkMobile);
-        window.addEventListener('resize', setVH);
-        window.addEventListener('orientationchange', setVH);
-
-        return () => {
-            window.removeEventListener('resize', checkMobile);
-            window.removeEventListener('resize', setVH);
-            window.removeEventListener('orientationchange', setVH);
-        };
-    }, []);
 
     useEffect(() => {
         const updateHeight = () => {
