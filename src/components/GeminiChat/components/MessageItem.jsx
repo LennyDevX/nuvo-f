@@ -9,7 +9,7 @@ const AnimatedAILogo = lazy(() => import('../../effects/AnimatedAILogo'));
 
 const BlinkingCursor = () => <span className="ml-1 animate-pulse select-none">|</span>;
 
-const CopyButton = ({ text }) => {
+const CopyButton = memo(({ text }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -31,16 +31,16 @@ const CopyButton = ({ text }) => {
       {isCopied ? <FaCheck size={12} /> : <FaCopy size={12} />}
     </button>
   );
-};
+});
 
 // New component for rendering code blocks with syntax highlighting
-const CustomParagraph = ({ children }) => {
+const CustomParagraph = memo(({ children }) => {
   const text = React.Children.toArray(children).join('');
   if (text.toLowerCase().includes('ingredientes:') || text.toLowerCase().includes('instrucciones:')) {
     return <p className="recipe-section">{children}</p>;
   }
   return <p>{children}</p>;
-};
+});
 
 const CodeBlock = memo(({ node, inline, className, children, ...props }) => {
   const match = /language-(\w+)/.exec(className || '');
@@ -77,7 +77,17 @@ const CodeBlock = memo(({ node, inline, className, children, ...props }) => {
   );
 });
 
-const MessageItem = memo(({ message, shouldReduceMotion, isFirstInGroup, isLastInGroup }) => {
+const MessageItem = memo(
+  ({
+    message,
+    isLastMessage,
+    isGrouped,
+    groupPosition,
+    onRegenerate,
+    isMobile,
+    isTyping,
+    showRegenerateButton,
+  }) => {
   const isUser = message.sender === 'user';
   const timestamp = message.timestamp
     ? new Date(message.timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })

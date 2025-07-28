@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { FaEllipsisV, FaUpload, FaSearch, FaBrain, FaImage, FaCode, FaMicrophone } from 'react-icons/fa';
 
 const futureFeatures = [
-    { id: 'upload', icon: FaUpload, label: 'Upload Files', description: 'Share documents and images' },
     { id: 'web-search', icon: FaSearch, label: 'Web Search', description: 'Real-time web information' },
     { id: 'reasoning', icon: FaBrain, label: 'Advanced Reasoning', description: 'Deep analysis mode' },
     { id: 'image-gen', icon: FaImage, label: 'Image Generation', description: 'Create AI images' },

@@ -68,13 +68,7 @@ const processMessagesForGrouping = (messages) => {
     });
 };
 
-const ChatMessages = ({
-    messages = [],
-    status = 'idle',
-    error = null,
-    dispatch,
-    shouldReduceMotion = false,
-}) => {
+const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showRegenerateButton, status = 'idle', error = null, dispatch, shouldReduceMotion = false }) => {
     const containerRef = useRef(null);
     const messageEndRef = useRef(null);
     const listRef = useRef(null);
@@ -302,7 +296,7 @@ const ChatMessages = ({
             )}
         </div>
     );
-};
+});
 
 // Add CSS animation for fade-in
 if (typeof document !== 'undefined') {

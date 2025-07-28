@@ -31,17 +31,17 @@ export function useStakingContract() {
     [CONTRACT_ADDRESS]
   );
 
-  // Reuse a single BrowserProvider instance
-  const browserProvider = useMemo(() => {
+  const getBrowserProvider = useCallback(() => {
     if (window.ethereum) {
       return new ethers.BrowserProvider(window.ethereum);
     }
     return null;
-  }, [window.ethereum]);
+  }, []);
 
   const getSignerAddress = useCallback(async () => {
+    const browserProvider = getBrowserProvider();
     if (!browserProvider) {
-      console.error('No browser provider available');
+      console.error('No browser provider available. Please ensure a Web3 wallet (like MetaMask) is installed and enabled.');
       return null;
     }
     try {
@@ -53,10 +53,11 @@ export function useStakingContract() {
       console.error("❌ Error getting signer address:", error);
       return null;
     }
-  }, [browserProvider]);
+  }, [getBrowserProvider]);
 
   const getSignedContract = useCallback(async () => {
-    if (!browserProvider) throw new Error('No wallet found');
+    const browserProvider = getBrowserProvider();
+    if (!browserProvider) throw new Error('No wallet found. Please ensure a Web3 wallet (like MetaMask) is installed and enabled.');
     try {
       const signer = await browserProvider.getSigner();
       return new ethers.Contract(CONTRACT_ADDRESS, ABI.abi, signer);
@@ -64,10 +65,11 @@ export function useStakingContract() {
       console.error("Error getting signed contract:", error);
       throw error;
     }
-  }, [browserProvider, CONTRACT_ADDRESS]);
+  }, [getBrowserProvider, CONTRACT_ADDRESS]);
 
   const getContractStatus = useCallback(async (contractInstance = contract) => {
-    if (!contractInstance || !provider || !isInitialized) return null;
+    const browserProvider = getBrowserProvider();
+    if (!contractInstance || !provider || !isInitialized || !browserProvider) return null;
     try {
       return await globalCache.get(
         contractStatusCacheKey,
