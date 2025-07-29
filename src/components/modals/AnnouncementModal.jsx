@@ -32,7 +32,7 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
             <div className="p-4 sm:p-6 sm:p-8"> 
               <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2 sm:gap-4">
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">
-                  Nuvos Update Beta v4.1
+                  Nuvos Update Beta v4.5
                 </h2>
                 <span className="text-xs px-2 py-0.5 sm:py-1 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20 flex-shrink-0">
                   Major Release
@@ -51,18 +51,21 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                   <div className="bg-purple-500/10 p-2 sm:p-3 md:p-4 rounded-lg border border-purple-500/20">
                     <ul className="text-xs md:text-sm space-y-1 sm:space-y-2 text-gray-300">
                       <li className="flex items-start gap-1">
-                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛒</span>
-                        <span><span className="font-bold">New NFT Marketplace:</span> Complete marketplace implementation with capabilities to list, buy, and make offers on NFTs.</span>
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🤖</span>
+                        <span><span className="font-bold">Improved AI Chat:</span> Integration of a much more optimized and stable AI Chat on the platform.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🎨</span>
-                        <span><span className="font-bold">Design Enhancements:</span> Improved visual coherence across the platform with a refreshed color palette and consistent UI elements.</span>
+                        <span><span className="font-bold">General Design Optimization:</span> Visual and usability improvements across the entire interface.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">✨</span>
-                        <span><span className="font-bold">Animation & Mobile:</span> Enhanced animations and comprehensive mobile optimization for a seamless experience across all devices.</span>
+                        <span><span className="font-bold">New Creator Section:</span> A dedicated web section with information for content creators interested in monetizing and collaborating with Web3 projects like Nuvos Cloud.</span>
                       </li>
-
+                      <li className="flex items-start gap-1">
+                        <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛒</span>
+                        <span><span className="font-bold">Marketplace Update:</span> New features and optimizations in the NFT marketplace.</span>
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -89,13 +92,12 @@ const AnnouncementModal = ({ isOpen, closeModal }) => {
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🛡️</span>
-                        <span><span className="font-bold">Security & Bug Fixes:</span> Resolved critical security vulnerabilities and fixed major bugs across all modules.</span>
+                        <span><span className="font-bold">Bug Fixes:</span> Critical bugs have been resolved and overall platform stability has been improved.</span>
                       </li>
                       <li className="flex items-start gap-1">
                         <span className="text-purple-400 mr-0.5 sm:mr-1 text-xs sm:text-sm">🔧</span>
-                        <span><span className="font-bold">Code Modularization:</span> Internal codebase restructured for improved maintainability and future development.</span>
+                        <span><span className="font-bold">Platform Optimization:</span> Significant improvements in application performance and responsiveness.</span>
                       </li>
-                      
                     </ul>
                   </div>
                 </div>

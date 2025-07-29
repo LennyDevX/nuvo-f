@@ -58,7 +58,7 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft, loading = false }) => {
                 value={offerAmount}
                 onChange={(e) => setOfferAmount(e.target.value)}
                 placeholder="0.0000"
-                className="nuvos-search-input"
+                className="nuvos-search-input text-black"
                 required
               />
             </div>
@@ -72,7 +72,7 @@ const OfferModal = ({ isOpen, onClose, onSubmit, nft, loading = false }) => {
             <select
               value={expirationDays}
               onChange={(e) => setExpirationDays(parseInt(e.target.value))}
-              className="nuvos-select"
+              className="nuvos-select m-2 text-sm "
             >
               <option value={1}>1 Day</option>
               <option value={3}>3 Days</option>
