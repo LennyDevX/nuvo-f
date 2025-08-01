@@ -1497,3 +1497,6 @@ export const getAvailableCategories = () => {
 export const getOptimizedImageUrl = (imageUrl) => {
   return getCSPCompliantImageURL(imageUrl);
 };
+
+// Verifica que los endpoints usados aquí estén permitidos en tu CSP y sean correctos.
+// ...existing code...

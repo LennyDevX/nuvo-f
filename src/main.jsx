@@ -12,7 +12,7 @@ const addResourceHints = () => {
   const connections = [
     'https://gateway.pinata.cloud',
     'https://polygonscan.com',
-    'https://polygon-rpc.com',
+    // 'https://polygon-rpc.com', // eliminado
   ];
   
   connections.forEach(url => {

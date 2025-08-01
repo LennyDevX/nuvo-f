@@ -14,7 +14,9 @@ const STYLE = {
 };
 
 const JSON_RPC_MAP = {
-  137: ['https://polygon-rpc.com/'],
+  137: [
+    // 'https://polygon-rpc.com/', // eliminado
+  ],
 };
 
 const DEFAULT_FROM_TOKEN = {

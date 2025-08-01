@@ -193,20 +193,12 @@ export default function useUserNFTs(address) {
         // Fallback to direct contract method with optimization
         console.log("Using optimized direct contract method");
         
-        if (!window.ethereum) {
-          throw new Error("No se encontró una wallet de Ethereum");
+        if (!ethProvider) {
+          throw new Error("No se encontró un proveedor de Ethereum inicializado");
         }
-        
-        
-        // Connect to provider without shadowing
-        if (!window.ethereum) {
-          throw new Error("No se encontró una wallet de Ethereum");
-        }
-        
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
         
         try {
-          const code = await browserProvider.getCode(TOKENIZATION_ADDRESS);
+          const code = await ethProvider.getCode(TOKENIZATION_ADDRESS);
           if (code === '0x' || code === '') {
             console.error("Contract does not exist at address:", TOKENIZATION_ADDRESS);
             throw new Error(`No se encontró un contrato en la dirección: ${TOKENIZATION_ADDRESS}`);
@@ -220,7 +212,7 @@ export default function useUserNFTs(address) {
         const contract = new ethers.Contract(
           TOKENIZATION_ADDRESS,
           MarketplaceABI.abi,
-          browserProvider
+          ethProvider
         );
         
         let tokenIds = [];

@@ -35,8 +35,8 @@ const WalletConnect = ({ className }) => {
   const rpcUrls = useMemo(() => [
     getAlchemyRpcUrl({ network: 'polygon-mainnet' }),
     'https://polygon-rpc.com',
-    'https://rpc-mainnet.matic.network',
-    'https://rpc-mainnet.maticvigil.com'
+    'https://polygon.llamarpc.com',
+    'https://rpc.ankr.com/polygon'
   ], []);
 
   const getBalanceWithRetry = useCallback(async (provider, account) => {

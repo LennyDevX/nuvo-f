@@ -217,15 +217,12 @@ function MarketplaceDashboard(props) {
         // Batch token checks for better performance
         const BATCH_SIZE = 10;
         let tokenId = 1;
-        let consecutiveErrors = 0;
-        const maxConsecutiveErrors = 5;
-        
-        while (tokenId <= maxTokenId && consecutiveErrors < maxConsecutiveErrors) {
+        while (tokenId <= maxTokenId) {
           const batch = [];
           for (let i = 0; i < BATCH_SIZE && tokenId <= maxTokenId; i++, tokenId++) {
             batch.push(tokenId);
           }
-          
+
           // Process batch in parallel
           const batchPromises = batch.map(async (id) => {
             try {
@@ -235,81 +232,82 @@ function MarketplaceDashboard(props) {
                 return cachedListing.isListed ? cachedListing : null;
               }
 
-              const tokenData = await contract.getListedToken(id);
-              console.log(`Token ${id} data:`, tokenData);
-              
+              // Check if token exists before calling getListedToken
+              try {
+                await contract.ownerOf(id);
+              } catch (err) {
+                // Token does not exist, skip silently
+                return null;
+              }
+
+              let tokenData;
+              try {
+                tokenData = await contract.getListedToken(id);
+              } catch (error) {
+                // If getListedToken fails, skip this token silently
+                return null;
+              }
+
+              // If the call succeeds, process as before
               const listingData = {
                 tokenId: id,
                 tokenData,
-                isListed: tokenData[4], // Check the isListed boolean
+                isListed: tokenData[4],
                 checkedAt: Date.now()
               };
-              
+
               // Cache the result
               marketplaceCache.setTokenListing(TOKENIZATION_ADDRESS, id, listingData);
-              
-              return tokenData[4] ? listingData : null; // Only return if actually listed
+
+              return tokenData[4] ? listingData : null;
             } catch (error) {
-              if (error.message.includes('TokenDoesNotExist')) {
-                return 'END_OF_TOKENS';
+              // Suppress all expected contract errors (CALL_EXCEPTION, missing revert data, etc.)
+              // Only log unexpected errors once per session
+              if (
+                error.code !== 'CALL_EXCEPTION' &&
+                !String(error.message || '').includes('missing revert data')
+              ) {
+                // You can add a flag to avoid logging the same error repeatedly if needed
+                console.warn(`Unexpected error checking token ${id}:`, error.message);
               }
-              console.warn(`Error checking token ${id}:`, error.message);
-              throw error;
+              return null;
             }
           });
-          
-          try {
-            const batchResults = await Promise.allSettled(batchPromises);
-            let foundEndOfTokens = false;
-            
-            for (const result of batchResults) {
-              if (result.status === 'fulfilled') {
-                if (result.value === 'END_OF_TOKENS') {
-                  foundEndOfTokens = true;
-                  break;
-                } else if (result.value && result.value.isListed) {
-                  // Fetch metadata for listed tokens
-                  const { tokenData } = result.value;
-                  try {
-                    const tokenURI = await contract.tokenURI(result.value.tokenId);
-                    const metadata = await fetchMetadata(tokenURI);
-                    
-                    const nftData = {
-                      tokenId: tokenData[0].toString(),
-                      owner: tokenData[1],
-                      seller: tokenData[2],
-                      price: ethers.formatEther(tokenData[3]),
-                      isListed: tokenData[4],
-                      listedAt: tokenData[5].toString(),
-                      category: normalizeCategory(tokenData[6]), // Normalize category here
-                      originalCategory: tokenData[6], // Keep original for debugging
-                      tokenURI,
-                      metadata,
-                      image: metadata.image,
-                      name: metadata.name,
-                      description: metadata.description
-                    };
-                    
-                    listedNfts.push(nftData);
-                    console.log(`Added NFT ${result.value.tokenId} to marketplace with category: ${nftData.category}, price: ${nftData.price}`);
-                  } catch (metadataError) {
-                    console.warn(`Error fetching metadata for token ${result.value.tokenId}:`, metadataError);
-                  }
+
+          const batchResults = await Promise.allSettled(batchPromises);
+
+          for (const result of batchResults) {
+            if (result.status === 'fulfilled') {
+              if (result.value && result.value.isListed) {
+                // Fetch metadata for listed tokens
+                const { tokenData } = result.value;
+                try {
+                  const tokenURI = await contract.tokenURI(result.value.tokenId);
+                  const metadata = await fetchMetadata(tokenURI);
+
+                  const nftData = {
+                    tokenId: tokenData[0].toString(),
+                    owner: tokenData[1],
+                    seller: tokenData[2],
+                    price: ethers.formatEther(tokenData[3]),
+                    isListed: tokenData[4],
+                    listedAt: tokenData[5].toString(),
+                    category: normalizeCategory(tokenData[6]), // Normalize category here
+                    originalCategory: tokenData[6], // Keep original for debugging
+                    tokenURI,
+                    metadata,
+                    image: metadata.image,
+                    name: metadata.name,
+                    description: metadata.description
+                  };
+
+                  listedNfts.push(nftData);
+                  console.log(`Added NFT ${result.value.tokenId} to marketplace with category: ${nftData.category}, price: ${nftData.price}`);
+                } catch (metadataError) {
+                  console.warn(`Error fetching metadata for token ${result.value.tokenId}:`, metadataError);
                 }
-                consecutiveErrors = 0;
-              } else {
-                consecutiveErrors++;
               }
             }
-            
-            if (foundEndOfTokens) {
-              console.log(`Reached end of tokens at batch starting with ${batch[0]}`);
-              break;
-            }
-            
-          } catch (batchError) {
-            console.error('Error processing batch:', batchError);
-            consecutiveErrors++;
           }
         }
 
@@ -614,7 +612,6 @@ function MarketplaceDashboard(props) {
               </h1>
               <p className="text-gray-300 text-base md:text-lg">Discover, collect, and trade unique digital assets</p>
             </div>
-            
             {/* Add Mint NFT Button */}
             <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
               <Link 
@@ -625,14 +622,10 @@ function MarketplaceDashboard(props) {
               </Link>
             </div>
           </div>
-            
-          
 
-          
-          
           {/* Stats Overview */}
           {stats && <MarketplaceStats stats={stats} />}
-          
+
           {/* Mobile Filters Toggle */}
           <div className="lg:hidden">
             <button 
@@ -645,7 +638,7 @@ function MarketplaceDashboard(props) {
               {showMobileFilters ? "Hide Filters" : "Show Filters"}
             </button>
           </div>
-          
+
           {/* Main Content Layout */}
           <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
             {/* Filters Sidebar - Desktop Always Visible, Mobile Toggleable */}
@@ -658,7 +651,6 @@ function MarketplaceDashboard(props) {
                 />
               </div>
             </div>
-            
             {/* Results Area */}
             <div className="flex-1 min-w-0">
               {/* Results Header - with refresh button */}
