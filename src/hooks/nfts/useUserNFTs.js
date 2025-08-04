@@ -209,11 +209,44 @@ export default function useUserNFTs(address) {
           throw new Error("Error verificando la existencia del contrato");
         }
         
+        // Verify contract address before creating contract instance
+        if (!TOKENIZATION_ADDRESS || !ethers.isAddress(TOKENIZATION_ADDRESS)) {
+          console.error('Invalid TOKENIZATION_ADDRESS in useUserNFTs:', TOKENIZATION_ADDRESS);
+          throw new Error(`Dirección de contrato inválida: ${TOKENIZATION_ADDRESS}`);
+        }
+        
+        if (!MarketplaceABI || !MarketplaceABI.abi) {
+          console.error('MarketplaceABI is missing or invalid');
+          throw new Error('ABI del contrato no disponible');
+        }
+        
+        console.log('🔧 [useUserNFTs] Creating contract with:', {
+          address: TOKENIZATION_ADDRESS,
+          abiLength: MarketplaceABI.abi.length,
+          providerType: ethProvider?.constructor?.name,
+          providerReady: ethProvider?._isProvider,
+          providerExists: !!ethProvider
+        });
+        
+        // Additional validation before contract creation
+        if (!ethProvider) {
+          console.error('❌ [useUserNFTs] ethProvider is null or undefined');
+          throw new Error('Provider no disponible');
+        }
+        
+        if (!ethProvider._isProvider && !ethProvider.provider) {
+          console.error('❌ [useUserNFTs] Provider is not properly initialized');
+          throw new Error('Provider no está inicializado correctamente');
+        }
+        
         const contract = new ethers.Contract(
           TOKENIZATION_ADDRESS,
           MarketplaceABI.abi,
           ethProvider
         );
+        
+        console.log('✅ [useUserNFTs] Contract created successfully:', !!contract);
+        console.log('✅ [useUserNFTs] Contract target:', contract.target);
         
         let tokenIds = [];
         try {
