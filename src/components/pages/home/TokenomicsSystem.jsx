@@ -147,7 +147,7 @@ const TokenomicsSystem = () => {
                 }}
               >
                 <OptimizedImage
-                  src="/NuvosToken.png"
+                  src="/NuvosToken2.png"
                   alt="Nuvos Token"
                   priority={false}
                   quality={85}

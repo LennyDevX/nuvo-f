@@ -192,13 +192,13 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
         <div className="p-3 sm:p-4 md:p-6 lg:p-8">
           {currentActiveTab === 'about' && (
             <motion.div {...motionProps}>
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 md:mb-6 text-white text-center">NUVOS Airdrop Program</h2>
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 md:mb-6 text-white text-center">Airdrop Program</h2>
               
               <div className="space-y-3 sm:space-y-4 md:space-y-6">
                 <div className="rounded-xl p-3 sm:p-4 md:p-6">
-                  <h3 className="text-base sm:text-lg md:text-xl font-medium text-white mb-2 sm:mb-3 md:mb-4">About NUVO Tokens</h3>
+                  <h3 className="text-base sm:text-lg md:text-xl font-medium text-white mb-2 sm:mb-3 md:mb-4"></h3>
                   <p className="text-gray-300 mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm md:text-base leading-relaxed">
-                    NUVO is the utility and governance token of the Nuvos ecosystem. It enables holders to participate in platform decisions, access premium features, and earn rewards through staking.
+                    POL Token is the utility and governance token of the Nuvos ecosystem. It enables holders to participate in platform decisions, access premium features, and earn rewards through staking.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4 mt-3 sm:mt-4 md:mt-6">
                     <div className="flex items-start gap-2 sm:gap-3">
@@ -240,28 +240,7 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                   </div>
                 </div>
 
-                <div className="p-3 sm:p-4 md:p-6">
-                  <h3 className="text-base sm:text-lg md:text-xl font-medium text-white mb-2 sm:mb-3 md:mb-4">Airdrop Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-                    <div className="p-2 sm:p-3 md:p-4 text-center">
-                      <h4 className="text-purple-400 font-medium mb-1 text-xs sm:text-sm md:text-base">Total Token Supply</h4>
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-white break-all">21,000,000 NUVO</p>
-                    </div>
-                    <div className="p-2 sm:p-3 md:p-4 text-center">
-                      <h4 className="text-purple-400 font-medium mb-1 text-xs sm:text-sm md:text-base">Airdrop Allocation</h4>
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-white">100 NUVO</p>
-                    </div>
-                    <div className="p-2 sm:p-3 md:p-4 text-center sm:col-span-2 lg:col-span-1">
-                      <h4 className="text-purple-400 font-medium mb-1 text-xs sm:text-sm md:text-base">Per Wallet</h4>
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold text-white">10 NUVO</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 sm:mt-4 md:mt-6">
-                    <p className="text-gray-300 text-xs sm:text-sm md:text-base leading-relaxed">
-                      The NUVOS airdrop is designed to distribute tokens to early supporters and community members. Each eligible wallet will receive 10 NUVO tokens, which can be staked immediately to start earning rewards at up to 125% APY.
-                    </p>
-                  </div>
-                </div>
+                
 
                 <div className="p-3 sm:p-4 md:p-6">
                   <h3 className="text-base sm:text-lg md:text-xl font-medium text-white mb-2 sm:mb-3 md:mb-4">Eligibility Requirements</h3>
@@ -276,7 +255,7 @@ const AirdropInfoTabs = ({ activeTab = 'about', setActiveTab }) => {
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-purple-500 flex-shrink-0"></span>
-                      <span className="text-gray-300 text-xs sm:text-sm break-words">Minimum wallet balance of 1 POL for transaction fees</span>
+                      <span className="text-gray-300 text-xs sm:text-sm break-words">Minimum wallet balance of 5 POL for transaction fees</span>
                     </li>
                   </ul>
                 </div>
