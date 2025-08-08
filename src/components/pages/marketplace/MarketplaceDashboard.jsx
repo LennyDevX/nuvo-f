@@ -15,19 +15,7 @@ import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { marketplaceCache } from '../../../utils/cache/MarketplaceCache';
 import { normalizeCategory, getCategoryDisplayName, getAvailableCategories } from '../../../utils/blockchain/blockchainUtils';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
-console.log('Raw TOKENIZATION CONTRACT ADDRESS from env:', CONTRACT_ADDRESS);
-
-// Make sure the address is valid by removing any surrounding whitespace
-const cleanedAddress = CONTRACT_ADDRESS ? CONTRACT_ADDRESS.trim() : '';
-
-// Validate the address format
-const isValidAddress = ethers.isAddress(cleanedAddress);
-console.log('Is tokenization address valid format?', isValidAddress);
-
-// Use the valid address or fallback to V2 address
-const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
-console.log('Final TOKENIZATION_ADDRESS being used:', TOKENIZATION_ADDRESS);
+const TOKENIZATION_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 
 function MarketplaceDashboard(props) {
   const { account, provider, walletConnected, connectWallet } = useContext(WalletContext);
@@ -39,7 +27,6 @@ function MarketplaceDashboard(props) {
   const [loading, setLoading] = useState(true);
   const [backgroundRefreshing, setBackgroundRefreshing] = useState(false);
   const [refreshing, setRefreshing] = useState(false); // Add refreshing state for button
-  const [configError, setConfigError] = useState(false);
   const [stats, setStats] = useState({
     totalItems: 0,
     totalVolume: '0',
@@ -64,65 +51,13 @@ function MarketplaceDashboard(props) {
 
   // Get contract instance
   const getContract = useCallback(() => {
-    console.log('🔍 [MarketplaceDashboard] getContract called - provider:', !!provider, 'type:', typeof provider);
-    console.log('🔍 [MarketplaceDashboard] TOKENIZATION_ADDRESS:', TOKENIZATION_ADDRESS);
-    console.log('🔍 [MarketplaceDashboard] contractABI.abi exists:', !!contractABI.abi);
-    
-    if (!provider) {
-      console.warn('⚠️ [MarketplaceDashboard] Provider is null or undefined');
-      return null;
-    }
-    
-    // Check if contract address is properly configured
-    if (!TOKENIZATION_ADDRESS || !ethers.isAddress(TOKENIZATION_ADDRESS)) {
-      console.error('❌ [MarketplaceDashboard] Invalid or missing TOKENIZATION_ADDRESS:', TOKENIZATION_ADDRESS);
-      return null;
-    }
-    
-    if (!contractABI || !contractABI.abi) {
-      console.error('❌ [MarketplaceDashboard] Contract ABI is missing or invalid');
-      return null;
-    }
-    
-    try {
-      console.log('🔧 [MarketplaceDashboard] Creating contract with:', {
-        address: TOKENIZATION_ADDRESS,
-        abiLength: contractABI.abi.length,
-        providerType: provider.constructor.name,
-        providerReady: provider._isProvider
-      });
-      
-      // Additional validation before contract creation
-      if (!provider._isProvider && !provider.provider) {
-        console.error('❌ [MarketplaceDashboard] Provider is not properly initialized');
-        return null;
-      }
-      
-      const contract = new ethers.Contract(TOKENIZATION_ADDRESS, contractABI.abi, provider);
-      console.log('✅ [MarketplaceDashboard] Contract created successfully:', !!contract);
-      console.log('✅ [MarketplaceDashboard] Contract target:', contract.target);
-      return contract;
-    } catch (error) {
-      console.error('❌ [MarketplaceDashboard] Error creating contract:', error);
-      console.error('❌ [MarketplaceDashboard] Error details:', {
-        message: error.message,
-        code: error.code,
-        stack: error.stack?.split('\n')[0]
-      });
-      return null;
-    }
+    if (!provider) return null;
+    return new ethers.Contract(TOKENIZATION_ADDRESS, contractABI.abi, provider);
   }, [provider]);
 
   // Get signer contract for transactions
   const getSignerContract = useCallback(async () => {
     if (!provider || !account) return null;
-    
-    // Check if contract address is properly configured
-    if (!TOKENIZATION_ADDRESS || !ethers.isAddress(TOKENIZATION_ADDRESS)) {
-      console.error('Invalid or missing TOKENIZATION_ADDRESS:', TOKENIZATION_ADDRESS);
-      return null;
-    }
-    
     const signer = await provider.getSigner();
     return new ethers.Contract(TOKENIZATION_ADDRESS, contractABI.abi, signer);
   }, [provider, account]);
@@ -214,13 +149,6 @@ function MarketplaceDashboard(props) {
       return;
     }
 
-    // Check if provider is available before proceeding
-    if (!provider) {
-      console.log('Provider not available yet, skipping fetch');
-      setLoading(false);
-      return;
-    }
-
     // Check if we should use cache
     if (!forceRefresh) {
       const cachedListings = marketplaceCache.getMarketplaceListings(TOKENIZATION_ADDRESS);
@@ -252,15 +180,7 @@ function MarketplaceDashboard(props) {
       
       const contract = getContract();
       if (!contract) {
-        console.warn('No contract available - provider:', !!provider, 'address:', TOKENIZATION_ADDRESS);
-        
-        // Only set configuration error if we don't have a valid fallback address
-        if (!TOKENIZATION_ADDRESS || !ethers.isAddress(TOKENIZATION_ADDRESS)) {
-          setConfigError(true);
-        } else {
-          setConfigError(false);
-        }
-        
+        console.warn('No contract available');
         setStats({
           totalItems: 0,
           totalVolume: '0',
@@ -272,9 +192,6 @@ function MarketplaceDashboard(props) {
         setLoading(false);
         fetchingRef.current = false;
         return;
-      } else {
-        // Contract is available, clear any configuration error
-        setConfigError(false);
       }
 
       console.log('Fetching marketplace data from blockchain...');
@@ -633,49 +550,22 @@ function MarketplaceDashboard(props) {
 
   // Effect: Load marketplace data with throttling
   useEffect(() => {
-    console.log('Marketplace useEffect triggered:', {
-      walletConnected,
-      hasAccount: !!account,
-      hasProvider: !!provider,
-      providerType: provider?.constructor?.name
-    });
-    
     if (walletConnected && account && provider) {
-      // Additional check to ensure provider is fully initialized
-      const testProvider = async () => {
-        try {
-          // Test if provider is working by calling a simple method
-          await provider.getNetwork();
-          console.log('Provider test successful, proceeding with marketplace data fetch');
-          
-          const now = Date.now();
-          if (now - lastFetchTime.current > 5000) { // Throttle to every 5 seconds minimum
-            fetchMarketplaceData();
-          } else {
-            // Use cached data if available
-            const cachedListings = marketplaceCache.getMarketplaceListings(TOKENIZATION_ADDRESS);
-            if (cachedListings) {
-              setNfts(cachedListings);
-              setFilteredNfts(cachedListings);
-              setLoading(false);
-            } else {
-              fetchMarketplaceData();
-            }
-          }
-        } catch (error) {
-          console.warn('Provider not ready yet:', error.message);
-          // Retry after a short delay
-          setTimeout(() => {
-            if (walletConnected && account && provider) {
-              testProvider();
-            }
-          }, 2000);
+      const now = Date.now();
+      if (now - lastFetchTime.current > 5000) { // Throttle to every 5 seconds minimum
+        fetchMarketplaceData();
+      } else {
+        // Use cached data if available
+        const cachedListings = marketplaceCache.getMarketplaceListings(TOKENIZATION_ADDRESS);
+        if (cachedListings) {
+          setNfts(cachedListings);
+          setFilteredNfts(cachedListings);
+          setLoading(false);
+        } else {
+          fetchMarketplaceData();
         }
-      };
-      
-      testProvider();
+      }
     } else {
-      console.log('Clearing marketplace data - wallet not connected or missing dependencies');
       setNfts([]);
       setFilteredNfts([]);
       setStats({
@@ -701,36 +591,6 @@ function MarketplaceDashboard(props) {
             message="Please connect your wallet to explore and trade NFTs in the marketplace."
             connectWallet={connectWallet}
           />
-        </div>
-      </div>
-    );
-  }
-
-  // Show configuration error if contract address is not set
-  if (configError) {
-    return (
-      <div className="relative min-h-screen bg-nuvo-gradient pb-12">
-        <SpaceBackground customClass="" />
-        <div className="container mx-auto px-3 md:px-4 py-8 relative z-10">
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-8">
-              <div className="text-red-400 text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold text-white mb-4">Marketplace Configuration Error</h2>
-              <p className="text-gray-300 mb-6">
-                The marketplace contract address is not properly configured. 
-                Please check your environment variables.
-              </p>
-              <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-400 mb-2">Expected environment variable:</p>
-                <code className="text-yellow-400 text-sm">VITE_TOKENIZATION_ADDRESS_V2</code>
-                <p className="text-sm text-gray-400 mt-2">Current value:</p>
-                <code className="text-red-400 text-sm">{TOKENIZATION_ADDRESS || 'undefined'}</code>
-              </div>
-              <p className="text-sm text-gray-500">
-                Please contact the administrator or check the deployment configuration.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     );

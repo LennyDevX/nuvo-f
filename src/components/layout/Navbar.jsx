@@ -133,8 +133,7 @@ const Navbar = () => {
     balance = '0',
     network = 'Polygon',
     walletConnected = false,
-    handleDisconnect,
-    connect = null
+    handleDisconnect
   } = walletContext || {};
 
   // Debug: Verificar el estado del contexto - UPDATED WITH SMART LOGGING

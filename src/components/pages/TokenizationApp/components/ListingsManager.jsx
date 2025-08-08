@@ -27,6 +27,7 @@ const ListingsManager = () => {
   const [newPrices, setNewPrices] = useState({});
   const [royaltyInfo, setRoyaltyInfo] = useState({});
   const [refreshFlag, setRefreshFlag] = useState(0);
+  const eventsRef = React.useRef([]); // track registered event names
 
   // Fetch user's listed NFTs
   const fetchListings = useCallback(async () => {
@@ -91,31 +92,41 @@ const ListingsManager = () => {
   useEffect(() => {
     if (!walletConnected || !account) return;
     let contract, provider;
-    let listeners = [];
+    const EVENT_CANDIDATES = ['TokenSold','TokenPriceUpdated','OfferCreated','TokenUnlisted'];
+    const refresh = () => setRefreshFlag(f => f + 1);
+    eventsRef.current = [];
+
     (async () => {
-      provider = new ethers.BrowserProvider(window.ethereum);
-      contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, provider);
+      try {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, provider);
 
-      // Helper to refresh listings on relevant events
-      const refresh = () => setRefreshFlag((f) => f + 1);
-
-      // TokenSold, TokenPriceUpdated, OfferCreated
-      listeners = [
-        contract.on("TokenSold", refresh),
-        contract.on("TokenPriceUpdated", refresh),
-        contract.on("OfferCreated", refresh),
-        contract.on("TokenUnlisted", refresh),
-      ];
+        // Safely register only events that exist in ABI
+        EVENT_CANDIDATES.forEach(evt => {
+          try {
+            contract.interface.getEvent(evt); // throws if not found
+            contract.on(evt, refresh);
+            eventsRef.current.push(evt);
+          } catch {
+            console.warn(`[ListingsManager] Event "${evt}" not found in ABI, skipped`);
+          }
+        });
+      } catch (e) {
+        console.warn('[ListingsManager] Failed to set up event listeners:', e);
+      }
     })();
 
     return () => {
-      if (contract && listeners.length) {
-        listeners.forEach((off) => {
-          try { contract.off(off); } catch {}
+      if (contract && eventsRef.current.length) {
+        eventsRef.current.forEach(evt => {
+          try {
+            contract.off(evt, refresh);
+          } catch {}
         });
       }
+      eventsRef.current = [];
     };
-  }, [walletConnected, account]);
+  }, [walletConnected, account, CONTRACT_ADDRESS]);
 
   useEffect(() => {
     fetchListings();

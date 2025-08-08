@@ -43,18 +43,21 @@ export const WalletProvider = ({ children }) => {
     });
     
     const [walletConnected, setWalletConnected] = useState(() => 
-        localStorage.getItem('walletConnected') === 'true'
+        // Persist only if not explicitly disconnected
+        localStorage.getItem('walletConnected') === 'true' &&
+        localStorage.getItem('walletExplicitlyDisconnected') !== 'true'
     );
     
     const [provider, setProvider] = useState(null);
     const [lastActivityTime, setLastActivityTime] = useState(Date.now());
-    const AUTO_DISCONNECT_TIME = 3600000; // 1 hour of inactivity
+    const AUTO_DISCONNECT_TIME = 300000; // 5 minutes of inactivity
 
     // Use the centralized provider hook FIRST
     const { provider: blockchainProvider, getWalletProvider, connect: connectProvider, disconnect: disconnectProvider, account: providerAccount, chainId, isInitialized } = useProvider();
 
     const handleDisconnect = useCallback(() => {
-        // Use the provider's disconnect function to set explicit disconnect flag
+        // Mark explicit disconnect so it does not auto-reconnect on reload
+        localStorage.setItem('walletExplicitlyDisconnected', 'true');
         disconnectProvider();
         
         // Clear local state
@@ -134,16 +137,12 @@ export const WalletProvider = ({ children }) => {
         logger.walletChange('connected', walletConnected);
         logger.walletChange('account', account ? `${account.substring(0, 8)}...` : null);
         logger.walletChange('network', network);
-        
-        // Log full context only once per session or on significant changes
         const contextSummary = { 
             walletConnected, 
             hasAccount: !!account, 
             network,
-            hasDisconnectMethod: !!handleDisconnect,
-            methodCount: Object.keys(value || {}).length
+            hasDisconnectMethod: !!handleDisconnect
         };
-        
         logger.logOnChange('WALLET', 'context_state', contextSummary);
     }, [walletConnected, account, network, handleDisconnect]);
 
@@ -166,11 +165,12 @@ export const WalletProvider = ({ children }) => {
         if (providerAccount && providerAccount !== account) {
             setAccount(providerAccount);
             setWalletConnected(true);
-        } else if (!providerAccount && walletConnected) {
-            // Provider lost account, but we think we're connected
-            handleDisconnect();
+        } else if (providerAccount && !walletConnected) {
+            // Rehydrate connection silently after reload
+            setWalletConnected(true);
         }
-    }, [providerAccount, account, walletConnected, handleDisconnect]);
+        // Removed auto-disconnect on missing providerAccount to allow persistence across reload
+    }, [providerAccount, account, walletConnected]);
     
     // Update network when chainId changes
     useEffect(() => {
@@ -213,12 +213,11 @@ export const WalletProvider = ({ children }) => {
             
             // Handle chain/network changes
             const handleChainChanged = async (chainId) => {
-                // Force page refresh on chain change for safety
                 window.location.reload();
             };
             
-            // Handle disconnect
-            const handleDisconnect = () => {
+            // Handle disconnect (rename to avoid shadowing outer handleDisconnect)
+            const handleDisconnectEvent = () => {
                 handleDisconnect();
             };
             
@@ -230,7 +229,7 @@ export const WalletProvider = ({ children }) => {
             // Add new listeners
             window.ethereum.on('accountsChanged', handleAccountsChanged);
             window.ethereum.on('chainChanged', handleChainChanged);
-            window.ethereum.on('disconnect', handleDisconnect);
+            window.ethereum.on('disconnect', handleDisconnectEvent);
         }
     }, [handleDisconnect]);
 
@@ -291,7 +290,7 @@ export const WalletProvider = ({ children }) => {
     const value = {
         account,
         balance,
-        network,      
+        network,
         walletConnected,
         provider,
         setAccount,
@@ -300,7 +299,7 @@ export const WalletProvider = ({ children }) => {
         setWalletConnected,
         handleDisconnect,
         ensureProvider,
-        connectWallet, // <-- expone la función para conectar la wallet
+        connectWallet,
     };
 
     return (
