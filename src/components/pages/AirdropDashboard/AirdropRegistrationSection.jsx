@@ -118,7 +118,7 @@ const AirdropRegistrationSection = () => {
                       animate={reduceAnimations ? {} : { opacity: 1 }}
                       transition={{ delay: 0.4 }}
                     >
-                      🎁 Each eligible wallet receives 10 NUVO tokens
+                      🎁 Each eligible wallet receives 10 POL tokens
                     </motion.p>
                     <div className="mt-6 md:mt-8">
                       <motion.button

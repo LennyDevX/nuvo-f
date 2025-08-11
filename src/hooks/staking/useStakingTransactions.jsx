@@ -125,7 +125,7 @@ export function useStakingTransactions() {
             errorMessage = 'You cancelled claiming your rewards. Your rewards are still there waiting for you!';
             break;
           case 'withdraw_all':
-            errorMessage = 'You cancelled the withdrawal. Your staked tokens and rewards remain safe.';
+            errorMessage = 'You cancelled the complete withdrawal. Your staked tokens and rewards remain safe.';
             break;
           case 'emergency_withdraw':
             errorMessage = 'You cancelled the emergency withdrawal. Your funds remain staked.';

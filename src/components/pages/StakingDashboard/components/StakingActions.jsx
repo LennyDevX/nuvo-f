@@ -44,13 +44,19 @@ const getErrorMessageForTransaction = (txType, error) => {
         ? 'Not enough MATIC to complete your staking transaction. Please add more MATIC to your wallet.'
         : `Unable to complete staking: ${parsedError.message}`;
     case 'withdraw_rewards':
-      return parsedError.code === 'INSUFFICIENT_FUNDS'
-        ? 'Not enough MATIC for gas fees to claim rewards. Please add more MATIC to your wallet.'
-        : `Unable to claim rewards: ${parsedError.message}`;
+      if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        return 'Not enough MATIC for gas fees to claim rewards. Please add more MATIC to your wallet.';
+      } else if (parsedError.code === 'INSUFFICIENT_CONTRACT_BALANCE') {
+        return 'The staking pool currently has insufficient funds to pay your rewards. This is a temporary issue - please try again later or contact support.';
+      }
+      return `Unable to claim rewards: ${parsedError.message}`;
     case 'withdraw_all':
-      return parsedError.code === 'INSUFFICIENT_FUNDS'
-        ? 'Not enough MATIC for gas fees to withdraw. Please add more MATIC to your wallet.'
-        : `Unable to process withdrawal: ${parsedError.message}`;
+      if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        return 'Not enough MATIC for gas fees to withdraw. Please add more MATIC to your wallet.';
+      } else if (parsedError.code === 'INSUFFICIENT_CONTRACT_BALANCE') {
+        return 'The staking pool currently has insufficient funds to process your full withdrawal. This is a temporary issue - please try again later or contact support for assistance.';
+      }
+      return `Unable to process withdrawal: ${parsedError.message}`;
     case 'emergency_withdraw':
       return `Emergency withdrawal failed: ${parsedError.message}`;
     default:

@@ -15,7 +15,7 @@ import { useAirdropRegistration } from '../../../../hooks/airdrop/useAirdropRegi
 import submitAirdropRegistration from '../../../firebase/submitAirdropRegistration';
 
 const airdropTypes = [  
-    { id: 'tokens', name: 'Tokens', description: 'Receive NUVO tokens', icon: <FaCoins /> },
+    { id: 'tokens', name: 'Tokens', description: 'Receive POL tokens', icon: <FaCoins /> },
     { id: 'nfts', name: 'NFTs', description: 'Get exclusive NFTs', icon: <FaImages />, comingSoon: true },
     { id: 'items', name: 'Items', description: 'Unlock special items', icon: <FaBox />, comingSoon: true },
     { id: 'art', name: 'Art', description: 'Claim unique digital art', icon: <FaPalette />, comingSoon: true }

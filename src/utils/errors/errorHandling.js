@@ -174,6 +174,29 @@ export const parseTransactionError = (error) => {
     const revertMatch = errorString.match(/execution reverted:?\s*(.+?)(?:\s|$)/i);
     const customReason = revertMatch ? revertMatch[1].trim().replace(/['"]/g, '') : '';
     
+    // Check for specific contract balance issues
+    const contractBalancePatterns = [
+      'insufficient contract balance',
+      'insufficient pool balance',
+      'contract has insufficient funds',
+      'pool has insufficient funds',
+      'not enough funds in contract',
+      'contract balance too low'
+    ];
+    
+    const isContractBalanceError = contractBalancePatterns.some(pattern =>
+      errorString.includes(pattern) || errorMessage.includes(pattern) || customReason.toLowerCase().includes(pattern)
+    );
+    
+    if (isContractBalanceError) {
+      return {
+        status: 'error',
+        message: 'The staking contract currently has insufficient funds to process your withdrawal. Please try again later or contact support.',
+        code: 'INSUFFICIENT_CONTRACT_BALANCE',
+        originalError: error
+      };
+    }
+    
     return {
       status: 'error',
       message: customReason || 'The smart contract rejected this transaction. Please check your inputs and try again.',

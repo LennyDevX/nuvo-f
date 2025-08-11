@@ -37,8 +37,8 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
 
   useEffect(() => {
     // Actualización de fechas para el próximo airdrop: Registro hasta 1 de agosto 2025
-    const startDate = new Date('2025-07-15T00:00:00').getTime(); // Inicio del registro
-    const endDate = new Date('2025-08-01T23:59:59').getTime(); // Fin del registro
+    const startDate = new Date('2025-08-10T00:00:00').getTime(); // Inicio del registro
+    const endDate = new Date('2025-08-20T23:59:59').getTime(); // Fin del registro
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -155,7 +155,7 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
             : "Registration period"}
         </div>
         <div className="text-sm sm:text-base lg:text-lg font-semibold text-white">
-          Registration: July 15 – August 1, 2025
+          Registration: August 10 – August 20, 2025
         </div>
       </motion.div>
     </div>
