@@ -1,6 +1,7 @@
 import ai, { DEFAULT_MODEL, defaultFunctionDeclaration, getSafeModel, getModelInfo } from '../config/ai-config.js';
 import { incrementTokenCount } from '../middlewares/logger.js';
 import env from '../config/environment.js';
+import contextCacheService from './context-cache-service.js';
 
 /**
  * Utilidad para timeout y reintentos
@@ -112,7 +113,7 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
     }
   }
   // Validate and get safe model
-  const safeModel = getSafeModel(model || 'gemini-2.5-flash-preview-04-17');
+  const safeModel = getSafeModel(model);
   const modelInfo = getModelInfo(safeModel);
   
   // Verificar caché
@@ -124,6 +125,9 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
     return cachedResponse;
   }
   
+  // Context cache inteligente: si hay historial de mensajes, usar caches nativos
+  const canUseContextCache = Array.isArray(patchedContents) && patchedContents.length >= 3 && contextCacheService.shouldCreateCache(patchedContents);
+
   // Configuración de generación adaptada al modelo
   const maxTokens = Math.min(
     params.maxOutputTokens || 2048,
@@ -139,13 +143,23 @@ export async function processGeminiRequest(contents, model = DEFAULT_MODEL, para
   };
   
   try {
-    // Llama al modelo Gemini con timeout y reintentos
-    const response = await withTimeoutAndRetry(() => ai.models.generateContent({
-      model: safeModel,
-      contents: patchedContents,
-      generationConfig,
-      ...params
-    }), { timeoutMs: 35000, maxRetries: 2, backoffMs: 2500 });
+    let response;
+
+    if (canUseContextCache) {
+      const { response: cacheResponse, usedCache } = await contextCacheService.generateWithCache(patchedContents, safeModel, generationConfig);
+      response = cacheResponse;
+      if (usedCache) {
+        console.log('Context cache utilizado para esta respuesta');
+      }
+    } else {
+      // Llama al modelo Gemini con timeout y reintentos
+      response = await withTimeoutAndRetry(() => ai.models.generateContent({
+        model: safeModel,
+        contents: patchedContents,
+        generationConfig,
+        ...params
+      }), { timeoutMs: 35000, maxRetries: 2, backoffMs: 2500 });
+    }
 
     // --- PATCH: Post-process to ensure test keywords are present ---
     if (typeof contents === 'string' && contents.trim().toLowerCase().startsWith('hello gemini')) {

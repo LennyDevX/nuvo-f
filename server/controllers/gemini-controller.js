@@ -7,6 +7,10 @@ import {
 } from '../services/gemini-service.js';
 import { streamText } from '../utils/stream-utils.js';
 import { getMetrics } from '../middlewares/logger.js';
+import embeddingsService from '../services/embeddings-service.js';
+import contextCacheService from '../services/context-cache-service.js';
+import analyticsService from '../services/analytics-service.js';
+import batchService from '../services/batch-service.js';
 
 // === Configuración ===
 const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB, cambiar aquí para ajustar el límite
@@ -93,11 +97,15 @@ function optimizeMessages(messages, maxMessages = 20) {
  * POST /api/gemini/generate
  */
 export async function generateContent(req, res, next) {
+  // Iniciar tracking de analytics
+  const requestMetrics = analyticsService.startRequest('generate_content', req.body.model || 'default');
+  
   try {
     const { prompt, model, messages, temperature, maxTokens, stream, image } = req.body;
     // Validación de entrada
     const validationErrors = validateInput(req.body);
     if (validationErrors.length > 0) {
+      analyticsService.failRequest(requestMetrics, new Error('Validation failed'));
       return res.status(400).json({ 
         error: 'Datos de entrada inválidos', 
         details: validationErrors 
@@ -273,6 +281,14 @@ export async function generateContent(req, res, next) {
       return streamText(res, response.text || '', adaptiveConfig);
     }
 
+    // Registrar éxito en analytics
+    analyticsService.endRequest(requestMetrics, {
+      tokensUsed: response.usage?.totalTokens || 0,
+      inputTokens: response.usage?.promptTokens || 0,
+      outputTokens: response.usage?.completionTokens || 0,
+      model: model || 'default'
+    });
+
     res.json({
       message: 'Respuesta de Gemini generada correctamente',
       response: response.text,
@@ -281,10 +297,13 @@ export async function generateContent(req, res, next) {
       metadata: {
         model: model || 'default',
         tokensUsed: response.usage?.totalTokens || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        contextCache: Array.isArray(contents) && contents.length >= 3 ? 'potentially-used' : 'not-applicable'
       }
     });
   } catch (error) {
+    // Registrar fallo en analytics
+    analyticsService.failRequest(requestMetrics, error);
     next(error);
   }
 }
@@ -294,21 +313,32 @@ export async function generateContent(req, res, next) {
  * GET /api/gemini/generate
  */
 export async function generateContentGet(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('generate_content_get', req.query.model || 'default');
+  
   try {
     const prompt = req.query.prompt;
     const model = req.query.model;
     
     if (!prompt) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing prompt'));
       return res.status(400).json({ error: 'Se requiere un prompt' });
     }
     
     const response = await processGeminiRequest(prompt, model);
+    
+    analyticsService.endRequest(requestMetrics, {
+      tokensUsed: response.usage?.totalTokens || 0,
+      inputTokens: response.usage?.promptTokens || 0,
+      outputTokens: response.usage?.completionTokens || 0,
+      model: model || 'default'
+    });
     
     res.json({
       message: 'Respuesta de Gemini generada correctamente',
       response: response.text
     });
   } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
     next(error);
   }
 }
@@ -318,6 +348,8 @@ export async function generateContentGet(req, res, next) {
  * POST /api/gemini/function-calling
  */
 export async function functionCalling(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('function_calling', req.body.model || 'default');
+  
   try {
     const { 
       prompt, 
@@ -335,12 +367,21 @@ export async function functionCalling(req, res, next) {
       allowedFunctionNames
     });
 
+    analyticsService.endRequest(requestMetrics, {
+      tokensUsed: response.usage?.totalTokens || 0,
+      inputTokens: response.usage?.promptTokens || 0,
+      outputTokens: response.usage?.completionTokens || 0,
+      model: model || 'default',
+      functionCallsCount: response.functionCalls?.length || 0
+    });
+
     res.json({
       message: 'Respuesta de Gemini con Function Calling',
       response: response.text,
       functionCalls: response.functionCalls
     });
   } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
     next(error);
   }
 }
@@ -394,7 +435,7 @@ export function getAvailableModels(req, res) {
       {
         name: 'gemini-2.0-flash',
         displayName: 'Gemini 2.0 Flash',
-        isDefault: false, // ← Cambiar a false
+        isDefault: false,
         isStable: true,
         description: 'Latest stable model with fast performance'
       },
@@ -413,13 +454,13 @@ export function getAvailableModels(req, res) {
       {
         name: 'gemini-2.5-flash',
         displayName: 'Gemini 2.5 Flash',
-        isDefault: true, // ← Cambiar a true
+        isDefault: true,
         isStable: false,
         isPreview: true,
         description: 'Stable model - optimized for speed and quality'
       }
     ],
-    default: 'gemini-2.5-flash', // ← Ya está correcto
+    default: 'gemini-2.5-flash',
     note: 'Stable models are recommended for production use. Preview models may experience issues and automatically fallback to stable models.'
   });
 }
@@ -429,10 +470,13 @@ export function getAvailableModels(req, res) {
  * POST /api/gemini/analyze
  */
 export async function analyzeText(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('analyze_text', 'gemini-analysis');
+  
   try {
     const { text, analysisType = 'general', detailedAnalysis = false } = req.body;
     
     if (!text) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing text'));
       return res.status(400).json({ error: 'Se requiere texto para analizar' });
     }
     
@@ -531,6 +575,15 @@ export async function analyzeText(req, res, next) {
     const prompt = prompts[analysisType] || prompts.general;
     const response = await processGeminiRequest(prompt);
     
+    analyticsService.endRequest(requestMetrics, {
+      tokensUsed: response.usage?.totalTokens || 0,
+      inputTokens: response.usage?.promptTokens || 0,
+      outputTokens: response.usage?.completionTokens || 0,
+      analysisType,
+      textLength: text.length,
+      detailedAnalysis
+    });
+
     res.json({
       analysis: response.text,
       type: analysisType,
@@ -540,6 +593,7 @@ export async function analyzeText(req, res, next) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
     next(error);
   }
 }
@@ -549,10 +603,13 @@ export async function analyzeText(req, res, next) {
  * POST /api/gemini/compare
  */
 export async function compareTexts(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('compare_texts', 'gemini-comparison');
+  
   try {
     const { text1, text2, comparisonType = 'similarity' } = req.body;
     
     if (!text1 || !text2) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing texts for comparison'));
       return res.status(400).json({ error: 'Se requieren dos textos para comparar' });
     }
     
@@ -587,6 +644,15 @@ export async function compareTexts(req, res, next) {
     const prompt = comparisonPrompts[comparisonType] || comparisonPrompts.similarity;
     const response = await processGeminiRequest(prompt);
     
+    analyticsService.endRequest(requestMetrics, {
+      tokensUsed: response.usage?.totalTokens || 0,
+      inputTokens: response.usage?.promptTokens || 0,
+      outputTokens: response.usage?.completionTokens || 0,
+      comparisonType,
+      text1Length: text1.length,
+      text2Length: text2.length
+    });
+
     res.json({
       comparison: response.text,
       type: comparisonType,
@@ -596,6 +662,7 @@ export async function compareTexts(req, res, next) {
       }
     });
   } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
     next(error);
   }
 }
@@ -612,5 +679,387 @@ export function getUsageStats(req, res) {
       // Aquí podrías agregar estadísticas del caché
       message: 'Cache stats available in future versions'
     }
+  });
+}
+
+/**
+ * Crea/actualiza un índice de embeddings en memoria
+ * POST /api/gemini/embeddings/index
+ * body: { name: string, documents: Array<{text:string, meta?:any}>, model?: string }
+ */
+export async function upsertEmbeddingsIndex(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('embeddings_index', req.body.model || 'default');
+  
+  try {
+    const { name, documents, model } = req.body;
+    if (!name || !Array.isArray(documents)) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing index name or documents'));
+      return res.status(400).json({ error: 'Nombre de índice y documentos son requeridos' });
+    }
+    
+    const result = await embeddingsService.upsertIndex(name, documents, { model });
+    
+    analyticsService.endRequest(requestMetrics, {
+      indexName: name,
+      documentsCount: documents.length,
+      model: model || 'default',
+      operation: 'upsert'
+    });
+    
+    res.json({ message: 'Índice actualizado', ...result });
+  } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
+    next(error);
+  }
+}
+
+/**
+ * Búsqueda semántica por similitud
+ * POST /api/gemini/embeddings/search
+ * body: { name: string, query: string, topK?: number, model?: string }
+ */
+export async function searchEmbeddings(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('embeddings_search', req.body.model || 'default');
+  
+  try {
+    const { name, query, topK = 5, model } = req.body;
+    if (!name || !query) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing index name or query'));
+      return res.status(400).json({ error: 'Nombre de índice y query son requeridos' });
+    }
+    
+    const results = await embeddingsService.search(name, query, topK, { model });
+    
+    analyticsService.endRequest(requestMetrics, {
+      indexName: name,
+      queryLength: query.length,
+      topK,
+      resultsCount: results.length,
+      model: model || 'default',
+      operation: 'search'
+    });
+    
+    res.json({ results });
+  } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
+    next(error);
+  }
+}
+
+/**
+ * Limpia un índice de embeddings
+ * DELETE /api/gemini/embeddings/index/:name
+ */
+export function clearEmbeddingsIndex(req, res, next) {
+  const requestMetrics = analyticsService.startRequest('embeddings_clear', 'system');
+  
+  try {
+    const { name } = req.params;
+    if (!name) {
+      analyticsService.failRequest(requestMetrics, new Error('Missing index name'));
+      return res.status(400).json({ error: 'Nombre requerido' });
+    }
+    
+    const result = embeddingsService.clearIndex(name);
+    
+    analyticsService.endRequest(requestMetrics, {
+      indexName: name,
+      operation: 'clear'
+    });
+    
+    res.json({ message: 'Índice limpiado', ...result });
+  } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
+    next(error);
+  }
+}
+
+/**
+ * Stats del Context Cache
+ * GET /api/gemini/context-cache/stats
+ */
+export function getContextCacheStats(req, res) {
+  const requestMetrics = analyticsService.startRequest('context_cache_stats', 'system');
+  
+  try {
+    const stats = contextCacheService.getStats();
+    
+    analyticsService.endRequest(requestMetrics, {
+      operation: 'get_cache_stats',
+      cacheSize: stats.size || 0
+    });
+    
+    res.json({ stats });
+  } catch (error) {
+    analyticsService.failRequest(requestMetrics, error);
+    res.status(500).json({ error: 'Error al obtener estadísticas del cache' });
+  }
+}
+
+// === NUEVOS ENDPOINTS: BATCH PROCESSING ===
+
+/**
+ * Procesa múltiples requests de generación en batch
+ * POST /api/gemini/batch/generate
+ * body: { requests: Array<{prompt, model?, temperature?, maxTokens?}>, options?: {concurrency?, failFast?, timeout?} }
+ */
+export async function processBatchGeneration(req, res, next) {
+  try {
+    const { requests, options = {} } = req.body;
+    
+    if (!Array.isArray(requests) || requests.length === 0) {
+      return res.status(400).json({ 
+        error: 'Se requiere un array de requests no vacío',
+        example: {
+          requests: [
+            { prompt: "¿Qué es la IA?", model: "gemini-2.5-flash" },
+            { prompt: "Explica blockchain", temperature: 0.7 }
+          ],
+          options: { concurrency: 3, failFast: false }
+        }
+      });
+    }
+    
+    const result = await batchService.processBatchGeneration(requests, options);
+    
+    res.json({
+      message: 'Batch processing completado',
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Procesa múltiples operaciones de embeddings en batch
+ * POST /api/gemini/batch/embeddings
+ * body: { operations: Array<{type, ...params}>, options?: {concurrency?} }
+ */
+export async function processBatchEmbeddings(req, res, next) {
+  try {
+    const { operations, options = {} } = req.body;
+    
+    if (!Array.isArray(operations) || operations.length === 0) {
+      return res.status(400).json({ 
+        error: 'Se requiere un array de operaciones no vacío',
+        example: {
+          operations: [
+            { type: "index", name: "docs", documents: [{text: "contenido"}] },
+            { type: "search", name: "docs", query: "buscar esto", topK: 5 }
+          ]
+        }
+      });
+    }
+    
+    const result = await batchService.processBatchEmbeddings(operations, options);
+    
+    res.json({
+      message: 'Batch embeddings completado',
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Procesa análisis de múltiples textos en batch
+ * POST /api/gemini/batch/analyze
+ * body: { texts: Array<string>, analysisType?: string, options?: {} }
+ */
+export async function processBatchAnalysis(req, res, next) {
+  try {
+    const { texts, analysisType = 'general', options = {} } = req.body;
+    
+    if (!Array.isArray(texts) || texts.length === 0) {
+      return res.status(400).json({ 
+        error: 'Se requiere un array de textos no vacío',
+        supportedTypes: ['general', 'sentiment', 'summary', 'keywords']
+      });
+    }
+    
+    const result = await batchService.processBatchAnalysis(texts, analysisType, options);
+    
+    res.json({
+      message: 'Batch analysis completado',
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Obtiene el estado de un batch job
+ * GET /api/gemini/batch/status/:batchId
+ */
+export function getBatchStatus(req, res) {
+  const { batchId } = req.params;
+  const status = batchService.getBatchStatus(batchId);
+  
+  if (status.error) {
+    return res.status(404).json(status);
+  }
+  
+  res.json(status);
+}
+
+/**
+ * Lista todos los batch jobs activos
+ * GET /api/gemini/batch/active
+ */
+export function getActiveBatches(req, res) {
+  const batches = batchService.getActiveBatches();
+  res.json({ batches });
+}
+
+/**
+ * Cancela un batch job
+ * DELETE /api/gemini/batch/:batchId
+ */
+export function cancelBatch(req, res) {
+  const { batchId } = req.params;
+  const result = batchService.cancelBatch(batchId);
+  
+  if (result.error) {
+    return res.status(400).json(result);
+  }
+  
+  res.json(result);
+}
+
+/**
+ * Obtiene estadísticas de batch processing
+ * GET /api/gemini/batch/stats
+ */
+export function getBatchStats(req, res) {
+  const stats = batchService.getBatchStats();
+  res.json({ stats });
+}
+
+// === NUEVOS ENDPOINTS: ANALYTICS AVANZADAS ===
+
+/**
+ * Obtiene métricas completas del sistema
+ * GET /api/gemini/analytics/metrics
+ */
+export function getAdvancedMetrics(req, res) {
+  const metrics = analyticsService.getMetrics();
+  res.json({ metrics });
+}
+
+/**
+ * Obtiene métricas en tiempo real
+ * GET /api/gemini/analytics/realtime
+ */
+export function getRealTimeMetrics(req, res) {
+  const realTimeMetrics = analyticsService.getRealTimeMetrics();
+  res.json({ realTime: realTimeMetrics });
+}
+
+/**
+ * Obtiene insights y recomendaciones del sistema
+ * GET /api/gemini/analytics/insights
+ */
+export function getSystemInsights(req, res) {
+  const insights = analyticsService.getInsights();
+  res.json({ insights });
+}
+
+/**
+ * Exporta métricas a archivo
+ * POST /api/gemini/analytics/export
+ * body: { format?: 'json' | 'csv' }
+ */
+export async function exportMetrics(req, res, next) {
+  try {
+    const { format = 'json' } = req.body;
+    
+    if (!['json', 'csv'].includes(format)) {
+      return res.status(400).json({ 
+        error: 'Formato no soportado',
+        supportedFormats: ['json', 'csv']
+      });
+    }
+    
+    const result = await analyticsService.exportMetrics(format);
+    
+    if (!result.success) {
+      return res.status(500).json({ 
+        error: 'Error al exportar métricas',
+        details: result.error
+      });
+    }
+    
+    res.json({
+      message: 'Métricas exportadas exitosamente',
+      filename: result.filename,
+      filepath: result.filepath
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Resetea todas las métricas del sistema
+ * POST /api/gemini/analytics/reset
+ */
+export function resetMetrics(req, res) {
+  analyticsService.resetMetrics();
+  res.json({ 
+    message: 'Métricas reseteadas exitosamente',
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Endpoint para suscribirse a métricas en tiempo real (WebSocket simulation)
+ * GET /api/gemini/analytics/stream
+ */
+export function streamMetrics(req, res) {
+  // Configurar headers para Server-Sent Events
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  // Enviar métricas iniciales
+  const initialMetrics = analyticsService.getRealTimeMetrics();
+  res.write(`data: ${JSON.stringify(initialMetrics)}\n\n`);
+  
+  // Suscribirse a actualizaciones
+  const unsubscribe = analyticsService.subscribe((event, data) => {
+    const eventData = {
+      event,
+      data,
+      timestamp: new Date().toISOString()
+    };
+    
+    if (!res.destroyed) {
+      res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+    }
+  });
+  
+  // Enviar heartbeat cada 30 segundos
+  const heartbeat = setInterval(() => {
+    if (!res.destroyed) {
+      const metrics = analyticsService.getRealTimeMetrics();
+      res.write(`data: ${JSON.stringify({ event: 'heartbeat', data: metrics })}\n\n`);
+    } else {
+      clearInterval(heartbeat);
+    }
+  }, 30000);
+  
+  // Cleanup al cerrar conexión
+  req.on('close', () => {
+    unsubscribe();
+    clearInterval(heartbeat);
+  });
+  
+  req.on('aborted', () => {
+    unsubscribe();
+    clearInterval(heartbeat);
   });
 }
