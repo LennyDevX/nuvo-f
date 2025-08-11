@@ -117,7 +117,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         isLowPerformance,
         shouldReduceMotion,
         onUpdate: (content) => dispatch({ type: 'UPDATE_STREAM', payload: content }),
-        onFinish: (finalContent) => {
+        onFinish: async (finalContent) => {
           retryCount.current = 0; // Reset retry count on success
           const finalMessages = [...state.messages];
           const lastMsg = finalMessages[finalMessages.length - 1];
@@ -126,6 +126,30 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
             lastMsg.isStreaming = false;
           }
           conversationManager.saveConversationToStorage(finalMessages, conversationId);
+          
+          // RAG Enhancement: Index conversation automatically
+          try {
+            const originalUserText = userMessage.originalText || userMessage.text;
+            await fetch('/server/gemini/embeddings/index', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: 'chat_history',
+                documents: [{
+                  content: `Usuario: ${originalUserText}\nIA: ${finalContent}`,
+                  metadata: {
+                    timestamp: Date.now(),
+                    type: 'conversation',
+                    user_query: originalUserText,
+                    ai_response: finalContent,
+                    conversation_id: conversationId
+                  }
+                }]
+              })
+            });
+          } catch (error) {
+            console.warn('Failed to index conversation:', error);
+          }
         },
         onError: (error, onRetry, messageId) => {
           dispatch({ 
@@ -145,7 +169,59 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }
   }, [isLowPerformance, shouldReduceMotion, state.messages.length, generateCacheKey, isOnline]);
 
-  // Enhanced send message with better caching and offline support
+  // RAG Enhancement: Search for relevant context before sending to Gemini
+  const enhanceMessageWithRAG = useCallback(async (userMessage) => {
+    try {
+      // Only enhance text messages (not images)
+      if (!userMessage.text || userMessage.image) {
+        return userMessage;
+      }
+
+      // Search for relevant context in knowledge base
+      const searchResponse = await fetch('/server/gemini/embeddings/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'knowledge_base',
+          query: userMessage.text,
+          topK: 3
+        })
+      });
+
+      if (searchResponse.ok) {
+        const relevantContext = await searchResponse.json();
+        
+        // Add context to prompt if relevant results found
+        if (relevantContext.results && relevantContext.results.length > 0) {
+          // Filter results with good similarity scores (>0.6 for better coverage)
+          const goodResults = relevantContext.results.filter(r => r.score > 0.6);
+          
+          if (goodResults.length > 0) {
+            const contextText = goodResults
+              .map(r => r.content || r.metadata?.text)
+              .filter(content => content && content.trim())
+              .join('\n\n');
+            
+            if (contextText) {
+              console.log('RAG Context found:', goodResults.length, 'relevant results');
+              const enhancedMessage = {
+                ...userMessage,
+                text: `Contexto relevante de la base de conocimientos de NUVOS:\n${contextText}\n\nPregunta del usuario: ${userMessage.text}\n\nPor favor responde basándote en el contexto proporcionado y en español.`,
+                originalText: userMessage.text // Keep original for display
+              };
+              return enhancedMessage;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('RAG enhancement failed, proceeding without context:', error);
+    }
+    
+    return userMessage;
+  }, []);
+
+  // Enhanced send message with RAG and better caching and offline support
   const sendMessageDebounced = useCallback(
     debounce(async (userMessage, setInput) => {
       // Check if offline
@@ -157,7 +233,9 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         return;
       }
 
-      const cacheKey = generateCacheKey(userMessage, state.messages);
+      // Enhance message with RAG before processing
+      const enhancedMessage = await enhanceMessageWithRAG(userMessage);
+      const cacheKey = generateCacheKey(enhancedMessage, state.messages);
       
       // Check enhanced cache first
       if (enhancedCache.has(cacheKey)) {
@@ -201,11 +279,11 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         const apiUrl = '/server/gemini';
         // Si el mensaje tiene imagen, ajusta el formato
         const formattedMessages = [...formatMessagesForAPI()];
-        if (userMessage.text || userMessage.image) {
+        if (enhancedMessage.text || enhancedMessage.image) {
           const parts = [];
-          if (userMessage.text) parts.push({ text: userMessage.text });
-          if (userMessage.image) {
-            const match = /^data:(image\/\w+);base64,(.*)$/.exec(userMessage.image);
+          if (enhancedMessage.text) parts.push({ text: enhancedMessage.text });
+          if (enhancedMessage.image) {
+            const match = /^data:(image\/\w+);base64,(.*)$/.exec(enhancedMessage.image);
             if (match) {
               parts.push({
                 inlineData: {
@@ -264,7 +342,12 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
           throw new Error(`Server error: ${response.status} - ${response.statusText} - ${errorText}`);
         }
         
-        await processStreamResponse(response, userMessage, setInput);
+        // Use original message for display, enhanced for API
+        const displayMessage = {
+          ...userMessage,
+          text: enhancedMessage.originalText || userMessage.text
+        };
+        await processStreamResponse(response, displayMessage, setInput);
         
       } catch (error) {
         clearTimeout(timeoutId);

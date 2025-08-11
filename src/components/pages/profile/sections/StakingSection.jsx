@@ -13,6 +13,7 @@ const StakingSection = ({ account, depositAmount }) => {
     withdrawRewards, 
     withdrawAll,
     getAPYAnalysis,
+    calculateRealAPY,
     STAKING_CONSTANTS 
   } = useStaking();
   
@@ -20,6 +21,19 @@ const StakingSection = ({ account, depositAmount }) => {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [depositAmountInput, setDepositAmountInput] = useState('');
   const [userAPYData, setUserAPYData] = useState(null);
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 8.76, dailyROI: 0.24 });
+
+  // Fetch dynamic APY on component mount
+  useEffect(() => {
+    const fetchAPY = async () => {
+      const apyData = await calculateRealAPY();
+      if (apyData) {
+        setDynamicAPY(apyData);
+      }
+    };
+    
+    fetchAPY();
+  }, [calculateRealAPY]);
 
   // Calculate user's APY data with all bonuses and penalties
   const apyAnalysis = useMemo(() => {
@@ -48,15 +62,14 @@ const StakingSection = ({ account, depositAmount }) => {
     }
   }, [state.userDeposits, state.userInfo?.totalStaked, account, STAKING_CONSTANTS]);
 
-  // Calculate base APY from contract
+  // Use dynamic APY from context instead of calculating from constants
   const baseAPYData = useMemo(() => {
-    try {
-      return calculateBaseAPY(STAKING_CONSTANTS);
-    } catch (error) {
-      console.error("Error calculating base APY:", error);
-      return { cappedAPY: 88, baseAPY: 88, dailyROI: 0.24 };
-    }
-  }, [STAKING_CONSTANTS]);
+    return {
+      cappedAPY: dynamicAPY.baseAPY || 8.76,
+      baseAPY: dynamicAPY.baseAPY || 8.76,
+      dailyROI: dynamicAPY.dailyROI || 0.24
+    };
+  }, [dynamicAPY]);
 
   // Get APY status for color coding
   const apyStatus = useMemo(() => {

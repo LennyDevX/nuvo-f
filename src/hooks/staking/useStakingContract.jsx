@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { ethers } from 'ethers';
 import useProvider from '../blockchain/useProvider';
-import ABI from '../../Abi/StakingContract.json';
+import ABI from '../../Abi/SmartStaking.json';
 import { globalCache } from '../../utils/cache/CacheManager';
 
 export function useStakingContract() {
@@ -13,7 +13,7 @@ export function useStakingContract() {
     totalPoolBalance: '0'
   });
 
-  const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS || "";
+  const CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS_V2 || "";
 
   // Memoize contract instance
   const contract = useMemo(() => {

@@ -15,11 +15,11 @@ export function useContractAPY() {
     try {
       const cacheKey = 'contract_constants';
       return await globalCache.get(cacheKey, async () => {
-        // Estas constantes se infieren del código del contrato basado en el ABI
+        // Constantes actualizadas del nuevo contrato SmartStaking v3.0
         const constants = {
-          HOURLY_ROI: 0.001, // 0.1% por hora (del código del contrato)
-          DAILY_ROI: 0.024, // 2.4% diario (0.1% * 24)
-          ANNUAL_ROI: 87.6, // 87.6% anual (2.4% * 365 / 10) - CORREGIDO
+          HOURLY_ROI: 0.0001, // 0.01% por hora (HOURLY_ROI_PERCENTAGE = 100 basis points)
+          DAILY_ROI: 0.0024, // 0.24% diario (0.01% * 24)
+          ANNUAL_ROI: 8.76, // 8.76% anual (0.24% * 365) - CORREGIDO para nuevo contrato
           MAX_ROI_MULTIPLIER: 1.25, // 125% máximo ROI
           COMMISSION_RATE: 0.06, // 6% comisión
           MIN_DEPOSIT: ethers.parseEther('5'), // 5 POL mínimo

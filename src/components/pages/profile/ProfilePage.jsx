@@ -156,7 +156,7 @@ const ProfilePage = () => {
 
   // Refresh staking data when connected
   useEffect(() => {
-    if (walletConnected && account) {
+    if (walletConnected && account && refreshUserInfo && typeof refreshUserInfo === 'function') {
       refreshUserInfo(account).catch(err => {
         console.error("Error refreshing staking info:", err);
       });

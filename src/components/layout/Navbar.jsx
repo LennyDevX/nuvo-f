@@ -25,7 +25,7 @@ import { WalletContext } from '../../context/WalletContext';
 import { logger } from '../../utils/debug/logger';
 
 // Importa la variable de entorno
-const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
+const contractAddress = import.meta.env.VITE_STAKING_ADDRESS_V2 || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);

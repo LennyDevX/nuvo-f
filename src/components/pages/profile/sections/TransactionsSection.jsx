@@ -122,7 +122,7 @@ const TransactionsSection = () => {
   const [stakingTransactions, setStakingTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const STAKING_CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS;
+  const STAKING_CONTRACT_ADDRESS = import.meta.env.VITE_STAKING_ADDRESS_V2;
   const [rawEvents, setRawEvents] = useState(null);
 
   // Memoize processing function to avoid recreation on every render

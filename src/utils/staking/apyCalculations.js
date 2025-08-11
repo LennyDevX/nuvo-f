@@ -126,14 +126,14 @@ export const calculateCompoundRewards = (principal, rate, days, maxMultiplier = 
  * @returns {Object} Base APY calculations
  */
 export const calculateBaseAPY = (constants = STAKING_CONSTANTS) => {
-  const hourlyROI = constants.HOURLY_ROI || 0.001; // 0.1% per hour
+  const hourlyROI = constants.HOURLY_ROI || 0.0001; // 0.01% per hour
   const maxROI = constants.MAX_ROI || 1.25;
-  const dailyRate = hourlyROI * 24; // 0.024 = 2.4% daily
+  const dailyRate = hourlyROI * 24; // 0.0024 = 0.24% daily
   
-  // Simple APY: daily rate * 365 = 0.024 * 365 = 8.76 = 876% (ERROR!)
-  // Correct APY: 2.4% daily = 87.6% annual (2.4 * 365 / 10)
-  const annualROI = dailyRate * 365; // This gives 8.76 (876%)
-  const correctedAPY = annualROI * 10; // Convert to percentage: 87.6%
+  // Correct APY calculation: 0.24% daily = 8.76% annual
+  // dailyRate is already in decimal (0.0024), so multiply by 365 and convert to percentage
+  const annualROI = dailyRate * 365; // This gives 0.0876 (8.76% in decimal)
+  const correctedAPY = annualROI * 100; // Convert to percentage: 8.76%
   
   // Capped APY considering max ROI limit
   const daysToMax = Math.ceil((maxROI - 1) / dailyRate);
@@ -142,8 +142,8 @@ export const calculateBaseAPY = (constants = STAKING_CONSTANTS) => {
   return {
     simpleAPY: correctedAPY,
     cappedAPY: Math.min(cappedAPY, correctedAPY),
-    dailyRate: dailyRate * 100, // 2.4%
-    hourlyRate: hourlyROI * 100, // 0.1%
+    dailyRate: dailyRate * 100, // 0.24%
+    hourlyRate: hourlyROI * 100, // 0.01%
     maxROI,
     daysToMax
   };
@@ -340,12 +340,12 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
   
   if (safeStaked === 0 || deposits.length === 0) {
     return {
-      baseAPY: 87.6, // Corrected: 87.6% annual instead of 876%
+      baseAPY: 8.76, // Updated for SmartStaking v3.0
       effectiveAPY: 0,
       actualAPY: 0,
-      contractAPY: 87.6,
+      contractAPY: 8.76,
       metrics: {
-        dailyRate: 2.4,
+        dailyRate: 0.24,
         hourlyRate: 0.1,
         totalRewards: 0,
         efficiency: 0,
@@ -364,7 +364,7 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
     (safeRewards / safeStaked) * (365 / daysActive) * 100 : 0;
 
   // Contract APY (constant) - Corrected value
-  const contractAPY = 87.6; // 0.1% per hour * 24 * 365 / 10 = 87.6%
+  const contractAPY = 8.76; // 0.01% per hour * 24 * 365 = 8.76%
 
   // Calculate efficiency
   const theoreticalRewards = safeStaked * (constants.HOURLY_ROI || 0.001) * (daysActive * 24);
@@ -383,8 +383,8 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
     actualAPY: actualAPY,
     contractAPY: contractAPY,
     metrics: {
-      dailyRate: 2.4, // 2.4% daily from contract
-      hourlyRate: 0.1, // 0.1% per hour from contract
+      dailyRate: 0.24, // 0.24% daily from contract
+      hourlyRate: 0.01, // 0.01% per hour from contract
       totalRewards: safeRewards,
       efficiency: Math.min(efficiency, 100),
       daysActive,
@@ -410,7 +410,7 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
  */
 export const calculateContractProjections = (principal, days = 30, constants = STAKING_CONSTANTS) => {
   const safePrincipal = safeParseNumber(principal);
-  const hourlyRate = constants.HOURLY_ROI || 0.001; // 0.1% per hour
+  const hourlyRate = constants.HOURLY_ROI || 0.0001; // 0.01% per hour
   const maxMultiplier = constants.MAX_ROI || 1.25; // 125% maximum
   
   const totalHours = days * 24;
@@ -429,13 +429,13 @@ export const calculateContractProjections = (principal, days = 30, constants = S
     projectedRewards: actualRewards,
     dailyRewards: dailyRewards,
     totalValue: safePrincipal + actualRewards,
-    effectiveAPY: Math.min(effectiveAPY, 87.6), // Cap at 87.6%
+    effectiveAPY: Math.min(effectiveAPY, 8.76), // Cap at 8.76%
     daysToMaxROI: daysToMaxROI,
     reachesMax: days >= daysToMaxROI,
     contractMetrics: {
       hourlyRate: hourlyRate * 100,
-      dailyRate: hourlyRate * 24 * 100,
-      annualRate: hourlyRate * 24 * 365 * 100 // This will be 87.6
+       dailyRate: hourlyRate * 24 * 100,
+      annualRate: hourlyRate * 24 * 365 * 100 // This will be 8.76
     }
   };
 };
