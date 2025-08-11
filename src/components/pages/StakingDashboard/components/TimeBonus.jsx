@@ -1,7 +1,8 @@
 import React from 'react';
-import { FaClock } from 'react-icons/fa';
+import { FaClock, FaGift, FaLock } from 'react-icons/fa';
 import { calculateTimeBonus } from '../../../../utils/staking/stakingAnalytics';
 import { StakingSection, ProgressBar, ValueDisplay } from '../ui/CommonComponents';
+import { STAKING_CONSTANTS } from '../../../../utils/staking/constants';
 
 const TimeBonus = ({ userDeposits }) => {
   // Calculate days staked
@@ -16,18 +17,39 @@ const TimeBonus = ({ userDeposits }) => {
   };
   
   const daysStaked = calculateDaysStaked();
-  const timeBonus = calculateTimeBonus(daysStaked);
-  const timeBonusPercentage = timeBonus * 100;
+  
+  // Calculate current bonus based on new system
+  const getCurrentBonus = () => {
+    if (daysStaked >= 365) return 5.0;
+    if (daysStaked >= 180) return 2.0;
+    if (daysStaked >= 90) return 1.0;
+    if (daysStaked >= 30) return 0.5;
+    return 0;
+  };
+  
+  const currentBonus = getCurrentBonus();
   
   // Calculate days until next bonus threshold
   const calculateDaysUntilNextThreshold = () => {
     if (daysStaked >= 365) return 0;
     if (daysStaked >= 180) return 365 - daysStaked;
     if (daysStaked >= 90) return 180 - daysStaked;
-    return 90 - daysStaked;
+    if (daysStaked >= 30) return 90 - daysStaked;
+    return 30 - daysStaked;
   };
   
   const daysUntilNextThreshold = calculateDaysUntilNextThreshold();
+  
+  // Get next bonus amount
+  const getNextBonusAmount = () => {
+    if (daysStaked >= 365) return null;
+    if (daysStaked >= 180) return 5.0;
+    if (daysStaked >= 90) return 2.0;
+    if (daysStaked >= 30) return 1.0;
+    return 0.5;
+  };
+  
+  const nextBonusAmount = getNextBonusAmount();
   
   return (
     <StakingSection title="Time Bonus" icon={<FaClock />}>
@@ -35,13 +57,13 @@ const TimeBonus = ({ userDeposits }) => {
         <div className="grid grid-cols-2 gap-4">
           <ValueDisplay 
             label="Current Bonus" 
-            value={timeBonusPercentage.toFixed(1)}
+            value={currentBonus.toFixed(1)}
             suffix="%"
           />
           
-          {daysUntilNextThreshold > 0 && (
+          {daysUntilNextThreshold > 0 && nextBonusAmount && (
             <ValueDisplay 
-              label="Next Bonus In" 
+              label={`Next: +${nextBonusAmount}% in`}
               value={daysUntilNextThreshold}
               suffix="days"
             />
@@ -56,15 +78,27 @@ const TimeBonus = ({ userDeposits }) => {
         />
         
         <div className="mt-4 space-y-3">
-          <h4 className="text-base font-medium text-white mb-3">Bonus Tiers</h4>
+          <h4 className="text-base font-medium text-white mb-3 flex items-center">
+            <FaGift className="text-yellow-400 mr-2" />
+            Lockup Bonus Tiers
+          </h4>
           
-          <BonusTier days={90} bonus={1} currentDays={daysStaked} />
-          <BonusTier days={180} bonus={3} currentDays={daysStaked} />
-          <BonusTier days={365} bonus={5} currentDays={daysStaked} />
+          <BonusTier days={30} bonus={0.5} currentDays={daysStaked} />
+          <BonusTier days={90} bonus={1.0} currentDays={daysStaked} />
+          <BonusTier days={180} bonus={2.0} currentDays={daysStaked} />
+          <BonusTier days={365} bonus={5.0} currentDays={daysStaked} />
           
           <div className="text-xs text-slate-400 mt-5 py-2 px-3 bg-slate-800/40 rounded-lg">
-            Time bonuses are automatically applied to your staking rewards
-            and increase your effective APY.
+            <div className="flex items-start">
+              <FaLock className="text-indigo-400 mr-2 mt-0.5 flex-shrink-0" />
+              <div>
+                <div className="font-medium text-white mb-1">New Lockup System</div>
+                <div>
+                  Bonuses are now based on your chosen lockup period when staking. 
+                  Longer commitments earn higher bonuses automatically applied to your rewards.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

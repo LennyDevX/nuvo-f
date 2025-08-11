@@ -60,6 +60,7 @@ export const StakingProvider = ({ children }) => {
     withdrawRewards,
     withdrawAll,
     emergencyWithdraw,
+    compound,
     isPending,
     currentTx
   } = useStakingTransactions();
@@ -380,6 +381,7 @@ export const StakingProvider = ({ children }) => {
     withdrawRewards,
     withdrawAll,
     emergencyWithdraw,
+    compound,
     
     // Data functions
     calculateUserRewards,

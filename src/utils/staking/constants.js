@@ -1,16 +1,53 @@
 // Move your constants into a separate file that doesn't use hooks
 
-// Contract constants with corrected APY calculations
+// Contract constants with new lockup periods and ROI rates
 export const STAKING_CONSTANTS = {
-  HOURLY_ROI: 0.0001, // 0.01% per hour
-  DAILY_ROI: 0.0024, // 0.24% daily (0.01% * 24)
-  ANNUAL_ROI: 8.76, // 8.76% annual (updated for SmartStaking v3.0)
+  // Legacy constants for backward compatibility
+  HOURLY_ROI: 0.0001, // 0.01% per hour (legacy)
+  DAILY_ROI: 0.0024, // 0.24% daily (legacy)
+  ANNUAL_ROI: 8.76, // 8.76% annual (legacy)
   MAX_ROI: 1.25, // 125% maximum ROI
   COMMISSION_RATE: 0.06, // 6% commission
   MIN_DEPOSIT: 5, // 5 POL minimum
   MAX_DEPOSIT: 10000, // 10,000 POL maximum
   MAX_DEPOSITS_PER_USER: 300,
-  PRECISION: 10000
+  PRECISION: 10000,
+  
+  // New lockup periods and ROI rates (from smart contract)
+  LOCKUP_PERIODS: {
+    DAYS_30: {
+      days: 30,
+      label: '30 Days',
+      roiPerHour: 120, // 0.012% per hour
+      roiPercentage: 0.012,
+      bonus: 0.5, // 0.5% bonus
+      description: 'Short-term staking with quick returns'
+    },
+    DAYS_90: {
+      days: 90,
+      label: '90 Days', 
+      roiPerHour: 160, // 0.016% per hour
+      roiPercentage: 0.016,
+      bonus: 1.0, // 1% bonus
+      description: 'Medium-term staking with balanced rewards'
+    },
+    DAYS_180: {
+      days: 180,
+      label: '180 Days',
+      roiPerHour: 200, // 0.02% per hour
+      roiPercentage: 0.020,
+      bonus: 2.0, // 2% bonus
+      description: 'Long-term staking with higher returns'
+    },
+    DAYS_365: {
+      days: 365,
+      label: '365 Days',
+      roiPerHour: 300, // 0.03% per hour
+      roiPercentage: 0.030,
+      bonus: 5.0, // 5% bonus
+      description: 'Maximum rewards for committed stakers'
+    }
+  }
 };
 
 // APY calculation helper with corrected formula

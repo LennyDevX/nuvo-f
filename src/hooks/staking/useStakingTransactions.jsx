@@ -130,6 +130,9 @@ export function useStakingTransactions() {
           case 'emergency_withdraw':
             errorMessage = 'You cancelled the emergency withdrawal. Your funds remain staked.';
             break;
+          case 'compound':
+            errorMessage = 'You cancelled the compound transaction. Your rewards are still available to claim or compound.';
+            break;
           default:
             errorMessage = 'Transaction cancelled. Your funds are safe!';
         }
@@ -193,11 +196,38 @@ export function useStakingTransactions() {
     );
   }, [executeTransaction]);
 
+  const compound = useCallback(async () => {
+    if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
+    return executeTransaction(
+      async (contract) => {
+        // First withdraw rewards, then immediately deposit them back
+        const withdrawTx = await contract.withdraw();
+        await withdrawTx.wait();
+        
+        // Get the user's current balance to determine how much was withdrawn
+        const userInfo = await contract.getUserInfo(await contract.signer.getAddress());
+        const rewardsAmount = userInfo.pendingRewards;
+        
+        if (rewardsAmount > 0) {
+          // Deposit the withdrawn rewards back
+          return await contract.deposit({
+            value: rewardsAmount,
+            gasLimit: 400000 // Higher gas limit for compound operation
+          });
+        } else {
+          throw new Error('No rewards available to compound');
+        }
+      },
+      { type: 'compound' }
+    );
+  }, [executeTransaction]);
+
   return {
     deposit,
     withdrawRewards,
     withdrawAll,
     emergencyWithdraw,
+    compound,
     isPending,
     executeTransaction,
     currentTx,

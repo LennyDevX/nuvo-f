@@ -87,6 +87,7 @@ const StakingActions = ({
     withdrawAll,
     deposit,
     emergencyWithdraw,
+    compound,
     calculateUserRewards,
     formatWithdrawDate,
     state: { isContractPaused, tokenContract, provider, web3Provider }
@@ -244,7 +245,8 @@ const StakingActions = ({
         deposit: 'Deposit successful! Your tokens are now staking and earning rewards.',
         withdraw_rewards: 'Rewards claimed successfully! The tokens have been sent to your wallet.',
         withdraw_all: 'Withdrawal successful! Your principal and rewards have been sent to your wallet.',
-        emergency_withdraw: 'Emergency withdrawal successful! Your funds have been returned to your wallet.'
+        emergency_withdraw: 'Emergency withdrawal successful! Your funds have been returned to your wallet.',
+        compound: 'Compound successful! Your rewards have been reinvested and are now earning additional rewards.'
       };
 
       // Force refresh user info after a successful transaction
@@ -303,6 +305,17 @@ const StakingActions = ({
     }
   }, [account, isPending, isContractPaused, emergencyWithdraw, updateStatus]);
 
+  const handleCompound = useCallback(async () => {
+    if (!account || isPending) return;
+
+    try {
+      await compound();
+    } catch (error) {
+      console.error("Compound failed:", error);
+      updateStatus('error', getErrorMessageForTransaction('compound', error));
+    }
+  }, [account, isPending, compound, updateStatus]);
+
   const formattedRewards = formatBalance(rewardsEstimate || userInfo?.calculatedRewards || userInfo?.pendingRewards || stakingStats?.pendingRewards || '0');
   const hasRewards = parseFloat(formattedRewards) > 0;
   const displayedBalance = formatBalance(walletBalance || userInfo?.walletBalance || '0');
@@ -329,6 +342,7 @@ const StakingActions = ({
           totalStaked={totalStaked}
           isPending={isPending}
           onWithdrawRewards={handleWithdrawRewards}
+          onCompound={handleCompound}
           onWithdrawAll={handleWithdrawAll}
         />
 
@@ -339,6 +353,8 @@ const StakingActions = ({
           fetchingBalance={fetchingBalance}
           deposit={deposit}
           updateStatus={updateStatus}
+          userInfo={userInfo}
+          rewardsEstimate={rewardsEstimate}
           onError={(error, txType) => {
             const errorMsg = getErrorMessageForTransaction(txType, error);
             updateStatus('error', errorMsg);

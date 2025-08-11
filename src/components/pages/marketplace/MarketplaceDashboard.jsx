@@ -604,7 +604,7 @@ function MarketplaceDashboard(props) {
           {/* Dashboard Header - with mint button */}
           <div className="flex flex-col md:flex-row md:justify-between md:items-center">
             <div className="text-center md:text-left">
-              <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 tracking-tight">
+              <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-2 text-transparent bg-nuvo-gradient-text">
                 NFT Marketplace
                 {backgroundRefreshing && (
                   <span className="ml-3 text-sm text-yellow-400">🔄 Updating...</span>
