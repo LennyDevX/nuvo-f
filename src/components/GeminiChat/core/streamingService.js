@@ -160,16 +160,16 @@ export class StreamingService {
     let lastUpdate = Date.now();
     let chunkIndex = 0;
     
-    // Enhanced performance configuration
+    // Enhanced performance configuration for smoother streaming
     const getUpdateThrottle = () => {
-      const baseFPS = shouldReduceMotion ? 15 : 30;
+      const baseFPS = shouldReduceMotion ? 20 : 60;
       const frameBudget = 1000 / baseFPS;
       
       if (isLowPerformance) {
-        return Math.max(200, frameBudget * 4);
+        return Math.max(100, frameBudget * 2);
       }
       
-      return Math.max(50, frameBudget);
+      return Math.max(16, frameBudget); // ~60fps for smooth streaming
     };
     
     // Smart buffer updates with Web Worker support
@@ -186,8 +186,8 @@ export class StreamingService {
     this.activeStreams.add(reader);
     
     try {
-      // Initialize streaming after we know the stream is valid
-      dispatch({ type: 'START_STREAMING' });
+      // Streaming already initialized in useChatState
+      // dispatch({ type: 'START_STREAMING' }); // Removed to avoid duplicate
 
       while (true) {
         const { value, done } = await reader.read();
@@ -335,10 +335,12 @@ export class StreamingService {
       }
     }
     
+    // More frequent updates for smoother streaming
     const shouldUpdate = !isLowPerformance || 
                         chunk.includes('.') || 
                         chunk.includes('\n') ||
-                        processedContent.length % 150 === 0;
+                        chunk.includes(' ') ||
+                        processedContent.length % 50 === 0; // Reduced from 150 to 50
     
     return {
       processedContent,

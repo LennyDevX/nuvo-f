@@ -13,6 +13,7 @@ export const useChatScroll = (messages, isVirtualized, listRef, messageEndRef) =
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
   const lastMessageCountRef = useRef(0);
+  const lastStreamingContentRef = useRef('');
 
   const handleScroll = useCallback(
     debounce((e) => {
@@ -41,13 +42,20 @@ export const useChatScroll = (messages, isVirtualized, listRef, messageEndRef) =
   }, [isVirtualized, listRef, messageEndRef, messages.length]);
 
   useEffect(() => {
-    if (isAtBottom && messages.length > lastMessageCountRef.current) {
+    const hasNewMessage = messages.length > lastMessageCountRef.current;
+    const lastMessage = messages[messages.length - 1];
+    const currentStreamingContent = lastMessage?.isStreaming ? lastMessage.text : '';
+    const hasStreamingUpdate = currentStreamingContent !== lastStreamingContentRef.current;
+    
+    if (isAtBottom && (hasNewMessage || hasStreamingUpdate)) {
       // Use a microtask to allow the DOM to update before scrolling
       queueMicrotask(() => {
         scrollToBottom('smooth');
       });
     }
+    
     lastMessageCountRef.current = messages.length;
+    lastStreamingContentRef.current = currentStreamingContent;
   }, [messages, isAtBottom, scrollToBottom]);
 
   return { showScrollButton, handleScroll, scrollToBottom };

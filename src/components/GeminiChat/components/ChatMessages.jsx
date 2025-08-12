@@ -11,18 +11,18 @@ const ESTIMATED_MESSAGE_HEIGHT = 90; // Adjusted for potential timestamps and gr
 const TypingIndicator = memo(() => (
     <div className="flex w-full mb-4 px-4 md:px-6">
         <div className="flex max-w-[85%] md:max-w-[70%] gap-3">
-            <div className="flex-shrink-0 self-end w-10 h-10">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg border border-white/20">
-                    <Suspense fallback={<div className="w-4 h-4 bg-purple-400 rounded-full animate-pulse" />}>
-                        <AnimatedAILogo reduced={true} isThinking={true} size="xs" />
-                    </Suspense>
-                </div>
-            </div>
             <div className="bg-gray-800/95 backdrop-blur-sm rounded-2xl rounded-tl-sm px-4 py-3 border border-purple-500/20 shadow-lg">
-                <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="flex items-center">
+                    <span className="text-lg font-semibold bg-gradient-to-r from-purple-300 via-pink-400 to-blue-400 bg-clip-text text-transparent animate-gradient-text"
+                          style={{
+                            backgroundImage: 'linear-gradient(100deg, #c084fc, #8b5cf6, #ec4899, #c084fc, #ffffff, #8b5cf6, #ec4899, #6366f1)',
+                            backgroundSize: '300% 300%',
+                            animation: 'gradientShift 12s ease-in-out infinite',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                          }}>
+                        Thinking...
+                    </span>
                 </div>
             </div>
         </div>
@@ -139,10 +139,25 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
         }
     }, [handleScroll]);
 
+    // Calculate typing indicator state outside renderMessageList for reuse
+    const isWaitingForResponse = status === 'waiting_for_response';
+    const isStreaming = status === 'streaming';
+    
+    // Show typing indicator when waiting for response OR when streaming but the bot message is still empty
+    const lastMessage = groupedMessages.length > 0 ? groupedMessages[groupedMessages.length - 1] : null;
+    const shouldShowTypingIndicator = isWaitingForResponse || 
+        (isStreaming && lastMessage && (
+            lastMessage.sender === 'user' || 
+            (lastMessage.sender === 'bot' && (!lastMessage.text || lastMessage.text.trim() === ''))
+        ));
+
     const renderMessageList = () => {
-        const isLoading = status === 'waiting_for_response' || status === 'streaming';
+        const isLoading = isWaitingForResponse || isStreaming;
         const allItems = [...groupedMessages];
-        if (isLoading) allItems.push({ type: 'loading', id: 'loading-indicator' });
+        
+        if (shouldShowTypingIndicator) {
+            allItems.push({ type: 'loading', id: 'loading-indicator' });
+        }
         // Error is now attached to a message, but we might have a general error.
         // Let's display a general error if present.
         const generalError = typeof error === 'string' ? error : null;
@@ -182,9 +197,20 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
             );
         }
 
+        // Filter out empty bot messages when showing typing indicator
+        const messagesToRender = shouldShowTypingIndicator 
+            ? stableMessages.filter(message => {
+                // Don't show empty bot messages when typing indicator is active
+                if (message.sender === 'bot' && (!message.text || message.text.trim() === '')) {
+                    return false;
+                }
+                return true;
+            })
+            : stableMessages;
+
         return (
             <div className="max-w-4xl mx-auto py-4">
-                {stableMessages.map((message, index) => (
+                {messagesToRender.map((message, index) => (
                     <MessageItem
                         key={message.id}
                         message={message}
@@ -195,7 +221,7 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
                     />
                 ))}
                 
-                {isLoading && <TypingIndicator />}
+                {shouldShowTypingIndicator && <TypingIndicator />}
                 {/* We now show errors on the message itself, but can keep a general error fallback */}
                 {error && typeof error === 'string' && <ErrorMessage error={error} onRetry={handleRetry} />}
                 

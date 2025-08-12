@@ -101,7 +101,9 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
   // Enhanced cache key generation
   const generateCacheKey = useCallback((userMessage, context = []) => {
     const contextHash = context.slice(-5).map(m => m.text.substring(0, 50)).join('|');
-    return `${userMessage.text}_${btoa(contextHash).substring(0, 16)}`;
+    // Use encodeURIComponent and hash instead of btoa to handle UTF-8 characters
+    const safeHash = encodeURIComponent(contextHash).replace(/%/g, '').substring(0, 16);
+    return `${userMessage.text}_${safeHash}`;
   }, []);
 
   // Process stream response with enhanced error handling
@@ -246,8 +248,8 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         const words = cachedResponse.split(' ');
         let currentText = '';
         
-        const wordBatch = shouldReduceMotion ? 8 : 4;
-        const delay = shouldReduceMotion ? 30 : 50;
+        const wordBatch = shouldReduceMotion ? 6 : 2;
+        const delay = shouldReduceMotion ? 20 : 25;
         
         for (let i = 0; i < words.length; i += wordBatch) {
           currentText += words.slice(i, i + wordBatch).join(' ') + ' ';
@@ -262,7 +264,8 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         return;
       }
       
-      dispatch({ type: 'SET_LOADING', payload: true });
+      // Start streaming immediately to show typing indicator
+      dispatch({ type: 'START_STREAMING' });
 
       // Enhanced AbortController with timeout
       const abortController = new AbortController();
