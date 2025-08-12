@@ -126,14 +126,14 @@ export const calculateCompoundRewards = (principal, rate, days, maxMultiplier = 
  * @returns {Object} Base APY calculations
  */
 export const calculateBaseAPY = (constants = STAKING_CONSTANTS) => {
-  const hourlyROI = constants.HOURLY_ROI || 0.0001; // 0.01% per hour
+  const hourlyROI = constants.HOURLY_ROI || 0.0001; // 0.01% per hour (contract value)
   const maxROI = constants.MAX_ROI || 1.25;
   const dailyRate = hourlyROI * 24; // 0.0024 = 0.24% daily
   
-  // Correct APY calculation: 0.24% daily = 8.76% annual
+  // Contract APY calculation: 0.24% daily = 87.6% annual
   // dailyRate is already in decimal (0.0024), so multiply by 365 and convert to percentage
-  const annualROI = dailyRate * 365; // This gives 0.0876 (8.76% in decimal)
-  const correctedAPY = annualROI * 100; // Convert to percentage: 8.76%
+  const annualROI = dailyRate * 365; // This gives 0.876 (87.6% in decimal)
+  const correctedAPY = annualROI * 100; // Convert to percentage: 87.6%
   
   // Capped APY considering max ROI limit
   const daysToMax = Math.ceil((maxROI - 1) / dailyRate);
@@ -346,7 +346,7 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
       contractAPY: 8.76,
       metrics: {
         dailyRate: 0.24,
-        hourlyRate: 0.1,
+        hourlyRate: 0.01,
         totalRewards: 0,
         efficiency: 0,
         daysActive: 0
@@ -367,7 +367,7 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
   const contractAPY = 8.76; // 0.01% per hour * 24 * 365 = 8.76%
 
   // Calculate efficiency
-  const theoreticalRewards = safeStaked * (constants.HOURLY_ROI || 0.001) * (daysActive * 24);
+  const theoreticalRewards = safeStaked * (constants.HOURLY_ROI || 0.0001) * (daysActive * 24);
   const efficiency = theoreticalRewards > 0 ? (safeRewards / theoreticalRewards) * 100 : 0;
 
   // Effective APY considering contract limits
@@ -410,7 +410,7 @@ export const calculateContractBasedAPY = (contractData, constants = STAKING_CONS
  */
 export const calculateContractProjections = (principal, days = 30, constants = STAKING_CONSTANTS) => {
   const safePrincipal = safeParseNumber(principal);
-  const hourlyRate = constants.HOURLY_ROI || 0.0001; // 0.01% per hour
+  const hourlyRate = constants.HOURLY_ROI || 0.00001; // 0.001% per hour
   const maxMultiplier = constants.MAX_ROI || 1.25; // 125% maximum
   
   const totalHours = days * 24;

@@ -351,15 +351,15 @@ export const StakingProvider = ({ children }) => {
     try {
       // Use corrected APY calculations
       const correctedAPY = {
-        hourly: 0.01, // 0.01%
-        daily: 0.24, // 0.24%
-        annual: 8.76 // Updated for SmartStaking v3.0
+        hourly: 0.01, // 0.01% (contract value)
+        daily: 0.24, // 0.24% (contract value)
+        annual: 87.6 // Updated for SmartStaking v3.0 (contract value)
       };
       
       return {
         baseAPY: correctedAPY.annual, // Updated for SmartStaking v3.0
-        dailyROI: correctedAPY.daily, // 0.24%
-        hourlyROI: correctedAPY.hourly, // 0.01%
+        dailyROI: correctedAPY.daily, // 0.024%
+        hourlyROI: correctedAPY.hourly, // 0.001%
         verified: true
       };
     } catch (error) {

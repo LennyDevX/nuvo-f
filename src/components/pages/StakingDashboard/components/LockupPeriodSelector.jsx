@@ -7,7 +7,7 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
 
   const calculateProjectedRewards = (period, amount) => {
     if (!amount || amount <= 0) return 0;
-    const hourlyRate = period.roiPercentage / 100;
+    const hourlyRate = period.roiPercentage; // Already in decimal format
     const totalHours = period.days * 24;
     const baseRewards = amount * hourlyRate * totalHours;
     const bonusRewards = baseRewards * (period.bonus / 100);
@@ -15,11 +15,12 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
   };
 
   const calculateAPY = (period) => {
-    const hourlyRate = period.roiPercentage / 100;
+    // roiPercentage is in decimal format (0.001 = 0.1%)
+    const hourlyRate = period.roiPercentage; // Already in decimal format
     const dailyRate = hourlyRate * 24;
     const annualRate = dailyRate * 365;
     const bonusRate = annualRate * (period.bonus / 100);
-    return ((annualRate + bonusRate) * 100).toFixed(2);
+    return ((annualRate + bonusRate) * 100).toFixed(2); // Convert to percentage
   };
 
   return (
@@ -98,7 +99,7 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="text-center">
                   <div className="text-xs text-slate-400">Hourly ROI</div>
-                  <div className="text-sm font-medium text-white">{period.roiPercentage}%</div>
+                  <div className="text-sm font-medium text-white">{(period.roiPercentage * 100).toFixed(3)}%</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-slate-400">Total APY</div>
@@ -180,7 +181,7 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                 <div className="text-center">
                   <div className="text-xs text-slate-400">Hourly ROI</div>
-                  <div className="text-sm font-medium text-white">{flexiblePeriod.roiPercentage}%</div>
+                  <div className="text-sm font-medium text-white">{(flexiblePeriod.roiPercentage * 100).toFixed(3)}%</div>
                 </div>
                 <div className="text-center">
                   <div className="text-xs text-slate-400">Total APY</div>
@@ -230,7 +231,7 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <span className="text-slate-400">Base ROI: </span>
-              <span className="text-white">{selectedPeriod.roiPercentage}% per hour</span>
+              <span className="text-white">{(selectedPeriod.roiPercentage * 100).toFixed(3)}% per hour</span>
             </div>
             <div>
               <span className="text-slate-400">Time Bonus: </span>

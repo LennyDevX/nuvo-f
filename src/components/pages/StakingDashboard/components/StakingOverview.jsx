@@ -13,7 +13,7 @@ import {
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
   const { calculateRealAPY, getDetailedStakingStats } = useStaking();
-  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 8.76, dailyROI: 0.24 }); // Updated for SmartStaking v3.0
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 8.76, dailyROI: 0.024 }); // Updated for SmartStaking v3.0
   const [detailedStats, setDetailedStats] = useState(null);
   
   // Calculate total staked

@@ -106,9 +106,9 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
     if (projections) return projections;
     if (!userInfo || !userInfo.totalStaked) return null;
     
-    // Simple ROI calculation based on contract verified APY (8.76%)
+    // Simple ROI calculation based on contract verified APY (87.6%)
     const totalStaked = parseFloat(userInfo.totalStaked);
-    const dailyRate = (8.76 / 365) / 100; // Use contract verified rate
+    const dailyRate = (87.6 / 365) / 100; // Use contract verified rate
     
     return {
       oneMonth: (totalStaked * dailyRate * 30).toFixed(4),

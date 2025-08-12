@@ -149,7 +149,7 @@ export function useStakingRewards() {
   const calculateStakingRewards = useCallback((amount, daysStaked, hourlyROI, maxROI) => {
     const amountNum = parseFloat(amount) || 0;
     const daysNum = parseFloat(daysStaked) || 0;
-    const hourlyRate = parseFloat(hourlyROI) || 0.0001; // 0.01% per hour default
+    const hourlyRate = parseFloat(hourlyROI) || 0.00001; // 0.001% per hour default
     
     // Contract uses linear calculation
     const totalHours = daysNum * 24;
@@ -187,7 +187,7 @@ export function useStakingRewards() {
         const rewardsData = calculateStakingRewards(
           deposit.amount,
           daysStaked,
-          STAKING_CONSTANTS.HOURLY_ROI || 0.001,
+          STAKING_CONSTANTS.HOURLY_ROI || 0.00001,
           STAKING_CONSTANTS.MAX_ROI || 1
         );
 
@@ -237,7 +237,7 @@ export function useStakingRewards() {
 
   const calculateRealAPY = useCallback(async () => {
     if (!contract) {
-      return { baseAPY: 8.76, dailyROI: 0.24 }; // Updated for SmartStaking v3.0
+      return { baseAPY: 8.76, dailyROI: 0.024 }; // Updated for SmartStaking v3.0
     }
     setLoading(true);
     setError(null);
@@ -268,7 +268,7 @@ export function useStakingRewards() {
       setError(error);
       setLoading(false);
       console.error("Error calculating APY:", error);
-      return { baseAPY: 8.76, dailyROI: 0.24 }; // Updated for SmartStaking v3.0
+      return { baseAPY: 87.6, dailyROI: 0.24 }; // Updated for SmartStaking v3.0 (contract value)
     }
   }, [contract]);
 

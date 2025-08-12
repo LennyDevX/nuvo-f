@@ -4,7 +4,7 @@ export const stakingInfo = {
   features: [
     {
       title: "Hourly Rewards",
-      description: "Earn 0.24% per day (0.01% per hour), automatically credited to your account",
+      description: "Earn 0.024% per day (0.001% per hour), automatically credited to your account",
       iconType: "clock"
     },
     {
