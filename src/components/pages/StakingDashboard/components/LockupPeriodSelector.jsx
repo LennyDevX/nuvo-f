@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaClock, FaLock, FaChartLine, FaGift } from 'react-icons/fa';
+import { FaClock, FaLock, FaChartLine, FaGift, FaUnlock } from 'react-icons/fa';
 import { STAKING_CONSTANTS } from '../../../../utils/staking/constants';
 
 const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount }) => {
@@ -26,11 +26,27 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
     <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/30 p-4">
       <h3 className="text-lg font-medium text-white mb-4 flex items-center">
         <FaClock className="text-indigo-400 mr-2" />
-        Select Lockup Period
+        Select Staking Option
       </h3>
 
+      {/* Clear selection button */}
+      {selectedPeriod && (
+        <div className="mb-4">
+          <button
+            onClick={() => onPeriodChange(null)}
+            className="text-sm text-slate-400 hover:text-white transition-colors duration-200 flex items-center"
+          >
+            <FaUnlock className="mr-1" />
+            Clear selection (Flexible staking)
+          </button>
+        </div>
+      )}
+
+      {/* Lockup periods (excluding flexible) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-        {Object.entries(STAKING_CONSTANTS.LOCKUP_PERIODS).map(([key, period]) => {
+        {Object.entries(STAKING_CONSTANTS.LOCKUP_PERIODS)
+          .filter(([key, period]) => period.days > 0) // Exclude flexible option
+          .map(([key, period]) => {
           const isSelected = selectedPeriod?.days === period.days;
           const isHovered = hoveredPeriod === key;
           const projectedRewards = calculateProjectedRewards(period, parseFloat(stakingAmount || 0));
@@ -63,13 +79,19 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
               {/* Period header */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center">
-                  <FaLock className={`mr-2 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  {period.days === 0 ? (
+                    <FaUnlock className={`mr-2 ${isSelected ? 'text-green-400' : 'text-slate-400'}`} />
+                  ) : (
+                    <FaLock className={`mr-2 ${isSelected ? 'text-indigo-400' : 'text-slate-400'}`} />
+                  )}
                   <span className="font-semibold text-white">{period.label}</span>
                 </div>
-                <div className="flex items-center text-xs text-slate-400">
-                  <FaGift className="mr-1" />
-                  +{period.bonus}%
-                </div>
+                {period.bonus > 0 && (
+                  <div className="flex items-center text-xs text-slate-400">
+                    <FaGift className="mr-1" />
+                    +{period.bonus}%
+                  </div>
+                )}
               </div>
 
               {/* ROI and APY */}
@@ -108,11 +130,101 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
         })}
       </div>
 
+      {/* Flexible staking option - full width at bottom */}
+      {(() => {
+        const flexiblePeriod = STAKING_CONSTANTS.LOCKUP_PERIODS.FLEXIBLE;
+        const isSelected = selectedPeriod?.days === 0;
+        const isHovered = hoveredPeriod === 'FLEXIBLE';
+        const projectedRewards = calculateProjectedRewards(flexiblePeriod, parseFloat(stakingAmount || 0));
+        const apy = calculateAPY(flexiblePeriod);
+
+        return (
+          <div className="mb-4">
+            <div
+              className={`
+                relative p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 w-full
+                ${isSelected 
+                  ? 'border-green-500 bg-green-500/10 shadow-lg shadow-green-500/20' 
+                  : 'border-slate-600/50 bg-slate-800/30 hover:border-green-400/50 hover:bg-slate-700/40'
+                }
+                ${isHovered ? 'transform scale-[1.01]' : ''}
+              `}
+              onClick={() => onPeriodChange(flexiblePeriod)}
+              onMouseEnter={() => setHoveredPeriod('FLEXIBLE')}
+              onMouseLeave={() => setHoveredPeriod(null)}
+            >
+              {/* Selection indicator */}
+              {isSelected && (
+                <div className="absolute top-2 right-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                  </div>
+                </div>
+              )}
+
+              {/* Period header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center">
+                  <FaUnlock className={`mr-2 ${isSelected ? 'text-green-400' : 'text-slate-400'}`} />
+                  <span className="font-semibold text-white">{flexiblePeriod.label} Staking</span>
+                  <span className="ml-2 text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">
+                    No Lock Period
+                  </span>
+                </div>
+                <div className="flex items-center text-xs text-slate-400">
+                  <span>Maximum Flexibility</span>
+                </div>
+              </div>
+
+              {/* ROI and APY */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">Hourly ROI</div>
+                  <div className="text-sm font-medium text-white">{flexiblePeriod.roiPercentage}%</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">Total APY</div>
+                  <div className="text-sm font-medium text-green-400">{apy}%</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">Withdrawal</div>
+                  <div className="text-sm font-medium text-green-400">Anytime</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-xs text-slate-400">Penalties</div>
+                  <div className="text-sm font-medium text-green-400">None</div>
+                </div>
+              </div>
+
+              {/* Projected rewards */}
+              {stakingAmount && parseFloat(stakingAmount) > 0 && (
+                <div className="border-t border-slate-600/30 pt-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-400">Projected Rewards:</span>
+                    <div className="flex items-center">
+                      <FaChartLine className="text-green-400 mr-1 text-xs" />
+                      <span className="text-sm font-medium text-green-400">
+                        {projectedRewards.toFixed(4)} POL
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              <div className="text-xs text-slate-500 mt-2">
+                {flexiblePeriod.description}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Compounding notice */}
       
 
       {/* Selected period summary */}
-      {selectedPeriod && (
+      {selectedPeriod ? (
         <div className="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700/30">
           <div className="text-sm font-medium text-white mb-2">Selected: {selectedPeriod.label}</div>
           <div className="grid grid-cols-2 gap-4 text-xs">
@@ -124,6 +236,18 @@ const LockupPeriodSelector = ({ selectedPeriod, onPeriodChange, stakingAmount })
               <span className="text-slate-400">Time Bonus: </span>
               <span className="text-green-400">+{selectedPeriod.bonus}%</span>
             </div>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 p-3 bg-green-900/20 rounded-lg border border-green-700/30">
+          <div className="flex items-center mb-2">
+            <FaUnlock className="text-green-400 mr-2" />
+            <div className="text-sm font-medium text-white">Flexible Staking Mode</div>
+          </div>
+          <div className="text-xs text-slate-300">
+            <div className="mb-1">• No lockup period - withdraw anytime</div>
+            <div className="mb-1">• Base ROI: 0.01% per hour</div>
+            <div>• No time bonus, but maximum flexibility</div>
           </div>
         </div>
       )}

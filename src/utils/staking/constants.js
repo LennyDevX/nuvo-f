@@ -15,6 +15,14 @@ export const STAKING_CONSTANTS = {
   
   // New lockup periods and ROI rates (from smart contract)
   LOCKUP_PERIODS: {
+    FLEXIBLE: {
+      days: 0,
+      label: 'Flexible',
+      roiPerHour: 100, // 0.01% per hour
+      roiPercentage: 0.010,
+      bonus: 0, // No bonus for flexible staking
+      description: 'Flexible staking - withdraw anytime without penalties'
+    },
     DAYS_30: {
       days: 30,
       label: '30 Days',

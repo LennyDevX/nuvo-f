@@ -206,15 +206,27 @@ const StakingForm = memo(({
         )}
 
         {/* Selected period info */}
-        <div className="text-xs text-slate-400 py-2 px-3 bg-slate-800/50 rounded-lg">
-          <div className="flex items-center justify-between mb-1">
-            <span><strong className="text-indigo-400">Selected:</strong> {selectedLockupPeriod.label}</span>
-            <span className="text-green-400">+{selectedLockupPeriod.bonus}% bonus</span>
+        {selectedLockupPeriod ? (
+          <div className="text-xs text-slate-400 py-2 px-3 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center justify-between mb-1">
+              <span><strong className="text-indigo-400">Selected:</strong> {selectedLockupPeriod.label}</span>
+              <span className="text-green-400">+{selectedLockupPeriod.bonus}% bonus</span>
+            </div>
+            <div className="text-slate-500">
+              {selectedLockupPeriod.roiPercentage}% per hour • Automatic compounding included
+            </div>
           </div>
-          <div className="text-slate-500">
-            {selectedLockupPeriod.roiPercentage}% per hour • Automatic compounding included
+        ) : (
+          <div className="text-xs text-slate-400 py-2 px-3 bg-green-900/20 rounded-lg border border-green-700/30">
+            <div className="flex items-center justify-between mb-1">
+              <span><strong className="text-green-400">Mode:</strong> Flexible Staking</span>
+              <span className="text-slate-400">No lockup period</span>
+            </div>
+            <div className="text-slate-500">
+              0.01% per hour • Withdraw anytime • Automatic compounding included
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
