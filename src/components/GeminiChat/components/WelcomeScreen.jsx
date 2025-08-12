@@ -3,20 +3,20 @@ import AnimatedAILogo from '../../effects/AnimatedAILogo';
 
 const WelcomeScreen = ({ onSuggestionClick }) => {
   const suggestions = [
-    "What is blockchain technology?",
-    "Explain how NFTs work", 
-    "How does crypto staking work?",
-    "Tell me about DeFi protocols"
+    "What is Nuvos Cloud?",
+    "Explain how Staking works", 
+    "How the marketplace works?",
+    "Tell me about Nuvos NFTs "
   ];
   return (
     <div className="flex flex-col items-center justify-center h-full px-4 py-6">
+     
       <div className="text-center mb-6">
-        <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg border border-white/20">
+        
+        <div className="w-32 h-32 md:w-36 md:h-36 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg border border-white/20">
           <AnimatedAILogo size="md" />
         </div>
-        <h1 className="text-xl md:text-3xl font-semibold text-white mb-2">
-          Nuvos AI Assistant
-        </h1>
+        
         <p className="text-gray-300 text-xs md:text-base max-w-md px-2">
           Your intelligent guide to blockchain, crypto, and the Nuvos ecosystem
         </p>

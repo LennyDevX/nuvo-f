@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaSearch, FaCode, FaRobot } from 'react-icons/fa';
+import { FaTimes, FaSearch, FaRobot } from 'react-icons/fa';
 
 const LeftSidebar = ({ isOpen, toggleSidebar }) => {
   const focusTrapRef = useRef(null);
@@ -170,18 +170,18 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
                 <div className="flex-1 min-w-0">
                   <h2 
                     id="left-sidebar-title"
-                    className="text-white font-bold flex items-center gap-4 md:gap-3 text-xl md:text-lg leading-tight mb-3 md:mb-2"
+                    className="bg-nuvo-gradient-text font-bold flex items-center gap-4 md:gap-3 text-xl md:text-2xl leading-tight mb-3 md:mb-2"
                   >
-                    <div className="w-10 h-10 md:w-9 md:h-9 rounded-2xl md:rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <FaRobot className="text-white text-lg md:text-sm" />
+                    <div className="w-10 h-10 md:w-9 md:h-9 rounded-2xl md:rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg ">
+                      <FaRobot className="text-white text-lg md:text-sm s" />
                     </div>
-                    AI Tools
+                    Nuvim AI
                   </h2>
                   <p 
                     id="left-sidebar-description" 
                     className="text-base md:text-sm text-gray-300 leading-relaxed font-medium"
                   >
-                    Enhance your workflow with AI assistance
+                    Powered by Gemini 2.5 Flash
                   </p>
                 </div>
                 <button 
@@ -217,183 +217,145 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
                 }}
               >
                 <div className="p-6 md:p-5 space-y-8 md:space-y-5">
-                  {/* Tools Section - Optimized desktop spacing */}
+                  {/* Current Capabilities */}
                   <div>
                     <h3 className="text-sm md:text-xs uppercase tracking-wider text-gray-400 mb-6 md:mb-4 font-bold">
-                      Available Tools
+                      Current Capabilities
                     </h3>
-                    <div className="space-y-6 md:space-y-4">
-                      <button 
-                        className="
-                          btn-nuvo-base btn-nuvo-secondary
-                          w-full text-left min-h-[auto] rounded-3xl md:rounded-xl
-                          border-2 border-gray-600/30 hover:border-purple-500/60 active:border-purple-500/80
-                          bg-gradient-to-br from-gray-800/90 to-gray-700/80 backdrop-blur-sm
-                          focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
-                          transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20
-                          transform hover:scale-[1.02] active:scale-[0.98]
-                          p-6 md:p-4 
-                        "
-                        aria-label="Web Search - Coming soon"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <span className="text-white font-bold text-lg md:text-base block mb-1 md:mb-0.5 truncate">Web Search</span>
-                            <span className="text-gray-400 text-sm md:text-xs truncate block">Real-time web information</span>
+                    <div className="space-y-4 md:space-y-3">
+                      <div className="bg-gradient-to-br from-green-800/30 to-emerald-700/30 border border-green-500/30 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                        <div className="flex items-center gap-3 mb-3 md:mb-2">
+                          <div className="w-8 h-8 md:w-6 md:h-6 rounded-lg bg-green-600/30 flex items-center justify-center border border-green-500/40">
+                            <span className="text-green-400 text-sm md:text-xs">📷</span>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs md:text-[10px] bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-500/30 font-medium flex-shrink-0">
-                              Soon
-                            </span>
-                            <div className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-blue-600/20 flex items-center justify-center flex-shrink-0 border border-blue-500/30 shadow-md">
-                              <FaSearch className="text-blue-400 text-lg md:text-sm" />
-                            </div>
-                          </div>
+                          <h4 className="text-white font-bold text-base md:text-sm">Image Analysis</h4>
+                          <span className="text-xs md:text-[10px] bg-green-600/20 text-green-300 px-2 py-1 rounded-full border border-green-500/30 font-medium">
+                            Active
+                          </span>
                         </div>
-                      </button>
-                      
-                      <button 
-                        className="
-                          btn-nuvo-base btn-nuvo-secondary
-                          w-full text-left min-h-[auto] rounded-3xl md:rounded-xl
-                          border-2 border-gray-600/30 hover:border-purple-500/60 active:border-purple-500/80
-                          bg-gradient-to-br from-gray-800/90 to-gray-700/80 backdrop-blur-sm
-                          focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900
-                          transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-purple-500/20
-                          transform hover:scale-[1.02] active:scale-[0.98]
-                          p-6 md:p-4
-                        "
-                        aria-label="Image Generator - Coming soon"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <span className="text-white font-bold text-lg md:text-base block mb-1 md:mb-0.5 truncate">Image Generator</span>
-                            <span className="text-gray-400 text-sm md:text-xs truncate block">Create AI-powered visuals</span>
-                          </div>
-                           <div className="flex items-center gap-3">
-                            <span className="text-xs md:text-[10px] bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-500/30 font-medium flex-shrink-0">
-                              Soon
-                            </span>
-                            <div className="w-10 h-10 md:w-8 md:h-8 rounded-lg bg-purple-600/20 flex items-center justify-center flex-shrink-0 border border-purple-500/30 shadow-md">
-                              <FaRobot className="text-purple-400 text-lg md:text-sm" />
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Model Information - Optimized desktop spacing and text overflow fix */}
-                  <div>
-                    <h3 className="text-sm md:text-xs uppercase tracking-wider text-gray-400 mb-6 md:mb-4 font-bold">
-                      AI Models
-                    </h3>
-                    
-                    {/* Gemini 2.5 Flash Experimental */}
-                    <div className="bg-gradient-to-br from-gray-800/90 to-gray-700/80 backdrop-blur-sm border border-amber-500/30 p-6 md:p-4 rounded-3xl md:rounded-xl shadow-lg mb-6 md:mb-4">
-                      <div className="flex items-center gap-3 md:gap-2 mb-4 md:mb-3">
-                        <h4 className="font-bold text-white text-xl md:text-sm truncate">Gemini 2.5 Flash</h4>
-                        <div className="text-xs md:text-[10px] bg-amber-600/20 text-amber-300 px-3 py-1 md:px-2 md:py-0.5 rounded-full border border-amber-500/30 font-medium flex-shrink-0">
-                          Experimental
-                        </div>
+                        <p className="text-gray-300 text-sm md:text-xs leading-relaxed">
+                          Upload images for detailed analysis, content description, text extraction and advanced visual understanding.
+                        </p>
                       </div>
-                      <p className="text-base md:text-xs text-gray-300 mb-6 md:mb-3 leading-relaxed font-medium">
-                        Latest experimental model with enhanced reasoning, multimodal capabilities, and advanced code understanding.
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 md:gap-2 text-sm md:text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Context:</span>
-                          <span className="text-amber-300 font-bold">1M tokens</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Speed:</span>
-                          <span className="text-green-300 font-bold">Ultra Fast</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Multimodal:</span>
-                          <span className="text-green-300 font-bold">Advanced</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Reasoning:</span>
-                          <span className="text-purple-300 font-bold">Enhanced</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Gemini 2.0 Flash Stable - Fixed text overflow */}
-                    <div className="bg-gradient-to-br from-gray-800/90 to-gray-700/80 backdrop-blur-sm border border-green-500/30 p-6 md:p-4 rounded-3xl md:rounded-xl shadow-lg">
+                      <div className="bg-gradient-to-br from-purple-800/30 to-pink-700/30 border border-purple-500/30 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                        <div className="flex items-center gap-3 mb-3 md:mb-2">
+                          <div className="w-8 h-8 md:w-6 md:h-6 rounded-lg bg-purple-600/30 flex items-center justify-center border border-purple-500/40">
+                            <span className="text-purple-400 text-sm md:text-xs">🚀</span>
+                          </div>
+                          <h4 className="text-white font-bold text-base md:text-sm">Nuvos Queries</h4>
+                          <span className="text-xs md:text-[10px] bg-purple-600/20 text-purple-300 px-2 py-1 rounded-full border border-purple-500/30 font-medium">
+                            Active
+                          </span>
+                        </div>
+                        <p className="text-gray-300 text-sm md:text-xs leading-relaxed">
+                          Ask about the Nuvos platform, tokenomics, staking, NFTs, marketplace and all ecosystem functionalities.
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-blue-800/30 to-cyan-700/30 border border-blue-500/30 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                         <div className="flex items-center gap-3 mb-3 md:mb-2">
+                           <div className="w-8 h-8 md:w-6 md:h-6 rounded-lg bg-blue-600/30 flex items-center justify-center border border-blue-500/40">
+                             <FaSearch className="text-blue-400 text-sm md:text-xs" />
+                           </div>
+                           <h4 className="text-white font-bold text-base md:text-sm">Web Search</h4>
+                           <span className="text-xs md:text-[10px] bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-500/30 font-medium">
+                             Coming Soon
+                           </span>
+                         </div>
+                         <p className="text-gray-300 text-sm md:text-xs leading-relaxed">
+                           Real-time web information search and retrieval for up-to-date answers and current data.
+                         </p>
+                       </div>
+                    </div>
+                  </div>
+                  
+                  {/* Gemini 2.5 Flash Information */}
+                  <div>
+                    <h3 className="text-sm md:text-xs uppercase tracking-wider text-gray-400 mb-6 md:mb-4 font-bold">
+                       AI Model
+                     </h3>
+                    
+                    <div className="bg-gradient-to-br from-blue-800/40 to-purple-700/40 backdrop-blur-sm border border-blue-500/40 p-6 md:p-4 rounded-3xl md:rounded-xl shadow-lg mb-6 md:mb-4">
                       <div className="flex items-center gap-3 md:gap-2 mb-4 md:mb-3">
-                        <h4 className="font-bold text-white text-xl md:text-sm truncate">Gemini 2.0 Flash</h4>
-                        <div className="text-xs md:text-[10px] bg-green-600/20 text-green-300 px-3 py-1 md:px-2 md:py-0.5 rounded-full border border-green-500/30 font-medium flex-shrink-0">
-                          Stable
+                        <div className="w-10 h-10 md:w-8 md:h-8 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-lg md:text-sm">G</span>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-white text-lg md:text-sm">Gemini 2.5 Flash</h4>
+                          <div className="text-xs md:text-[10px] bg-blue-600/20 text-blue-300 px-2 py-1 rounded-full border border-blue-500/30 font-medium inline-block mt-1">
+                            Experimental
+                          </div>
                         </div>
                       </div>
-                      <p className="text-base md:text-xs text-gray-300 mb-6 md:mb-3 leading-relaxed font-medium">
-                        Production-ready model optimized for reliability, consistent performance, and blockchain expertise.
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-1 gap-4 md:gap-2 text-sm md:text-xs">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Context:</span>
-                          <span className="text-green-300 font-bold">128K tokens</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Reliability:</span>
-                          <span className="text-green-300 font-bold">99.9%</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Streaming:</span>
-                          <span className="text-green-300 font-bold">Enabled</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-400 font-medium">Specialization:</span>
-                          <span className="text-purple-300 font-bold truncate">Crypto/Web3</span>
-                        </div>
+                      <p className="text-base md:text-xs text-gray-200 mb-4 md:mb-3 leading-relaxed font-medium">
+                         Google's most advanced AI model, optimized for speed and multimodal capabilities.
+                       </p>
+                      
+                      {/* Specifications */}
+                      <div className="grid grid-cols-2 gap-3 md:gap-2 text-sm md:text-xs mb-4">
+                        <div className="bg-gray-800/50 p-3 md:p-2 rounded-xl">
+                           <div className="text-gray-400 font-medium mb-1">Context</div>
+                           <div className="text-blue-300 font-bold">1M tokens</div>
+                         </div>
+                         <div className="bg-gray-800/50 p-3 md:p-2 rounded-xl">
+                           <div className="text-gray-400 font-medium mb-1">Speed</div>
+                           <div className="text-green-300 font-bold">Ultra Fast</div>
+                         </div>
+                         <div className="bg-gray-800/50 p-3 md:p-2 rounded-xl">
+                           <div className="text-gray-400 font-medium mb-1">Multimodal</div>
+                           <div className="text-purple-300 font-bold">Advanced</div>
+                         </div>
+                         <div className="bg-gray-800/50 p-3 md:p-2 rounded-xl">
+                           <div className="text-gray-400 font-medium mb-1">Reasoning</div>
+                           <div className="text-orange-300 font-bold">Enhanced</div>
+                         </div>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Features - Optimized desktop spacing */}
+                  {/* Specialized Knowledge */}
                   <div>
                     <h3 className="text-sm md:text-xs uppercase tracking-wider text-gray-400 mb-6 md:mb-4 font-bold">
-                      Capabilities
-                    </h3>
+                       Specialized Knowledge
+                     </h3>
                     <div className="bg-gradient-to-br from-gray-800/90 to-gray-700/80 backdrop-blur-sm border border-purple-500/20 p-6 md:p-4 rounded-3xl md:rounded-xl shadow-lg">
                       {/* Mobile: Grid layout for compact display */}
                       <div className="grid grid-cols-1 md:hidden gap-3 text-sm">
                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Blockchain explanations</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Market insights</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">NFT & DeFi protocols</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Smart contracts</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Token economics</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Web3 development</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Cross-chain protocols</span>
-                        </div>
-                        <div 
-                          ref={lastFocusableRef}
-                          className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl"
-                        >
-                          <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium">Real-time data</span>
+                          <span className="font-medium">Nuvos Ecosystem</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">Blockchain & Web3</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">NFTs & Marketplace</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">Smart Contracts</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">Staking & Rewards</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">Tokenomics</span>
+                         </div>
+                         <div className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl">
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">DeFi Protocols</span>
+                         </div>
+                         <div 
+                           ref={lastFocusableRef}
+                           className="flex items-center gap-3 text-gray-300 p-3 bg-gray-700/30 rounded-xl"
+                         >
+                           <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium">Programming</span>
                         </div>
                       </div>
 
@@ -401,39 +363,68 @@ const LeftSidebar = ({ isOpen, toggleSidebar }) => {
                       <div className="hidden md:grid grid-cols-1 gap-2 text-xs">
                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Blockchain explanations</span>
+                          <span className="font-medium truncate">Nuvos Ecosystem</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">Blockchain & Web3</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">NFTs & Marketplace</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">Smart Contracts</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">Staking & Rewards</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">Tokenomics</span>
+                         </div>
+                         <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">DeFi Protocols</span>
+                         </div>
+                         <div 
+                           ref={lastFocusableRef}
+                           className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg"
+                         >
+                           <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
+                           <span className="font-medium truncate">Programming</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Market insights</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">NFT & DeFi protocols</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Smart contracts</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Token economics</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Web3 development</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg">
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Cross-chain protocols</span>
-                        </div>
-                        <div 
-                          ref={lastFocusableRef}
-                          className="flex items-center gap-2 text-gray-300 p-2 bg-gray-700/30 rounded-lg"
-                        >
-                          <div className="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></div>
-                          <span className="font-medium truncate">Real-time data</span>
-                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tips for Better Interaction */}
+                  <div>
+                    <h3 className="text-sm md:text-xs uppercase tracking-wider text-gray-400 mb-6 md:mb-4 font-bold">
+                       Usage Tips
+                     </h3>
+                    <div className="space-y-4 md:space-y-3">
+                      <div className="bg-gradient-to-br from-amber-800/20 to-orange-700/20 border border-amber-500/20 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                        <h4 className="text-amber-300 font-bold text-sm md:text-xs mb-2 md:mb-1">💡 Specific Questions</h4>
+                         <p className="text-gray-300 text-xs md:text-[10px] leading-relaxed">
+                           Be specific in your questions to get more precise and useful answers.
+                         </p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-cyan-800/20 to-blue-700/20 border border-cyan-500/20 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                        <h4 className="text-cyan-300 font-bold text-sm md:text-xs mb-2 md:mb-1">🖼️ Visual Analysis</h4>
+                         <p className="text-gray-300 text-xs md:text-[10px] leading-relaxed">
+                           Upload images for detailed analysis, text extraction or visual explanations.
+                         </p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-br from-emerald-800/20 to-green-700/20 border border-emerald-500/20 p-4 md:p-3 rounded-2xl md:rounded-xl">
+                        <h4 className="text-emerald-300 font-bold text-sm md:text-xs mb-2 md:mb-1">🔗 Nuvos Context</h4>
+                         <p className="text-gray-300 text-xs md:text-[10px] leading-relaxed">
+                           Ask about any aspect of the Nuvos platform for up-to-date information.
+                         </p>
                       </div>
                     </div>
                   </div>

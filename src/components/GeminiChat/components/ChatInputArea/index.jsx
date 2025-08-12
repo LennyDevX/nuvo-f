@@ -1,6 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FaPaperPlane, FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
-import FeaturesMenu from './FeaturesMenu';
 import ImageUpload from './ImageUpload';
 import MainInput from './MainInput';
 
@@ -323,8 +322,7 @@ const ChatInputArea = ({
               {/* Action buttons - Mobile optimized */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Features menu button - Hide when keyboard is open on mobile */}
-                <FeaturesMenu isMobile={isMobile} isKeyboardOpen={isKeyboardOpen} />
-                
+
                 {/* Botón para subir imagen */}
                 <ImageUpload
                   selectedImage={selectedImage}

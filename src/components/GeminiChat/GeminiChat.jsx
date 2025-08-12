@@ -159,7 +159,7 @@ const GeminiChat = ({
 
       {/* Main Content Area */}
       {isInitializing ? (
-        <div className="flex items-center justify-center h-full">
+        <div className="flex items-center justify-center flex-grow h-full">
           <div className="text-center">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg border border-white/20">
               <AnimatedAILogo size="sm" isThinking={true} />
@@ -169,7 +169,7 @@ const GeminiChat = ({
         </div>
       ) : (
         <Suspense fallback={
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center justify-center flex-grow h-full">
             <div className="text-center">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500/90 via-pink-500/90 to-blue-500/90 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg border border-white/20">
                 <AnimatedAILogo size="sm" isThinking={true} />
@@ -178,17 +178,19 @@ const GeminiChat = ({
             </div>
           </div>
         }>
-          {state.messages.length === 0 ? (
-            <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
-          ) : (
-            <ChatMessages 
-              messages={state.messages}
-              status={state.status}
-              error={state.error}
-              dispatch={dispatch} 
-              shouldReduceMotion={shouldReduceMotion}
-            />
-          )}
+          <div className="flex-grow overflow-y-auto">
+            {state.messages.length === 0 ? (
+              <WelcomeScreen onSuggestionClick={handleSuggestionClick} />
+            ) : (
+              <ChatMessages 
+                messages={state.messages}
+                status={state.status}
+                error={state.error}
+                dispatch={dispatch} 
+                shouldReduceMotion={shouldReduceMotion}
+              />
+            )}
+          </div>
         </Suspense>
       )}
 

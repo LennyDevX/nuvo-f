@@ -14,7 +14,7 @@ const AnimatedAILogo = () => {
   const animationRef = useRef(null);
   const containerRef = useRef(null);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(true);
   const fpsRef = useRef({ value: 0, lastLoop: 0, lastFpsUpdate: 0, frameCount: 0 });
   const rippleTimeoutsRef = useRef([]);
   const interactionPointRef = useRef({ x: null, y: null });
@@ -109,7 +109,7 @@ const AnimatedAILogo = () => {
       ];
       
       const scheme = colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
-      const baseHue = isActive ? scheme.baseHue : scheme.baseHue - 10;
+      const baseHue = scheme.baseHue;
       const hue = baseHue + (scheme.hueVariation * distanceFactor) + (Math.random() * 20 - 10);
       
       const saturation = 70 + Math.random() * 30;
@@ -190,6 +190,8 @@ const AnimatedAILogo = () => {
     const animate = (timestamp) => {
       updateFps(timestamp);
       
+      const time = timestamp * 0.001;
+      
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       const gradient = ctx.createRadialGradient(
@@ -197,37 +199,27 @@ const AnimatedAILogo = () => {
         centerX, centerY, radius
       );
       
-      if (isActive) {
-        gradient.addColorStop(0, 'rgba(88, 28, 135, 0.15)');
-        gradient.addColorStop(0.6, 'rgba(76, 29, 149, 0.08)');
-        gradient.addColorStop(1, 'rgba(20, 0, 50, 0)');
-      } else {
-        gradient.addColorStop(0, 'rgba(88, 28, 135, 0.1)');
-        gradient.addColorStop(0.6, 'rgba(76, 29, 149, 0.05)');
-        gradient.addColorStop(1, 'rgba(20, 0, 50, 0)');
-      }
+      // Animación de intensidad basada en tiempo para mantener dinamismo
+      const intensityPulse = 0.1 + Math.sin(time * 0.8) * 0.05;
+      gradient.addColorStop(0, `rgba(88, 28, 135, ${0.15 + intensityPulse})`);
+      gradient.addColorStop(0.6, `rgba(76, 29, 149, ${0.08 + intensityPulse * 0.5})`);
+      gradient.addColorStop(1, 'rgba(20, 0, 50, 0)');
       
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.fill();
-      
-      const time = timestamp * 0.001;
       const pulseSize = radius * 0.4 + Math.sin(time * 1.5) * radius * 0.1;
       const pulseGradient = ctx.createRadialGradient(
         centerX, centerY, 0,
         centerX, centerY, pulseSize
       );
       
-      if (isActive) {
-        pulseGradient.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
-        pulseGradient.addColorStop(0.7, 'rgba(139, 92, 246, 0.05)');
-        pulseGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-      } else {
-        pulseGradient.addColorStop(0, 'rgba(139, 92, 246, 0.15)');
-        pulseGradient.addColorStop(0.7, 'rgba(139, 92, 246, 0.03)');
-        pulseGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
-      }
+      // Pulso dinámico continuo
+      const pulseBrightness = 0.15 + Math.sin(time * 1.2) * 0.08;
+      pulseGradient.addColorStop(0, `rgba(139, 92, 246, ${pulseBrightness + 0.05})`);
+      pulseGradient.addColorStop(0.7, `rgba(139, 92, 246, ${pulseBrightness * 0.3})`);
+      pulseGradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
       
       ctx.beginPath();
       ctx.arc(centerX, centerY, pulseSize, 0, Math.PI * 2);
@@ -237,7 +229,8 @@ const AnimatedAILogo = () => {
       particlesRef.current.sort((a, b) => b.z - a.z);
       
       const connections = [];
-      const connectionDistance = radius * (isActive ? 0.45 : 0.35);
+      // Distancia de conexión dinámica para mantener movimiento
+      const connectionDistance = radius * (0.4 + Math.sin(time * 0.6) * 0.1);
       
       particlesRef.current.forEach((particle, i) => {
         const wobbleOffset = Math.sin(time * particle.wobbleSpeed + particle.wobbleAngle) * particle.wobble;
@@ -268,9 +261,11 @@ const AnimatedAILogo = () => {
           particle.z = (particle.z * orbitFactor) + (particle.origZ * (1 - orbitFactor)) + 
                        particle.speedZ;
           
-          particle.speedX += (Math.random() - 0.5) * 0.03;
-          particle.speedY += (Math.random() - 0.5) * 0.03;
-          particle.speedZ += (Math.random() - 0.5) * 0.01;
+          // Movimiento automático continuo más dinámico
+          const autoMovement = 0.02 + Math.sin(time * 0.5 + particle.angle) * 0.01;
+          particle.speedX += (Math.random() - 0.5) * autoMovement * 2;
+          particle.speedY += (Math.random() - 0.5) * autoMovement * 2;
+          particle.speedZ += (Math.random() - 0.5) * autoMovement;
           
           particle.speedX *= 0.98;
           particle.speedY *= 0.98;
@@ -369,15 +364,25 @@ const AnimatedAILogo = () => {
         });
       }
       
-      if (interactionPointRef.current.x !== null && isActive) {
-        if (timestamp % 50 === 0) {
-          setIsActive(prevActive => {
-            if (prevActive) {
-              return Math.random() > 0.1;
-            }
-            return prevActive;
-          });
-        }
+      // Simulación de interacciones automáticas para mantener dinamismo
+      if (Math.floor(timestamp / 3000) !== Math.floor((timestamp - 16) / 3000)) {
+        // Cada 3 segundos, simula una interacción automática
+        const autoX = centerX + (Math.random() - 0.5) * radius * 0.8;
+        const autoY = centerY + (Math.random() - 0.5) * radius * 0.8;
+        
+        const interactionRadius = radius * 0.4;
+        particlesRef.current.forEach(particle => {
+          const dx = particle.x - autoX;
+          const dy = particle.y - autoY;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < interactionRadius) {
+            const force = Math.pow(1 - (distance / interactionRadius), 2) * 0.5;
+            particle.speedX += Math.cos(Math.atan2(dy, dx)) * force;
+            particle.speedY += Math.sin(Math.atan2(dy, dx)) * force;
+            particle.speedZ += (Math.random() - 0.5) * force * 0.3;
+          }
+        });
       }
       
       animationRef.current = requestAnimationFrame(animate);

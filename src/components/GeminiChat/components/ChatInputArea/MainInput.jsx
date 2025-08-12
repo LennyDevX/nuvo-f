@@ -24,6 +24,7 @@ const MainInput = React.forwardRef(({
         if (textareaRef.current) {
             textareaRef.current.style.height = 'auto';
             const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
+            textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
             textareaRef.current.style.height = `${newHeight}px`;
         }
     };
@@ -37,7 +38,7 @@ const MainInput = React.forwardRef(({
                 onKeyDown={onKeyPress}
                 onFocus={onFocus}
                 onBlur={onBlur}
-                placeholder={status === 'waiting_for_response' || status === 'streaming' ? 'Nuvos está pensando...' : 'Escribe tu mensaje...'}
+                placeholder={'Ask Nuvim...'}
                 className={`
                     w-full resize-none rounded-xl 
                     border-2 border-purple-800/20 
@@ -52,7 +53,7 @@ const MainInput = React.forwardRef(({
                     touch-manipulation
                     text-base
                     px-3 py-3
-                    min-h-[48px]
+                    min-h-[48px] max-h-[120px] overflow-y-auto
                     ${isKeyboardOpen ? 'focus:ring-4 focus:ring-purple-500/30 focus:border-purple-400' : ''}
                 `}
                 rows={1}
