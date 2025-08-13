@@ -57,9 +57,9 @@ const TransactionToast = ({ id, message, type = 'info', details, hash, duration 
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 20, scale: 0.9, transition: { duration: 0.2 } }}
           transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-          // Position fixed bottom-right, responsive width
-          className={`fixed bottom-4 right-4 z-[100] p-4 rounded-xl backdrop-blur-md border
-            ${toastStyles[type]} shadow-lg w-[calc(100%-2rem)] max-w-md sm:w-auto`}
+          // Position relative to container, appears near staking form
+          className={`relative mb-4 z-[100] p-4 rounded-xl backdrop-blur-md border
+            ${toastStyles[type]} shadow-lg w-full max-w-md mx-auto`}
         >
           <div className="flex items-start gap-3">
             {/* Icon */}

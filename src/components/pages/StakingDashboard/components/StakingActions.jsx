@@ -3,8 +3,10 @@ import { ethers } from 'ethers';
 import { FaCoins } from 'react-icons/fa';
 import { formatBalance } from '../../../../utils/blockchain/formatters';
 import { useStaking } from '../../../../context/StakingContext';
-import { StakingSection } from '../ui/CommonComponents';
+import { StakingSection, FriendlyAlert } from '../ui/CommonComponents';
 import { WalletContext } from '../../../../context/WalletContext';
+import { useToast } from '../../../../hooks/useToast';
+import { StakingDebugLogger } from '../../../../utils/staking/debugLogger';
 
 // Import modular components
 import TransactionHandler from './actions/TransactionHandler';
@@ -32,17 +34,57 @@ const getErrorMessageForTransaction = (txType, error) => {
         return 'You cancelled the withdrawal. Your staked tokens and rewards remain safe.';
       case 'emergency_withdraw':
         return 'You cancelled the emergency withdrawal. Your funds remain staked.';
+      case 'compound':
+        return 'You cancelled the compound transaction. Your rewards are still available to claim or compound.';
       default:
         return 'Transaction cancelled. Your funds are safe!';
     }
   }
   
+  // Check for specific contract errors first
+  const errorMessage = parsedError.message || '';
+  
+  // Handle contract-specific errors
+  if (errorMessage.includes('FundsAreLocked') || errorMessage.includes('funds are locked')) {
+    return 'Your funds are still locked. Please wait until the lock-up period expires before withdrawing.';
+  }
+  
+  if (errorMessage.includes('NoRewardsAvailable') || errorMessage.includes('No rewards available')) {
+    return 'You don\'t have any rewards to claim or compound yet. Keep staking to earn rewards!';
+  }
+  
+  if (errorMessage.includes('DailyWithdrawalLimitExceeded') || errorMessage.includes('daily withdrawal limit')) {
+    return 'You have reached your daily withdrawal limit. Please try again tomorrow or withdraw a smaller amount.';
+  }
+  
+  if (errorMessage.includes('NoDepositsFound') || errorMessage.includes('No deposits found')) {
+    return 'You don\'t have any staked tokens. Please stake some tokens first before attempting to withdraw.';
+  }
+  
+  if (errorMessage.includes('InsufficientBalance') || errorMessage.includes('insufficient balance')) {
+    return 'The staking pool currently has insufficient funds. This is a temporary issue - please try again later or contact support.';
+  }
+  
+  if (errorMessage.includes('InvalidLockupDuration') || errorMessage.includes('invalid lockup')) {
+    return 'Invalid lock-up duration selected. Please choose a valid lock-up period (30, 90, 180, or 365 days).';
+  }
+  
   // For other errors, provide context-specific messages
   switch (txType) {
     case 'deposit':
-      return parsedError.code === 'INSUFFICIENT_FUNDS' 
-        ? 'Not enough MATIC to complete your staking transaction. Please add more MATIC to your wallet.'
-        : `Unable to complete staking: ${parsedError.message}`;
+      if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        return 'Not enough MATIC to complete your staking transaction. Please add more MATIC to your wallet.';
+      }
+      if (errorMessage.includes('DepositTooLow')) {
+        return 'Deposit amount is too low. Minimum deposit is 5 POL tokens.';
+      }
+      if (errorMessage.includes('DepositTooHigh')) {
+        return 'Deposit amount is too high. Maximum deposit is 10,000 POL tokens.';
+      }
+      if (errorMessage.includes('MaxDepositsReached')) {
+        return 'You have reached the maximum number of deposits (300). Please withdraw some deposits before making new ones.';
+      }
+      return `Unable to complete staking: ${parsedError.message}`;
     case 'withdraw_rewards':
       if (parsedError.code === 'INSUFFICIENT_FUNDS') {
         return 'Not enough MATIC for gas fees to claim rewards. Please add more MATIC to your wallet.';
@@ -55,12 +97,22 @@ const getErrorMessageForTransaction = (txType, error) => {
         return 'Not enough MATIC for gas fees to withdraw. Please add more MATIC to your wallet.';
       } else if (parsedError.code === 'INSUFFICIENT_CONTRACT_BALANCE') {
         return 'The staking pool currently has insufficient funds to process your full withdrawal. This is a temporary issue - please try again later or contact support for assistance.';
+      } else if (parsedError.message.includes('No deposits found') || parsedError.message.includes('totalDeposited')) {
+        return 'You don\'t have any staked tokens to withdraw. Please stake some tokens first before attempting to withdraw.';
       }
       return `Unable to process withdrawal: ${parsedError.message}`;
+    case 'compound':
+      if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        return 'Not enough MATIC for gas fees to compound rewards. Please add more MATIC to your wallet.';
+      }
+      return `Unable to compound rewards: ${parsedError.message}`;
     case 'emergency_withdraw':
+      if (parsedError.code === 'INSUFFICIENT_FUNDS') {
+        return 'Not enough MATIC for gas fees for emergency withdrawal. Please add more MATIC to your wallet.';
+      }
       return `Emergency withdrawal failed: ${parsedError.message}`;
     default:
-      return parsedError.message;
+      return parsedError.message || 'Transaction failed. Please try again.';
   }
 };
 
@@ -71,9 +123,10 @@ const StakingActions = ({
   userDeposits,
   isPending,
   setIsPending,
-  updateStatus,
   refreshUserInfo,
-  currentTx
+  currentTx,
+  statusMessage,
+  setStatusMessage
 }) => {
   const previousTxRef = useRef(null);
   const [walletBalance, setWalletBalance] = useState("0");
@@ -81,6 +134,7 @@ const StakingActions = ({
   
   // Add WalletContext to access the wallet balance
   const { balance: maticBalance } = useContext(WalletContext);
+  const { showToast, showErrorToast } = useToast();
 
   const {
     withdrawRewards,
@@ -96,7 +150,7 @@ const StakingActions = ({
 
   const totalStaked = userDeposits?.reduce((sum, deposit) => {
     return sum + parseFloat(deposit.amount || 0);
-  }, 0) || 0;
+  }, 0) || parseFloat(userInfo?.totalStaked || 0);
 
   useEffect(() => {
     if (!account) return;
@@ -216,12 +270,12 @@ const StakingActions = ({
   const resetTransactionState = useCallback(() => {
     if (isPending) {
       setIsPending(false);
-      updateStatus('info', 'Transaction state has been reset. You can try again now.');
+      showToast('Transaction state has been reset. You can try again now.');
       
       // Force refresh user info to ensure we have latest state
       refreshUserInfo(account);
     }
-  }, [isPending, setIsPending, updateStatus, refreshUserInfo, account]);
+  }, [isPending, setIsPending, showToast, refreshUserInfo, account]);
 
   // Transaction monitoring effect
   useEffect(() => {
@@ -253,29 +307,48 @@ const StakingActions = ({
       refreshUserInfo(account);
       
       const action = successMessages[currentTx.type] || 'Transaction successful!';
-      updateStatus('success', action);
+      showToast(action);
     } else if (currentTx.status === 'failed') {
       // The error should already be properly formatted from the transaction hook
       const errorMsg = currentTx.error || getErrorMessageForTransaction(currentTx.type, 'Transaction failed');
-      updateStatus('error', errorMsg);
+      showErrorToast(errorMsg);
       
       setTimeout(() => {
         resetTransactionState();
       }, 3000);
     }
-  }, [currentTx, setIsPending, updateStatus, refreshUserInfo, account, resetTransactionState]);
+  }, [currentTx, setIsPending, showToast, showErrorToast, refreshUserInfo, account, resetTransactionState]);
 
   // Action handlers
   const handleWithdrawRewards = useCallback(async () => {
-    if (!account || isPending) return;
+    if (!account || isPending) {
+      StakingDebugLogger.logError('WITHDRAW_REWARDS_BLOCKED', new Error('Account not connected or transaction pending'), {
+        account: !!account,
+        isPending
+      });
+      return;
+    }
+
+    StakingDebugLogger.logButtonState({
+      action: 'withdraw_rewards',
+      account,
+      isPending,
+      hasRewards: !!rewardsEstimate && parseFloat(rewardsEstimate) > 0,
+      rewardsEstimate
+    });
 
     try {
       await withdrawRewards();
     } catch (error) {
       console.error("Withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('withdraw_rewards', error));
+      StakingDebugLogger.logError('WITHDRAW_REWARDS_FAILED', error, {
+        account,
+        rewardsEstimate,
+        isPending
+      });
+      showErrorToast(getErrorMessageForTransaction('withdraw_rewards', error));
     }
-  }, [account, isPending, withdrawRewards, updateStatus]);
+  }, [account, isPending, withdrawRewards, showErrorToast, rewardsEstimate]);
 
   const handleWithdrawAll = useCallback(async () => {
     if (!account || isPending) return;
@@ -284,37 +357,56 @@ const StakingActions = ({
       await withdrawAll();
     } catch (error) {
       console.error("Full withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('withdraw_all', error));
+      showErrorToast(getErrorMessageForTransaction('withdraw_all', error));
     }
-  }, [account, isPending, withdrawAll, updateStatus]);
+  }, [account, isPending, withdrawAll, showErrorToast]);
 
   const handleEmergencyWithdraw = useCallback(async () => {
     if (!account || isPending) return;
 
     if (!isContractPaused) {
-      updateStatus('error', 'Emergency withdrawal is only available when the contract is paused.');
+      showErrorToast('Emergency withdrawal is only available when the contract is paused.');
       return;
     }
 
     try {
-      updateStatus('info', 'Processing emergency withdrawal...');
+      showToast('Processing emergency withdrawal...');
       await emergencyWithdraw();
     } catch (error) {
       console.error("Emergency withdrawal failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('emergency_withdraw', error));
+      showErrorToast(getErrorMessageForTransaction('emergency_withdraw', error));
     }
-  }, [account, isPending, isContractPaused, emergencyWithdraw, updateStatus]);
+  }, [account, isPending, isContractPaused, emergencyWithdraw, showToast, showErrorToast]);
 
   const handleCompound = useCallback(async () => {
-    if (!account || isPending) return;
+    if (!account || isPending) {
+      StakingDebugLogger.logError('COMPOUND_BLOCKED', new Error('Account not connected or transaction pending'), {
+        account: !!account,
+        isPending
+      });
+      return;
+    }
+
+    StakingDebugLogger.logButtonState({
+      action: 'compound',
+      account,
+      isPending,
+      hasRewards: !!rewardsEstimate && parseFloat(rewardsEstimate) > 0,
+      rewardsEstimate
+    });
 
     try {
       await compound();
     } catch (error) {
       console.error("Compound failed:", error);
-      updateStatus('error', getErrorMessageForTransaction('compound', error));
+      StakingDebugLogger.logError('COMPOUND_FAILED', error, {
+        account,
+        rewardsEstimate,
+        isPending
+      });
+      showErrorToast(getErrorMessageForTransaction('compound', error));
     }
-  }, [account, isPending, compound, updateStatus]);
+  }, [account, isPending, compound, showErrorToast, rewardsEstimate]);
 
   const formattedRewards = formatBalance(rewardsEstimate || userInfo?.calculatedRewards || userInfo?.pendingRewards || stakingStats?.pendingRewards || '0');
   const hasRewards = parseFloat(formattedRewards) > 0;
@@ -323,16 +415,6 @@ const StakingActions = ({
   
   return (
     <StakingSection title="Rewards & Actions" icon={<FaCoins />} className="h-auto">
-      <TransactionHandler 
-        currentTx={currentTx}
-        isPending={isPending}
-        setIsPending={setIsPending}
-        updateStatus={updateStatus}
-        refreshUserInfo={refreshUserInfo}
-        account={account}
-        onReset={resetTransactionState}
-      />
-
       <div className="space-y-6 sm:space-y-8">
         <RewardsPanel 
           formattedRewards={formattedRewards}
@@ -346,18 +428,21 @@ const StakingActions = ({
           onWithdrawAll={handleWithdrawAll}
         />
 
+
+
         <StakingForm 
           isPending={isPending}
           walletBalance={displayedBalance}
           tokenSymbol={tokenSymbol}
           fetchingBalance={fetchingBalance}
           deposit={deposit}
-          updateStatus={updateStatus}
+          showToast={showToast}
+          showErrorToast={showErrorToast}
           userInfo={userInfo}
           rewardsEstimate={rewardsEstimate}
           onError={(error, txType) => {
             const errorMsg = getErrorMessageForTransaction(txType, error);
-            updateStatus('error', errorMsg);
+            showErrorToast(errorMsg);
           }}
         />
 
@@ -365,10 +450,33 @@ const StakingActions = ({
           isContractPaused={isContractPaused}
           totalStaked={totalStaked}
           isPending={isPending}
-          updateStatus={updateStatus}
+          showToast={showToast}
+          showErrorToast={showErrorToast}
           onEmergencyWithdraw={handleEmergencyWithdraw}
         />
       </div>
+
+      {/* Status Message Display - Moved to end of section */}
+      {statusMessage && (
+        <FriendlyAlert
+          type={statusMessage.type}
+          title={statusMessage.type === 'error' ? 'Transaction Error' : 'Success'}
+          message={statusMessage.text}
+          onClose={() => setStatusMessage(null)}
+        />
+      )}
+
+      {/* Transaction Handler - Moved to bottom */}
+      <TransactionHandler 
+        currentTx={currentTx}
+        isPending={isPending}
+        setIsPending={setIsPending}
+        showToast={showToast}
+        showErrorToast={showErrorToast}
+        refreshUserInfo={refreshUserInfo}
+        account={account}
+        onReset={resetTransactionState}
+      />
     </StakingSection>
   );
 };

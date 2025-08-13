@@ -17,14 +17,16 @@ export const STAKING_CONSTANTS = {
   LOCKUP_PERIODS: {
     FLEXIBLE: {
       days: 0,
+      lockupDuration: 0, // Explicitly set to 0 for flexible staking
       label: 'Flexible',
       roiPerHour: 100, // 0.01% per hour (matches contract HOURLY_ROI_PERCENTAGE)
       roiPercentage: 0.0001, // 0.0001 decimal = 0.01% for 87.6% APY
       bonus: 0, // No bonus for flexible staking
-      description: 'Flexible staking - withdraw anytime without penalties'
+      description: 'Flexible staking - withdraw anytime without penalties. Perfect for users who want maximum flexibility.'
     },
     DAYS_30: {
       days: 30,
+      lockupDuration: 30,
       label: '30 Days',
       roiPerHour: 120, // 0.012% per hour (matches contract ROI_30_DAYS_LOCKUP)
       roiPercentage: 0.00012, // 0.00012 decimal = 0.012% per hour for ~105.12% APY
@@ -33,6 +35,7 @@ export const STAKING_CONSTANTS = {
     },
     DAYS_90: {
       days: 90,
+      lockupDuration: 90,
       label: '90 Days', 
       roiPerHour: 160, // 0.016% per hour (matches contract ROI_90_DAYS_LOCKUP)
       roiPercentage: 0.00016, // 0.00016 decimal = 0.016% per hour for ~140.16% APY
@@ -41,6 +44,7 @@ export const STAKING_CONSTANTS = {
     },
     DAYS_180: {
       days: 180,
+      lockupDuration: 180,
       label: '180 Days',
       roiPerHour: 200, // 0.02% per hour (matches contract ROI_180_DAYS_LOCKUP)
       roiPercentage: 0.0002, // 0.0002 decimal = 0.02% per hour for ~175.2% APY
@@ -49,6 +53,7 @@ export const STAKING_CONSTANTS = {
     },
     DAYS_365: {
       days: 365,
+      lockupDuration: 365,
       label: '365 Days',
       roiPerHour: 300, // 0.03% per hour (matches contract ROI_365_DAYS_LOCKUP)
       roiPercentage: 0.0003, // 0.0003 decimal = 0.03% per hour for ~262.8% APY

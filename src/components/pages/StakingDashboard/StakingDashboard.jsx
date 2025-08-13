@@ -4,6 +4,7 @@ import { WalletContext } from '../../../context/WalletContext';
 import SpaceBackground from '../../effects/SpaceBackground';
 import NotConnectedMessage from '../../ui/NotConnectedMessage';
 import { FriendlyAlert } from './ui/CommonComponents';
+import { useToast } from '../../../hooks/useToast';
 
 // Import modular components
 import StakingOverview from './components/StakingOverview';
@@ -24,6 +25,7 @@ const StakingDashboard = ({ account: propAccount }) => {
 
   const [isPending, setIsPending] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
+  const { showToast, showErrorToast } = useToast();
   
   const { userDeposits, userInfo, stakingStats, currentTx } = state;
 
@@ -67,16 +69,6 @@ const StakingDashboard = ({ account: propAccount }) => {
       <HeroSection />
 
       <div className="w-full space-y-4 sm:space-y-6">
-        {/* Status Message Display */}
-        {statusMessage && (
-          <FriendlyAlert
-            type={statusMessage.type}
-            title={statusMessage.type === 'error' ? 'Transaction Error' : 'Success'}
-            message={statusMessage.text}
-            onClose={() => setStatusMessage(null)}
-          />
-        )}
-        
         {/* Top Overview Card */}
         <StakingOverview 
           userDeposits={userDeposits} 
@@ -115,9 +107,12 @@ const StakingDashboard = ({ account: propAccount }) => {
             userDeposits={userDeposits}
             isPending={isPending}
             setIsPending={setIsPending}
-            updateStatus={updateStatus}
+            showToast={showToast}
+            showErrorToast={showErrorToast}
             refreshUserInfo={refreshUserInfo}
             currentTx={currentTx}
+            statusMessage={statusMessage}
+            setStatusMessage={setStatusMessage}
           />
         </div>
       </div>

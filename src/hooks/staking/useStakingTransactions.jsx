@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useStakingContract } from './useStakingContract';
 import { parseTransactionError, isUserRejection } from '../../utils/errors/errorHandling';
+import { StakingDebugLogger, validateTransactionState, formatTransactionError } from '../../utils/staking/debugLogger';
 
 // Timeout constants
 const TX_SUCCESS_TIMEOUT = 2000;
@@ -153,14 +154,31 @@ export function useStakingTransactions() {
   }, [getSignedContract, getSignerAddress, getContractStatus, safeSetIsPending]);
 
   // Transaction functions with concurrency guard
-  const deposit = useCallback(async (amount) => {
+  const deposit = useCallback(async (amount, lockupDuration = 0) => {
     if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
-        return await contract.deposit({
-          value: amount,
-          gasLimit: 300000
-        });
+        try {
+          // Estimate gas first
+          const estimatedGas = await contract.deposit.estimateGas(lockupDuration, {
+            value: amount
+          });
+          
+          // Add 20% buffer to estimated gas
+          const gasLimit = Math.floor(Number(estimatedGas) * 1.2);
+          
+          return await contract.deposit(lockupDuration, {
+            value: amount,
+            gasLimit: gasLimit
+          });
+        } catch (estimateError) {
+          console.warn('Gas estimation failed, using fallback:', estimateError);
+          // Fallback to higher fixed gas limit if estimation fails
+          return await contract.deposit(lockupDuration, {
+            value: amount,
+            gasLimit: 500000
+          });
+        }
       },
       { type: 'deposit' }
     );
@@ -168,29 +186,137 @@ export function useStakingTransactions() {
 
   const withdrawRewards = useCallback(async () => {
     if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
+    
+    StakingDebugLogger.logTransaction('withdraw_rewards', 'STARTING');
+    
     return executeTransaction(
       async (contract) => {
-        return await contract.withdraw();
+        try {
+          // Validate rewards before attempting withdrawal
+          const userAddress = await getSignerAddress();
+          if (!userAddress) {
+            throw new Error('Unable to get user address. Please ensure your wallet is connected.');
+          }
+          const [userInfo, calculatedRewards, isPaused] = await Promise.all([
+            contract.getUserInfo(userAddress),
+            contract.calculateRewards(userAddress),
+            contract.paused()
+          ]);
+          
+          StakingDebugLogger.logUserState(userAddress, userInfo, calculatedRewards);
+          StakingDebugLogger.logContractState({ isPaused, address: contract.address });
+          
+          // Validate transaction state
+          const validation = validateTransactionState('withdraw_rewards', userInfo, calculatedRewards, { isPaused });
+          if (!validation.canProceed) {
+            const errorMessage = `Cannot withdraw rewards: ${validation.failureReasons.join(', ')}`;
+            StakingDebugLogger.logError('VALIDATION', new Error(errorMessage));
+            throw new Error(errorMessage);
+          }
+          
+          if (calculatedRewards.toString() === '0') {
+            throw new Error('No rewards available to withdraw');
+          }
+          
+          // Estimate gas first
+          StakingDebugLogger.logTransaction('withdraw_rewards', 'ESTIMATING_GAS');
+          const estimatedGas = await contract.withdraw.estimateGas();
+          
+          // Add 20% buffer to estimated gas
+          const gasLimit = Math.floor(Number(estimatedGas) * 1.2);
+          
+          StakingDebugLogger.logGasEstimation('withdraw_rewards', {
+            estimated: estimatedGas,
+            withBuffer: gasLimit
+          });
+          
+          StakingDebugLogger.logTransaction('withdraw_rewards', 'EXECUTING');
+          return await contract.withdraw({
+            gasLimit: gasLimit
+          });
+        } catch (estimateError) {
+          StakingDebugLogger.logError('GAS_ESTIMATION', estimateError, { function: 'withdraw_rewards' });
+          
+          // Check if it's a validation error first
+          if (estimateError.message.includes('No rewards') || estimateError.message.includes('NoRewardsAvailable')) {
+            throw estimateError;
+          }
+          
+          // Fallback to higher fixed gas limit if estimation fails
+          StakingDebugLogger.logTransaction('withdraw_rewards', 'USING_FALLBACK_GAS');
+          return await contract.withdraw({
+            gasLimit: 400000
+          });
+        }
       },
       { type: 'withdraw_rewards' }
     );
-  }, [executeTransaction]);
+  }, [executeTransaction, getSignerAddress]);
 
   const withdrawAll = useCallback(async () => {
     if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
-        return await contract.withdrawAll();
+        try {
+          // Get user info first to validate they have deposits
+          const userAddress = await getSignerAddress();
+          if (!userAddress) {
+            throw new Error('Unable to get user address. Please ensure your wallet is connected.');
+          }
+          const userInfo = await contract.getUserInfo(userAddress);
+          
+          if (userInfo.totalDeposited.toString() === '0') {
+            throw new Error('No deposits found to withdraw');
+          }
+          
+          // Estimate gas first
+          const estimatedGas = await contract.withdrawAll.estimateGas();
+          
+          // Add 20% buffer to estimated gas
+          const gasLimit = Math.floor(Number(estimatedGas) * 1.2);
+          
+          return await contract.withdrawAll({
+            gasLimit: gasLimit
+          });
+        } catch (estimateError) {
+          console.warn('Gas estimation failed for withdrawAll, using fallback:', estimateError);
+          
+          // Check if it's a validation error first
+          if (estimateError.message.includes('No deposits') || estimateError.message.includes('totalDeposited')) {
+            throw estimateError;
+          }
+          
+          // Fallback to higher fixed gas limit if estimation fails
+          return await contract.withdrawAll({
+            gasLimit: 500000
+          });
+        }
       },
       { type: 'withdraw_all' }
     );
-  }, [executeTransaction]);
+  }, [executeTransaction, getSignerAddress]);
 
   const emergencyWithdraw = useCallback(async () => {
     if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
     return executeTransaction(
       async (contract) => {
-        return await contract.emergencyUserWithdraw();
+        try {
+          // Estimate gas first
+          const estimatedGas = await contract.emergencyUserWithdraw.estimateGas();
+          
+          // Add 20% buffer to estimated gas
+          const gasLimit = Math.floor(Number(estimatedGas) * 1.2);
+          
+          return await contract.emergencyUserWithdraw({
+            gasLimit: gasLimit
+          });
+        } catch (estimateError) {
+          console.warn('Gas estimation failed for emergencyWithdraw, using fallback:', estimateError);
+          // Fallback to higher fixed gas limit if estimation fails
+          return await contract.emergencyUserWithdraw({
+            gasLimit: 400000
+          });
+        }
       },
       { type: 'emergency_withdraw' }
     );
@@ -198,29 +324,72 @@ export function useStakingTransactions() {
 
   const compound = useCallback(async () => {
     if (pendingRef.current) return { success: false, error: 'Another transaction is pending' };
+    
+    StakingDebugLogger.logTransaction('compound', 'STARTING');
+    
     return executeTransaction(
       async (contract) => {
-        // First withdraw rewards, then immediately deposit them back
-        const withdrawTx = await contract.withdraw();
-        await withdrawTx.wait();
-        
-        // Get the user's current balance to determine how much was withdrawn
-        const userInfo = await contract.getUserInfo(await contract.signer.getAddress());
-        const rewardsAmount = userInfo.pendingRewards;
-        
-        if (rewardsAmount > 0) {
-          // Deposit the withdrawn rewards back
-          return await contract.deposit({
-            value: rewardsAmount,
-            gasLimit: 400000 // Higher gas limit for compound operation
+        try {
+          // Get user address and calculate rewards directly from contract
+          const userAddress = await getSignerAddress();
+          if (!userAddress) {
+            throw new Error('Unable to get user address. Please ensure your wallet is connected.');
+          }
+          const [userInfo, calculatedRewards, isPaused] = await Promise.all([
+            contract.getUserInfo(userAddress),
+            contract.calculateRewards(userAddress),
+            contract.paused()
+          ]);
+          
+          StakingDebugLogger.logUserState(userAddress, userInfo, calculatedRewards);
+          StakingDebugLogger.logContractState({ isPaused, address: contract.address });
+          
+          // Validate transaction state
+          const validation = validateTransactionState('compound', userInfo, calculatedRewards, { isPaused });
+          if (!validation.canProceed) {
+            const errorMessage = `Cannot compound: ${validation.failureReasons.join(', ')}`;
+            StakingDebugLogger.logError('VALIDATION', new Error(errorMessage));
+            throw new Error(errorMessage);
+          }
+          
+          if (calculatedRewards.toString() === '0') {
+            throw new Error('No rewards available to compound');
+          }
+          
+          // Estimate gas first
+          StakingDebugLogger.logTransaction('compound', 'ESTIMATING_GAS');
+          const estimatedGas = await contract.compound.estimateGas();
+          
+          // Add 20% buffer to estimated gas
+          const gasLimit = Math.floor(Number(estimatedGas) * 1.2);
+          
+          StakingDebugLogger.logGasEstimation('compound', {
+            estimated: estimatedGas,
+            withBuffer: gasLimit
           });
-        } else {
-          throw new Error('No rewards available to compound');
+          
+          StakingDebugLogger.logTransaction('compound', 'EXECUTING');
+          return await contract.compound({
+            gasLimit: gasLimit
+          });
+        } catch (estimateError) {
+          StakingDebugLogger.logError('GAS_ESTIMATION', estimateError, { function: 'compound' });
+          
+          // Check if it's a validation error first
+          if (estimateError.message.includes('No rewards') || estimateError.message.includes('NoRewardsAvailable')) {
+            throw estimateError;
+          }
+          
+          // Fallback to higher fixed gas limit if estimation fails
+          StakingDebugLogger.logTransaction('compound', 'USING_FALLBACK_GAS');
+          return await contract.compound({
+            gasLimit: 400000
+          });
         }
       },
       { type: 'compound' }
     );
-  }, [executeTransaction]);
+  }, [executeTransaction, getSignerAddress]);
 
   return {
     deposit,

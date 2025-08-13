@@ -6,7 +6,8 @@ const EmergencyControls = ({
   isContractPaused, 
   totalStaked, 
   isPending, 
-  updateStatus,
+  showToast,
+  showErrorToast,
   onEmergencyWithdraw 
 }) => {
   const [showEmergencyTooltip, setShowEmergencyTooltip] = useState(false);

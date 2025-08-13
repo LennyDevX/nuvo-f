@@ -42,12 +42,16 @@ export const ToastProvider = ({ children }) => {
     ));
   }, []);
 
+  const showErrorToast = useCallback((message, options = {}) => {
+    return showToast(message, 'error', options);
+  }, [showToast]);
+
   return (
-    <ToastContext.Provider value={{ showToast, hideToast, updateToast, toasts }}>
+    <ToastContext.Provider value={{ showToast, showErrorToast, hideToast, updateToast, toasts }}>
       {children}
       
       {/* Toast Containers */}
-      <div className="fixed inset-0 pointer-events-none z-[9999]">
+      <div className="pointer-events-none z-[9999]">
         <AnimatePresence>
           {toasts.map(toast => {
             // Use TransactionToast for blockchain-related toasts
@@ -68,12 +72,14 @@ export const ToastProvider = ({ children }) => {
             
             // Use regular Toast for simple messages
             return (
-              <Toast
-                key={toast.id}
-                message={toast.message}
-                type={toast.type}
-                onClose={() => hideToast(toast.id)}
-              />
+              <div key={`wrapper-${toast.id}`} className="fixed inset-0 pointer-events-none">
+                <Toast
+                  key={toast.id}
+                  message={toast.message}
+                  type={toast.type}
+                  onClose={() => hideToast(toast.id)}
+                />
+              </div>
             );
           })}
         </AnimatePresence>

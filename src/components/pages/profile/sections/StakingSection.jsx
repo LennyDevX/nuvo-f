@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback, useContext } from 'react';
 import { motion as m } from 'framer-motion';
+import { ethers } from 'ethers';
 import { FaLock, FaCoins, FaChartLine, FaClock, FaUsers, FaExchangeAlt, FaSpinner, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 import { useStaking } from '../../../../context/StakingContext';
 import { calculateUserAPY, formatAPY, getAPYStatus, calculateBaseAPY } from '../../../../utils/staking/apyCalculations';
@@ -80,9 +81,27 @@ const StakingSection = ({ account, depositAmount }) => {
   const handleDeposit = async () => {
     if (!depositAmountInput || isDepositing) return;
     
+    // Validate deposit amount before proceeding
+    const stakeAmount = parseFloat(depositAmountInput);
+    if (isNaN(stakeAmount) || stakeAmount <= 0) {
+      console.error('Please enter a valid amount to stake.');
+      return;
+    }
+
+    if (stakeAmount < 5) {
+      console.error('Minimum deposit amount is 5 POL.');
+      return;
+    }
+
+    if (stakeAmount > 10000) {
+      console.error('Maximum deposit amount is 10,000 POL.');
+      return;
+    }
+    
     setIsDepositing(true);
     try {
-      await deposit(depositAmountInput);
+      const amountWei = ethers.parseEther(depositAmountInput);
+      await deposit(amountWei, 0); // Use flexible staking (no lockup)
       setDepositAmountInput('');
     } catch (error) {
       console.error("Deposit failed:", error);

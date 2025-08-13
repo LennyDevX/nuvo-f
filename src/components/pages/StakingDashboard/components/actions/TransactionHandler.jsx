@@ -159,7 +159,7 @@ export const txLogger = (message, ...args) => {
 };
 
 // Main component code
-const TransactionHandler = ({ currentTx, isPending, setIsPending, updateStatus, refreshUserInfo, account, onReset }) => {
+const TransactionHandler = ({ currentTx, isPending, setIsPending, refreshUserInfo, account, onReset }) => {
   const transactionTimerRef = useRef(null);
 
   // Set up a transaction timeout to automatically clear stuck transactions

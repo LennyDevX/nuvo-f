@@ -5,6 +5,7 @@ import { ActionButton } from '../../ui/CommonComponents';
 import { parseTransactionError } from '../../../../../utils/errors/errorHandling';
 import LockupPeriodSelector from '../LockupPeriodSelector';
 import { STAKING_CONSTANTS } from '../../../../../utils/staking/constants';
+import { useToast } from '../../../../../hooks/useToast';
 
 // Use memo to prevent unnecessary re-renders
 const StakingForm = memo(({ 
@@ -13,29 +14,55 @@ const StakingForm = memo(({
   tokenSymbol, 
   fetchingBalance, 
   deposit, 
-  updateStatus,
+  showToast,
+  showErrorToast,
   onError,
   userInfo,
   rewardsEstimate
 }) => {
   const [depositAmount, setDepositAmount] = useState("");
-  const [selectedLockupPeriod, setSelectedLockupPeriod] = useState(STAKING_CONSTANTS.LOCKUP_PERIODS.DAYS_30);
+  const [selectedLockupPeriod, setSelectedLockupPeriod] = useState(STAKING_CONSTANTS.LOCKUP_PERIODS.FLEXIBLE);
   const [enableCompounding, setEnableCompounding] = useState(false);
+  const { showToast: localShowToast, showErrorToast: localShowErrorToast } = useToast();
 
   const handleDepositSubmit = useCallback(async (e) => {
     e.preventDefault();
     if (!depositAmount || isPending) return;
 
+    // Validate deposit amount before proceeding
+    const stakeAmount = parseFloat(depositAmount);
+    if (isNaN(stakeAmount) || stakeAmount <= 0) {
+      (showErrorToast || localShowErrorToast)('Please enter a valid amount to stake.');
+      return;
+    }
+
+    if (stakeAmount < 5) {
+      (showErrorToast || localShowErrorToast)('Minimum deposit amount is 5 POL.');
+      return;
+    }
+
+    if (stakeAmount > 10000) {
+      (showErrorToast || localShowErrorToast)('Maximum deposit amount is 10,000 POL.');
+      return;
+    }
+
+    const walletBalanceNum = parseFloat(walletBalance || '0');
+    if (stakeAmount > walletBalanceNum) {
+      (showErrorToast || localShowErrorToast)(`Insufficient balance. You have ${walletBalanceNum.toFixed(4)} ${tokenSymbol} available.`);
+      return;
+    }
+
     try {
       const amountWei = ethers.parseEther(depositAmount);
+      const lockupDurationDays = selectedLockupPeriod ? (selectedLockupPeriod.lockupDuration || selectedLockupPeriod.days) : 0;
       setDepositAmount("");
       
       // Let the deposit function handle the error messages
-      const result = await deposit(amountWei);
+      const result = await deposit(amountWei, lockupDurationDays);
       
       // The transaction hook will handle success/error status updates
       if (!result.success && result.error) {
-        updateStatus('error', result.error);
+        (showErrorToast || localShowErrorToast)(result.error);
       }
     } catch (error) {
       console.error("Deposit failed:", error);
@@ -52,9 +79,9 @@ const StakingForm = memo(({
         errorMessage = `Unable to complete staking: ${parsedError.message}`;
       }
       
-      updateStatus('error', errorMessage);
+      (showErrorToast || localShowErrorToast)(errorMessage);
     }
-  }, [depositAmount, isPending, deposit, updateStatus]);
+  }, [depositAmount, isPending, deposit, showErrorToast]);
 
   const handleStakeSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -63,18 +90,20 @@ const StakingForm = memo(({
     
     const stakeAmount = parseFloat(depositAmount);
     if (isNaN(stakeAmount) || stakeAmount <= 0) {
-      updateStatus('error', 'Please enter a valid amount to stake.');
+      (showErrorToast || localShowErrorToast)('Please enter a valid amount to stake.');
       return;
     }
 
     const walletBalanceNum = parseFloat(walletBalance || '0');
     if (stakeAmount > walletBalanceNum) {
-      updateStatus('error', `Insufficient balance. You have ${walletBalanceNum.toFixed(4)} ${tokenSymbol} available.`);
+      (showErrorToast || localShowErrorToast)(`Insufficient balance. You have ${walletBalanceNum.toFixed(4)} ${tokenSymbol} available.`);
       return;
     }
 
     try {
-      await deposit(depositAmount);
+      const amountWei = ethers.parseEther(depositAmount);
+      const lockupDurationDays = selectedLockupPeriod ? (selectedLockupPeriod.lockupDuration || selectedLockupPeriod.days) : 0;
+      await deposit(amountWei, lockupDurationDays);
       setDepositAmount('');
     } catch (error) {
       console.error("Staking failed:", error);
@@ -90,9 +119,9 @@ const StakingForm = memo(({
         errorMessage = `Unable to complete staking: ${parsedError.message}`;
       }
       
-      updateStatus('error', errorMessage);
+      (showErrorToast || localShowErrorToast)(errorMessage);
     }
-  }, [depositAmount, isPending, walletBalance, tokenSymbol, deposit, updateStatus]);
+  }, [depositAmount, isPending, walletBalance, tokenSymbol, deposit, showErrorToast]);
 
   const availableRewards = parseFloat(rewardsEstimate || 0);
   const canCompound = availableRewards > 0;
@@ -105,12 +134,12 @@ const StakingForm = memo(({
       // For now, we'll show it as adding to the deposit amount
       const newAmount = (parseFloat(depositAmount) || 0) + availableRewards;
       setDepositAmount(newAmount.toString());
-      updateStatus('success', `Added ${availableRewards.toFixed(4)} POL rewards to your staking amount!`);
+      (showToast || localShowToast)(`Added ${availableRewards.toFixed(4)} POL rewards to your staking amount!`);
     } catch (error) {
       console.error('Compound failed:', error);
-      updateStatus('error', 'Failed to compound rewards. Please try again.');
+      (showErrorToast || localShowErrorToast)('Failed to compound rewards. Please try again.');
     }
-  }, [canCompound, isPending, depositAmount, availableRewards, updateStatus]);
+  }, [canCompound, isPending, depositAmount, availableRewards, showToast, showErrorToast]);
 
   return (
     <div className="space-y-4">
@@ -163,7 +192,7 @@ const StakingForm = memo(({
                 icon={<FaArrowRight />}
                 label="Stake"
                 isPrimary={true}
-                disabled={isPending || !depositAmount || parseFloat(depositAmount) < 5}
+                disabled={isPending || !depositAmount || parseFloat(depositAmount) < 5 || parseFloat(depositAmount) > 10000}
                 className="whitespace-nowrap btn-nuvo-base bg-nuvo-gradient-button flex-shrink-0"
               />
             </div>
@@ -213,7 +242,6 @@ const StakingForm = memo(({
               <span className="text-green-400">+{selectedLockupPeriod.bonus}% bonus</span>
             </div>
             <div className="text-slate-500">
-              {selectedLockupPeriod.roiPercentage}% per hour • Automatic compounding included
             </div>
           </div>
         ) : (
