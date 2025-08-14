@@ -256,7 +256,7 @@ const ChatInputArea = ({
           }
         `}
         style={{ 
-          minHeight: isMobile ? '64px' : '70px',
+          minHeight: isMobile ? '70px' : '70px', // Reducido de 80px a 70px en móvil
           ...(isMobile && isKeyboardOpen && {
             position: 'fixed',
             bottom: '0px',
@@ -265,7 +265,7 @@ const ChatInputArea = ({
           })
         }}
       >
-        <div className="max-w-4xl mx-auto px-3 py-2 md:p-4">
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-3 py-2 md:p-4'}`}>
           <form onSubmit={handleSubmit} className="relative">
             <div className="flex items-center gap-2 md:gap-3">
               {/* Left sidebar toggle - Desktop only */}
