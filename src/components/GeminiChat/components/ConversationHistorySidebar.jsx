@@ -139,9 +139,7 @@ const ConversationHistorySidebar = ({
         <div className="flex-1 overflow-hidden min-h-0">
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 sm:p-8 text-center">
-              <div className="p-3 sm:p-4 bg-gray-800/50 rounded-full mb-3 sm:mb-4">
-                <FaHistory className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
-              </div>
+              
               <p className="text-gray-400 text-base sm:text-lg font-medium mb-2">No conversations</p>
               <p className="text-gray-500 text-xs sm:text-sm">Start a new conversation to begin</p>
             </div>
@@ -258,7 +256,7 @@ const ConversationHistorySidebar = ({
       </AnimatePresence>
       
       {/* Estilos personalizados para el scrollbar */}
-      <style jsx>{`
+      <style jsx="true">{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

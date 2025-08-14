@@ -410,6 +410,37 @@ export function helloCheck(req, res) {
 }
 
 /**
+ * Verifica la conexión con la API de Gemini.
+ * GET /api/gemini/check-api
+ */
+export function checkApiConnection(req, res) {
+  try {
+    // Verificar que la API key esté configurada
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'API key not configured',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    // Respuesta exitosa
+    res.json({
+      status: 'ok',
+      message: 'API connection available',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: 'API connection check failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+/**
  * Limpia la caché de Gemini.
  * POST /api/gemini/clear-cache
  */

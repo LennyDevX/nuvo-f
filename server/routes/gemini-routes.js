@@ -14,6 +14,7 @@ router.use(auth);
 // Endpoints de salud y prueba
 router.get('/health', geminiController.getHealthStatus);
 router.get('/hello', geminiController.helloCheck);
+router.get('/check-api', geminiController.checkApiConnection);
 
 // Endpoints principales
 router.post('/', geminiController.generateContent);
