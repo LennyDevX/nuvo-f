@@ -3,29 +3,17 @@ export const cspConfig = {
     'default-src': ["'self'"],
     'connect-src': [
       "'self'",
-      'data:',
-      'https://api.dodoex.io',
-      'https://*.nftstorage.link',
-
-      'https://polygon-mainnet.g.alchemy.com',
-      'wss://polygon-mainnet.g.alchemy.com',
-      'https://*.alchemy.com',
-      'wss://*.alchemy.com',
-      'https://*.googleapis.com',
-      'https://*.firebase.com',
-      'https://*.firebaseio.com',
-      'https://identitytoolkit.googleapis.com',
+      'https://api.gemini.com',
+      'https://generativelanguage.googleapis.com',
       'https://polygon-rpc.com',
-      'https://rpc-mainnet.matic.network',
-      'https://matic-mainnet.chainstacklabs.com',
-      'https://rpc-mumbai.maticvigil.com',
-      'https://matic-mumbai.chainstacklabs.com',
-      'https://*.vercel.app',
-      'https://*.vercel.com',
-      'https://vercel.live',
-      import.meta.env.MODE === 'development' ? 'ws://localhost:*' : null,
-      import.meta.env.MODE === 'development' ? 'wss://localhost:*' : null
-    ].filter(Boolean),
+      'https://polygon.drpc.org',
+      'https://mumbai.polygonscan.com',
+      'https://polygonscan.com',
+      'https://api.polygonscan.com',
+      'https://api-testnet.polygonscan.com',
+      'wss://polygon-rpc.com',
+      'wss://polygon.drpc.org'
+    ],
     'img-src': [
       "'self'",
       'data:',
@@ -72,6 +60,11 @@ export const cspConfig = {
       'https://*.firebaseapp.com',
       'https://*.vercel.app',
       'https://*.vercel.com'
+    ],
+    'worker-src': [
+      "'self'",
+      'blob:',
+      'data:'
     ]
   }
 };

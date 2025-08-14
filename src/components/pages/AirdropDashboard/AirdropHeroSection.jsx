@@ -30,10 +30,18 @@ const AirdropHeroSection = ({ setActiveTab }) => {
     }
   }, [setActiveTab, reduceAnimations]);
 
-  // Adaptar animaciones según preferencias
+  // Adaptar animaciones según preferencias - SIMPLIFICADO
   const titleAnimation = reduceAnimations
-    ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
-    : { initial: { opacity: 0, y: -20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.8 } };
+    ? { 
+        initial: { opacity: 1 }, 
+        animate: { opacity: 1 }, 
+        transition: { duration: 0 } 
+      }
+    : { 
+        initial: { opacity: 0, y: -20 }, 
+        animate: { opacity: 1, y: 0 }, 
+        transition: { duration: 0.8, ease: "easeOut" } 
+      };
 
   const paragraphAnimation = reduceAnimations
     ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.3 } }
@@ -53,8 +61,9 @@ const AirdropHeroSection = ({ setActiveTab }) => {
       <motion.div 
         className="mb-3 lg:mb-4" 
         {...titleAnimation}
+        style={{ opacity: 1 }} // Forzar opacidad visible
       >
-        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-3 lg:mb-4 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-400 to-purple-300 drop-shadow-[0_2px_4px_rgba(168,85,247,0.6)] leading-tight">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-3 lg:mb-4 bg-nuvo-gradient-text">
           Join the Future of Finance
         </h1>
       </motion.div>

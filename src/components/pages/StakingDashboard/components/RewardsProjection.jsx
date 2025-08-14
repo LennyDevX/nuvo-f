@@ -8,7 +8,7 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
   const { getDetailedStakingStats, getSignerAddress, calculateRealAPY } = useStaking();
   const [projections, setProjections] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [baseAPY, setBaseAPY] = useState(88);
+  const [baseAPY, setBaseAPY] = useState(8.76); // Updated for SmartStaking v3.0
   const fetchInProgressRef = useRef(false);
   const lastFetchTimeRef = useRef(0);
   const cachedDataRef = useRef(null);
@@ -23,7 +23,7 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
         }
       } catch (error) {
         console.error('Error fetching APY:', error);
-        setBaseAPY(87.6); // Fallback to contract verified rate
+        setBaseAPY(8.76); // Updated for SmartStaking v3.0
       }
     };
     
@@ -156,11 +156,11 @@ const RewardsProjection = ({ userDeposits, userInfo }) => {
           <div className="pt-4 border-t border-slate-700/30 text-xs text-slate-400">
             <div className="flex justify-between items-center py-2">
               <span>Base APY:</span>
-              <span className="text-white">87.6%</span>
+              <span className="text-white">8.76%</span>
             </div>
             
             <div className="text-xs mt-4 py-2 px-3 bg-indigo-900/20 rounded-lg border border-indigo-900/40">
-              <span className="text-indigo-400">Note:</span> Projections based on contract verified 87.6% APY with linear rewards.
+              <span className="text-indigo-400">Note:</span> Projections based on contract verified 8.76% APY with linear rewards.
             </div>
           </div>
         </div>

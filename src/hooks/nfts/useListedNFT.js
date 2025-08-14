@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../Abi/Marketplace.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 
 // Utilidad para parsear tokenId de forma robusta
 function parseTokenId(tokenId) {
@@ -43,7 +43,7 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
       const tx = await contract.buyToken(parsedTokenId, { value: ethers.parseEther(price.toString()), gasLimit: BigInt(300000) });
       setTxHash(tx.hash);
@@ -71,7 +71,7 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
       const tx = await contract.makeOffer(parsedTokenId, expiresInDays, {
         value: ethers.parseEther(offerAmount.toString()),
@@ -98,7 +98,7 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
       const tx = await contract.acceptOffer(offerId, { gasLimit: BigInt(300000) });
       setTxHash(tx.hash);
@@ -122,7 +122,7 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
       const tx = await contract.cancelOffer(offerId, { gasLimit: BigInt(200000) });
       setTxHash(tx.hash);
@@ -149,12 +149,9 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
-      // Use category if provided, else fallback
-      const categoryValue = category || 'collectible';
-
-      const tx = await contract.listTokenForSale(parsedTokenId, ethers.parseEther(newPrice.toString()), categoryValue, {
+      const tx = await contract.updatePrice(parsedTokenId, ethers.parseEther(newPrice.toString()), {
         gasLimit: BigInt(200000)
       });
       setTxHash(tx.hash);
@@ -168,8 +165,8 @@ export default function useListedNFT() {
     }
   }, []);
 
-  // Unlist NFT (set price to 0)
-  const unlistNFT = useCallback(async ({ tokenId, category }) => {
+  // Unlist NFT
+  const unlistNFT = useCallback(async ({ tokenId }) => {
     setLoading(true); setError(null); setTxHash(null);
     try {
       if (!window.ethereum) throw new Error('Wallet not found');
@@ -180,12 +177,9 @@ export default function useListedNFT() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, TokenizationAppABI.abi, signer);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, MarketplaceABI.abi, signer);
 
-      // Use category if provided, else fallback
-      const categoryValue = category || 'collectible';
-
-      const tx = await contract.listTokenForSale(parsedTokenId, 0, categoryValue, {
+      const tx = await contract.unlistedToken(parsedTokenId, {
         gasLimit: BigInt(200000)
       });
       setTxHash(tx.hash);

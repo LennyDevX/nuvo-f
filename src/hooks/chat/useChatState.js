@@ -1,23 +1,113 @@
-import { useReducer, useRef, useCallback, useEffect } from 'react';
+import { useReducer, useRef, useCallback, useEffect, useState } from 'react';
 import { debounce } from '../../utils/performance/debounce';
 import { chatReducer, initialChatState } from '../../components/GeminiChat/core/chatReducer';
 import { StreamingService } from '../../components/GeminiChat/core/streamingService';
+import { enhancedCache } from '../../components/GeminiChat/core/cacheManager';
+import { conversationManager } from '../../components/GeminiChat/core/conversationManager';
 
 export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = false }) => {
   const [state, dispatch] = useReducer(chatReducer, initialChatState);
-  const responseCache = useRef(new Map());
-  const streamingService = useRef(new StreamingService());
+  const streamingService = useRef(null);
+  if (!streamingService.current) {
+    streamingService.current = new StreamingService();
+  }
+  const retryCount = useRef(0);
+  const maxRetries = 3;
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [conversationId, setConversationId] = useState(null);
 
-  // Format messages for API
+  // Enhanced offline/online detection
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      retryCount.current = 0;
+      dispatch({ type: 'SET_ERROR', payload: null });
+    };
+    
+    const handleOffline = () => {
+      setIsOnline(false);
+      dispatch({ 
+        type: 'SET_ERROR', 
+        payload: 'You are offline. Messages will be sent when connection is restored.' 
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    const lastConversation = conversationManager.loadLastConversation();
+    if (lastConversation) {
+      dispatch({ type: 'LOAD_CONVERSATION', payload: lastConversation });
+      setConversationId(lastConversation.id);
+    }
+  }, []); // Run only once on mount
+
+  const debouncedSave = useCallback(
+    debounce((messages, id) => {
+      conversationManager.saveConversationToStorage(messages, id);
+    }, 500), // Debounce de 500ms
+    []
+  );
+
+  useEffect(() => {
+    if (state.messages.length > 0) {
+      debouncedSave(state.messages, conversationId);
+    }
+
+    const handleBeforeUnload = () => {
+        conversationManager.saveConversationToStorage(state.messages, conversationId);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [state.messages, conversationId, debouncedSave]);
+
+  // Formatea mensajes para API Gemini multimodal
   const formatMessagesForAPI = useCallback(() => {
-    return state.messages.map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    }));
+    return state.messages.map(msg => {
+      const parts = [];
+      if (msg.text) {
+        parts.push({ text: msg.text });
+      }
+      if (msg.image) {
+        // Gemini SDK espera imágenes como objetos { inlineData: { mimeType, data } }
+        const match = /^data:(image\/\w+);base64,(.*)$/.exec(msg.image);
+        if (match) {
+          parts.push({
+            inlineData: {
+              mimeType: match[1],
+              data: match[2]
+            }
+          });
+        }
+      }
+      return {
+        role: msg.sender === 'user' ? 'user' : 'model',
+        parts
+      };
+    });
   }, [state.messages]);
 
-  // Process stream response with optimizations
-  const processStreamResponse = useCallback(async (response, userMessage) => {
+  // Enhanced cache key generation
+  const generateCacheKey = useCallback((userMessage, context = []) => {
+    const contextHash = context.slice(-5).map(m => m.text.substring(0, 50)).join('|');
+    // Use encodeURIComponent and hash instead of btoa to handle UTF-8 characters
+    const safeHash = encodeURIComponent(contextHash).replace(/%/g, '').substring(0, 16);
+    return `${userMessage.text}_${safeHash}`;
+  }, []);
+
+  // Process stream response with enhanced error handling
+  const processStreamResponse = useCallback(async (response, userMessage, setInput) => {
     if (!response.body) {
       throw new Error('No stream available');
     }
@@ -29,25 +119,48 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         isLowPerformance,
         shouldReduceMotion,
         onUpdate: (content) => dispatch({ type: 'UPDATE_STREAM', payload: content }),
-        onFinish: (finalContent) => {
-          dispatch({ type: 'FINISH_STREAM' });
-          // Cache successful response with proper content reference
-          if (finalContent && finalContent.length > 10 && finalContent.length < 15000) {
-            responseCache.current.set(userMessage.text, finalContent);
-            if (responseCache.current.size > 50) {
-              const firstKey = responseCache.current.keys().next().value;
-              responseCache.current.delete(firstKey);
-            }
+        onFinish: async (finalContent) => {
+          retryCount.current = 0; // Reset retry count on success
+          const finalMessages = [...state.messages];
+          const lastMsg = finalMessages[finalMessages.length - 1];
+          if (lastMsg?.isStreaming) {
+            lastMsg.text = finalContent;
+            lastMsg.isStreaming = false;
+          }
+          conversationManager.saveConversationToStorage(finalMessages, conversationId);
+          
+          // RAG Enhancement: Index conversation automatically
+          try {
+            const originalUserText = userMessage.originalText || userMessage.text;
+            await fetch('/server/gemini/embeddings/index', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: 'chat_history',
+                documents: [{
+                  content: `Usuario: ${originalUserText}\nIA: ${finalContent}`,
+                  metadata: {
+                    timestamp: Date.now(),
+                    type: 'conversation',
+                    user_query: originalUserText,
+                    ai_response: finalContent,
+                    conversation_id: conversationId
+                  }
+                }]
+              })
+            });
+          } catch (error) {
+            console.warn('Failed to index conversation:', error);
           }
         },
-        onError: (error) => {
-          console.error('Stream processing error:', error);
+        onError: (error, onRetry, messageId) => {
           dispatch({ 
             type: 'SET_ERROR', 
-            payload: "Connection interrupted. Please try again." 
+            payload: { error, onRetry, messageId }
           });
-          dispatch({ type: 'REMOVE_FAILED_MESSAGE', payload: state.messages.length });
-        }
+        },
+        lastMessage: userMessage,
+        setInput
       });
     } catch (error) {
       console.error('Error in processStreamResponse:', error);
@@ -56,28 +169,94 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         payload: "Stream processing failed. Please try again." 
       });
     }
-  }, [isLowPerformance, shouldReduceMotion, state.messages.length]);
+  }, [isLowPerformance, shouldReduceMotion, state.messages.length, generateCacheKey, isOnline]);
 
-  // Send message with caching and debouncing
+  // RAG Enhancement: Search for relevant context before sending to Gemini
+  const enhanceMessageWithRAG = useCallback(async (userMessage) => {
+    try {
+      // Only enhance text messages (not images)
+      if (!userMessage.text || userMessage.image) {
+        return userMessage;
+      }
+
+      // Search for relevant context in knowledge base
+      const searchResponse = await fetch('/server/gemini/embeddings/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'knowledge_base',
+          query: userMessage.text,
+          topK: 3
+        })
+      });
+
+      if (searchResponse.ok) {
+        const relevantContext = await searchResponse.json();
+        
+        // Add context to prompt if relevant results found
+        if (relevantContext.results && relevantContext.results.length > 0) {
+          // Filter results with good similarity scores (>0.6 for better coverage)
+          const goodResults = relevantContext.results.filter(r => r.score > 0.6);
+          
+          if (goodResults.length > 0) {
+            const contextText = goodResults
+              .map(r => r.content || r.metadata?.text)
+              .filter(content => content && content.trim())
+              .join('\n\n');
+            
+            if (contextText) {
+              console.log('RAG Context found:', goodResults.length, 'relevant results');
+              const enhancedMessage = {
+                ...userMessage,
+                text: `Contexto relevante de la base de conocimientos de NUVOS:\n${contextText}\n\nPregunta del usuario: ${userMessage.text}\n\nPor favor responde basándote en el contexto proporcionado y en español.`,
+                originalText: userMessage.text // Keep original for display
+              };
+              return enhancedMessage;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('RAG enhancement failed, proceeding without context:', error);
+    }
+    
+    return userMessage;
+  }, []);
+
+  // Enhanced send message with RAG and better caching and offline support
   const sendMessageDebounced = useCallback(
-    debounce(async (userMessage) => {
-      const cacheKey = userMessage.text;
+    debounce(async (userMessage, setInput) => {
+      // Check if offline
+      if (!isOnline) {
+        dispatch({ 
+          type: 'SET_ERROR', 
+          payload: "You are offline. Please check your connection and try again." 
+        });
+        return;
+      }
+
+      // Enhance message with RAG before processing
+      const enhancedMessage = await enhanceMessageWithRAG(userMessage);
+      const cacheKey = generateCacheKey(enhancedMessage, state.messages);
       
-      // Check local cache first
-      if (responseCache.current.has(cacheKey)) {
-        const cachedResponse = responseCache.current.get(cacheKey);
+      // Check enhanced cache first
+      if (enhancedCache.has(cacheKey)) {
+        const cachedResponse = enhancedCache.get(cacheKey);
         dispatch({ type: 'START_STREAMING' });
         
-        // Simulate progressive loading for cached content
+        // Simulate progressive loading for cached content with better UX
         const words = cachedResponse.split(' ');
         let currentText = '';
         
-        for (let i = 0; i < words.length; i += 3) {
-          currentText += words.slice(i, i + 3).join(' ') + ' ';
+        const wordBatch = shouldReduceMotion ? 6 : 2;
+        const delay = shouldReduceMotion ? 20 : 25;
+        
+        for (let i = 0; i < words.length; i += wordBatch) {
+          currentText += words.slice(i, i + wordBatch).join(' ') + ' ';
           dispatch({ type: 'UPDATE_STREAM', payload: currentText.trim() });
           
-          if (!shouldReduceMotion) {
-            await new Promise(resolve => setTimeout(resolve, 50));  
+          if (!shouldReduceMotion && i < words.length - wordBatch) {
+            await new Promise(resolve => setTimeout(resolve, delay));  
           }
         }
         
@@ -85,10 +264,14 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         return;
       }
       
-      dispatch({ type: 'SET_LOADING', payload: true });
+      // Start streaming immediately to show typing indicator
+      dispatch({ type: 'START_STREAMING' });
 
-      // AbortController for cancellation
+      // Enhanced AbortController with timeout
       const abortController = new AbortController();
+      const timeoutId = setTimeout(() => {
+        abortController.abort();
+      }, 60000); // 60 second timeout
       
       if (window.currentGeminiRequest) {
         window.currentGeminiRequest.abort();
@@ -97,43 +280,101 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
 
       try {
         const apiUrl = '/server/gemini';
-        const formattedMessages = [...formatMessagesForAPI(), {
-          role: 'user',
-          parts: [{ text: userMessage.text }]
-        }];
+        // Si el mensaje tiene imagen, ajusta el formato
+        const formattedMessages = [...formatMessagesForAPI()];
+        if (enhancedMessage.text || enhancedMessage.image) {
+          const parts = [];
+          if (enhancedMessage.text) parts.push({ text: enhancedMessage.text });
+          if (enhancedMessage.image) {
+            const match = /^data:(image\/\w+);base64,(.*)$/.exec(enhancedMessage.image);
+            if (match) {
+              parts.push({
+                inlineData: {
+                  mimeType: match[1],
+                  data: match[2]
+                }
+              });
+            }
+          }
+          formattedMessages.push({
+            role: 'user',
+            parts
+          });
+        }
         
         const response = await fetch(apiUrl, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'Accept': 'text/plain',
-            'Cache-Control': 'no-cache'
+            'Cache-Control': 'no-cache',
+            'X-Request-ID': `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
           },
           body: JSON.stringify({ 
             messages: formattedMessages,
             stream: true,
             temperature: 0.7,
-            maxTokens: 3000
+            maxTokens: 3000,
+            metadata: {
+              cacheKey,
+              retryCount: retryCount.current
+            }
           }),
           signal: abortController.signal
         });
         
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
-          throw new Error(`Server error: ${response.status} - ${response.statusText}`);
+          // Try to get error details from response
+          let errorText = '';
+          try {
+            errorText = await response.text();
+          } catch (err) {}
+          console.error('Gemini API error:', response.status, response.statusText, errorText);
+          // Mejorar el manejo de errores 500
+          if (response.status === 500) {
+            // Try to parse JSON error if available
+            let errorMsg = errorText;
+            try {
+              const json = JSON.parse(errorText);
+              errorMsg = json.details || json.error || errorText;
+            } catch (e) {}
+            throw new Error(`Gemini API error 500: ${errorMsg}`);
+          }
+          throw new Error(`Server error: ${response.status} - ${response.statusText} - ${errorText}`);
         }
         
-        await processStreamResponse(response, userMessage);
+        // Use original message for display, enhanced for API
+        const displayMessage = {
+          ...userMessage,
+          text: enhancedMessage.originalText || userMessage.text
+        };
+        await processStreamResponse(response, displayMessage, setInput);
         
       } catch (error) {
+        clearTimeout(timeoutId);
         if (error.name === 'AbortError') {
-          console.log('Request cancelled');
-          return;
+          console.log('Request cancelled or timed out');
+          return; // Early exit
         }
         
-        console.error('Error:', error);
+        console.error('Error sending message:', error);
+
+        const onRetry = () => {
+            dispatch({ type: 'REMOVE_LAST_MESSAGE' });
+            if (userMessage) {
+                setInput(userMessage.text);
+            }
+        };
+
         dispatch({ 
           type: 'SET_ERROR', 
-          payload: `Error: ${error.message}. Please try again.` 
+          payload: { 
+            message: `Failed to send message: ${error.message}`,
+            onRetry,
+            messageId: userMessage.id
+           }
         });
       } finally {
         if (window.currentGeminiRequest === abortController) {
@@ -141,19 +382,30 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         }
       }
     }, 300),
-    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion]
+    [formatMessagesForAPI, processStreamResponse, shouldReduceMotion, generateCacheKey, state.messages, isOnline]
   );
 
-  // Message handlers
+  // Enhanced message handlers
   const handleSendMessage = useCallback((e, input, setInput) => {
     e.preventDefault();
-    if (!input.trim() || state.isLoading) return;
+    if (!input || state.isLoading) return;
 
-    const userMessage = { text: input.trim(), sender: 'user' };
+    // Si input es objeto multimodal (con imagen), asegúrate de incluir texto y imagen
+    let userMessage;
+    if (typeof input === 'object' && (input.image || input.text)) {
+      userMessage = {
+        text: input.text?.trim() || '',
+        sender: 'user',
+        image: input.image || null
+      };
+    } else {
+      userMessage = { text: input.trim(), sender: 'user' };
+    }
+
     dispatch({ type: 'ADD_USER_MESSAGE', payload: userMessage });
     setInput('');
-    
-    sendMessageDebounced(userMessage);
+
+    sendMessageDebounced(userMessage, setInput);
   }, [state.isLoading, sendMessageDebounced]);
 
   const handleNewConversation = useCallback(() => {
@@ -176,9 +428,28 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }
   }, []);
 
+  // Enhanced cache management
+  const clearCache = useCallback(() => {
+    enhancedCache.clear();
+  }, []);
+
+  const getCacheStats = useCallback(() => {
+    return enhancedCache.getStats();
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      streamingService.current?.destroy();
+    };
+  }, []);
+
   return {
     // State
-    state,
+    state: {
+      ...state,
+      isOnline
+    },
     dispatch,
     
     // Handlers
@@ -190,11 +461,16 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     checkApiConnection,
     formatMessagesForAPI,
     
-    // Cache management
-    clearCache: () => responseCache.current.clear(),
-    getCacheStats: () => ({
-      size: responseCache.current.size,
-      keys: Array.from(responseCache.current.keys()).slice(0, 5)
+    // Enhanced cache management
+    clearCache,
+    getCacheStats,
+    
+    // Performance stats
+    getPerformanceStats: () => ({
+      cache: getCacheStats(),
+      retryCount: retryCount.current,
+      isOnline
     })
   };
 };
+

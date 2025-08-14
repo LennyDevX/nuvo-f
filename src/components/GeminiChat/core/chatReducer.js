@@ -1,8 +1,9 @@
 export const initialChatState = {
   messages: [],
-  isLoading: false,
+  status: 'idle', // idle, loading_history, waiting_for_response, streaming, error
   error: null,
-  conversationId: null
+  conversationId: null,
+  isOnline: true,
 };
 
 export const chatReducer = (state, action) => {
@@ -10,61 +11,102 @@ export const chatReducer = (state, action) => {
     case 'ADD_USER_MESSAGE':
       return {
         ...state,
-        messages: [...state.messages, action.payload],
-        isLoading: true,
-        error: null
+        messages: [
+          ...state.messages,
+          {
+            ...action.payload,
+            timestamp: new Date().toISOString(),
+            id: `msg_${Date.now()}`,
+          },
+        ],
+        status: 'waiting_for_response',
+        error: null,
       };
-      
+
     case 'START_STREAMING':
       return {
         ...state,
-        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true }]
+        status: 'streaming',
+        messages: [...state.messages, { text: '', sender: 'bot', isStreaming: true, timestamp: new Date().toISOString(), id: `msg_${Date.now()}` }],
       };
-      
+
     case 'UPDATE_STREAM':
       const updatedMessages = [...state.messages];
-      const lastIndex = updatedMessages.length - 1;
-      if (updatedMessages[lastIndex]?.isStreaming) {
-        updatedMessages[lastIndex] = {
-          ...updatedMessages[lastIndex],
-          text: action.payload
-        };
+      const lastMessage = updatedMessages[updatedMessages.length - 1];
+      if (lastMessage?.isStreaming) {
+        lastMessage.text = action.payload;
       }
       return { ...state, messages: updatedMessages };
-      
+
     case 'FINISH_STREAM':
-      return {
-        ...state,
-        isLoading: false,
-        messages: state.messages.map((msg, idx) => 
-          idx === state.messages.length - 1 
-            ? { ...msg, isStreaming: false }
-            : msg
-        )
-      };
-      
+        return {
+            ...state,
+            status: 'idle',
+            messages: state.messages.map((msg) => 
+                msg.isStreaming ? { ...msg, isStreaming: false } : msg
+            ),
+        };
+
+
     case 'SET_ERROR':
-      return { ...state, error: action.payload, isLoading: false };
-      
+        const { error, messageId } = action.payload;
+        const messagesWithError = state.messages.map(msg => 
+            msg.id === messageId ? { ...msg, error: error } : msg
+        );
+        // Si el último mensaje es el de streaming, lo eliminamos
+        const lastMsg = messagesWithError[messagesWithError.length - 1];
+        const finalMessages = (lastMsg?.isStreaming) 
+            ? messagesWithError.slice(0, -1) 
+            : messagesWithError;
+
+        return {
+            ...state,
+            error: error,
+            status: 'error',
+            messages: finalMessages,
+        };
+
     case 'RESET_CONVERSATION':
-      return { ...state, messages: [], error: null, isLoading: false, conversationId: null };
-      
+      return {
+        ...initialChatState,
+        isOnline: state.isOnline,
+       };
+
     case 'LOAD_CONVERSATION':
-      return { 
-        ...state, 
-        messages: action.payload.messages, 
-        conversationId: action.payload.id, 
-        error: null 
-      };
+      if (!action.payload || !action.payload.messages) return state;
+      // Combine loaded messages with existing messages, avoiding duplicates.
+      // New messages from the current session should be preserved.
+      const loadedMessages = action.payload.messages;
+      const currentMessages = state.messages;
       
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-      
-    case 'REMOVE_FAILED_MESSAGE':
+      const messageIds = new Set(currentMessages.map(m => m.id));
+      const mergedMessages = [
+          ...loadedMessages.filter(m => !messageIds.has(m.id)),
+          ...currentMessages
+      ];
+
+      // Sort messages by timestamp to ensure correct order
+      mergedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
       return {
         ...state,
-        messages: state.messages.filter((_, index) => index !== action.payload),
-        isLoading: false
+        messages: mergedMessages,
+        conversationId: action.payload.id,
+        status: 'idle',
+        error: null,
+      };
+
+    case 'SET_STATUS':
+      return { ...state, status: action.payload };
+
+    case 'SET_ONLINE_STATUS':
+      return { ...state, isOnline: action.payload };
+
+    case 'REMOVE_LAST_MESSAGE': // Para el reintento
+      return {
+        ...state,
+        messages: state.messages.slice(0, -1),
+        status: 'waiting_for_response',
       };
       
     default:

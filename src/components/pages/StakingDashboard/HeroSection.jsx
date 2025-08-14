@@ -10,8 +10,8 @@ const HeroSection = () => {
       {/* Mobile Layout: Vertical */}
       <div className="relative flex flex-col sm:hidden px-4 py-6 gap-4">
         {/* Title top */}
-        <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text text-center">
-          Smart Staking v1.0
+        <h1 className=" font-bold text-transparent bg-clip-text bg-nuvo-gradient-text text-center">
+          Smart Staking v2.0
         </h1>
         {/* Badges bottom - horizontal stack */}
         <div className="flex items-center justify-center gap-2">
@@ -27,7 +27,7 @@ const HeroSection = () => {
       <div className="relative hidden sm:flex items-start justify-between px-6 py-6">
         {/* Title top-left */}
         <h1 className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-nuvo-gradient-text">
-          Smart Staking v1.0
+          Smart Staking v2.0
         </h1>
         {/* Badge + Live Protocol top-right */}
         <div className="flex items-center gap-2">

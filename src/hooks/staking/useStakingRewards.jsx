@@ -149,7 +149,7 @@ export function useStakingRewards() {
   const calculateStakingRewards = useCallback((amount, daysStaked, hourlyROI, maxROI) => {
     const amountNum = parseFloat(amount) || 0;
     const daysNum = parseFloat(daysStaked) || 0;
-    const hourlyRate = parseFloat(hourlyROI) || 0.001; // 0.1% per hour default
+    const hourlyRate = parseFloat(hourlyROI) || 0.00001; // 0.001% per hour default
     
     // Contract uses linear calculation
     const totalHours = daysNum * 24;
@@ -187,7 +187,7 @@ export function useStakingRewards() {
         const rewardsData = calculateStakingRewards(
           deposit.amount,
           daysStaked,
-          STAKING_CONSTANTS.HOURLY_ROI || 0.001,
+          STAKING_CONSTANTS.HOURLY_ROI || 0.00001,
           STAKING_CONSTANTS.MAX_ROI || 1
         );
 
@@ -201,7 +201,7 @@ export function useStakingRewards() {
 
       // Calculate projections
       const totalStaked = parseFloat(ethers.formatEther(userInfo.totalDeposited || '0'));
-      const baseDaily = totalStaked * 0.024; // 2.4% daily from contract
+      const baseDaily = totalStaked * 0.0024; // 0.24% daily from contract
       
       const projections = {
         oneMonth: (baseDaily * 30).toFixed(4),
@@ -237,38 +237,38 @@ export function useStakingRewards() {
 
   const calculateRealAPY = useCallback(async () => {
     if (!contract) {
-      return { baseAPY: 87.6, dailyROI: 2.4 }; // FIXED: Correct default values
+      return { baseAPY: 8.76, dailyROI: 0.024 }; // Updated for SmartStaking v3.0
     }
     setLoading(true);
     setError(null);
     try {
       // FIXED: Use the corrected contract constants
-      const hourlyROI = 0.001; // 0.1% per hour
-      const dailyROI = hourlyROI * 24; // 2.4% per day
-      const annualAPY = (dailyROI * 365 / 10) * 100; // This gives 87.6%
+      const hourlyROI = 0.0001; // 0.01% per hour
+        const dailyROI = hourlyROI * 24; // 0.24% per day
+      const annualAPY = (dailyROI * 365) * 100; // This gives 8.76%
       
       console.log('FIXED APY calculation:', {
         hourlyROI: (hourlyROI * 100).toFixed(1) + '%',
         dailyROI: (dailyROI * 100).toFixed(1) + '%',
-        annualAPY: (annualAPY * 100).toFixed(1) + '%' // FIXED: This should be 87.6%
+        annualAPY: annualAPY.toFixed(2) + '%' // Updated: This should be 8.76%
       });
 
       setLoading(false);
       return {
-        baseAPY: annualAPY, // 87.6
-        dailyRate: dailyROI * 100, // 2.4
-        hourlyRate: hourlyROI * 100, // 0.1
+        baseAPY: annualAPY, // 8.76
+        dailyRate: dailyROI * 100, // 0.24
+       hourlyRate: hourlyROI * 100, // 0.01
         metrics: {
           hourlyROI: `${(hourlyROI * 100).toFixed(1)}%`,
           dailyROI: `${(dailyROI * 100).toFixed(1)}%`,
-          annualAPY: `${annualAPY.toFixed(1)}%` // Now shows 87.6%
+          annualAPY: `${annualAPY.toFixed(2)}%` // Now shows 8.76%
         }
       };
     } catch (error) {
       setError(error);
       setLoading(false);
       console.error("Error calculating APY:", error);
-      return { baseAPY: 87.6, dailyROI: 2.4 }; // FIXED: Correct fallback values
+      return { baseAPY: 87.6, dailyROI: 0.24 }; // Updated for SmartStaking v3.0 (contract value)
     }
   }, [contract]);
 
@@ -288,24 +288,24 @@ export function useStakingRewards() {
 
   // Look for the APY calculation function and fix it
   const calculateAPYMetrics = useCallback(() => {
-    const hourlyROI = 0.001; // 0.1% per hour
-    const dailyROI = hourlyROI * 24; // 0.024 = 2.4% daily
+    const hourlyROI = 0.0001; // 0.01% per hour
+        const dailyROI = hourlyROI * 24; // 0.0024 = 0.24% daily
     
     // CORRECTED: Annual APY calculation
     // Old incorrect: dailyROI * 365 = 8.76 (876%)
-    // New correct: dailyROI * 365 / 10 * 100 = 87.6%
-    const annualAPY = (dailyROI * 365 / 10) * 100; // This gives 87.6%
+    // Updated for SmartStaking v3.0: dailyROI * 365 * 100 = 8.76%
+        const annualAPY = (dailyROI * 365) * 100; // This gives 8.76%
     
     const apyMetrics = {
-      hourlyROI: `${(hourlyROI * 100).toFixed(1)}%`, // 0.1%
-      dailyROI: `${(dailyROI * 100).toFixed(1)}%`, // 2.4%
-      annualAPY: `${annualAPY.toFixed(1)}%` // Now shows 87.6%
+      hourlyROI: `${(hourlyROI * 100).toFixed(2)}%`, // 0.01%
+        dailyROI: `${(dailyROI * 100).toFixed(2)}%`, // 0.24%
+      annualAPY: `${annualAPY.toFixed(2)}%` // Now shows 8.76%
     };
     
     console.log('FIXED APY calculation:', apyMetrics);
     
     return {
-      baseAPY: annualAPY, // 87.6
+      baseAPY: annualAPY, // 8.76
       dailyRate: dailyROI * 100, // 2.4
       hourlyRate: hourlyROI * 100, // 0.1
       metrics: apyMetrics

@@ -4,13 +4,13 @@ import { FaImage, FaExternalLinkAlt, FaShoppingCart, FaSpinner, FaLayerGroup, Fa
 import { Link } from 'react-router-dom';
 import { ethers } from 'ethers';
 import { useTokenization } from '../../../../context/TokenizationContext';
-import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../../../Abi/Marketplace.json';
 import { getOptimizedImageUrl, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
 import IPFSImage from '../../../ui/IPFSImage';
 // Importar el modal
 import NFTDetailModal from './NFTDetailModal';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x71f3d55856e4058ed06ee057d79ada615f65cdf5";
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2 || "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
 const PLACEHOLDER_IMAGE = "/LogoNuvos.webp";
 
 const NFTCard = React.memo(({ nft, index, onClick }) => {

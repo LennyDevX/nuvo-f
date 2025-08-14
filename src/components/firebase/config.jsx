@@ -34,8 +34,18 @@ const validateEnvVariables = () => {
 
   const missing = required.filter(key => !import.meta.env[key]);
   if (missing.length > 0) {
+    console.error('Missing environment variables:', missing);
+    console.error('Available env vars:', Object.keys(import.meta.env).filter(k => k.startsWith('VITE_FIREBASE')));
     throw new Error(`Missing required environment variables: ${missing.join(', ')}`);
   }
+
+  // Log actual values for debugging (mask sensitive data)
+  console.log('Firebase env validation:', {
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    authDomain: import.meta.env.VITE_FIREBASE_AD,
+    hasApiKey: !!import.meta.env.VITE_FIREBASE,
+    hasAppId: !!import.meta.env.VITE_FIREBASE_APP_ID
+  });
 };
 
 // Collection names
@@ -66,14 +76,15 @@ try {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
   };
 
-  // Log configuration for debugging
-  console.log('Initializing Firebase with config:', {
-    apiKey: firebaseConfig.apiKey ? '***' : undefined,
+  // Log configuration for debugging (with more details)
+  console.log('Firebase Config Validation:', {
+    apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 8)}...` : 'MISSING',
     authDomain: firebaseConfig.authDomain,
     projectId: firebaseConfig.projectId,
     storageBucket: firebaseConfig.storageBucket,
     messagingSenderId: firebaseConfig.messagingSenderId,
-    appId: firebaseConfig.appId ? '***' : undefined
+    appId: firebaseConfig.appId ? `${firebaseConfig.appId.substring(0, 10)}...` : 'MISSING',
+    measurementId: firebaseConfig.measurementId
   });
 
   // Validate configuration

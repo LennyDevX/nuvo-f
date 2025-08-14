@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import { ethers } from 'ethers';
 import { logger } from '../utils/debug/logger';
+import useProvider from '../hooks/blockchain/useProvider';
 
 export const WalletContext = createContext({
     account: null,
@@ -42,24 +43,43 @@ export const WalletProvider = ({ children }) => {
     });
     
     const [walletConnected, setWalletConnected] = useState(() => 
-        localStorage.getItem('walletConnected') === 'true'
+        // Persist only if not explicitly disconnected
+        localStorage.getItem('walletConnected') === 'true' &&
+        localStorage.getItem('walletExplicitlyDisconnected') !== 'true'
     );
     
     const [provider, setProvider] = useState(null);
     const [lastActivityTime, setLastActivityTime] = useState(Date.now());
-    const AUTO_DISCONNECT_TIME = 3600000; // 1 hour of inactivity
+    const AUTO_DISCONNECT_TIME = 300000; // 5 minutes of inactivity
+
+    // Use the centralized provider hook FIRST
+    const { provider: blockchainProvider, getWalletProvider, connect: connectProvider, disconnect: disconnectProvider, account: providerAccount, chainId, isInitialized } = useProvider();
 
     const handleDisconnect = useCallback(() => {
+        // Mark explicit disconnect so it does not auto-reconnect on reload
+        localStorage.setItem('walletExplicitlyDisconnected', 'true');
+        disconnectProvider();
+        
+        // Clear local state
         setAccount(null);
         setBalance(null);
         setNetwork(null);
         setWalletConnected(false);
         setProvider(null);
+        
+        // Clear localStorage
         localStorage.removeItem('walletAccount');
         localStorage.removeItem('walletBalance');
         localStorage.removeItem('walletNetwork');
         localStorage.removeItem('walletConnected');
-    }, []);
+        
+        // Remove wallet event listeners
+        if (window.ethereum) {
+            window.ethereum.removeAllListeners('accountsChanged');
+            window.ethereum.removeAllListeners('chainChanged');
+            window.ethereum.removeAllListeners('disconnect');
+        }
+    }, [disconnectProvider]);
 
     // Update lastActivityTime on user activity
     useEffect(() => {
@@ -117,74 +137,14 @@ export const WalletProvider = ({ children }) => {
         logger.walletChange('connected', walletConnected);
         logger.walletChange('account', account ? `${account.substring(0, 8)}...` : null);
         logger.walletChange('network', network);
-        
-        // Log full context only once per session or on significant changes
         const contextSummary = { 
             walletConnected, 
             hasAccount: !!account, 
             network,
-            hasDisconnectMethod: !!handleDisconnect,
-            methodCount: Object.keys(value || {}).length
+            hasDisconnectMethod: !!handleDisconnect
         };
-        
         logger.logOnChange('WALLET', 'context_state', contextSummary);
     }, [walletConnected, account, network, handleDisconnect]);
-
-    // Improved auto-reconnect logic
-    useEffect(() => {
-        const initProvider = async () => {
-            if (window.ethereum && walletConnected && account) {
-                try {
-                    logger.debug('WALLET', 'Attempting to reconnect wallet');
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    await provider.ready;
-                    
-                    // Get current accounts
-                    const accounts = await window.ethereum.request({ 
-                        method: "eth_accounts" 
-                    });
-                    
-                    // Verify if our saved account is still authorized
-                    if (accounts && accounts.length > 0) {
-                        // Check if the saved account matches one of the available accounts
-                        const isAuthorized = accounts.some(
-                            acc => acc.toLowerCase() === account.toLowerCase()
-                        );
-                        
-                        if (isAuthorized) {
-                            // Account still authorized, restore connection
-                            setProvider(provider);
-                            
-                            // Update network
-                            const network = await provider.getNetwork();
-                            const networkName = getNetworkName(network.chainId.toString());
-                            setNetwork(networkName);
-                            
-                            // Update balance
-                            const balance = await provider.getBalance(account);
-                            setBalance(ethers.formatEther(balance));
-                            
-                            // Setup event listeners
-                            setupEventListeners(provider);
-                            
-                            logger.success('WALLET', 'Wallet reconnected successfully');
-                        } else {
-                            logger.warn('WALLET', 'Saved account no longer authorized');
-                            handleDisconnect();
-                        }
-                    } else {
-                        logger.warn('WALLET', 'No authorized accounts found');
-                        handleDisconnect();
-                    }
-                } catch (error) {
-                    logger.error('WALLET', 'Error reconnecting wallet', error.message);
-                    handleDisconnect();
-                }
-            }
-        };
-
-        initProvider();
-    }, []);
 
     const getNetworkName = useCallback((chainId) => {
         const networks = {
@@ -198,10 +158,48 @@ export const WalletProvider = ({ children }) => {
         return networks[chainId] || `Chain ID: ${chainId}`;
     }, []);
 
-    const setupEventListeners = useCallback((provider) => {
+
+    
+    // Sync with provider hook account
+    useEffect(() => {
+        if (providerAccount && providerAccount !== account) {
+            setAccount(providerAccount);
+            setWalletConnected(true);
+        } else if (providerAccount && !walletConnected) {
+            // Rehydrate connection silently after reload
+            setWalletConnected(true);
+        }
+        // Removed auto-disconnect on missing providerAccount to allow persistence across reload
+    }, [providerAccount, account, walletConnected]);
+    
+    // Update network when chainId changes
+    useEffect(() => {
+        if (chainId) {
+            const networkName = getNetworkName(chainId.toString());
+            setNetwork(networkName);
+        }
+    }, [chainId, getNetworkName]);
+    
+    // Update balance when account or provider changes
+    useEffect(() => {
+        const updateBalance = async () => {
+            if (account && blockchainProvider) {
+                try {
+                    const balance = await blockchainProvider.getBalance(account);
+                    setBalance(ethers.formatEther(balance));
+                } catch (error) {
+                    logger.error('WALLET', 'Error updating balance', error.message);
+                }
+            }
+        };
+        
+        updateBalance();
+    }, [account, blockchainProvider]);
+
+    const setupEventListeners = useCallback(() => {
         if (window.ethereum) {
             // Handle account changes
-            window.ethereum.on('accountsChanged', async (accounts) => {
+            const handleAccountsChanged = async (accounts) => {
                 if (accounts.length === 0) {
                     logger.info('WALLET', 'User disconnected all accounts');
                     handleDisconnect();
@@ -209,105 +207,90 @@ export const WalletProvider = ({ children }) => {
                     const newAccount = accounts[0];
                     logger.info('WALLET', 'Account changed', `${newAccount.substring(0, 8)}...`);
                     setAccount(newAccount);
-                    
-                    // Update balance for new account
-                    const balance = await provider.getBalance(newAccount);
-                    setBalance(ethers.formatEther(balance));
-                    
                     console.log("Account changed:", newAccount);
                 }
-            });
+            };
             
             // Handle chain/network changes
-            window.ethereum.on('chainChanged', async (chainId) => {
-                // Force page refresh on chain change for safety
+            const handleChainChanged = async (chainId) => {
                 window.location.reload();
-            });
+            };
             
-            // Handle disconnect
-            window.ethereum.on('disconnect', () => {
+            // Handle disconnect (rename to avoid shadowing outer handleDisconnect)
+            const handleDisconnectEvent = () => {
                 handleDisconnect();
-            });
+            };
+            
+            // Remove existing listeners to prevent duplicates
+            window.ethereum.removeAllListeners('accountsChanged');
+            window.ethereum.removeAllListeners('chainChanged');
+            window.ethereum.removeAllListeners('disconnect');
+            
+            // Add new listeners
+            window.ethereum.on('accountsChanged', handleAccountsChanged);
+            window.ethereum.on('chainChanged', handleChainChanged);
+            window.ethereum.on('disconnect', handleDisconnectEvent);
         }
-    }, []);
+    }, [handleDisconnect]);
 
     const ensureProvider = useCallback(async () => {
-        if (!provider && window.ethereum && account) {
+        if (blockchainProvider) {
+            return blockchainProvider;
+        }
+        
+        if (account && window.ethereum) {
             try {
-                const newProvider = new ethers.BrowserProvider(window.ethereum);
-                await newProvider.ready;
-                setProvider(newProvider);
-                return newProvider;
+                const { browserProvider } = await getWalletProvider();
+                setProvider(browserProvider);
+                return browserProvider;
             } catch (error) {
-                console.error("Error creating provider:", error);
-                throw new Error("Failed to initialize provider");
+                console.error("Error creating wallet provider:", error);
+                throw new Error("Failed to initialize wallet provider");
             }
         }
-        if (!provider) {
-            throw new Error("Provider not available");
-        }
-        return provider;
-    }, [provider, account]);
+        
+        throw new Error("Provider not available");
+    }, [blockchainProvider, account, getWalletProvider]);
 
     // Nueva función para conectar la wallet manualmente
     const connectWallet = useCallback(async () => {
-        if (window.ethereum) {
-            try {
-                const provider = new ethers.BrowserProvider(window.ethereum);
-                await provider.ready;
-                const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-                if (accounts && accounts.length > 0) {
-                    const newAccount = accounts[0];
-                    setAccount(newAccount);
-                    setWalletConnected(true);
-                    setProvider(provider);
-
-                    // Actualiza balance y network
-                    const balance = await provider.getBalance(newAccount);
-                    setBalance(ethers.formatEther(balance));
-                    const network = await provider.getNetwork();
-                    const networkName = getNetworkName(network.chainId.toString());
-                    setNetwork(networkName);
-
-                    setupEventListeners(provider);
-                }
-            } catch (error) {
-                logger.error('WALLET', 'Error connecting wallet', error.message);
-                handleDisconnect();
+        try {
+            // Clear explicit disconnect flag when manually connecting
+            localStorage.removeItem('walletExplicitlyDisconnected');
+            
+            const success = await connectProvider();
+            if (success) {
+                logger.success('WALLET', 'Wallet connected successfully');
+                setupEventListeners();
+            } else {
+                logger.error('WALLET', 'Failed to connect wallet');
             }
-        } else {
-            logger.warn('WALLET', 'No Ethereum provider found');
+            return success;
+        } catch (error) {
+            logger.error('WALLET', 'Error connecting wallet', error.message);
+            handleDisconnect();
+            return false;
         }
-    }, [getNetworkName, setupEventListeners, handleDisconnect]);
+    }, [connectProvider, handleDisconnect, setupEventListeners]);
 
-    // Efecto: actualiza el provider y datos al conectar la wallet
+    // Set the provider from the hook when available
     useEffect(() => {
-        if (window.ethereum && walletConnected && account) {
-            (async () => {
-                try {
-                    const provider = new ethers.BrowserProvider(window.ethereum);
-                    await provider.ready;
-                    setProvider(provider);
-
-                    // Actualiza balance y network
-                    const balance = await provider.getBalance(account);
-                    setBalance(ethers.formatEther(balance));
-                    const network = await provider.getNetwork();
-                    const networkName = getNetworkName(network.chainId.toString());
-                    setNetwork(networkName);
-
-                    setupEventListeners(provider);
-                } catch (error) {
-                    logger.error('WALLET', 'Error updating provider after connect', error.message);
-                }
-            })();
+        if (blockchainProvider) {
+            setProvider(blockchainProvider);
         }
-    }, [walletConnected, account, getNetworkName, setupEventListeners]);
+    }, [blockchainProvider]);
+    
+    // Setup event listeners when wallet is connected
+    useEffect(() => {
+        if (walletConnected && account) {
+            setupEventListeners();
+        }
+    }, [walletConnected, account, setupEventListeners]);
 
     const value = {
         account,
         balance,
-        network,      
+        network,
         walletConnected,
         provider,
         setAccount,
@@ -316,7 +299,7 @@ export const WalletProvider = ({ children }) => {
         setWalletConnected,
         handleDisconnect,
         ensureProvider,
-        connectWallet, // <-- expone la función para conectar la wallet
+        connectWallet,
     };
 
     return (

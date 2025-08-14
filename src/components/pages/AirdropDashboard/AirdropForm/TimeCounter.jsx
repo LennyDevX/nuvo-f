@@ -36,9 +36,9 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
   const reduceAnimations = shouldReduceMotion || isLowPerformance;
 
   useEffect(() => {
-    // Actualización de fechas para el próximo airdrop: 20 de junio - 31 de junio 2025
-    const startDate = new Date('2025-06-20T00:00:00').getTime();
-    const endDate = new Date('2025-06-31T23:59:59').getTime();
+    // Actualización de fechas para el próximo airdrop: Registro hasta 1 de agosto 2025
+    const startDate = new Date('2025-08-10T00:00:00').getTime(); // Inicio del registro
+    const endDate = new Date('2025-08-20T23:59:59').getTime(); // Fin del registro
 
     const updateTimer = () => {
       const now = new Date().getTime();
@@ -131,8 +131,8 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
         </p>
         <p className="text-purple-200/60 text-xs sm:text-sm">
           {isExpired 
-            ? "Airdrop period has ended" 
-            : "Time remaining until Airdrop starts:"}
+            ? "Registration period has ended - Claim period starts now!" 
+            : "Time remaining for Registration:"}
         </p>
       </motion.div>
       
@@ -151,11 +151,11 @@ const TimeCounter = ({ hideDetailsOnMobile = false }) => {
       >
         <div className="text-xs sm:text-sm font-medium text-purple-200/60">
           {isExpired 
-            ? "The airdrop period has concluded" 
-            : "Distribution period"}
+            ? "Registration period has concluded - Distribution starting now" 
+            : "Registration period"}
         </div>
         <div className="text-sm sm:text-base lg:text-lg font-semibold text-white">
-          June 20, 2025 – June 31, 2025
+          Registration: August 10 – August 20, 2025
         </div>
       </motion.div>
     </div>

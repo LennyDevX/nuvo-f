@@ -13,7 +13,7 @@ import {
 
 const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }) => {
   const { calculateRealAPY, getDetailedStakingStats } = useStaking();
-  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 87.6, dailyROI: 2.4 }); // Corrected default
+  const [dynamicAPY, setDynamicAPY] = useState({ baseAPY: 8.76, dailyROI: 0.024 }); // Updated for SmartStaking v3.0
   const [detailedStats, setDetailedStats] = useState(null);
   
   // Calculate total staked
@@ -64,7 +64,7 @@ const StakingOverview = ({ userDeposits, userInfo, stakingStats, statusMessage }
   const timeBonesPercentage = timeBonus * 100;
   
   // Use dynamically calculated APY instead of hardcoded value
-  const baseAPY = dynamicAPY.baseAPY || 87.6; // Corrected default value
+  const baseAPY = dynamicAPY.baseAPY || 8.76; // Updated for SmartStaking v3.0
   const effectiveAPY = baseAPY + (timeBonesPercentage * 1.5);
   
   // Get monthly projected rewards if available

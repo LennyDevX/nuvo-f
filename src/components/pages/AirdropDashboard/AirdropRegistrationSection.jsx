@@ -96,18 +96,44 @@ const AirdropRegistrationSection = () => {
                     className="text-center p-4 md:p-6 lg:p-8 lg:mt-4"
                     transition={{ duration: reduceAnimations ? 0.2 : 0.3 }}
                   >
-                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4">Register for Airdrop</h2>
-                    <p className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
+                    <motion.h2 
+                      className="text-2xl md:text-3xl font-bold text-white mb-3 md:mb-4"
+                      initial={reduceAnimations ? {} : { y: -10, opacity: 0 }}
+                      animate={reduceAnimations ? {} : { y: 0, opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      Register for Airdrop
+                    </motion.h2>
+                    <motion.p 
+                      className="text-gray-300 max-w-2xl mx-auto text-sm md:text-base leading-relaxed mb-2"
+                      initial={reduceAnimations ? {} : { y: 10, opacity: 0 }}
+                      animate={reduceAnimations ? {} : { y: 0, opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                    >
                       Complete the form below to register for the NUVOS airdrop. Make sure your wallet is connected to receive your tokens.
-                    </p>
+                    </motion.p>
+                    <motion.p 
+                      className="text-purple-300/80 text-xs md:text-sm font-medium"
+                      initial={reduceAnimations ? {} : { opacity: 0 }}
+                      animate={reduceAnimations ? {} : { opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      🎁 Each eligible wallet receives 10 POL tokens
+                    </motion.p>
                     <div className="mt-6 md:mt-8">
                       <motion.button
-                        whileHover={reduceAnimations ? {} : { scale: 1.05 }}
                         whileTap={reduceAnimations ? {} : { scale: 0.98 }}
                         onClick={() => setIsFormOpen(true)}
-                        className="w-full sm:w-auto px-6 md:px-8 py-3 md:py-4 btn-nuvo-base bg-nuvo-gradient-button font-medium text-white flex items-center justify-center gap-2 mx-auto shadow-lg shadow-purple-900/30 text-sm md:text-base"
+                        className="group relative w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 btn-nuvo-base bg-nuvo-gradient-button text-white rounded-xl "
+                        initial={reduceAnimations ? {} : { opacity: 0, y: 20 }}
+                        animate={reduceAnimations ? {} : { opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
                       >
-                        <FaGift /> Open Registration Form
+                        <div className="absolute inset-0 "></div>
+                        <div className="relative flex items-center justify-center gap-3">
+                          <FaGift className="text-lg" />
+                          <span>Start Registration</span>
+                        </div>
                       </motion.button>
                     </div>
                   </motion.div>

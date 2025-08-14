@@ -8,20 +8,31 @@ export class ConversationManager {
     this.saveConversationToStorage = debounce(this._saveConversation.bind(this), 2000);
   }
 
-  _saveConversation(messages) {
+  _saveConversation(messages, conversationId) {
     if (messages.length === 0) return;
-    
+
     const saveOperation = () => {
       try {
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        const newConversation = {
-          id: Date.now(),
-          timestamp: Date.now(),
-          messages: messages.slice(),
-          preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
-        };
-        
-        const updated = [newConversation, ...stored.slice(0, MAX_STORED_CONVERSATIONS - 1)];
+        let stored = this.loadConversationsFromStorage();
+        const existingIndex = stored.findIndex(c => c.id === conversationId);
+
+        if (existingIndex !== -1) {
+          // Update existing conversation
+          stored[existingIndex].messages = messages.slice();
+          stored[existingIndex].timestamp = Date.now();
+          stored[existingIndex].preview = messages[0]?.text?.substring(0, 100) || 'Updated conversation';
+        } else {
+          // Add new conversation
+          const newConversation = {
+            id: conversationId || Date.now(),
+            timestamp: Date.now(),
+            messages: messages.slice(),
+            preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
+          };
+          stored = [newConversation, ...stored];
+        }
+
+        const updated = stored.slice(0, MAX_STORED_CONVERSATIONS);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       } catch (error) {
         console.warn('Failed to save conversation:', error);
@@ -48,6 +59,11 @@ export class ConversationManager {
     } catch (fallbackError) {
       console.error('Critical storage error:', fallbackError);
     }
+  }
+
+  loadLastConversation() {
+    const conversations = this.loadConversationsFromStorage();
+    return conversations[0] || null;
   }
 
   loadConversationsFromStorage() {

@@ -247,10 +247,11 @@ const Header = ({ openUpdatesModal }) => {
             animate={pageControls}
             className="space-y-8"
           >
+            
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight">
-              <span className="inline-block pb-2">The Future  is</span>
+              <span className="inline-block pb-2">The future is</span>
               <br />
-              <span className=" text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">Blockchain</span>
+              <span className=" text-transparent bg-clip-text bg-nuvo-gradient-text tracking-tight">Nuvos Cloud</span>
             </h2>
 
             <p className="text-gray-300 text-lg leading-relaxed">

@@ -4,7 +4,7 @@ import { useStakingContract } from './useStakingContract';
 import { globalCache } from '../../utils/cache/CacheManager';
 import { globalRateLimiter } from '../../utils/performance/RateLimiter';
 import { fetchLogsInChunks } from '../../utils/blockchain/blockchainUtils';
-import ABI from '../../Abi/StakingContract.json';
+import ABI from '../../Abi/SmartStaking.json';
 
 export function useStakingEvents() {
   const { contract, getSignerAddress } = useStakingContract();

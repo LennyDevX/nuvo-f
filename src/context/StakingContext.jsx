@@ -60,6 +60,7 @@ export const StakingProvider = ({ children }) => {
     withdrawRewards,
     withdrawAll,
     emergencyWithdraw,
+    compound,
     isPending,
     currentTx
   } = useStakingTransactions();
@@ -350,23 +351,23 @@ export const StakingProvider = ({ children }) => {
     try {
       // Use corrected APY calculations
       const correctedAPY = {
-        hourly: 0.1, // 0.1%
-        daily: 2.4, // 2.4%
-        annual: 87.6 // 87.6% instead of 876%
+        hourly: 0.01, // 0.01% (contract value)
+        daily: 0.24, // 0.24% (contract value)
+        annual: 87.6 // Updated for SmartStaking v3.0 (contract value)
       };
       
       return {
-        baseAPY: correctedAPY.annual, // 87.6% instead of 876%
-        dailyROI: correctedAPY.daily, // 2.4%
-        hourlyROI: correctedAPY.hourly, // 0.1%
+        baseAPY: correctedAPY.annual, // Updated for SmartStaking v3.0
+        dailyROI: correctedAPY.daily, // 0.024%
+        hourlyROI: correctedAPY.hourly, // 0.001%
         verified: true
       };
     } catch (error) {
       console.error('Error calculating real APY:', error);
       return {
-        baseAPY: 87.6, // Fallback to corrected value
-        dailyROI: 2.4,
-        hourlyROI: 0.1,
+        baseAPY: 8.76, // Updated for SmartStaking v3.0
+        dailyROI: 0.24,
+        hourlyROI: 0.01,
         verified: false
       };
     }
@@ -380,6 +381,7 @@ export const StakingProvider = ({ children }) => {
     withdrawRewards,
     withdrawAll,
     emergencyWithdraw,
+    compound,
     
     // Data functions
     calculateUserRewards,

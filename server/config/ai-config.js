@@ -5,7 +5,7 @@ import env from './environment.js';
 const ai = new GoogleGenAI({ apiKey: env.geminiApiKey });
 
 // Fix: Remove extra quote from model name
-export const DEFAULT_MODEL = 'gemini-2.5-flash-preview-04-17'; // Keep working model as default
+export const DEFAULT_MODEL = 'gemini-2.5-flash'; // Keep working model as default
 
 // Available models with compatibility info
 export const AVAILABLE_MODELS = {
@@ -27,12 +27,25 @@ export const AVAILABLE_MODELS = {
     supportsStreaming: true,
     maxTokens: 1048576
   },
-  'gemini-2.5-flash-preview-04-17': {
-    name: 'gemini-2.5-flash-preview-04-17',
+  'gemini-2.5-flash': {
+    name: 'gemini-2.5-flash',
     isStable: false,
     supportsStreaming: true,
     maxTokens: 8192,
     isPreview: true
+  },
+
+  'gemma-3n-e4b-it': {
+    name: 'gemma-3n-e4b-it',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 8192
+  },
+  'gemma-3n-e4b-it': {
+    name: 'gemma-3n-e2b-it',
+    isStable: true,
+    supportsStreaming: true,
+    maxTokens: 8192
   }
 };
 

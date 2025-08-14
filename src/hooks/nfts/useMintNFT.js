@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from 'react';
 import { ethers } from 'ethers';
 import { uploadFileToIPFS, uploadJsonToIPFS } from '../../utils/blockchain/blockchainUtils';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../Abi/Marketplace.json';
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 
 // Move category map outside component to prevent recreation on each render
 const categoryMap = {
@@ -54,8 +54,9 @@ export default function useMintNFT() {
       
       console.log("Using contract address:", validatedContractAddress);
       
-      // Normalize the category to English first, then translate to Spanish for contract
+      // Normaliza la categoría a inglés y español
       const normalizedCategory = categoryMap[category] || 'coleccionables';
+      const categoryToSend = normalizedCategory;
       console.log("Category normalized:", category, "->", normalizedCategory);
 
       // Check if wallet is connected
@@ -73,9 +74,29 @@ export default function useMintNFT() {
       // Create contract instance
       const contract = new ethers.Contract(
         validatedContractAddress,
-        TokenizationAppABI.abi,
+        MarketplaceABI.abi,
         signer
       );
+
+      // --- NUEVO: Verifica si la categoría está registrada ---
+      try {
+        // Si el contrato tiene registerCategory, intenta registrar si es necesario
+        // Si ya está registrada, esto hará revert, pero no afecta si ya existe
+        await contract.registerCategory(categoryToSend);
+      } catch (catErr) {
+        // Si el error es porque ya está registrada, ignora
+        if (
+          catErr?.message?.includes("already registered") ||
+          catErr?.message?.includes("revert") ||
+          catErr?.data === "0x8f563f02"
+        ) {
+          // Ya está registrada o revertió, continuar
+        } else {
+          // Otro error, mostrar
+          console.warn("Error registering category:", catErr);
+        }
+      }
+      // --- FIN NUEVO ---
 
       // Step 1: Upload image to IPFS
       console.log("Uploading image to IPFS...");
@@ -142,7 +163,7 @@ export default function useMintNFT() {
       console.log("Executing minting transaction...");
       const transaction = await contract.createNFT(
         metadataUrl,
-        normalizedCategory,
+        categoryToSend,
         royaltyBasisPoints,
         {
           gasLimit: 500000 // Set a reasonable gas limit
@@ -216,4 +237,3 @@ export default function useMintNFT() {
 
   return { mintNFT, loading, error, success, txHash };
 }
-      

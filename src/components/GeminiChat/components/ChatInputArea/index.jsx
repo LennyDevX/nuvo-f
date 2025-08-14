@@ -1,26 +1,29 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { FaPaperPlane, FaBars, FaUserCircle, FaStop, FaEllipsisV, FaUpload, FaSearch, FaBrain, FaImage, FaCode, FaMicrophone } from 'react-icons/fa';
+import { FaPaperPlane, FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
+import ImageUpload from './ImageUpload';
+import MainInput from './MainInput';
 
 const ChatInputArea = ({
   input,
   setInput,
   onSendMessage,
-  isLoading = false,
+  status = 'idle',
+  isOnline = true,
   isInitializing = false,
   toggleLeftSidebar,
   toggleRightSidebar,
   leftSidebarOpen = false,
   rightSidebarOpen = false,
   onNewConversation,
-  hasMessages = false
+  hasMessages = false,
+  onSendImage // <-- Nuevo prop para enviar imagen
 }) => {
   const inputRef = useRef(null);
-  const textareaRef = useRef(null);
   const containerRef = useRef(null);
-  const [showFeaturesMenu, setShowFeaturesMenu] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Detect mobile device
   useEffect(() => {
@@ -39,18 +42,6 @@ const ChatInputArea = ({
       inputRef.current.focus();
     }
   }, [isInitializing, isMobile]);
-
-  // Close features menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showFeaturesMenu && !e.target.closest('.features-menu-container')) {
-        setShowFeaturesMenu(false);
-      }
-    };
-    
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [showFeaturesMenu]);
 
   // Handle input focus on mobile - ensure visibility
   const handleInputFocus = useCallback(() => {
@@ -88,25 +79,44 @@ const ChatInputArea = ({
     }
   }, [isMobile]);
 
-  // Enhanced message send handler
-  const handleSendMessage = useCallback((e) => {
-    e.preventDefault();
-    
-    // Blur input to close keyboard and show navbar
-    if (isMobile && inputRef.current) {
-      inputRef.current.blur();
-      
-      // Force show navbar immediately
-      const mobileNavbar = document.querySelector('nav.fixed.bottom-0');
-      if (mobileNavbar) {
-        mobileNavbar.style.transform = 'translateY(0%)';
-        mobileNavbar.style.transition = 'transform 0.3s ease-out';
-      }
+  const isDisabled = status === 'waiting_for_response' || status === 'streaming' || isInitializing || !isOnline;
+
+  // Unify submission logic into a single handler
+  const handleSubmit = useCallback((event) => {
+    event.preventDefault();
+    if ((!input.trim() && !selectedImage) || isDisabled) {
+      return;
+    }
+
+    if (selectedImage) {
+      // If there's an image, use the onSendImage prop from the parent
+      onSendImage(input, selectedImage);
+    } else {
+      // Otherwise, use the standard onSendMessage prop
+      onSendMessage(event);
+    }
+
+    // Reset the selected image and file input after submission
+    setSelectedImage(null);
+    // The parent component is responsible for clearing the text input
+  }, [input, selectedImage, isDisabled, onSendImage, onSendMessage]);
+
+  // Handle key press (Enter to send, Shift+Enter for new line)
+  const handleKeyPress = useCallback((e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
     
-    // Call the original send message function
-    onSendMessage(e);
-  }, [isMobile, onSendMessage]);
+    if (e.key === 'Escape') {
+      inputRef.current?.blur();
+    }
+    
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+      e.preventDefault();
+      onNewConversation?.();
+    }
+  }, [handleSubmit, onNewConversation]);
 
   // Enhanced mobile virtual keyboard handling
   useEffect(() => {
@@ -190,50 +200,7 @@ const ChatInputArea = ({
   // Handle input change with auto-resize
   const handleInputChange = useCallback((e) => {
     setInput(e.target.value);
-    
-    // Auto-resize textarea
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const newHeight = Math.min(textareaRef.current.scrollHeight, 120);
-      textareaRef.current.style.height = `${newHeight}px`;
-    }
   }, [setInput]);
-
-  // Handle key press (Enter to send, Shift+Enter for new line)
-  const handleKeyPress = useCallback((e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      onSendMessage(e);
-    }
-    
-    // Smart keyboard shortcuts
-    if (e.key === 'Escape') {
-      inputRef.current?.blur();
-      setShowFeaturesMenu(false);
-    }
-    
-    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-      e.preventDefault();
-      onNewConversation?.();
-    }
-  }, [onSendMessage, onNewConversation]);
-
-  // Future features list
-  const futureFeatures = [
-    { id: 'upload', icon: FaUpload, label: 'Upload Files', description: 'Share documents and images' },
-    { id: 'web-search', icon: FaSearch, label: 'Web Search', description: 'Real-time web information' },
-    { id: 'reasoning', icon: FaBrain, label: 'Advanced Reasoning', description: 'Deep analysis mode' },
-    { id: 'image-gen', icon: FaImage, label: 'Image Generation', description: 'Create AI images' },
-    { id: 'code-assist', icon: FaCode, label: 'Code Assistant', description: 'Programming help' },
-    { id: 'voice', icon: FaMicrophone, label: 'Voice Input', description: 'Speak to chat' }
-  ];
-
-  // Handle feature click
-  const handleFeatureClick = useCallback((featureId) => {
-    console.log(`Future feature clicked: ${featureId}`);
-    setShowFeaturesMenu(false);
-    // TODO: Implement feature handlers
-  }, []);
 
   return (
     <>
@@ -267,7 +234,7 @@ const ChatInputArea = ({
           `}
         </style>
       )}
-      
+
       <div 
         ref={containerRef}
         className={`
@@ -289,7 +256,7 @@ const ChatInputArea = ({
           }
         `}
         style={{ 
-          minHeight: isMobile ? '64px' : '70px',
+          minHeight: isMobile ? '70px' : '70px', // Reducido de 80px a 70px en móvil
           ...(isMobile && isKeyboardOpen && {
             position: 'fixed',
             bottom: '0px',
@@ -298,8 +265,8 @@ const ChatInputArea = ({
           })
         }}
       >
-        <div className="max-w-4xl mx-auto px-3 py-2 md:p-4">
-          <form onSubmit={handleSendMessage} className="relative">
+        <div className={`max-w-4xl mx-auto ${isMobile ? 'px-3 py-3' : 'px-3 py-2 md:p-4'}`}>
+          <form onSubmit={handleSubmit} className="relative">
             <div className="flex items-center gap-2 md:gap-3">
               {/* Left sidebar toggle - Desktop only */}
               <button
@@ -321,135 +288,52 @@ const ChatInputArea = ({
                 <FaBars className="w-4 h-4" />
               </button>
 
-              {/* Input container - Mobile optimized */}
-              <div className="flex-1 relative min-w-0">
-                <textarea
-                  ref={(el) => {
-                    inputRef.current = el;
-                    textareaRef.current = el;
-                  }}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyPress}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  placeholder="Message"
+              {hasMessages && (
+                <button
+                  type="button"
+                  onClick={onNewConversation}
                   className={`
-                    w-full resize-none rounded-xl 
-                    border-2 border-purple-800/20 
-                    bg-gray-500/20 backdrop-blur-sm 
-                    text-white placeholder-gray-400 
-                    focus:border-purple-500 focus:outline-none 
-                    focus:ring-2 focus:ring-purple-500/20 
-                    focus:bg-gray-700
-                    leading-tight
-                    transition-all duration-200
-                    shadow-lg
-                    touch-manipulation
-                    text-base
-                    px-3 py-3
-                    min-h-[48px]
-                    ${isKeyboardOpen ? 'focus:ring-4 focus:ring-purple-500/30 focus:border-purple-400' : ''}
+                    hidden md:flex items-center justify-center
+                    w-12 h-12 rounded-xl transition-all duration-200 ease-out
+                    border-2 shadow-lg flex-shrink-0
+                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
+                    bg-gradient-to-br from-purple-600 via-purple-700 to-purple-800 border-purple-500 text-white shadow-purple-500/30 scale-105
                   `}
-                  rows={1}
-                  style={{ 
-                    height: '48px',
-                    maxHeight: '48px',
-                    WebkitAppearance: 'none',
-                    fontSize: '16px',
-                    outline: 'none',
-                    lineHeight: '1.2'
-                  }}
-                  disabled={isLoading || isInitializing}
-                  aria-label="Chat message input"
-                  aria-describedby="input-help"
-                />
-              </div>
+                  aria-label="Start new conversation"
+                >
+                  <FaPlus className="w-4 h-4" />
+                </button>
+              )}
+
+              {/* Input container - Mobile optimized */}
+              <MainInput
+                ref={inputRef}
+                input={input}
+                onInputChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                status={status}
+                isDisabled={isDisabled}
+                isInitializing={isInitializing}
+                isKeyboardOpen={isKeyboardOpen}
+              />
 
               {/* Action buttons - Mobile optimized */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Features menu button - Hide when keyboard is open on mobile */}
-                <div className={`features-menu-container relative ${isMobile && isKeyboardOpen ? 'hidden' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => setShowFeaturesMenu(!showFeaturesMenu)}
-                    className="
-                      flex items-center justify-center 
-                      w-12 h-12 md:w-10 md:h-10 rounded-xl
-                      bg-gray-500/30 hover:bg-gray-600 text-gray-300 hover:text-white
-                      border-2 border-purple-800/20 hover:border-purple-500/50
-                      transition-all duration-200 ease-out
-                      shadow-lg hover:shadow-xl hover:scale-105 active:scale-95
-                      touch-manipulation
-                      focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                    "
-                    aria-label="More features"
-                    aria-expanded={showFeaturesMenu}
-                  >
-                    <FaEllipsisV className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                  </button>
-                  
-                  {/* Features dropdown menu - Adjusted for mobile */}
-                  {showFeaturesMenu && (
-                    <div className={`
-                      absolute bottom-full mb-3
-                      bg-gray-800/95 backdrop-blur-md border border-purprle-500/20 rounded-xl shadow-2xl
-                      overflow-hidden z-50
-                      ${isMobile 
-                        ? 'right-0 w-80 max-w-[95vw]' 
-                        : 'right-0 w-72 max-w-[90vw]'
-                      }
-                    `}>
-                      <div className="p-3 border-b border-purple-500/20 bg-gray-700/50">
-                        <h3 className="text-white font-medium text-sm">Coming Soon</h3>
-                        <p className="text-gray-400 text-xs">Advanced AI features in development</p>
-                      </div>
-                      
-                      <div className="max-h-64 overflow-y-auto">
-                        {futureFeatures.map((feature) => (
-                          <button
-                            key={feature.id}
-                            onClick={() => handleFeatureClick(feature.id)}
-                            className="
-                              w-full flex items-center gap-3 p-3 
-                              text-left hover:bg-gray-700/50 
-                              transition-colors duration-200
-                              min-h-[52px] touch-manipulation
-                              focus:outline-none focus:bg-gray-700/50
-                              disabled:opacity-50 disabled:cursor-not-allowed
-                            "
-                            disabled={true}
-                          >
-                            <div className="
-                              w-10 h-10 rounded-lg 
-                              bg-purple-600/20 
-                              flex items-center justify-center 
-                              flex-shrink-0
-                            ">
-                              <feature.icon className="w-4 h-4 text-purple-400" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-white font-medium text-sm truncate">
-                                {feature.label}
-                              </h4>
-                              <p className="text-gray-400 text-xs truncate">
-                                {feature.description}
-                              </p>
-                            </div>
-                            <div className="text-xs bg-yellow-600/20 text-yellow-300 px-2 py-1 rounded-full flex-shrink-0">
-                              Soon
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Send button - Always visible */}
+
+                {/* Botón para subir imagen */}
+                <ImageUpload
+                  selectedImage={selectedImage}
+                  setSelectedImage={setSelectedImage}
+                  isDisabled={isDisabled}
+                />
+
+                {/* Send button - ahora usa handleSendMultimodal */}
                 <button
                   type="submit"
-                  disabled={!input.trim() || isLoading || isInitializing}
+                  disabled={(!input.trim() && !selectedImage) || isDisabled}
                   className={`
                     flex items-center justify-center 
                     w-12 h-12 md:w-10 md:h-10 rounded-xl
@@ -457,21 +341,15 @@ const ChatInputArea = ({
                     shadow-lg hover:shadow-xl
                     touch-manipulation
                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                    ${!input.trim() || isLoading || isInitializing
+                    ${(!input.trim() && !selectedImage) || isDisabled
                       ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
-                      : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 hover:scale-105 active:scale-95 border-2 border-purple-500/50 hover:border-purple-400/70'
+                      : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pinkk -700 hover:to-purple-800 border-purple-500 hover:border-purple-600 scale-105'
                     }
                   `}
-                  aria-label={isLoading ? "Stop generation" : "Send message"}
                 >
-                  {isLoading ? (
-                    <FaStop className="w-4 h-4 md:w-3.5 md:h-3.5" />
-                  ) : (
-                    <FaPaperPlane className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
-                  )}
+                  <FaPaperPlane className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
                 </button>
               </div>
-
               {/* Right sidebar toggle - Desktop only */}
               <button
                 type="button"
@@ -492,7 +370,6 @@ const ChatInputArea = ({
                 <FaUserCircle className="w-4 h-4 " />
               </button>
             </div>
-            
             {/* Hidden help text for screen readers */}
             <div id="input-help" className="sr-only">
               Press Enter to send, Shift+Enter for new line, Ctrl+N for new conversation

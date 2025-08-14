@@ -1,5 +1,23 @@
 import { ethers } from 'ethers';
 import { calculateContractBasedAPY, calculateEnhancedUserAPY, calculateUserAPY, calculateBaseAPY, formatAPY } from './apyCalculations';
+import { 
+  calculateExpandedScore, 
+  calculateRiskMetrics, 
+  generateBasicPredictions,
+  calculateConsistencyIndex,
+  calculateCapitalEfficiency,
+  calculateTemporalDiversification,
+  calculateSharpeRatio,
+  calculateConcentrationRisk,
+  calculateLiquidityRisk,
+  calculateTimingRisk,
+  calculateOverallRiskScore,
+  getRiskLevel,
+  calculateOptimalStakingAmount,
+  identifyOptimalTiming,
+  projectFutureRewards,
+  generateRiskAdjustedRecommendations
+} from './advancedMetrics';
 
 /**
  * Utility function for safe BigInt/number parsing and formatting
@@ -53,153 +71,292 @@ export const calculateTimeBonus = (daysStaked) => {
 };
 
 /**
- * Advanced scoring algorithm for staking portfolio
- * @param {Object} stakingData - User's staking data
- * @param {Object} apyAnalysis - APY analysis results
- * @returns {number} Score from 0-100
+ * DEPRECATED: Replaced by calculateExpandedScore in advancedMetrics.js
+ * Keeping for backward compatibility
  */
 const calculateAdvancedScore = (stakingData, apyAnalysis) => {
-  let score = 0;
-  
-  // APY Performance Score (40 points max)
-  if (apyAnalysis) {
-    const apyRatio = apyAnalysis.effectiveAPY / apyAnalysis.baseAPY;
-    if (apyRatio >= 1.1) score += 40;      // Excellent: 10%+ above base
-    else if (apyRatio >= 1.05) score += 35; // Very Good: 5-10% above base
-    else if (apyRatio >= 1.0) score += 30;  // Good: At base APY
-    else if (apyRatio >= 0.95) score += 20; // Fair: 5% below base
-    else score += 10;                        // Poor: >5% below
-  }
-  
-  // Staking Amount Score (20 points max)
-  const totalStaked = safeParseAmount(stakingData.stakingStats.totalStaked);
-  if (totalStaked >= 10000) score += 20;
-  else if (totalStaked >= 5000) score += 16;
-  else if (totalStaked >= 1000) score += 12;
-  else if (totalStaked >= 500) score += 8;
-  else if (totalStaked >= 100) score += 4;
-  
-  // Time Commitment Score (20 points max)
-  const stakingDays = apyAnalysis?.metrics.stakingDays || 0;
-  if (stakingDays >= 365) score += 20;
-  else if (stakingDays >= 180) score += 16;
-  else if (stakingDays >= 90) score += 12;
-  else if (stakingDays >= 30) score += 8;
-  else if (stakingDays >= 7) score += 4;
-  
-  // Strategy Efficiency Score (10 points max)
-  const depositCount = stakingData.userDeposits?.length || 0;
-  const maxDeposits = stakingData.stakingConstants?.MAX_DEPOSITS_PER_USER || 300;
-  const utilizationRatio = depositCount / maxDeposits;
-  
-  if (utilizationRatio <= 0.2) score += 10;      // Very efficient
-  else if (utilizationRatio <= 0.5) score += 8;  // Good efficiency
-  else if (utilizationRatio <= 0.8) score += 5;  // Fair efficiency
-  else score += 2;                               // Poor efficiency
-  
-  // Bonus multiplier application (10 points max)
-  if (apyAnalysis?.multipliers) {
-    const totalBonus = apyAnalysis.multipliers.total;
-    if (totalBonus >= 5) score += 10;      // 5%+ total bonus
-    else if (totalBonus >= 3) score += 8;  // 3-5% total bonus
-    else if (totalBonus >= 1) score += 6;  // 1-3% total bonus
-    else if (totalBonus > 0) score += 4;   // Any bonus
-  }
-  
-  return Math.round(Math.max(0, Math.min(100, score)));
+  // Use the new expanded scoring system
+  const expandedScore = calculateExpandedScore(stakingData, apyAnalysis);
+  return expandedScore.totalScore;
 };
 
 /**
- * Generate intelligent recommendations based on APY analysis and score
+ * Generate enhanced intelligent recommendations with risk analysis and predictions
  * @param {Object} stakingData - User's staking data
  * @param {Object} apyAnalysis - APY analysis results
  * @param {number} score - Portfolio score
+ * @param {Object} expandedScore - Detailed scoring breakdown
+ * @param {Object} riskMetrics - Risk analysis results
+ * @param {Object} predictions - Basic predictions
  * @returns {Array} Array of intelligent recommendations
  */
-const generateIntelligentRecommendations = (stakingData, apyAnalysis, score) => {
+const generateEnhancedRecommendations = (stakingData, apyAnalysis, score, expandedScore, riskMetrics, predictions) => {
   const recommendations = [];
   const stakingDays = apyAnalysis?.metrics.stakingDays || 0;
   const totalStaked = safeParseAmount(stakingData.stakingStats.totalStaked);
   const depositCount = stakingData.userDeposits?.length || 0;
   const maxDeposits = stakingData.stakingConstants?.MAX_DEPOSITS_PER_USER || 300;
   
+  // FASE 1: Recomendaciones basadas en scoring expandido
+  
   // Critical recommendations (score < 30)
   if (score < 30) {
-    if (totalStaked < 100) {
-      recommendations.push("🚨 Critical: Increase your stake to at least 100 POL to improve rewards significantly.");
+    if (expandedScore.categoryScores.stakingAmount < 5) {
+      recommendations.push({
+        type: 'critical',
+        priority: 'high',
+        message: "🚨 Crítico: Aumenta tu stake a al menos 100 POL para mejorar significativamente las recompensas",
+        category: 'staking_amount',
+        impact: 'high'
+      });
     }
-    if (stakingDays < 30) {
-      recommendations.push("🚨 Critical: Stake for at least 30 days to establish a solid foundation.");
+    if (expandedScore.categoryScores.timeCommitment < 5) {
+      recommendations.push({
+        type: 'critical',
+        priority: 'high',
+        message: "🚨 Crítico: Mantén el staking por al menos 30 días para establecer una base sólida",
+        category: 'time_commitment',
+        impact: 'high'
+      });
     }
-    if (depositCount > maxDeposits * 0.8) {
-      recommendations.push("🚨 Critical: You're using too many deposit slots. Consolidate into larger deposits.");
+    if (expandedScore.categoryScores.efficiency < 3) {
+      recommendations.push({
+        type: 'critical',
+        priority: 'high',
+        message: "🚨 Crítico: Estás usando demasiados slots de depósito. Consolida en depósitos más grandes",
+        category: 'efficiency',
+        impact: 'medium'
+      });
     }
   }
   
+  // FASE 2: Recomendaciones basadas en análisis de riesgo
+  
+  // Risk-based recommendations
+  if (riskMetrics.overallRiskScore >= 60) {
+    recommendations.push({
+      type: 'risk_management',
+      priority: 'high',
+      message: `🛡️ Tu portfolio tiene un riesgo ${riskMetrics.riskLevel}. Score de riesgo: ${riskMetrics.overallRiskScore}/100`,
+      category: 'risk',
+      impact: 'high'
+    });
+  }
+  
+  if (riskMetrics.concentrationRisk.level === 'high') {
+    recommendations.push({
+      type: 'diversification',
+      priority: 'medium',
+      message: "📊 Diversifica tus depósitos para reducir el riesgo de concentración",
+      category: 'risk',
+      impact: 'medium'
+    });
+  }
+  
+  if (riskMetrics.liquidityRisk.level === 'high') {
+    recommendations.push({
+      type: 'liquidity',
+      priority: 'medium',
+      message: "💧 Reduce los retiros frecuentes para mejorar la eficiencia APY",
+      category: 'risk',
+      impact: 'medium'
+    });
+  }
+  
+  // Consistency-based recommendations
+  if (expandedScore.breakdown.consistency.score < 50) {
+    recommendations.push({
+      type: 'consistency',
+      priority: 'medium',
+      message: `📅 Mejora la consistencia de tus depósitos. Patrón actual: ${expandedScore.breakdown.consistency.frequency}`,
+      category: 'strategy',
+      impact: 'medium'
+    });
+  }
+  
+  // Capital efficiency recommendations
+  if (expandedScore.breakdown.capitalEfficiency.efficiencyRating === 'poor') {
+    recommendations.push({
+      type: 'efficiency',
+      priority: 'medium',
+      message: "⚡ Optimiza la eficiencia de capital. ROI anualizado actual: " + 
+               expandedScore.breakdown.capitalEfficiency.annualizedROI.toFixed(2) + "%",
+      category: 'efficiency',
+      impact: 'high'
+    });
+  }
+  
+  // FASE 2: Recomendaciones predictivas
+  
+  // Optimal amount recommendations
+  if (predictions.optimalStakingAmount.confidence === 'high') {
+    const currentStaked = safeParseAmount(stakingData.stakingStats.totalStaked);
+    if (predictions.optimalStakingAmount.recommended > currentStaked * 1.2) {
+      recommendations.push({
+        type: 'optimization',
+        priority: 'medium',
+        message: `🎯 Cantidad óptima recomendada: ${predictions.optimalStakingAmount.recommended} POL. ${predictions.optimalStakingAmount.reasoning}`,
+        category: 'optimization',
+        impact: 'high'
+      });
+    }
+  }
+  
+  // Timing recommendations
+  if (predictions.bestTimingWindows.pattern !== 'insufficient_data') {
+    const nextOptimalDate = new Date(predictions.bestTimingWindows.nextOptimalTime);
+    recommendations.push({
+      type: 'timing',
+      priority: 'low',
+      message: `⏰ Próximo momento óptimo para depositar: ${nextOptimalDate.toLocaleDateString()}`,
+      category: 'timing',
+      impact: 'low'
+    });
+  }
+  
+  // Future rewards projections
+  const monthlyProjection = predictions.futureRewards['30days'];
+  if (monthlyProjection && monthlyProjection.rewards > 0) {
+    recommendations.push({
+      type: 'projection',
+      priority: 'info',
+      message: `📈 Proyección 30 días: +${monthlyProjection.rewards.toFixed(2)} POL en recompensas`,
+      category: 'projection',
+      impact: 'low'
+    });
+  }
+  
   // Medium priority recommendations (score 30-70)
-  else if (score < 70) {
+  if (score >= 30 && score < 70) {
     if (apyAnalysis?.multipliers.timeBonus < 1) {
       const daysToNext = stakingDays < 90 ? 90 - stakingDays : 
                         stakingDays < 180 ? 180 - stakingDays : 365 - stakingDays;
       const nextBonus = stakingDays < 90 ? "1%" : stakingDays < 180 ? "3%" : "5%";
-      recommendations.push(`⏰ Stake for ${daysToNext} more days to unlock ${nextBonus} time bonus.`);
+      recommendations.push({
+        type: 'bonus',
+        priority: 'medium',
+        message: `⏰ Mantén el staking por ${daysToNext} días más para desbloquear ${nextBonus} de bono temporal`,
+        category: 'bonus',
+        impact: 'medium'
+      });
     }
     
     if (totalStaked < 1000 && apyAnalysis?.multipliers.volumeBonus === 0) {
-      recommendations.push("📈 Consider increasing your stake to 1000+ POL to unlock volume bonuses.");
-    }
-    
-    if (apyAnalysis?.effectiveAPY < apyAnalysis?.baseAPY) {
-      recommendations.push("⚡ Your APY is below base rate. Review strategy to maximize bonuses.");
+      recommendations.push({
+        type: 'volume',
+        priority: 'medium',
+        message: "📈 Considera aumentar tu stake a 1000+ POL para desbloquear bonos de volumen",
+        category: 'bonus',
+        impact: 'medium'
+      });
     }
   }
   
   // Optimization recommendations (score 70+)
-  else {
+  if (score >= 70) {
     if (stakingDays >= 90 && stakingDays < 180) {
-      recommendations.push("🎯 Excellent progress! Continue staking to reach 180 days for 3% bonus.");
+      recommendations.push({
+        type: 'milestone',
+        priority: 'low',
+        message: "🎯 ¡Excelente progreso! Continúa hasta los 180 días para el bono del 3%",
+        category: 'milestone',
+        impact: 'low'
+      });
     } else if (stakingDays >= 180 && stakingDays < 365) {
-      recommendations.push("🎯 Great job! You're on track for the maximum 5% bonus at 365 days.");
+      recommendations.push({
+        type: 'milestone',
+        priority: 'low',
+        message: "🎯 ¡Buen trabajo! Vas camino al bono máximo del 5% a los 365 días",
+        category: 'milestone',
+        impact: 'low'
+      });
     }
     
     if (totalStaked >= 5000 && apyAnalysis?.multipliers.volumeBonus < 2) {
-      recommendations.push("💎 Consider staking 10,000+ POL to maximize volume bonuses.");
-    }
-    
-    if (depositCount < maxDeposits * 0.2) {
-      recommendations.push("✨ Perfect deposit efficiency! You're maximizing rewards per slot.");
+      recommendations.push({
+        type: 'volume',
+        priority: 'low',
+        message: "💎 Considera hacer staking de 10,000+ POL para maximizar bonos de volumen",
+        category: 'bonus',
+        impact: 'medium'
+      });
     }
   }
   
   // Universal recommendations
   const pendingRewards = safeParseAmount(stakingData.stakingStats.pendingRewards);
   if (pendingRewards > totalStaked * 0.1) {
-    recommendations.push("💰 Consider claiming and re-staking rewards to compound earnings.");
+    recommendations.push({
+      type: 'compound',
+      priority: 'medium',
+      message: "💰 Considera reclamar y re-stakear las recompensas para capitalizar las ganancias",
+      category: 'compound',
+      impact: 'medium'
+    });
   }
   
   // Advanced strategy recommendations
   if (score >= 80) {
-    recommendations.push("🏆 Excellent portfolio! Consider sharing your strategy with the community.");
+    recommendations.push({
+      type: 'achievement',
+      priority: 'info',
+      message: "🏆 ¡Portfolio excelente! Considera compartir tu estrategia con la comunidad",
+      category: 'achievement',
+      impact: 'low'
+    });
+    
     if (apyAnalysis?.effectiveAPY > apyAnalysis?.baseAPY * 1.05) {
-      recommendations.push("🚀 Outstanding APY optimization! You're earning 5%+ above base rate.");
+      recommendations.push({
+        type: 'achievement',
+        priority: 'info',
+        message: "🚀 ¡Optimización APY sobresaliente! Estás ganando 5%+ sobre la tasa base",
+        category: 'achievement',
+        impact: 'low'
+      });
     }
   }
   
-  return recommendations;
+  // Sort recommendations by priority
+  const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1, 'info': 0 };
+  return recommendations.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
 };
 
 /**
- * Optimized version of staking portfolio analyzer with improved APY integration
- * @param {Object} stakingData - Data about user's staking activity
- * @returns {Object} Analysis results including score and recommendations
+ * Legacy function for backward compatibility
  */
-export const analyzeStakingPortfolio = (stakingData) => {
+const generateIntelligentRecommendations = (stakingData, apyAnalysis, score) => {
+  // Calculate additional metrics for enhanced recommendations
+  const expandedScore = calculateExpandedScore(stakingData, apyAnalysis);
+  const riskMetrics = calculateRiskMetrics(stakingData);
+  const predictions = generateBasicPredictions(stakingData, apyAnalysis);
+  
+  // Get enhanced recommendations
+  const enhancedRecs = generateEnhancedRecommendations(
+    stakingData, apyAnalysis, score, expandedScore, riskMetrics, predictions
+  );
+  
+  // Convert to legacy format (simple strings)
+  return enhancedRecs.map(rec => rec.message);
+};
+
+/**
+ * Analyze staking portfolio with enhanced metrics, risk analysis, and AI-powered recommendations
+ * @param {Object} stakingData - Complete staking data from the user
+ * @returns {Object} Comprehensive analysis results with Phase 1 & 2 enhancements
+ */
+const analyzeStakingPortfolio = (stakingData) => {
   // Initialize results object at the beginning
   const results = {
     score: 0,
     performanceSummary: "",
     recommendations: [],
-    metrics: {}
+    metrics: {},
+    // FASE 1 & 2: New enhanced analysis fields
+    expandedScore: null,
+    riskAnalysis: null,
+    predictions: null,
+    enhancedRecommendations: [],
+    categorizedRecommendations: {}
   };
 
   if (!stakingData || !stakingData.userDeposits || stakingData.userDeposits.length === 0) {
@@ -236,28 +393,58 @@ export const analyzeStakingPortfolio = (stakingData) => {
     const apyAnalysis = calculateUserAPY(userData, stakingData.stakingConstants);
     const baseAPYData = calculateBaseAPY(stakingData.stakingConstants);
     
-    // Calculate advanced score using APY analysis
-    results.score = calculateAdvancedScore(stakingData, apyAnalysis);
+    // FASE 1: Calculate expanded score with detailed breakdown
+    const expandedScore = calculateExpandedScore(stakingData, apyAnalysis);
+    results.expandedScore = expandedScore;
     
-    // Enhanced performance summary using APY data
+    // Legacy score for backward compatibility
+    results.score = expandedScore.totalScore;
+    
+    // FASE 2: Calculate risk metrics and predictions
+    const riskMetrics = calculateRiskMetrics(stakingData);
+    const predictions = generateBasicPredictions(stakingData, apyAnalysis);
+    
+    results.riskAnalysis = riskMetrics;
+    results.predictions = predictions;
+    
+    // Generate enhanced recommendations with risk analysis
+    const enhancedRecommendations = generateEnhancedRecommendations(
+      stakingData, apyAnalysis, results.score, expandedScore, riskMetrics, predictions
+    );
+    
+    results.enhancedRecommendations = enhancedRecommendations;
+    
+    // Legacy recommendations for backward compatibility
+    results.recommendations = enhancedRecommendations.map(rec => rec.message);
+    
+    // Category-based recommendations for better organization
+    results.categorizedRecommendations = {
+      critical: enhancedRecommendations.filter(rec => rec.type === 'critical'),
+      risk: enhancedRecommendations.filter(rec => rec.category === 'risk'),
+      optimization: enhancedRecommendations.filter(rec => rec.category === 'optimization'),
+      strategy: enhancedRecommendations.filter(rec => rec.category === 'strategy'),
+      achievements: enhancedRecommendations.filter(rec => rec.type === 'achievement')
+    };
+    
+    // Enhanced performance summary using APY data and risk analysis
     const apyComparison = apyAnalysis.effectiveAPY / baseAPYData.cappedAPY;
     const totalEarnings = safeClaimed + pendingRewards;
     
     if (results.score >= 80) {
-      results.performanceSummary = `🏆 Exceptional performance! Your effective APY of ${formatAPY(apyAnalysis.effectiveAPY)} is ${((apyComparison - 1) * 100).toFixed(1)}% ${apyComparison >= 1 ? 'above' : 'below'} base rate. You've mastered staking optimization!`;
+      results.performanceSummary = riskMetrics.riskLevel === 'high' ? 
+        `🏆 Excelente rendimiento pero con alto riesgo! Tu APY efectivo de ${formatAPY(apyAnalysis.effectiveAPY)} es ${((apyComparison - 1) * 100).toFixed(1)}% ${apyComparison >= 1 ? 'sobre' : 'bajo'} la tasa base. Score de riesgo: ${riskMetrics.overallRiskScore}/100` :
+        `🏆 ¡Rendimiento excepcional! Tu APY efectivo de ${formatAPY(apyAnalysis.effectiveAPY)} es ${((apyComparison - 1) * 100).toFixed(1)}% ${apyComparison >= 1 ? 'sobre' : 'bajo'} la tasa base. ¡Has dominado la optimización de staking!`;
     } else if (results.score >= 60) {
-      results.performanceSummary = `📈 Strong performance! Your effective APY of ${formatAPY(apyAnalysis.effectiveAPY)} shows good optimization. With ${stakingDays} days staked, you're building solid returns.`;
+      results.performanceSummary = `📈 ¡Buen rendimiento! Tu APY efectivo de ${formatAPY(apyAnalysis.effectiveAPY)} muestra buena optimización. Con ${stakingDays} días en staking, estás construyendo retornos sólidos. Riesgo: ${riskMetrics.riskLevel}`;
     } else if (results.score >= 40) {
-      results.performanceSummary = `⚡ Moderate performance. Your APY is ${formatAPY(apyAnalysis.effectiveAPY)}, with room for improvement. Focus on time bonuses and deposit efficiency.`;
+      results.performanceSummary = `⚡ Rendimiento moderado. Tu APY es ${formatAPY(apyAnalysis.effectiveAPY)}, con espacio para mejoras. Enfócate en bonos de tiempo y eficiencia de depósitos. Riesgo: ${riskMetrics.riskLevel}`;
     } else {
-      results.performanceSummary = `🎯 Early stage portfolio. Your current APY is ${formatAPY(apyAnalysis.effectiveAPY)}. Follow recommendations below to optimize your strategy.`;
+      results.performanceSummary = `🎯 Portfolio en etapa temprana. Tu APY actual es ${formatAPY(apyAnalysis.effectiveAPY)}. Sigue las recomendaciones para optimizar tu estrategia. Riesgo: ${riskMetrics.riskLevel}`;
     }
     
-    // Generate intelligent recommendations
-    results.recommendations = generateIntelligentRecommendations(stakingData, apyAnalysis, results.score);
-    
-    // Enhanced metrics with APY breakdown
+    // Enhanced metrics with APY breakdown and Phase 1 & 2 additions
     results.metrics = {
+      // Existing metrics
       totalStaked: totalStaked.toFixed(2),
       pendingRewards: pendingRewards.toFixed(4),
       totalEarnings: totalEarnings.toFixed(4),
@@ -272,7 +459,25 @@ export const analyzeStakingPortfolio = (stakingData) => {
       totalWithdrawn: safeWithdrawn.toFixed(2),
       rewardsClaimed: safeClaimed.toFixed(4),
       holdRatio: formatAPY(apyAnalysis.metrics.holdRatio),
-      roi: formatAPY(apyAnalysis.metrics.roi)
+      roi: formatAPY(apyAnalysis.metrics.roi),
+      
+      // FASE 1: Advanced metrics
+      sharpeRatio: calculateSharpeRatio(stakingData, apyAnalysis),
+      consistencyIndex: calculateConsistencyIndex(stakingData),
+      capitalEfficiency: calculateCapitalEfficiency(stakingData, apyAnalysis),
+      temporalDiversification: calculateTemporalDiversification(stakingData),
+      
+      // FASE 2: Risk metrics summary
+      riskScore: riskMetrics.overallRiskScore,
+      riskLevel: riskMetrics.riskLevel,
+      concentrationRisk: riskMetrics.concentrationRisk.level,
+      liquidityRisk: riskMetrics.liquidityRisk.level,
+      timingRisk: riskMetrics.timingRisk.level,
+      
+      // FASE 2: Prediction highlights
+      optimalStakingAmount: predictions.optimalStakingAmount.recommended,
+      nextOptimalTiming: predictions.bestTimingWindows.nextOptimalTime,
+      projectedRewards30d: predictions.futureRewards['30days']?.rewards || 0
     };
     
   } catch (error) {
@@ -294,10 +499,44 @@ export const analyzeStakingPortfolio = (stakingData) => {
       totalWithdrawn: "0.00",
       rewardsClaimed: "0.00",
       holdRatio: "0.0%",
-      roi: "0.0%"
+      roi: "0.0%",
+      riskScore: 0,
+      riskLevel: 'unknown'
     };
   }
 
+  // Add metadata for version tracking
+  results.timestamp = new Date().toISOString();
+  results.version = '2.0'; // Indicates Phase 1 & 2 implementation
+  results.phases = ['expanded_metrics', 'risk_analysis', 'basic_predictions'];
+
   return results;
+};
+
+// Export the main analysis function and new Phase 1 & 2 functions
+export { 
+  analyzeStakingPortfolio,
+  // FASE 1: Advanced metrics functions
+  calculateExpandedScore,
+  calculateSharpeRatio,
+  calculateConsistencyIndex,
+  calculateCapitalEfficiency,
+  calculateTemporalDiversification,
+  // FASE 2: Risk analysis functions
+  calculateRiskMetrics,
+  calculateConcentrationRisk,
+  calculateLiquidityRisk,
+  calculateTimingRisk,
+  calculateOverallRiskScore,
+  getRiskLevel,
+  // FASE 2: Prediction functions
+  generateBasicPredictions,
+  calculateOptimalStakingAmount,
+  identifyOptimalTiming,
+  projectFutureRewards,
+  generateRiskAdjustedRecommendations,
+  // Enhanced recommendation functions
+  generateEnhancedRecommendations,
+  generateIntelligentRecommendations // Legacy compatibility
 };
 

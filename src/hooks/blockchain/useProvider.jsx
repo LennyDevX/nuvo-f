@@ -6,14 +6,55 @@ import { getAlchemyRpcUrl, getAlchemyApiKey } from '../../utils/blockchain/alche
 // Public RPC fallbacks if primary provider fails
 const PUBLIC_RPC_ENDPOINTS = {
   137: [ // Polygon Mainnet
-    "https://polygon-rpc.com",
-    "https://rpc-mainnet.matic.network",
-    "https://matic-mainnet.chainstacklabs.com"
+    "https://polygon.drpc.org",
+    "https://polygon-rpc.com"
   ],
   80001: [ // Polygon Mumbai
     "https://rpc-mumbai.maticvigil.com",
-    "https://matic-mumbai.chainstacklabs.com"
+    "https://polygon-mumbai.g.alchemy.com/v2/demo",
+    "https://rpc.ankr.com/polygon_mumbai"
   ]
+};
+
+// Provider configuration for FallbackProvider
+const getProviderConfigs = (chainId) => {
+  const configs = [];
+  const networkName = chainId === 137 ? 'polygon-mainnet' : 'polygon-mumbai';
+  const networkDisplayName = chainId === 137 ? 'Polygon Mainnet' : 'Mumbai Testnet';
+  
+  // Try to add Alchemy provider first (priority 1)
+  try {
+    const alchemyUrl = getAlchemyRpcUrl({ network: networkName });
+    configs.push({
+      provider: new ethers.JsonRpcProvider(alchemyUrl, { name: chainId === 137 ? 'polygon' : 'mumbai', chainId }),
+      priority: 1,
+      stallTimeout: 3000,
+      weight: 2
+    });
+  } catch (error) {
+    console.warn('Could not initialize Alchemy provider:', error.message);
+  }
+  
+  // Add public RPC endpoints as fallbacks (priority 2)
+  const fallbacks = PUBLIC_RPC_ENDPOINTS[chainId] || [];
+  fallbacks.forEach((url, index) => {
+    try {
+      configs.push({
+        provider: new ethers.JsonRpcProvider(url, { 
+          name: chainId === 137 ? 'polygon' : 'mumbai', 
+          chainId,
+          timeout: 10000 // 10 second timeout
+        }),
+        priority: 2,
+        stallTimeout: 8000, // Increased timeout
+        weight: 1
+      });
+    } catch (error) {
+      console.warn(`Failed to initialize RPC provider ${url}:`, error.message);
+    }
+  });
+  
+  return { configs, networkName, networkDisplayName };
 };
 
 const useProvider = () => {
@@ -21,9 +62,10 @@ const useProvider = () => {
   const [error, setError] = useState(null);
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
-  const [isConnecting, setIsConnecting] = useState(false);  const providerRef = useRef(null);
-  const networkInitialized = useRef(false);  const CHAIN_ID = parseInt(import.meta.env.VITE_CHAIN_ID || '137');
-    // Safely get RPC URL with error handling - moved inside initProvider
+  const [isConnecting, setIsConnecting] = useState(false);
+  const providerRef = useRef(null);
+  const networkInitialized = useRef(false);
+  const CHAIN_ID = parseInt(import.meta.env.VITE_CHAIN_ID || '137');
   
   // Helper to safely initialize provider
   const initProvider = useCallback(async () => {
@@ -36,77 +78,63 @@ const useProvider = () => {
       if (cachedNetwork) {
         setChainId(cachedNetwork.chainId);
         console.log("Loaded network info from cache:", cachedNetwork.name);
-      }      // Generate RPC URL dynamically to ensure env vars are loaded
-      let alchemyUrl;
-      try {
-        alchemyUrl = getAlchemyRpcUrl({ network: CHAIN_ID === 137 ? 'polygon-mainnet' : 'polygon-mumbai' });
-      } catch (error) {
-        console.error('Failed to generate Alchemy RPC URL, using fallbacks:', error);
-        throw new Error("Alchemy not available, using fallbacks");
       }
-
+      
       console.log(`Connecting to ${CHAIN_ID === 137 ? 'Polygon Mainnet' : 'Mumbai Testnet'}...`);
       
-      // Create provider with correct network config
-      const provider = new ethers.JsonRpcProvider(
-        alchemyUrl,
-        {
-          name: CHAIN_ID === 137 ? 'polygon' : 'mumbai',
-          chainId: CHAIN_ID
-        }
-      );
-
-      // Test the connection
-      try {
-        const network = await provider.getNetwork();
-        setChainId(network.chainId);
-        console.log("Network connection successful:", network.name);
-        await globalCache.set(cacheKey, { chainId: network.chainId, name: network.name }, 30 * 60 * 1000); // 30 minutes
-      } catch (networkError) {
-        console.error("Primary RPC endpoint failed:", networkError);
-        
-        // Try fallback RPC endpoints
-        const fallbacks = PUBLIC_RPC_ENDPOINTS[CHAIN_ID] || [];
-        for (const fallbackUrl of fallbacks) {
-          console.log(`Trying fallback RPC: ${fallbackUrl}`);
-          try {
-            const fallbackProvider = new ethers.JsonRpcProvider(
-              fallbackUrl,
-              { name: CHAIN_ID === 137 ? 'polygon' : 'mumbai', chainId: CHAIN_ID }
-            );
-            
-            const network = await fallbackProvider.getNetwork();
-            setChainId(network.chainId);
-            console.log("Fallback connection successful!");
-            await globalCache.set(cacheKey, { chainId: network.chainId, name: network.name }, 30 * 60 * 1000); // 30 minutes
-            
-            // Store the working fallback provider
-            providerRef.current = fallbackProvider;
-            networkInitialized.current = true;
-            setProvider(fallbackProvider);
-            return; // Exit if a fallback works
-          } catch (fallbackErr) {
-            console.warn(`Fallback RPC ${fallbackUrl} failed:`, fallbackErr);
-          }
-        }
-        
-        // If all fallbacks fail, throw the original error
-        throw networkError;
+      // Get provider configurations
+      const { configs, networkName, networkDisplayName } = getProviderConfigs(CHAIN_ID);
+      
+      if (configs.length === 0) {
+        throw new Error("No RPC providers available");
       }
       
-      // If primary connection worked, store it
-      providerRef.current = provider;
-      networkInitialized.current = true;
-      setProvider(provider);
+      // Create FallbackProvider with all available providers
+       const fallbackProvider = new ethers.FallbackProvider(configs, CHAIN_ID, {
+         quorum: 1, // Only need one provider to respond successfully
+         stallTimeout: 8000, // Wait 8 seconds before trying the next provider
+         eventQuorum: 1,
+         eventStallTimeout: 8000
+       });
       
-      console.log("Provider successfully initialized");
-      setError(null);
-    } catch (error) {      console.error("Provider initialization error:", error);
+      // Test the connection
+      try {
+        const network = await fallbackProvider.getNetwork();
+        
+        // Verify network matches expected chain ID
+        if (network.chainId !== BigInt(CHAIN_ID)) {
+          throw new Error(`Network chain ID mismatch: expected ${CHAIN_ID}, got ${network.chainId}`);
+        }
+        
+        setChainId(Number(network.chainId));
+        console.log("Network connection successful:", network.name);
+        await globalCache.set(cacheKey, { chainId: Number(network.chainId), name: network.name }, 30 * 60 * 1000); // 30 minutes
+        
+        // Store the working provider
+        providerRef.current = fallbackProvider;
+        networkInitialized.current = true;
+        setProvider(fallbackProvider);
+        console.log("FallbackProvider successfully initialized with", configs.length, "providers");
+        setError(null);
+      } catch (networkError) {
+        console.error("FallbackProvider initialization failed:", networkError);
+        throw networkError;
+      }
+    } catch (error) {
+      console.error("Provider initialization error:", error);
       setError(error.message);
       // Reset initialization flag on error
       networkInitialized.current = false;
+      
+      // Prevent infinite retry loops by adding a delay
+      setTimeout(() => {
+        if (!providerRef.current && !networkInitialized.current) {
+          console.log("Retrying provider initialization after delay...");
+          initProvider();
+        }
+      }, 10000); // Wait 10 seconds before retry
     }
-  }, [CHAIN_ID]); // Removed ALCHEMY_KEY and RPC_URL as they're now generated dynamically
+  }, [CHAIN_ID]);
 
   // Access browser wallet provider for sending transactions
   const getWalletProvider = useCallback(async () => {
@@ -133,6 +161,9 @@ const useProvider = () => {
     
     setIsConnecting(true);
     try {
+      // Clear explicit disconnect flag when connecting
+      localStorage.removeItem('walletExplicitlyDisconnected');
+      
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts'
       });
@@ -161,6 +192,15 @@ const useProvider = () => {
     }
   }, [initProvider]);
 
+  // Explicit disconnect function
+  const disconnect = useCallback(() => {
+    console.log('Explicitly disconnecting wallet');
+    localStorage.setItem('walletExplicitlyDisconnected', 'true');
+    setAccount(null);
+    setChainId(null);
+    setError(null);
+  }, []);
+
   // Initial provider setup
   useEffect(() => {
     if (providerRef.current || networkInitialized.current) {
@@ -182,6 +222,13 @@ const useProvider = () => {
     const getAccount = async () => {
       if (window.ethereum) {
         try {
+          // Only auto-detect accounts if user hasn't explicitly disconnected
+          const isDisconnected = localStorage.getItem('walletExplicitlyDisconnected') === 'true';
+          if (isDisconnected) {
+            console.log('Wallet was explicitly disconnected, skipping auto-detection');
+            return;
+          }
+          
           const accounts = await window.ethereum.request({ method: 'eth_accounts' });
           if (accounts.length > 0) {
             setAccount(accounts[0]);
@@ -200,6 +247,13 @@ const useProvider = () => {
     // Setup event listeners
     if (window.ethereum) {
       const handleAccountsChanged = (accounts) => {
+        // Check if user explicitly disconnected
+        const isDisconnected = localStorage.getItem('walletExplicitlyDisconnected') === 'true';
+        if (isDisconnected) {
+          console.log('Ignoring account change - wallet explicitly disconnected');
+          return;
+        }
+        
         if (accounts.length > 0) {
           setAccount(accounts[0]);
         } else {
@@ -247,7 +301,8 @@ const useProvider = () => {
     chainId,
     isInitialized: networkInitialized.current && providerRef.current !== null,
     isConnecting,
-    connect
+    connect,
+    disconnect
   };
 };
 

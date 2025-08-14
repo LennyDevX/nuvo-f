@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ethers } from 'ethers';
-import TokenizationAppABI from '../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../Abi/Marketplace.json';
 import { fetchNFTs, fetchTokenMetadata, ipfsToHttp } from '../../utils/blockchain/blockchainUtils';
 import useProvider from '../blockchain/useProvider';
 import { nftCollectionCache } from '../../utils/cache/NFTCollectionCache';
 
-// Directly access the environment variable and log it for debugging
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS;
+
+
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2;
 console.log('Raw TOKENIZATION CONTRACT ADDRESS from env:', CONTRACT_ADDRESS);
 
 // Make sure the address is valid by removing any surrounding whitespace
@@ -16,8 +17,8 @@ const cleanedAddress = CONTRACT_ADDRESS ? CONTRACT_ADDRESS.trim() : '';
 const isValidAddress = ethers.isAddress(cleanedAddress);
 console.log('Is tokenization address valid format?', isValidAddress);
 
-// Use the valid address or fallback
-const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
+// Use the valid address or fallback to V2 address
+const TOKENIZATION_ADDRESS = isValidAddress ? cleanedAddress : "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
 console.log('Final TOKENIZATION_ADDRESS being used:', TOKENIZATION_ADDRESS);
 
 // Default image placeholder
@@ -192,20 +193,12 @@ export default function useUserNFTs(address) {
         // Fallback to direct contract method with optimization
         console.log("Using optimized direct contract method");
         
-        if (!window.ethereum) {
-          throw new Error("No se encontró una wallet de Ethereum");
+        if (!ethProvider) {
+          throw new Error("No se encontró un proveedor de Ethereum inicializado");
         }
-        
-        
-        // Connect to provider without shadowing
-        if (!window.ethereum) {
-          throw new Error("No se encontró una wallet de Ethereum");
-        }
-        
-        const browserProvider = new ethers.BrowserProvider(window.ethereum);
         
         try {
-          const code = await browserProvider.getCode(TOKENIZATION_ADDRESS);
+          const code = await ethProvider.getCode(TOKENIZATION_ADDRESS);
           if (code === '0x' || code === '') {
             console.error("Contract does not exist at address:", TOKENIZATION_ADDRESS);
             throw new Error(`No se encontró un contrato en la dirección: ${TOKENIZATION_ADDRESS}`);
@@ -216,11 +209,44 @@ export default function useUserNFTs(address) {
           throw new Error("Error verificando la existencia del contrato");
         }
         
+        // Verify contract address before creating contract instance
+        if (!TOKENIZATION_ADDRESS || !ethers.isAddress(TOKENIZATION_ADDRESS)) {
+          console.error('Invalid TOKENIZATION_ADDRESS in useUserNFTs:', TOKENIZATION_ADDRESS);
+          throw new Error(`Dirección de contrato inválida: ${TOKENIZATION_ADDRESS}`);
+        }
+        
+        if (!MarketplaceABI || !MarketplaceABI.abi) {
+          console.error('MarketplaceABI is missing or invalid');
+          throw new Error('ABI del contrato no disponible');
+        }
+        
+        console.log('🔧 [useUserNFTs] Creating contract with:', {
+          address: TOKENIZATION_ADDRESS,
+          abiLength: MarketplaceABI.abi.length,
+          providerType: ethProvider?.constructor?.name,
+          providerReady: ethProvider?._isProvider,
+          providerExists: !!ethProvider
+        });
+        
+        // Additional validation before contract creation
+        if (!ethProvider) {
+          console.error('❌ [useUserNFTs] ethProvider is null or undefined');
+          throw new Error('Provider no disponible');
+        }
+        
+        if (!ethProvider._isProvider && !ethProvider.provider) {
+          console.error('❌ [useUserNFTs] Provider is not properly initialized');
+          throw new Error('Provider no está inicializado correctamente');
+        }
+        
         const contract = new ethers.Contract(
           TOKENIZATION_ADDRESS,
-          TokenizationAppABI.abi,
-          browserProvider
+          MarketplaceABI.abi,
+          ethProvider
         );
+        
+        console.log('✅ [useUserNFTs] Contract created successfully:', !!contract);
+        console.log('✅ [useUserNFTs] Contract target:', contract.target);
         
         let tokenIds = [];
         try {
@@ -274,11 +300,8 @@ export default function useUserNFTs(address) {
         
         if (tokenIds.length === 0) {
           console.log("No tokens found for user");
-          const cacheKey = `user_nfts_${address}_${TOKENIZATION_ADDRESS}`;
-          userNFTCache.set(cacheKey, {
-            nfts: [],
-            timestamp: Date.now()
-          });
+          // Cambia userNFTCache por nftCollectionCache
+          nftCollectionCache.setUserNFTs(address, TOKENIZATION_ADDRESS, []);
           setNfts([]);
           setLoading(false);
           return;

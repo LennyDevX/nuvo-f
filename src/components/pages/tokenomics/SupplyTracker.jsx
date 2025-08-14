@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { m } from 'framer-motion';
-import { FaCoins } from 'react-icons/fa';
+import { FaLayerGroup, FaGem, FaClone, FaCheckCircle } from 'react-icons/fa';
 import LoadingSpinner from '../../ui/LoadingSpinner';
 
-const SupplyTracker = () => {
+const CollectionTracker = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [supplyData, setSupplyData] = useState({
-    totalSupply: '0',
-    circulatingSupply: '0',
-    percentCirculating: 0,
-    remainingSupply: '0'
+  const [collectionData, setCollectionData] = useState({
+    seasonName: '',
+    collectionSupply: 0,
+    uniqueNFTs: 0,
+    editionsPerNFT: 0,
+    totalMinted: 0,
+    percentMinted: 0,
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -43,21 +45,31 @@ const SupplyTracker = () => {
       // Simulate API call delay - reduced for mobile
       await new Promise(resolve => setTimeout(resolve, isMobile ? 500 : 1000));
       
-      // Sample data - replace with your actual data fetching
-      setSupplyData({
-        totalSupply: '21,000,000',
-        circulatingSupply: '1,000,000',
-        percentCirculating: 0,
-        remainingSupply: '21,000,000'
+      // New logic based on user request
+      const uniqueNFTs = 10;
+      const editionsPerNFT = 1000;
+      const collectionSupply = uniqueNFTs * editionsPerNFT;
+      const totalMinted = 1; // As per user's example "1 NFT minteado"
+      const percentage = (totalMinted / collectionSupply) * 100;
+
+      setCollectionData({
+        seasonName: 'Season 1: The Genesis Keys',
+        collectionSupply: collectionSupply.toLocaleString(),
+        uniqueNFTs: uniqueNFTs.toLocaleString(),
+        editionsPerNFT: editionsPerNFT.toLocaleString(),
+        totalMinted: totalMinted.toLocaleString(),
+        percentMinted: percentage,
       });
     } catch (error) {
-      console.error("Error fetching supply data:", error);
+      console.error("Error fetching collection data:", error);
       // Set fallback values in case of error
-      setSupplyData({
-        totalSupply: '21,000,000',
-        circulatingSupply: '0',
-        percentCirculating: 0,
-        remainingSupply: '21,000,000'
+      setCollectionData({
+        seasonName: 'Season 1',
+        collectionSupply: '10,000',
+        uniqueNFTs: '10',
+        editionsPerNFT: '1,000',
+        totalMinted: '0',
+        percentMinted: 0,
       });
     } finally {
       setIsLoading(false);
@@ -72,10 +84,10 @@ const SupplyTracker = () => {
   // Memoize percentage calculation
   const formattedPercentage = useMemo(() => {
     if (isLoading) return 0;
-    return typeof supplyData.percentCirculating === 'number' 
-      ? supplyData.percentCirculating.toFixed(2) 
-      : 0;
-  }, [isLoading, supplyData.percentCirculating]);
+    return typeof collectionData.percentMinted === 'number' 
+      ? collectionData.percentMinted.toFixed(2) 
+      : '0.00';
+  }, [isLoading, collectionData.percentMinted]);
 
   // Memoize animation variants for better performance
   const progressAnimationVariants = useMemo(() => ({
@@ -105,9 +117,9 @@ const SupplyTracker = () => {
   const ProgressBar = useMemo(() => (
     <div className="mt-4 sm:mt-6">
       <div className="flex justify-between text-xs sm:text-sm mb-2">
-        <span className="text-gray-400">Supply Distribution</span>
+        <span className="text-gray-400">Minting Progress</span>
         {!isLoading && (
-          <span className="text-purple-300 font-medium">{formattedPercentage}% Circulating</span>
+          <span className="text-purple-300 font-medium">{formattedPercentage}% Minted</span>
         )}
       </div>
       
@@ -138,88 +150,90 @@ const SupplyTracker = () => {
       {/* Component Header */}
       <div className="flex items-center mb-3 sm:mb-4">
         <div className="p-2 bg-purple-900/30 rounded-lg mr-3 flex-shrink-0">
-          <FaCoins className="text-purple-400 text-lg sm:text-xl" />
+          <FaLayerGroup className="text-purple-400 text-lg sm:text-xl" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-lg sm:text-xl font-bold text-white">NUVOS Token Supply</h2>
-          <p className="text-gray-400 text-xs sm:text-sm">Fixed cap of 21M tokens</p>
+          <h2 className="text-lg sm:text-xl font-bold text-white">Seasonal Collection Tracker</h2>
+          <p className="text-gray-400 text-xs sm:text-sm">
+            {isLoading ? 'Loading...' : collectionData.seasonName}
+          </p>
         </div>
       </div>
 
       {/* Main Content - improved mobile grid */}
       <div className={gridClassName}>
-        {/* Total Supply */}
+        {/* Collection Supply */}
         <div 
           className="bg-gradient-to-br from-purple-900/25 to-purple-800/15 p-3 sm:p-4 rounded-lg 
                      border border-purple-500/20 hover:border-purple-400/40 transition-all
                      flex flex-col justify-between"
           style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-xs sm:text-sm mb-1">Total Supply</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Collection Supply</div>
           {isLoading ? (
             <div className="mt-1 h-6 flex justify-center">
               {SkeletonLoader}
             </div>
           ) : (
             <div className="text-base sm:text-lg lg:text-xl font-bold text-white leading-tight">
-              {supplyData.totalSupply || '0'}
+              {collectionData.collectionSupply || '0'}
             </div>
           )}
         </div>
 
-        {/* Circulating Supply */}
-        <div 
-          className="bg-gradient-to-br from-green-900/25 to-green-800/15 p-3 sm:p-4 rounded-lg 
-                     border border-green-500/20 hover:border-green-400/40 transition-all
-                     flex flex-col justify-between"
-          style={{ minHeight: '85px' }}
-        >
-          <div className="text-gray-400 text-xs sm:text-sm mb-1">Circulating</div>
-          {isLoading ? (
-            <div className="mt-1 h-6">
-              {SkeletonLoader}
-            </div>
-          ) : (
-            <div className="text-base sm:text-lg lg:text-xl font-bold text-green-400 leading-tight">
-              {supplyData.circulatingSupply || '0'}
-            </div>
-          )}
-        </div>
-
-        {/* Percent Circulating */}
+        {/* Unique NFTs */}
         <div 
           className="bg-gradient-to-br from-blue-900/25 to-blue-800/15 p-3 sm:p-4 rounded-lg 
                      border border-blue-500/20 hover:border-blue-400/40 transition-all
                      flex flex-col justify-between"
           style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-xs sm:text-sm mb-1">% Circulating</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Unique NFTs</div>
           {isLoading ? (
             <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
             <div className="text-base sm:text-lg lg:text-xl font-bold text-blue-400 leading-tight">
-              {formattedPercentage}%
+              {collectionData.uniqueNFTs || '0'}
             </div>
           )}
         </div>
 
-        {/* Remaining Supply */}
+        {/* Editions per NFT */}
+        <div 
+          className="bg-gradient-to-br from-green-900/25 to-green-800/15 p-3 sm:p-4 rounded-lg 
+                     border border-green-500/20 hover:border-green-400/40 transition-all
+                     flex flex-col justify-between"
+          style={{ minHeight: '85px' }}
+        >
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Editions per NFT</div>
+          {isLoading ? (
+            <div className="mt-1 h-6">
+              {SkeletonLoader}
+            </div>
+          ) : (
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-green-400 leading-tight">
+              {collectionData.editionsPerNFT || '0'}
+            </div>
+          )}
+        </div>
+
+        {/* Total Minted */}
         <div 
           className="bg-gradient-to-br from-purple-900/25 to-pink-900/15 p-3 sm:p-4 rounded-lg 
                      border border-purple-500/20 hover:border-purple-400/40 transition-all
                      flex flex-col justify-between"
           style={{ minHeight: '85px' }}
         >
-          <div className="text-gray-400 text-xs sm:text-sm mb-1">Remaining</div>
+          <div className="text-gray-400 text-xs sm:text-sm mb-1">Total Minted</div>
           {isLoading ? (
             <div className="mt-1 h-6">
               {SkeletonLoader}
             </div>
           ) : (
             <div className="text-base sm:text-lg lg:text-xl font-bold text-purple-400 leading-tight">
-              {supplyData.remainingSupply || '0'}
+              {collectionData.totalMinted || '0'}
             </div>
           )}
         </div>
@@ -231,4 +245,4 @@ const SupplyTracker = () => {
   );
 };
 
-export default React.memo(SupplyTracker);
+export default React.memo(CollectionTracker);

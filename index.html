@@ -35,17 +35,22 @@
                   https://*.firebase.com
                   https://*.firebaseio.com
                   https://identitytoolkit.googleapis.com
+                  https://api.gemini.com
+                  https://generativelanguage.googleapis.com
                   https://polygon-rpc.com
-                  https://rpc-mainnet.matic.network
-                  https://matic-mainnet.chainstacklabs.com
-                  https://rpc-mumbai.maticvigil.com
-                  https://matic-mumbai.chainstacklabs.com
+                  https://polygon.drpc.org
+                  https://mumbai.polygonscan.com
+                  https://polygonscan.com
+                  https://api.polygonscan.com
+                  https://api-testnet.polygonscan.com
                   https://*.vercel.app
                   https://*.vercel.com
                   https://vercel.live
                   ws://localhost:*
-                  wss://localhost:*;
-      img-src 'self' data: 
+                  wss://localhost:*
+                  wss://polygon-rpc.com
+                  wss://polygon.drpc.org;
+      img-src 'self' data: blob: 
                    https://gateway.pinata.cloud 
                    https://ipfs.io
                    https://cloudflare-ipfs.com
@@ -63,6 +68,7 @@
                    https://polygonscan.com 
                    https://*.googleapis.com;
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseapp.com https://apis.google.com https://*.vercel.app https://*.vercel.com https://vercel.live;
+      worker-src 'self' blob: data:;
       style-src 'self' 'unsafe-inline';
       font-src 'self' data:;
       frame-src 'self' https://widget.dodoex.io https://*.firebaseapp.com https://*.vercel.app https://*.vercel.com;

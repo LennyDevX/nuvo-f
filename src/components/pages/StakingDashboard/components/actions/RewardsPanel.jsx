@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaCoins, FaWallet } from 'react-icons/fa';
+import { FaCoins, FaWallet, FaRecycle } from 'react-icons/fa';
 import { ActionButton } from '../../ui/CommonComponents';
 
 // Helper function for formatting dates
@@ -21,7 +21,8 @@ const RewardsPanel = ({
   totalStaked,
   isPending,
   onWithdrawRewards, 
-  onWithdrawAll 
+  onWithdrawAll,
+  onCompound
 }) => {
   return (
     <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-slate-700/30 p-4">
@@ -44,7 +45,7 @@ const RewardsPanel = ({
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-2">
         <ActionButton
           onClick={onWithdrawRewards}
           icon={<FaCoins />}
@@ -52,6 +53,16 @@ const RewardsPanel = ({
           isPrimary={hasRewards}
           disabled={isPending || !hasRewards}
           className="flex-1 btn-nuvo-base bg-nuvo-gradient-button" 
+        />
+
+        <ActionButton
+          onClick={onCompound}
+          icon={<FaRecycle />}
+          label="Compound"
+          isPrimary={false}
+          disabled={isPending || !hasRewards}
+          className="flex-1 btn-nuvo-base btn-nuvo-outline"
+          title="Reinvest your rewards to earn compound interest"
         />
 
         <ActionButton
@@ -65,7 +76,7 @@ const RewardsPanel = ({
       </div>
 
       <div className="text-xs text-slate-400 mt-3 py-2 px-3 bg-slate-800/50 rounded-lg">
-        <strong className="text-indigo-400">Tip:</strong> Claiming rewards keeps your staked tokens active and earning. Withdrawing all will return both your principal and rewards to your wallet.
+        <strong className="text-indigo-400">Smart Staking:</strong> Use <strong className="text-green-400">Compound</strong> to manually reinvest your rewards and earn compound interest. Claiming rewards keeps your staked tokens active. Withdrawing all returns both principal and rewards to your wallet.
       </div>
     </div>
   );

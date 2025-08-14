@@ -171,6 +171,25 @@ const OptimizedImage = ({
 
   const optimizedSrc = getOptimizedSrc(currentSrc);
 
+  // Enhanced placeholder with better accessibility
+  const renderPlaceholder = () => {
+    return (
+      <div 
+        className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800/20 to-gray-900/20"
+        role="img"
+        aria-label={`Loading ${alt}`}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <div 
+            className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"
+            aria-hidden="true"
+          />
+          <span className="text-xs text-gray-400 font-medium">Loading...</span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div 
       className={`relative overflow-hidden ${className}`}
@@ -180,20 +199,18 @@ const OptimizedImage = ({
         height: height || 'auto'
       }}
     >
-      {!isLoaded && !error && (
-        <div 
-          className="absolute inset-0"
-          style={{ 
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 1.5s infinite linear'
-          }}
-        />
-      )}
+      {!isLoaded && !error && renderPlaceholder()}
       
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center text-white text-xs" style={{background: 'transparent'}}>
-          ⚠️ Error
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-gray-800/20"
+          role="img"
+          aria-label={`Failed to load ${alt}`}
+        >
+          <div className="text-center">
+            <div className="text-2xl mb-2">⚠️</div>
+            <span className="text-xs text-gray-400">Failed to load</span>
+          </div>
         </div>
       )}
       

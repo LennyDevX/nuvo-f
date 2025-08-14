@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FaUsers } from 'react-icons/fa';
 import NavLink from '../navigation/NavLink';
 import WalletConnect from '../web3/WalletConnect';
 import BetaBadge from '../ui/BetaBadge';
@@ -24,7 +25,7 @@ import { WalletContext } from '../../context/WalletContext';
 import { logger } from '../../utils/debug/logger';
 
 // Importa la variable de entorno
-const contractAddress = import.meta.env.VITE_STAKING_ADDRESS || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
+const contractAddress = import.meta.env.VITE_STAKING_ADDRESS_V2 || '0x051485a1B6Ad819415BDcBFDEd5B73D0d6c52Afd';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -107,12 +108,13 @@ const Navbar = () => {
     return `${contractAddress.slice(0, 6)}...${contractAddress.slice(-6)}`;
   }, []);
 
-  // Updated navigation items with Home button
+  // Updated navigation items with Creators button
   const navigationItems = useMemo(() => [
     { path: '/', label: 'Home', icon: FaHome },
     { path: '/my-nfts', label: 'NFTs', icon: FaImage },
     { path: '/staking', label: 'Staking', icon: FaCoins },
     { path: '/marketplace', label: 'Marketplace', icon: FaStoreAlt },
+    { path: '/creators', label: 'Creators', icon: FaUsers },
     { path: '/tokenomics', label: 'Token', icon: FaChartPie },
     { path: '/chat', label: 'Chat', icon: FaComments },
   ], []);
@@ -131,8 +133,7 @@ const Navbar = () => {
     balance = '0',
     network = 'Polygon',
     walletConnected = false,
-    handleDisconnect,
-    connect = null
+    handleDisconnect
   } = walletContext || {};
 
   // Debug: Verificar el estado del contexto - UPDATED WITH SMART LOGGING

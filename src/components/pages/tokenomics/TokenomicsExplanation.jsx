@@ -1,24 +1,24 @@
 import React, { useMemo } from "react";
 import { m } from "framer-motion";
 
-const TokenomicsExplanation = () => {
+const NFTnomicsModel = () => {
   // Memoize card data
   const cardData = useMemo(() => [
     {
-      title: "Driving Ecosystem Growth",
-      description: "Our tokenomics model ensures that resources are allocated to foster innovation, incentivize participation, and drive the growth of the ecosystem."
+      title: "Seasonal Collections for Sustained Growth",
+      description: "Our model is built on seasonal NFT collections, released every 4 months. This ensures continuous innovation, engagement, and fresh opportunities for the community."
     },
     {
-      title: "Empowering the Community",
-      description: "By dedicating 60% of tokens to community rewards and ecosystem development, we align the success of the protocol with the value delivered to our users."
+      title: "NFTs as Keys to a Creator Economy",
+      description: "Each NFT serves as a unique key, granting access to our DeFi ecosystem. This empowers creators to monetize their work and users to participate in a vibrant digital economy."
     },
     {
-      title: "Ensuring Long-Term Sustainability",
-      description: "A carefully designed token distribution model ensures the protocol remains sustainable, balancing rewards with ongoing development and operational needs."
+      title: "Real-World Utility and Value",
+      description: "We bridge the digital and physical worlds. NFTs unlock tangible benefits like discounts, exclusive access, and physical rewards, creating lasting value for holders."
     },
     {
-      title: "Transparency and Trust",
-      description: "Our tokenomics strategy is built on transparency, providing clear insights into token allocation and usage to build trust with our community."
+      title: "Transparent Value via Smart Contracts",
+      description: "Our NFT-nomics are built on transparency. All utilities and benefits are encoded directly into smart contracts, ensuring trust and clarity for our entire community."
     }
   ], []);
 
@@ -96,11 +96,10 @@ const TokenomicsExplanation = () => {
       <div className="mb-4 sm:mb-6">
         <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-white mb-2 sm:mb-3 
                        bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-          Understanding the Importance of Tokenomics
+          Understanding Our NFT-nomics Model
         </h2>
         <p className="text-gray-300 text-xs sm:text-sm lg:text-base leading-relaxed">
-          Tokenomics is the backbone of any blockchain ecosystem. It defines how tokens are distributed, 
-          utilized, and sustained over time, ensuring a fair and thriving environment for all participants.
+          NFT-nomics is the backbone of our ecosystem. It defines how our NFT collections create, deliver, and sustain value over time, ensuring a fair and thriving environment for all participants.
         </p>
       </div>
       {cardsGrid}
@@ -108,4 +107,4 @@ const TokenomicsExplanation = () => {
   );
 };
 
-export default React.memo(TokenomicsExplanation);
+export default React.memo(NFTnomicsModel);

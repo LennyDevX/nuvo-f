@@ -7,7 +7,7 @@ import { toast } from 'react-hot-toast';
 import { WalletContext } from '../../../../context/WalletContext';
 import SpaceBackground from '../../../effects/SpaceBackground';
 import LoadingSpinner from '../../../ui/LoadingSpinner';
-import TokenizationAppABI from '../../../../Abi/TokenizationApp.json';
+import MarketplaceABI from '../../../../Abi/Marketplace.json';
 import IPFSImage from '../../../ui/IPFSImage';
 import useListNFT from '../../../../hooks/nfts/useListNFT';
 import { getCSPCompliantImageURL, getOptimizedImageUrl, getCategoryDisplayName, normalizeCategory } from '../../../../utils/blockchain/blockchainUtils';
@@ -18,10 +18,16 @@ const nftCache = new Map();
 const metadataCache = new Map();
 
 // Ensure we have the contract address from environment variables or hardcoded fallback
-const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS || "0x98d2fC435d4269CB5c1057b5Cd30E75944ae406F";
+const CONTRACT_ADDRESS = import.meta.env.VITE_TOKENIZATION_ADDRESS_V2 || "0xe8f1A205ACf4dBbb08d6d8856ae76212B9AE7582";
 
 // Debug log
 console.log("TokenizationApp Contract Address:", CONTRACT_ADDRESS);
+
+// Utilidad para abreviar wallets
+const formatWallet = (address) => {
+  if (!address) return '';
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+};
 
 const NFTDetail = () => {
   const { tokenId } = useParams();
@@ -33,10 +39,10 @@ const NFTDetail = () => {
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [copied, setCopied] = useState(false);
+  // Nuevo estado para mostrar el formulario de listado
   const [showListForm, setShowListForm] = useState(false);
-  const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('collectible');
-  // Add missing state variables
+  const [listPrice, setListPrice] = useState('');
+  const [listCategory, setListCategory] = useState(nft?.category || 'collectible');
   const [isLiking, setIsLiking] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   
@@ -103,7 +109,7 @@ const NFTDetail = () => {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(
           formattedAddress,
-          TokenizationAppABI.abi,
+          MarketplaceABI.abi,
           provider
         );
 
@@ -263,7 +269,7 @@ const NFTDetail = () => {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(
         CONTRACT_ADDRESS,
-        TokenizationAppABI.abi,
+        MarketplaceABI.abi,
         signer
       );
       
@@ -361,19 +367,34 @@ const NFTDetail = () => {
     navigate('/marketplace');
   };
 
+  // Handler para mostrar el formulario de listado
+  const handleShowListForm = () => setShowListForm(true);
+  const handleHideListForm = () => setShowListForm(false);
+
+  // Handler para listar NFT (debes conectar con tu lógica real)
+  const handleListNFT = (e) => {
+    e.preventDefault();
+    listNFT({
+      tokenId: nft.tokenId,
+      price: listPrice,
+      category: listCategory
+    });
+    setShowListForm(false);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="relative min-h-screen pb-10"
+      className="relative min-h-screen pb-20"
     >
       <SpaceBackground />
       
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <Link 
           to="/marketplace" 
-          className="inline-flex items-center gap-3 px-4 py-2 mb-6 bg-gray-800/60 hover:bg-gray-700/80 backdrop-blur-md border border-gray-600/40 hover:border-purple-500/50 rounded-lg text-white transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
+          className="inline-flex items-center gap-3 px-4 py-2 mb-8 bg-gray-800/60 hover:bg-gray-700/80 backdrop-blur-md border border-gray-600/40 hover:border-purple-500/50 rounded-lg text-white transition-all duration-300 hover:transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/20"
         >
           <FaArrowLeft className="text-purple-400" />
           <span className="font-medium text-white">Back to Marketplace</span>
@@ -388,186 +409,171 @@ const NFTDetail = () => {
         )}
         
         {nft && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6">
-            {/* Image Section - Hidden on mobile, visible on desktop */}
-            <div className="hidden lg:block bg-gray-800/80 backdrop-blur-md rounded-lg p-4 py-20 shadow-lg border border-gray-700/50">
-              <div className="aspect-square w-full max-w-md mx-auto">
-                <IPFSImage
-                  src={getOptimizedImageUrl(nft.image)}
-                  alt={nft.name}
-                  className="w-full h-full rounded-lg overflow-hidden"
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              
-              {/* Desktop Action Buttons */}
-              <div className="flex items-center justify-center gap-4 mt-6">
-                <button
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className={`flex items-center px-6 py-3 rounded-lg transition-all duration-300 font-medium nft-detail-action-button ${
-                    hasLiked 
-                      ? 'bg-red-600 text-white shadow-lg nft-like-button liked' 
-                      : 'bg-gray-700 text-gray-200 hover:bg-gray-600 nft-like-button border border-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    {isLiking ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <FaHeart />
-                    )
-                    }
-                    <span className="text-white">{isLiking ? 'Loading...' : hasLiked ? 'Liked' : 'Like'} ({likesCount})</span>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+            {/* Image Section */}
+            <div className="lg:col-span-2">
+              <div className="sticky top-24">
+                <div className="bg-gray-800/80 backdrop-blur-md rounded-lg p-4 shadow-lg border border-gray-700/50">
+                  <div className="aspect-square w-full">
+                    <IPFSImage
+                      src={getOptimizedImageUrl(nft.image)}
+                      alt={nft.name}
+                      className="w-full h-full rounded-lg object-cover"
+                    />
                   </div>
-                </button>
-                
-                <button
-                  onClick={handleShare}
-                  disabled={shareLoading}
-                  className="flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium nft-detail-action-button nft-share-button border border-purple-500"
-                >
-                  <div className="flex items-center gap-2">
-                    {shareLoading ? (
-                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : copied ? (
-                      <FaCheck />
-                    ) : (
-                      <FaCopy />
-                    )}
-                    <span className="text-white">{shareLoading ? 'Sharing...' : copied ? 'Copied!' : 'Share'}</span>
-                  </div>
-                </button>
-              </div>
-
-              {/* Marketplace Button */}
-              <button
-                onClick={handleGoToMarketplace}
-                className="btn-nuvo-base bg-nuvo-gradient-button nft-marketplace-button mt-4 w-full"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <FaStore className="w-4 h-4" />
-                  <span className="text-white font-medium">Explore Marketplace</span>
                 </div>
-              </button>
+              </div>
             </div>
             
             {/* Details Section */}
-            <div className="bg-gray-800/80 backdrop-blur-md rounded-lg p-4 lg:p-6 shadow-lg lg:col-span-1 border border-gray-700/50">
-              <div className="space-y-4 lg:space-y-6">
+            <div className="lg:col-span-3">
+              <div className="bg-gray-800/80 backdrop-blur-md rounded-lg p-6 shadow-lg border border-gray-700/50 space-y-6">
                 {/* Header */}
                 <div>
-                  <h1 className="text-2xl lg:text-3xl font-bold text-white mb-2">{nft.name}</h1>
-                  <div className="flex items-center text-gray-300 text-sm">
-                    <span className="bg-gray-700/80 px-3 py-1 rounded-full mr-3 text-white font-medium">#{nft.tokenId}</span>
+                  <div className="flex items-center gap-4 mb-2">
+                    <span className="bg-gray-700/80 px-3 py-1 rounded-full text-white font-medium">#{nft.tokenId}</span>
                     <span className="bg-purple-600 px-3 py-1 rounded-full text-white font-medium">
                       {getCategoryDisplayName(nft.category)}
                     </span>
                   </div>
+                  <h1 className="text-3xl lg:text-4xl font-bold text-white">{nft.name}</h1>
                 </div>
                 
-                {/* Price Section with Mobile Image */}
+                {/* Price Section */}
                 <div className="bg-gray-700/80 backdrop-blur-sm rounded-lg p-4 border border-gray-600/50">
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Price Info */}
-                    <div className="flex-1">
-                      <span className="text-gray-200 font-medium block mb-2">Current Price</span>
-                      <div className="flex items-center text-xl lg:text-2xl font-bold text-white mb-2">
-                        <FaEthereum className="mr-2 text-blue-400" />
-                        <span className="text-white">{parseFloat(ethers.formatEther(nft.price)).toFixed(2)} POL</span>
-                      </div>
-                      {nft.isForSale && (
-                        <div className="text-green-400 text-sm font-medium">
-                          <FaTags className="inline mr-1" />
-                          <span className="text-green-400">Available for purchase</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Mobile Image - only show on mobile */}
-                    <div className="lg:hidden w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0">
-                      <IPFSImage
-                        src={getOptimizedImageUrl(nft.image)}
-                        alt={nft.name}
-                        className="w-full h-full rounded-lg overflow-hidden"
-                        style={{ objectFit: 'cover' }}
-                      />
-                    </div>
+                  <span className="text-gray-300 font-medium block mb-2">Current Price</span>
+                  <div className="flex items-center text-2xl lg:text-3xl font-bold text-white mb-2">
+                    <FaEthereum className="mr-2 text-blue-400" />
+                    <span>{parseFloat(ethers.formatEther(nft.price)).toFixed(2)} POL</span>
                   </div>
+                  {nft.isForSale && (
+                    <div className="text-green-400 text-sm font-medium flex items-center">
+                      <FaCheck className="inline mr-2 bg-green-500/20 text-green-400 rounded-full p-0.5" />
+                      <span>Available for purchase</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Mobile Action Buttons */}
-                <div className="lg:hidden space-y-3">
-                  <div className="flex items-center justify-center gap-3">
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={handleGoToMarketplace}
+                      className="btn-nuvo-base bg-nuvo-gradient-button w-full"
+                    >
+                      <FaStore className="w-4 h-4" />
+                      <span className="font-medium">Explore</span>
+                    </button>
+                    <button
+                      onClick={handleShowListForm}
+                      className="btn-nuvo-base btn-nuvo-primary w-full"
+                      disabled={nft.isForSale}
+                    >
+                      {nft.isForSale ? 'Already Listed' : 'List NFT'}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={handleLike}
                       disabled={isLiking}
-                      className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-300 font-medium text-sm nft-detail-action-button ${
-                        hasLiked 
-                          ? 'bg-red-600 text-white shadow-lg nft-like-button liked border border-red-500' 
-                          : 'bg-gray-700 text-gray-200 hover:bg-gray-600 nft-like-button border border-gray-600'
+                      className={`btn-nuvo-base btn-nuvo-outline w-full ${
+                        hasLiked ? 'active-like' : ''
                       }`}
                     >
-                      <div className="flex items-center gap-2">
-                        {isLiking ? (
-                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <FaHeart />
-                        )}
-                        <span className="text-white">{isLiking ? 'Loading' : hasLiked ? 'Liked' : 'Like'} ({likesCount})</span>
-                      </div>
+                      {isLiking ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent  rounded-full animate-spin" />
+                      ) : (
+                        <FaHeart />
+                      )}
+                      <span>{hasLiked ? 'Liked' : 'Like'} ({likesCount})</span>
                     </button>
                     
                     <button
                       onClick={handleShare}
                       disabled={shareLoading}
-                      className="flex-1 flex items-center justify-center px-4 py-3 bg-purple-600 text-white rounded-lg transition-all duration-300 hover:bg-purple-700 font-medium text-sm nft-detail-action-button nft-share-button border border-purple-500"
+                      className="btn-nuvo-base btn-nuvo-outline share w-full"
                     >
-                      <div className="flex items-center gap-2">
-                        {shareLoading ? (
-                          <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : copied ? (
-                          <FaCheck />
-                        ) : (
-                          <FaCopy />
-                        )}
-                        <span className="text-white">{shareLoading ? 'Loading' : copied ? 'Copied!' : 'Share'}</span>
-                      </div>
+                      {shareLoading ? (
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : copied ? (
+                        <FaCheck />
+                      ) : (
+                        <FaShareAlt />
+                      )}
+                      <span>{copied ? 'Copied!' : 'Share'}</span>
                     </button>
                   </div>
-
-                  {/* Marketplace Button */}
-                  <button
-                    onClick={handleGoToMarketplace}
-                    className="btn-nuvo-base bg-nuvo-gradient-button nft-marketplace-button w-full"
-                  >
-                    <div className="flex items-center justify-center gap-2">
-                      <FaStore className="w-4 h-4" />
-                      <span className="text-white font-medium">Explore Marketplace</span>
-                    </div>
-                  </button>
+                  
+                  {/* Listing Form */}
+                  {showListForm && (
+                    <form onSubmit={handleListNFT} className="bg-gray-900/70 p-4 rounded-lg mt-3 border border-gray-700">
+                      <h4 className="text-md font-semibold text-white mb-3">List your NFT</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm text-gray-300 mb-1">Price (POL)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="any"
+                            value={listPrice}
+                            onChange={e => setListPrice(e.target.value)}
+                            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 focus:ring-purple-500 focus:border-purple-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-300 mb-1">Category</label>
+                          <input
+                            type="text"
+                            value={listCategory}
+                            onChange={e => setListCategory(e.target.value)}
+                            className="w-full p-2 rounded bg-gray-800 text-white border border-gray-600 focus:ring-purple-500 focus:border-purple-500"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-3 mt-4">
+                        <button type="submit" className="btn-nuvo-base bg-blue-600 hover:bg-blue-700 text-white flex-1">Confirm Listing</button>
+                        <button type="button" onClick={handleHideListForm} className="btn-nuvo-base bg-gray-600 hover:bg-gray-700 text-white flex-1">Cancel</button>
+                      </div>
+                    </form>
+                  )}
                 </div>
                 
                 {/* Description */}
                 {nft.description && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">Description</h3>
-                    <p className="text-gray-200 leading-relaxed text-sm lg:text-base">{nft.description}</p>
+                  <div className="border-t border-gray-700 pt-6">
+                    <h3 className="text-xl font-semibold text-white mb-3">Description</h3>
+                    <p className="text-gray-300 leading-relaxed">{nft.description}</p>
                   </div>
                 )}
                 
                 {/* Attributes */}
                 {nft.attributes && nft.attributes.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-white mb-3">Attributes</h3>
-                    <div className="grid grid-cols-2 gap-2 lg:gap-3">
+                  <div className="border-t border-gray-700 pt-6">
+                    <h3 className="text-xl font-semibold text-white mb-3">Attributes</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                       {nft.attributes.map((attr, index) => (
-                        <div key={index} className="bg-gray-700/80 border border-gray-600/50 rounded-lg p-2 lg:p-3">
-                          <div className="text-gray-200 text-xs lg:text-sm uppercase tracking-wide font-medium">
+                        <div key={index} className="bg-gray-700/80 border border-gray-600/50 rounded-lg p-3 text-center">
+                          <div className="text-purple-400 text-sm uppercase tracking-wider font-medium">
                             {attr.trait_type}
                           </div>
-                          <div className="text-white font-semibold mt-1 text-sm lg:text-base">
-                            {attr.value}
+                          <div className="text-white font-semibold mt-1 text-lg break-all">
+                            {(() => {
+                              const value = String(attr.value);
+                              const traitType = String(attr.trait_type).toLowerCase();
+
+                              if (ethers.isAddress(value)) {
+                                return formatWallet(value);
+                              }
+
+                              if ((traitType === 'created' || traitType === 'date') && !isNaN(Date.parse(value))) {
+                                return new Date(value).toLocaleDateString();
+                              }
+
+                              return attr.value;
+                            })()}
                           </div>
                         </div>
                       ))}
@@ -576,46 +582,45 @@ const NFTDetail = () => {
                 )}
                 
                 {/* Owner & Seller Info */}
-                <div className="space-y-3">
-                  <h3 className="text-lg font-semibold text-white">Details</h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between py-2 border-b border-gray-600">
-                      <span className="text-gray-200 flex items-center text-sm font-medium">
-                        <FaUser className="mr-2" />
+                <div className="border-t border-gray-700 pt-6">
+                  <h3 className="text-xl font-semibold text-white mb-4">Details</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
+                      <span className="text-gray-300 flex items-center font-medium">
+                        <FaUser className="mr-3 text-gray-400" />
                         Owner
                       </span>
                       <a
                         href={`https://polygonscan.com/address/${nft.owner}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
+                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-sm"
                       >
-                        {`${nft.owner.slice(0, 6)}...${nft.owner.slice(-4)}`}
+                        {formatWallet(nft.owner)}
                       </a>
                     </div>
                     
-                    <div className="flex items-center justify-between py-2 border-b border-gray-600">
-                      <span className="text-gray-200 flex items-center text-sm font-medium">
-                        <FaTags className="mr-2" />
+                    <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
+                      <span className="text-gray-300 flex items-center font-medium">
+                        <FaTags className="mr-3 text-gray-400" />
                         Seller
                       </span>
                       <a
                         href={`https://polygonscan.com/address/${nft.seller}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-xs lg:text-sm"
+                        className="text-purple-400 hover:text-purple-300 transition-colors font-mono text-sm"
                       >
-                        {`${nft.seller.slice(0, 6)}...${nft.seller.slice(-4)}`}
+                        {formatWallet(nft.seller)}
                       </a>
                     </div>
                     
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-200 flex items-center text-sm font-medium">
-                        <FaClock className="mr-2" />
+                    <div className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
+                      <span className="text-gray-300 flex items-center font-medium">
+                        <FaClock className="mr-3 text-gray-400" />
                         Listed
                       </span>
-                      <span className="text-white text-xs lg:text-sm font-medium">
+                      <span className="text-white text-sm font-medium">
                         {new Date(nft.listedTimestamp * 1000).toLocaleDateString()}
                       </span>
                     </div>

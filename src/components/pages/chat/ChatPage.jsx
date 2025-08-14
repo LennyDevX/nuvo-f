@@ -169,7 +169,7 @@ const ChatPage = () => {
   return (
     <>
       {/* Full screen background */}
-      <div className="fixed inset-0 z-0 bg-white dark:bg-gray-900">
+      <div className="fixed inset-0 z-0 chat-background">
         <SpaceBackground 
           starDensity={isLowPerformance ? "minimal" : "low"} 
           animationDisabled={shouldReduceMotion || isLowPerformance}
@@ -190,7 +190,7 @@ const ChatPage = () => {
         className="fixed inset-0 z-10 md:pt-[var(--header-height)]"
       >
         {isContainerVisible && (
-          <div className="w-full h-full flex overflow-hidden bg-white dark:bg-gray-900">
+          <div className="w-full h-full flex overflow-hidden chat-background">
             {/* Sidebars */}
             <Suspense fallback={<ComponentLoader className="w-72 h-full" />}>
               <LeftSidebar 
