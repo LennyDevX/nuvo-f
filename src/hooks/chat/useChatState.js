@@ -49,6 +49,11 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }
   }, []); // Run only once on mount
 
+  const loadConversation = useCallback((conversation) => {
+    dispatch({ type: 'LOAD_CONVERSATION', payload: conversation });
+    setConversationId(conversation.id);
+  }, []);
+
   const debouncedSave = useCallback(
     debounce((messages, id) => {
       conversationManager.saveConversationToStorage(messages, id);
@@ -409,21 +414,36 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
   }, [state.isLoading, sendMessageDebounced]);
 
   const handleNewConversation = useCallback(() => {
+    // Guardar la conversación actual antes de resetear si tiene mensajes
+    if (state.messages.length > 0 && conversationId) {
+      conversationManager.saveConversationToStorage(state.messages, conversationId);
+    }
+    
+    // Generar nuevo ID para la nueva conversación
+    const newConversationId = crypto.randomUUID();
+    setConversationId(newConversationId);
+    
     dispatch({ type: 'RESET_CONVERSATION' });
-  }, []);
+  }, [state.messages, conversationId]);
 
   const handleLoadConversation = useCallback((conversation) => {
     dispatch({ type: 'LOAD_CONVERSATION', payload: conversation });
+    setConversationId(conversation.id);
   }, []);
 
   // API connection check
   const checkApiConnection = useCallback(async () => {
     try {
-      const apiUrl = '/server/hello';
-      await fetch(apiUrl);
-      return true;
+      const response = await fetch('/server/gemini/check-api');
+      if (!response.ok) {
+        throw new Error(`API check failed: ${response.statusText}`);
+      }
+      const data = await response.json();
+      console.log('API connection check:', data.status);
+      return data.status === 'ok';
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: "Unable to connect to AI service. Please try again later." });
+      console.error('Error checking API connection:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to connect to API. Please check your network and server.' });
       return false;
     }
   }, []);
@@ -470,7 +490,12 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
       cache: getCacheStats(),
       retryCount: retryCount.current,
       isOnline
-    })
+    }),
+    
+    // Additional exports for compatibility
+    loadConversation,
+    conversationId,
+    setConversationId
   };
 };
 

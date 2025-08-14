@@ -24,11 +24,13 @@ export class ConversationManager {
         } else {
           // Add new conversation
           const newConversation = {
-            id: conversationId || Date.now(),
+            id: conversationId || crypto.randomUUID(),
             timestamp: Date.now(),
             messages: messages.slice(),
-            preview: messages[0]?.text?.substring(0, 100) || 'New conversation'
+            preview: messages[0]?.text?.substring(0, 100) || 'New conversation',
+            title: messages[0]?.text?.substring(0, 50) || 'New Chat' // Add a default title
           };
+
           stored = [newConversation, ...stored];
         }
 
@@ -44,6 +46,23 @@ export class ConversationManager {
       window.requestIdleCallback(saveOperation, { timeout: 2000 });
     } else {
       setTimeout(saveOperation, 100);
+    }
+  }
+
+  updateConversationTitle(conversationId, newTitle) {
+    try {
+      let stored = this.loadConversationsFromStorage();
+      const existingIndex = stored.findIndex(c => c.id === conversationId);
+
+      if (existingIndex !== -1) {
+        stored[existingIndex].title = newTitle;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Failed to update conversation title:', error);
+      return false;
     }
   }
 

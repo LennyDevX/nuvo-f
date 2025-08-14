@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { FaPaperPlane, FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
+import { FaPaperPlane, FaBars, FaUserCircle, FaPlus, FaHistory } from 'react-icons/fa';
 import ImageUpload from './ImageUpload';
 import MainInput from './MainInput';
 
@@ -16,7 +16,9 @@ const ChatInputArea = ({
   rightSidebarOpen = false,
   onNewConversation,
   hasMessages = false,
-  onSendImage // <-- Nuevo prop para enviar imagen
+  onSendImage, // <-- Nuevo prop para enviar imagen
+  toggleHistorySidebar, // <-- Nuevo prop para toggle del historial
+  isHistorySidebarOpen = false // <-- Estado del sidebar del historial
 }) => {
   const inputRef = useRef(null);
   const containerRef = useRef(null);
@@ -288,6 +290,27 @@ const ChatInputArea = ({
                 <FaBars className="w-4 h-4" />
               </button>
 
+              {/* History button - always visible */}
+              <button
+                type="button"
+                onClick={toggleHistorySidebar}
+                className={`
+                  hidden md:flex items-center justify-center
+                  w-12 h-12 rounded-xl transition-all duration-200 ease-out
+                  border-2 shadow-lg flex-shrink-0
+                  focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
+                  ${isHistorySidebarOpen 
+                    ? 'bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 border-blue-500 text-white shadow-blue-500/30 scale-105' 
+                    : 'bg-gray-500/30 border-blue-500/40 text-blue-400 hover:border-blue-500/60 hover:bg-gray-700 hover:scale-105'
+                  }
+                `}
+                aria-label="Toggle conversation history"
+                aria-expanded={isHistorySidebarOpen}
+              >
+                <FaHistory className="w-4 h-4" />
+              </button>
+              
+              {/* New conversation button - only show when there are messages */}
               {hasMessages && (
                 <button
                   type="button"

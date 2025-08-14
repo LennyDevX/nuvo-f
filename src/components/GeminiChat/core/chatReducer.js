@@ -74,23 +74,9 @@ export const chatReducer = (state, action) => {
 
     case 'LOAD_CONVERSATION':
       if (!action.payload || !action.payload.messages) return state;
-      // Combine loaded messages with existing messages, avoiding duplicates.
-      // New messages from the current session should be preserved.
-      const loadedMessages = action.payload.messages;
-      const currentMessages = state.messages;
-      
-      const messageIds = new Set(currentMessages.map(m => m.id));
-      const mergedMessages = [
-          ...loadedMessages.filter(m => !messageIds.has(m.id)),
-          ...currentMessages
-      ];
-
-      // Sort messages by timestamp to ensure correct order
-      mergedMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
       return {
         ...state,
-        messages: mergedMessages,
+        messages: action.payload.messages,
         conversationId: action.payload.id,
         status: 'idle',
         error: null,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { FaBars, FaUserCircle, FaPlus } from 'react-icons/fa';
+import { FaBars, FaUserCircle, FaPlus, FaHistory } from 'react-icons/fa';
 import memoWithName from '../../utils/performance/memoWithName';
 import AnimatedAILogo from '../effects/AnimatedAILogo';
 
@@ -10,6 +10,7 @@ const WelcomeScreen = lazy(() => import('./components/WelcomeScreen'));
 import ChatInputArea from './components/ChatInputArea/index';
 import { useChatState } from '../../hooks/chat/useChatState';
 import { conversationManager } from './core/conversationManager';
+const ConversationHistorySidebar = lazy(() => import('./components/ConversationHistorySidebar'));
 
 const DEFAULT_MULTIMODAL_MODEL = 'gemini-2.5-flash-preview-04-17'; // O el que soporte imágenes
 
@@ -23,15 +24,33 @@ const GeminiChat = ({
 }) => {
   const [input, setInput] = useState('');
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(false);
+
+  const toggleHistorySidebar = useCallback(() => {
+    setIsHistorySidebarOpen(prev => !prev);
+  }, []);
   
   // Use the enhanced chat state hook
   const {
     state,
     dispatch,
-    handleSendMessage: handleSendMessageCore,
-    handleNewConversation: handleNewConversationCore,
-    checkApiConnection
-  } = useChatState({ shouldReduceMotion, isLowPerformance });
+    handleSendMessage,
+    handleNewConversation,
+    handleLoadConversation,
+    conversationId,
+    setConversationId,
+    loadConversation,
+    checkApiConnection,
+    formatMessagesForAPI,
+    clearCache,
+    getCacheStats,
+    getPerformanceStats
+  } = useChatState({
+    shouldReduceMotion: shouldReduceMotion,
+    isLowPerformance: isLowPerformance
+  });
+
+  const isOnline = state.isOnline;
 
 
 
@@ -70,26 +89,25 @@ const GeminiChat = ({
         sender: 'user',
         image: imageBase64
       };
-      handleSendMessageCore({ preventDefault: () => {} }, userMessage, setInput);
+      handleSendMessage({ preventDefault: () => {} }, userMessage, setInput);
     };
     reader.readAsDataURL(imageFile);
-  }, [handleSendMessageCore, setInput]);
+  }, [handleSendMessage, setInput]);
 
   // Wrapper para handleSendMessage que soporta multimodalidad
-  const handleSendMessage = useCallback((e, inputOverride, setInputOverride) => {
+  const handleSendMessageWrapper = useCallback((e, inputOverride, setInputOverride) => {
     if (typeof inputOverride === 'object' && inputOverride.image) {
-      handleSendMessageCore(e, inputOverride, setInputOverride || setInput);
+      handleSendMessage(e, inputOverride, setInputOverride || setInput);
     } else {
-      handleSendMessageCore(e, input, setInput);
+      handleSendMessage(e, input, setInput);
     }
-  }, [handleSendMessageCore, input, setInput]);
+  }, [handleSendMessage, input, setInput]);
 
   // Wrapper handlers that include input management
-  const handleNewConversation = useCallback(() => {
-    conversationManager.clearAllConversations(); // Clear all conversations from localStorage
-    handleNewConversationCore();
+  const handleNewConversationWrapper = useCallback(() => {
+    handleNewConversation();
     setInput('');
-  }, [handleNewConversationCore]);
+  }, [handleNewConversation]);
 
   // Handle suggestion click
   const handleSuggestionClick = useCallback((suggestion) => {
@@ -125,6 +143,15 @@ const GeminiChat = ({
             aria-expanded={leftSidebarOpen}
           >
             <FaBars className="w-5 h-5" />
+          </button>
+          {/* New button for Conversation History Sidebar */}
+          <button
+            onClick={toggleHistorySidebar}
+            className={`btn-nuvo-base btn-nuvo-sm ${isHistorySidebarOpen ? 'btn-nuvo-chat-primary' : 'btn-nuvo-chat-secondary'}`}
+            aria-label="Toggle conversation history"
+            aria-expanded={isHistorySidebarOpen}
+          >
+            <FaHistory className="w-4 h-4" />
           </button>
           {state.messages.length > 0 && (
             <button
@@ -191,6 +218,20 @@ const GeminiChat = ({
               />
             )}
           </div>
+          {/* Conversation History Sidebar */}
+          <ConversationHistorySidebar
+            isOpen={isHistorySidebarOpen}
+          onClose={toggleHistorySidebar}
+          onLoadConversation={(conversation) => {
+            loadConversation(conversation);
+            setIsHistorySidebarOpen(false);
+          }}
+          currentConversationId={conversationId}
+          onNewChat={() => {
+            handleNewConversation();
+            setIsHistorySidebarOpen(false);
+          }}
+        />
         </Suspense>
       )}
 
@@ -198,17 +239,19 @@ const GeminiChat = ({
       <ChatInputArea
         input={input}
         setInput={setInput}
-        onSendMessage={handleSendMessage}
+        onSendMessage={handleSendMessageWrapper}
         status={state.status}
         isInitializing={isInitializing}
         toggleLeftSidebar={toggleLeftSidebar}
         toggleRightSidebar={toggleRightSidebar}
         leftSidebarOpen={leftSidebarOpen}
         rightSidebarOpen={rightSidebarOpen}
-        onNewConversation={handleNewConversation}
+        onNewConversation={handleNewConversationWrapper}
         hasMessages={state.messages.length > 0}
         isOnline={state.isOnline}
         onSendImage={handleSendImage}
+        toggleHistorySidebar={toggleHistorySidebar}
+        isHistorySidebarOpen={isHistorySidebarOpen}
       />
     </div>
   );
