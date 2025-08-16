@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { conversationManager } from '../core/conversationManager';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { motion as m, AnimatePresence } from 'framer-motion';
+import { conversationManager } from '../../../GeminiChat/core/conversationManager';
 import { FaTrash, FaEdit, FaCheck, FaTimes } from 'react-icons/fa';
-import { AnimatePresence } from 'framer-motion';
 
 const ConversationHistorySidebar = ({
   isOpen,
@@ -10,6 +10,116 @@ const ConversationHistorySidebar = ({
   currentConversationId,
   onNewChat // Add onNewChat prop
 }) => {
+  const focusTrapRef = useRef(null);
+  const firstFocusableRef = useRef(null);
+  const lastFocusableRef = useRef(null);
+
+  // Performance and accessibility optimizations
+  const shouldReduceMotion = useMemo(() => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }, []);
+
+  const isLowPerformance = useMemo(() => {
+    // Check for low-end devices
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const hasSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+    const hasLowMemory = navigator.deviceMemory && navigator.deviceMemory <= 2;
+    const hasSlowCPU = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2;
+    
+    return hasSlowConnection || hasLowMemory || hasSlowCPU || shouldReduceMotion;
+  }, [shouldReduceMotion]);
+
+  // Optimized animation configurations
+  const getBackdropAnimationConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.15 }
+      };
+    }
+
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+      transition: { duration: 0.3 }
+    };
+  }, [shouldReduceMotion]);
+
+  const getSidebarAnimationConfig = useMemo(() => {
+    if (shouldReduceMotion) {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.2 }
+      };
+    }
+
+    // Different animations for mobile and desktop
+    const isMobile = window.innerWidth < 768;
+    
+    if (isMobile) {
+      return {
+        initial: { y: "100%", x: 0 },
+        animate: { y: 0, x: 0 },
+        exit: { y: "100%", x: 0 },
+        transition: { 
+          type: 'spring', 
+          damping: isLowPerformance ? 40 : 30, 
+          stiffness: isLowPerformance ? 200 : 300,
+          mass: isLowPerformance ? 1.2 : 0.8
+        }
+      };
+    } else {
+      // Desktop: fade in with slight scale
+      return {
+        initial: { opacity: 0, scale: 0.95 },
+        animate: { opacity: 1, scale: 1 },
+        exit: { opacity: 0, scale: 0.95 },
+        transition: { 
+          duration: 0.2,
+          ease: "easeOut"
+        }
+      };
+    }
+  }, [shouldReduceMotion, isLowPerformance]);
+
+  // Focus management for accessibility
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        firstFocusableRef.current?.focus();
+        // Remove focus immediately to prevent persistent focus styling
+        setTimeout(() => {
+          firstFocusableRef.current?.blur();
+        }, 100);
+      }, 100);
+    }
+  }, [isOpen]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+    
+    // Tab trapping
+    if (e.key === 'Tab') {
+      const firstElement = firstFocusableRef.current;
+      const lastElement = lastFocusableRef.current;
+      
+      if (e.shiftKey && document.activeElement === firstElement) {
+        e.preventDefault();
+        lastElement?.focus();
+      } else if (!e.shiftKey && document.activeElement === lastElement) {
+        e.preventDefault();
+        firstElement?.focus();
+      }
+    }
+  };
   const [conversations, setConversations] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [newTitle, setNewTitle] = useState('');
@@ -51,31 +161,35 @@ const ConversationHistorySidebar = ({
 
   return (
     <>
-      {/* Backdrop with blur effect for desktop */}
+      {/* Backdrop with blur effect for mobile */}
       <AnimatePresence>
         {isOpen && (
-          <div 
+          <m.div 
             className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[150] md:hidden"
             onClick={onClose}
             aria-hidden="true"
+            {...getBackdropAnimationConfig}
           />
         )}
       </AnimatePresence>
       
-      {/* Desktop blur overlay for main content */}
+      {/* Desktop blur overlay for main content - now clickeable */}
       <AnimatePresence>
         {isOpen && (
-          <div 
+          <m.div 
             className="hidden md:block fixed inset-0 backdrop-blur-sm z-[150] cursor-pointer"
             onClick={onClose}
             aria-hidden="true"
+            {...getBackdropAnimationConfig}
           />
         )}
       </AnimatePresence>
       
       <AnimatePresence>
         {isOpen && (
-          <div
+          <m.div
+            ref={focusTrapRef}
+            onKeyDown={handleKeyDown}
             className="
               fixed z-[200] md:z-[300] shadow-2xl
               bottom-0 left-0 right-0 h-[90vh] rounded-t-3xl
@@ -90,6 +204,7 @@ const ConversationHistorySidebar = ({
             aria-modal="true"
             aria-labelledby="history-sidebar-title"
             aria-describedby="history-sidebar-description"
+            {...getSidebarAnimationConfig}
           >
             {/* Mobile drag indicator */}
             <div className="md:hidden flex justify-center pt-4 pb-3 flex-shrink-0">
@@ -115,6 +230,7 @@ const ConversationHistorySidebar = ({
                   </p>
                 </div>
                 <button
+                  ref={firstFocusableRef}
                   onClick={onNewChat}
                   className="
                     w-12 h-12 md:w-9 md:h-9 rounded-2xl md:rounded-xl
@@ -129,6 +245,7 @@ const ConversationHistorySidebar = ({
                   "
                   aria-label="Start new conversation"
                   title="Start new conversation"
+                  onFocus={(e) => e.target.blur()}
                 >
                   <span className="text-lg md:text-sm font-bold group-hover:scale-110 transition-transform duration-200">+</span>
                 </button>
@@ -251,27 +368,9 @@ const ConversationHistorySidebar = ({
             </div>
           )}
         </div>
-      </div>
+      </m.div>
         )}
       </AnimatePresence>
-      
-      {/* Estilos personalizados para el scrollbar */}
-      <style jsx="true">{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(55, 65, 81, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(147, 51, 234, 0.5);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(147, 51, 234, 0.7);
-        }
-      `}</style>
     </>
   );
 };

@@ -340,38 +340,18 @@ const ChatInputArea = ({
                 isDisabled={isDisabled}
                 isInitializing={isInitializing}
                 isKeyboardOpen={isKeyboardOpen}
+                onSubmit={handleSubmit}
+                selectedImage={selectedImage}
               />
 
               {/* Action buttons - Mobile optimized */}
               <div className="flex items-center gap-2 flex-shrink-0">
-                {/* Features menu button - Hide when keyboard is open on mobile */}
-
                 {/* Botón para subir imagen */}
                 <ImageUpload
                   selectedImage={selectedImage}
                   setSelectedImage={setSelectedImage}
                   isDisabled={isDisabled}
                 />
-
-                {/* Send button - ahora usa handleSendMultimodal */}
-                <button
-                  type="submit"
-                  disabled={(!input.trim() && !selectedImage) || isDisabled}
-                  className={`
-                    flex items-center justify-center 
-                    w-12 h-12 md:w-10 md:h-10 rounded-xl
-                    transition-all duration-200 ease-out
-                    shadow-lg hover:shadow-xl
-                    touch-manipulation
-                    focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-800
-                    ${(!input.trim() && !selectedImage) || isDisabled
-                      ? 'bg-gray-500/30 text-gray-400 cursor-not-allowed opacity-60 border-2 border-gray-500/30'
-                      : 'bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 text-white hover:from-purple-700 hover:via-pinkk -700 hover:to-purple-800 border-purple-500 hover:border-purple-600 scale-105'
-                    }
-                  `}
-                >
-                  <FaPaperPlane className="w-4 h-4 md:w-3.5 md:h-3.5 ml-0.5" />
-                </button>
               </div>
               {/* Right sidebar toggle - Desktop only */}
               <button
