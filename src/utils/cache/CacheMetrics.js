@@ -1,5 +1,5 @@
-import { logger } from '../debug/logger';
-import { SIZE_UTILS, METRICS_CONFIG } from './cacheConfig';
+import { logger } from '../debug/logger.js';
+import { SIZE_UTILS, METRICS_CONFIG } from './cacheConfig.js';
 
 /**
  * Sistema centralizado de métricas para todos los caches

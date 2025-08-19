@@ -1,6 +1,6 @@
-import { logger } from '../debug/logger';
-import { cacheMetrics } from './CacheMetrics';
-import { CACHE_TTL, CLEANUP_CONFIG } from './cacheConfig';
+import { logger } from '../debug/logger.js';
+import { cacheMetrics } from './CacheMetrics.js';
+import { CACHE_TTL, CLEANUP_CONFIG } from './cacheConfig.js';
 
 const CACHE_STORAGE_KEY = 'nuvo-cache-manager-v1';
 

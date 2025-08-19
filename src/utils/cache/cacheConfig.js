@@ -29,7 +29,7 @@ export const METRICS_CONFIG = {
   LOG_INTERVAL: 5 * 60 * 1000,  // Log cada 5 minutos
   LOG_LOW_EFFICIENCY: true,     // Log caches con baja eficiencia
   EFFICIENCY_THRESHOLD: 0.5,    // Umbral de eficiencia (50%)
-  ENABLE_DETAILED_LOGGING: import.meta.env.DEV, // Solo en desarrollo
+  ENABLE_DETAILED_LOGGING: typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env.DEV : false, // Solo en desarrollo
   MAX_LOG_ENTRIES: 1000         // Máximo de entradas de log
 };
 

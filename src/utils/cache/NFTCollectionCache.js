@@ -1,6 +1,7 @@
-import { logger } from '../debug/logger';
-import { cacheMetrics } from './CacheMetrics';
-import { CACHE_TTL, CLEANUP_CONFIG } from './cacheConfig';
+import { logger } from '../debug/logger.js';
+import { CacheManager } from './CacheManager.js';
+import { cacheMetrics } from './CacheMetrics.js';
+import { CACHE_TTL, CLEANUP_CONFIG } from './cacheConfig.js';
 
 // NFT Collection Cache Management System
 class NFTCollectionCache {
