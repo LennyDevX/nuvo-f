@@ -9,10 +9,8 @@ const ChatMessages = lazy(() => import('./components/ChatMessages'));
 const WelcomeScreen = lazy(() => import('./components/WelcomeScreen'));
 import ChatInputArea from './components/ChatInputArea/index';
 import { useChatState } from '../../hooks/chat/useChatState';
-import { conversationManager } from './core/conversationManager';
-const ConversationHistorySidebar = lazy(() => import('../pages/chat/components/ConversationHistorySidebar'));
 
-const DEFAULT_MULTIMODAL_MODEL = 'gemini-2.5-flash-preview-04-17'; // O el que soporte imágenes
+const ConversationHistorySidebar = lazy(() => import('../pages/chat/components/ConversationHistorySidebar'));
 
 const GeminiChat = ({ 
   shouldReduceMotion = false, 

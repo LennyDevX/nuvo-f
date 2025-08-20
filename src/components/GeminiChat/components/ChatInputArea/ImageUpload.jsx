@@ -29,7 +29,7 @@ const ImageUpload = ({ selectedImage, setSelectedImage, isDisabled }) => {
                 type="button"
                 className="
                   flex items-center justify-center
-                  w-12 h-12 md:w-10 md:h-10 rounded-xl
+                  w-12 h-12 md:w-12 md:h-12 rounded-xl
                   bg-gray-500/30 hover:bg-gray-600 text-gray-300 hover:text-white
                   border-2 border-purple-800/20 hover:border-purple-500/50
                   transition-all duration-200 ease-out

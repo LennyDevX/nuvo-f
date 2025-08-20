@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FaPaperPlane, FaBars, FaUserCircle, FaPlus, FaHistory } from 'react-icons/fa';
 import ImageUpload from './ImageUpload';
 import MainInput from './MainInput';
+import SendButton from './SendButton';
 
 const ChatInputArea = ({
   input,
@@ -351,6 +352,15 @@ const ChatInputArea = ({
                   selectedImage={selectedImage}
                   setSelectedImage={setSelectedImage}
                   isDisabled={isDisabled}
+                />
+                
+                {/* Botón de enviar mensaje */}
+                <SendButton
+                  onSubmit={handleSubmit}
+                  input={input}
+                  selectedImage={selectedImage}
+                  isDisabled={isDisabled}
+                  status={status}
                 />
               </div>
               {/* Right sidebar toggle - Desktop only */}
