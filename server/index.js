@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import env from './config/environment.js';
 import routes from './routes/index.js';
 import errorHandler from './middlewares/error-handler.js';
-import websocketHandler from './middleware/websocket-handler.js';
+import websocketHandler from './middlewares/websocket-handler.js';
 import { initializeKnowledgeBaseOnStartup } from './services/embeddings-service.js';
 
 // Crear la aplicación express

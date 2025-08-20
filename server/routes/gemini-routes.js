@@ -25,6 +25,11 @@ router.post('/function-calling', geminiController.functionCalling);
 router.post('/analyze', geminiController.analyzeText);
 router.post('/compare', geminiController.compareTexts); // Nueva función
 
+// Endpoint para procesar URLs
+router.post('/extract-url', geminiController.extractUrlContent);
+router.post('/extract-multiple-urls', geminiController.extractMultipleUrls);
+router.post('/validate-url', geminiController.validateUrl);
+
 // Embeddings API
 router.post('/embeddings/index', geminiController.upsertEmbeddingsIndex);
 router.post('/embeddings/search', geminiController.searchEmbeddings);

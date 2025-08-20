@@ -110,9 +110,9 @@ const Home = () => {
                   {loadingStrategy.shouldLoadIntersectionObserverComponents && (
                     <LazyComponentLoader>
                       <RewardDeveloper />
+                      <NuvosAI showSkeletonIfLoading={false} />
                       <TokenizationSection />
                       <Features showSkeletonIfLoading={false} />
-                      <NuvosAI showSkeletonIfLoading={false} />
 
                       <WhitelistToken showSkeletonIfLoading={false} />
 

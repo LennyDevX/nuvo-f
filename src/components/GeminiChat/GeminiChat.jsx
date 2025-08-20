@@ -215,6 +215,7 @@ const GeminiChat = ({
                 error={state.error}
                 dispatch={dispatch} 
                 shouldReduceMotion={shouldReduceMotion}
+                urlProcessing={state.urlProcessing}
               />
             )}
           </div>

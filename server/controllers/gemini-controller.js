@@ -11,6 +11,7 @@ import embeddingsService from '../services/embeddings-service.js';
 import contextCacheService from '../services/context-cache-service.js';
 import analyticsService from '../services/analytics-service.js';
 import batchService from '../services/batch-service.js';
+import webScraperService from '../services/web-scraper-service.js';
 
 // === Configuración ===
 const IMAGE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB, cambiar aquí para ajustar el límite
@@ -1093,4 +1094,268 @@ export function streamMetrics(req, res) {
     unsubscribe();
     clearInterval(heartbeat);
   });
+}
+
+/**
+ * Extrae contenido de una URL
+ * POST /api/gemini/extract-url
+ * body: { url: string, includeInContext?: boolean }
+ */
+export async function extractUrlContent(req, res, next) {
+  try {
+    const { url, includeInContext = false } = req.body;
+    
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ 
+        error: 'Se requiere una URL válida',
+        example: { url: 'https://example.com' }
+      });
+    }
+
+    console.log(`Intentando extraer contenido de: ${url}`);
+
+    // Extraer contenido de la URL
+    const extractedContent = await webScraperService.extractContent(url);
+    
+    // Si se solicita, agregar al contexto usando embeddings
+    if (includeInContext) {
+      try {
+        await embeddingsService.upsertIndex('url_context', [{
+          content: extractedContent.content,
+          metadata: {
+            ...extractedContent.metadata,
+            type: 'url_content',
+            title: extractedContent.title,
+            url: extractedContent.url,
+            addedAt: new Date().toISOString()
+          }
+        }]);
+        console.log(`Contenido de ${url} agregado al contexto`);
+      } catch (contextError) {
+        console.warn('Error agregando contenido al contexto:', contextError);
+      }
+    }
+
+    // Formatear respuesta
+    const response = {
+      success: true,
+      data: extractedContent,
+      formatted: webScraperService.formatForChat(extractedContent),
+      addedToContext: includeInContext
+    };
+
+    console.log(`Extracción exitosa de ${url}: ${extractedContent.title}`);
+    res.json(response);
+  } catch (error) {
+    console.error('Error extracting URL content:', error);
+    
+    // Proporcionar error más detallado
+    const errorResponse = {
+      success: false,
+      error: error.message,
+      url: req.body.url,
+      details: {
+        type: error.name || 'ExtractionError',
+        timestamp: new Date().toISOString()
+      }
+    };
+    
+    // Diferentes códigos de estado según el tipo de error
+    if (error.message.includes('URL no válida') || error.message.includes('no permitida')) {
+      return res.status(400).json(errorResponse);
+    } else if (error.message.includes('Error HTTP: 404') || error.message.includes('no existe')) {
+      return res.status(404).json(errorResponse);
+    } else if (error.message.includes('timeout') || error.message.includes('AbortError')) {
+      return res.status(408).json(errorResponse);
+    } else {
+      return res.status(500).json(errorResponse);
+    }
+  }
+}
+
+/**
+ * Extrae contenido de múltiples URLs
+ * POST /api/gemini/extract-multiple-urls
+ * body: { urls: string[], options?: { concurrency?: number, continueOnError?: boolean, includeInContext?: boolean } }
+ */
+export async function extractMultipleUrls(req, res, next) {
+  try {
+    const { urls, options = {} } = req.body;
+    
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ 
+        error: 'Se requiere un array de URLs no vacío',
+        example: { urls: ['https://example1.com', 'https://example2.com'] }
+      });
+    }
+
+    if (urls.length > 10) {
+      return res.status(400).json({ 
+        error: 'Máximo 10 URLs permitidas por solicitud'
+      });
+    }
+
+    const { includeInContext = false, ...extractOptions } = options;
+    
+    // Extraer contenido de múltiples URLs
+    const result = await webScraperService.extractMultipleUrls(urls, extractOptions);
+    
+    // Si se solicita, agregar contenido exitoso al contexto
+    if (includeInContext && result.results.length > 0) {
+      try {
+        const documentsForContext = result.results.map(content => ({
+          content: content.content,
+          metadata: {
+            ...content.metadata,
+            type: 'url_content',
+            title: content.title,
+            url: content.url,
+            addedAt: new Date().toISOString()
+          }
+        }));
+
+        await embeddingsService.upsertIndex('url_context', documentsForContext);
+        console.log(`${result.results.length} URLs agregadas al contexto`);
+      } catch (contextError) {
+        console.warn('Error agregando URLs al contexto:', contextError);
+      }
+    }
+
+    // Formatear respuestas
+    const formattedResults = result.results.map(content => ({
+      ...content,
+      formatted: webScraperService.formatForChat(content)
+    }));
+
+    const response = {
+      success: true,
+      results: formattedResults,
+      errors: result.errors,
+      summary: result.summary,
+      addedToContext: includeInContext
+    };
+
+    res.json(response);
+  } catch (error) {
+    console.error('Error extracting multiple URLs:', error);
+    next(error);
+  }
+}
+
+/**
+ * Valida una URL antes de intentar extraer contenido
+ * POST /api/gemini/validate-url
+ * body: { url: string }
+ */
+export async function validateUrl(req, res, next) {
+  try {
+    const { url } = req.body;
+    
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ 
+        valid: false,
+        error: 'Se requiere una URL válida',
+        example: { url: 'https://example.com' }
+      });
+    }
+
+    console.log(`Validando URL: ${url}`);
+    
+    // Limpiar la URL
+    const cleanedUrl = webScraperService.cleanUrl(url);
+    console.log(`URL limpia: ${cleanedUrl}`);
+    
+    // Validar formato
+    const isValidFormat = webScraperService.isValidUrl(cleanedUrl);
+    
+    if (!isValidFormat) {
+      return res.json({
+        valid: false,
+        originalUrl: url,
+        cleanedUrl,
+        error: 'URL no válida o no permitida (debe ser HTTP/HTTPS y no local)',
+        issues: ['Formato inválido o URL local/privada']
+      });
+    }
+    
+    // Verificar si la URL está truncada
+    const issues = [];
+    if (url.includes('…') || url.includes('...')) {
+      issues.push('URL parece estar truncada');
+    }
+    
+    if (url !== cleanedUrl) {
+      issues.push('URL fue modificada durante la limpieza');
+    }
+    
+    // Intentar hacer una petición HEAD para verificar accesibilidad
+    let accessible = false;
+    let httpStatus = null;
+    let contentType = null;
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos
+      
+      const response = await fetch(cleanedUrl, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      accessible = response.ok;
+      httpStatus = response.status;
+      contentType = response.headers.get('content-type');
+      
+      if (!response.ok) {
+        issues.push(`Error HTTP: ${response.status} ${response.statusText}`);
+      }
+      
+      if (contentType && !contentType.includes('text/html')) {
+        issues.push(`Contenido no es HTML: ${contentType}`);
+      }
+      
+    } catch (fetchError) {
+      issues.push(`No se pudo acceder: ${fetchError.message}`);
+    }
+    
+    const validation = {
+      valid: isValidFormat && accessible && issues.length === 0,
+      originalUrl: url,
+      cleanedUrl,
+      accessible,
+      httpStatus,
+      contentType,
+      issues: issues.length > 0 ? issues : null,
+      recommendations: []
+    };
+    
+    // Agregar recomendaciones
+    if (url.includes('…') || url.includes('...')) {
+      validation.recommendations.push('Intenta copiar la URL completa sin truncar');
+    }
+    
+    if (!accessible && httpStatus === 404) {
+      validation.recommendations.push('Verifica que la URL sea correcta y que la página exista');
+    }
+    
+    if (contentType && !contentType.includes('text/html')) {
+      validation.recommendations.push('Esta URL no apunta a una página web HTML');
+    }
+    
+    console.log(`Validación completada para ${url}:`, validation);
+    res.json(validation);
+    
+  } catch (error) {
+    console.error('Error validating URL:', error);
+    res.status(500).json({
+      valid: false,
+      error: 'Error interno validando la URL',
+      details: error.message
+    });
+  }
 }

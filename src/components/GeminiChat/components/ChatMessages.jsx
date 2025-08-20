@@ -4,6 +4,7 @@ import { useChatScroll } from '../../../hooks/chat/useChatScroll';
 import MessageItem from './MessageItem';
 import AnimatedAILogo from '../../effects/AnimatedAILogo';
 import ScrollToBottomButton from './ScrollToBottomButton';
+import UrlProcessingIndicator from './UrlProcessingIndicator';
 
 const VIRTUALIZATION_THRESHOLD = 50;
 const ESTIMATED_MESSAGE_HEIGHT = 90; // Adjusted for potential timestamps and grouping
@@ -69,7 +70,7 @@ const processMessagesForGrouping = (messages) => {
     });
 };
 
-const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showRegenerateButton, status = 'idle', error = null, dispatch, shouldReduceMotion = false }) => {
+const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showRegenerateButton, status = 'idle', error = null, dispatch, shouldReduceMotion = false, urlProcessing = { urls: [], status: 'idle', content: [] } }) => {
     const containerRef = useRef(null);
     const messageEndRef = useRef(null);
     const listRef = useRef(null);
@@ -239,6 +240,9 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
                         isLastInGroup={message.isLastInGroup}
                     />
                 ))}
+                
+                {/* URL Processing Indicator */}
+                <UrlProcessingIndicator urlProcessing={urlProcessing} />
                 
                 {shouldShowTypingIndicator && <TypingIndicator />}
                 {/* We now show errors on the message itself, but can keep a general error fallback */}

@@ -4,7 +4,7 @@
  */
 
 import express from 'express';
-import enhancedStreamingController from '../controllers/enhanced-streaming-controller.js';
+import enhancedStreamingController from '../controllers/streaming-controller.js';
 import rateLimiter from '../middlewares/rate-limiter.js';
 import auth from '../middlewares/auth.js';
 import logger from '../middlewares/logger.js';

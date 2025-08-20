@@ -176,12 +176,119 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
     }
   }, [isLowPerformance, shouldReduceMotion, state.messages.length, generateCacheKey, isOnline]);
 
-  // RAG Enhancement: Search for relevant context before sending to Gemini
+  // Función para detectar URLs en texto
+  const detectUrls = useCallback((text) => {
+    // Regex más robusta para detectar URLs, incluyendo las que están entre backticks o comillas
+    const urlRegex = /(?:`|"|\')?\s*(https?:\/\/[^\s<>"'`\)\]\}]+)\s*(?:`|"|\')?/gi;
+    const matches = [];
+    let match;
+    
+    while ((match = urlRegex.exec(text)) !== null) {
+      matches.push(match[1]); // Capturar solo la URL sin los delimitadores
+    }
+    
+    // Limpiar y normalizar URLs detectadas
+    return matches.map(url => {
+      // Remover espacios al inicio y final
+      url = url.trim();
+      
+      // Remover caracteres especiales al final que no pertenecen a la URL
+      url = url.replace(/[.,;:!?\)\]}>"'`]+$/, '');
+      
+      // Detectar URLs truncadas y mostrar advertencia
+      if (url.includes('…') || url.includes('...')) {
+        console.warn(`URL detectada parece estar truncada: ${url}`);
+        console.warn('Esto puede causar errores en la extracción de contenido');
+      }
+      
+      return url;
+    }).filter(url => {
+      // Filtrar URLs válidas
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        console.warn(`URL inválida detectada y filtrada: ${url}`);
+        return false;
+      }
+    });
+  }, []);
+
+  // Función para extraer contenido de URLs
+  const extractUrlContent = useCallback(async (urls) => {
+    try {
+      const response = await fetch('/server/gemini/extract-multiple-urls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          urls,
+          options: {
+            concurrency: 2,
+            continueOnError: true,
+            includeInContext: true
+          }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        return result;
+      }
+    } catch (error) {
+      console.warn('Error extracting URL content:', error);
+    }
+    return null;
+  }, []);
+
+  // RAG Enhancement: Search for relevant context and process URLs before sending to Gemini
   const enhanceMessageWithRAG = useCallback(async (userMessage) => {
     try {
       // Only enhance text messages (not images)
       if (!userMessage.text || userMessage.image) {
         return userMessage;
+      }
+
+      let enhancedText = userMessage.text;
+      let urlContent = '';
+      
+      // Detectar y procesar URLs en el mensaje
+      const urls = detectUrls(userMessage.text);
+      if (urls.length > 0) {
+        console.log('URLs detectadas:', urls);
+        
+        // Mostrar indicador de procesamiento de URLs
+        dispatch({ 
+          type: 'SET_URL_PROCESSING', 
+          payload: { urls, status: 'processing' } 
+        });
+        
+        const urlResult = await extractUrlContent(urls);
+        if (urlResult && urlResult.results && urlResult.results.length > 0) {
+          const urlContents = urlResult.results.map(result => 
+            `**Contenido de ${result.title}** (${result.url}):\n${result.excerpt}\n`
+          ).join('\n');
+          
+          urlContent = `\n\n**Contenido extraído de URLs:**\n${urlContents}`;
+          console.log('Contenido de URLs extraído exitosamente');
+          
+          // Actualizar estado con URLs procesadas
+          dispatch({ 
+            type: 'SET_URL_PROCESSING', 
+            payload: { urls, status: 'completed', content: urlResult.results } 
+          });
+        } else {
+          // Proporcionar información más detallada del error
+          let errorMessage = 'No se pudo extraer contenido';
+          if (urlResult && urlResult.errors && urlResult.errors.length > 0) {
+            errorMessage = urlResult.errors[0].error || errorMessage;
+          }
+          
+          console.warn('Error extrayendo contenido de URLs:', errorMessage);
+          dispatch({ 
+            type: 'SET_URL_PROCESSING', 
+            payload: { urls, status: 'failed', error: errorMessage } 
+          });
+        }
       }
 
       // Search for relevant context in knowledge base
@@ -195,6 +302,7 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         })
       });
 
+      let ragContext = '';
       if (searchResponse.ok) {
         const relevantContext = await searchResponse.json();
         
@@ -211,22 +319,70 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
             
             if (contextText) {
               console.log('RAG Context found:', goodResults.length, 'relevant results');
-              const enhancedMessage = {
-                ...userMessage,
-                text: `Contexto relevante de la base de conocimientos de NUVOS:\n${contextText}\n\nPregunta del usuario: ${userMessage.text}\n\nPor favor responde basándote en el contexto proporcionado y en español.`,
-                originalText: userMessage.text // Keep original for display
-              };
-              return enhancedMessage;
+              ragContext = `\n\nContexto relevante de la base de conocimientos de NUVOS:\n${contextText}`;
             }
           }
         }
       }
+
+      // Buscar también en el contexto de URLs si existe
+      if (urls.length > 0) {
+        try {
+          const urlContextResponse = await fetch('/server/gemini/embeddings/search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: 'url_context',
+              query: userMessage.text,
+              topK: 2
+            })
+          });
+
+          if (urlContextResponse.ok) {
+            const urlContextResult = await urlContextResponse.json();
+            if (urlContextResult.results && urlContextResult.results.length > 0) {
+              const urlContextText = urlContextResult.results
+                .filter(r => r.score > 0.5)
+                .map(r => {
+                  const title = r.metadata?.title || 'Contenido sin título';
+                  const url = r.metadata?.url || 'URL no disponible';
+                  const content = r.content || '';
+                  return `**${title}** (${url}):\n${content.substring(0, 500)}...`;
+                })
+                .join('\n\n');
+              
+              if (urlContextText) {
+                ragContext += `\n\nContexto relevante de URLs procesadas anteriormente:\n${urlContextText}`;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn('Error searching URL context:', error);
+        }
+      }
+
+      // Combinar todo el contexto
+      if (ragContext || urlContent) {
+        const enhancedMessage = {
+          ...userMessage,
+          text: `${ragContext}${urlContent}\n\nPregunta del usuario: ${userMessage.text}\n\nPor favor responde basándote en el contexto proporcionado y en español.`,
+          originalText: userMessage.text, // Keep original for display
+          hasUrls: urls.length > 0,
+          processedUrls: urls
+        };
+        return enhancedMessage;
+      }
     } catch (error) {
       console.warn('RAG enhancement failed, proceeding without context:', error);
+      // Limpiar estado de procesamiento de URLs en caso de error
+      dispatch({ 
+        type: 'SET_URL_PROCESSING', 
+        payload: { urls: [], status: 'failed' } 
+      });
     }
     
     return userMessage;
-  }, []);
+  }, [detectUrls, extractUrlContent, dispatch]);
 
   // Enhanced send message with RAG and better caching and offline support
   const sendMessageDebounced = useCallback(

@@ -9,7 +9,7 @@ import uxEnhancementService from '../services/ux-enhancement-service.js';
 import { processGeminiStreamRequest, createOptimizedGeminiStream } from '../services/gemini-service.js';
 import analyticsService from '../services/analytics-service.js';
 
-class EnhancedStreamingController {
+class StreamingController {
   constructor() {
     this.activeStreams = new Map();
     this.streamMetrics = new Map();
@@ -562,4 +562,4 @@ class EnhancedStreamingController {
   }
 }
 
-export default new EnhancedStreamingController();
+export default new StreamingController();

@@ -4,9 +4,9 @@
  */
 
 import { WebSocketServer } from 'ws';
-import enhancedStreamingController from '../controllers/enhanced-streaming-controller.js';
-import auth from '../middlewares/auth.js';
-import logger from '../middlewares/logger.js';
+import enhancedStreamingController from '../controllers/streaming-controller.js';
+import auth from './auth.js';
+import logger from './logger.js';
 
 class WebSocketHandler {
   constructor() {

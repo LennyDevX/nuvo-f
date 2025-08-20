@@ -4,11 +4,22 @@ export const initialChatState = {
   error: null,
   conversationId: null,
   isOnline: true,
+  urlProcessing: {
+    urls: [],
+    status: 'idle', // idle, processing, completed, failed
+    content: [],
+    error: null
+  },
 };
 
 export const chatReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_USER_MESSAGE':
+      // Detectar si el mensaje contiene URLs
+      const messageText = action.payload.text || '';
+      const urlRegex = /https?:\/\/[^\s<>"'`\)\]\}]+/gi;
+      const hasUrls = urlRegex.test(messageText);
+      
       return {
         ...state,
         messages: [
@@ -21,6 +32,13 @@ export const chatReducer = (state, action) => {
         ],
         status: 'waiting_for_response',
         error: null,
+        // Resetear urlProcessing si el nuevo mensaje no contiene URLs
+        urlProcessing: hasUrls ? state.urlProcessing : {
+          urls: [],
+          status: 'idle',
+          content: [],
+          error: null
+        }
       };
 
     case 'START_STREAMING':
@@ -70,6 +88,12 @@ export const chatReducer = (state, action) => {
       return {
         ...initialChatState,
         isOnline: state.isOnline,
+        urlProcessing: {
+          urls: [],
+          status: 'idle',
+          content: [],
+          error: null
+        }
        };
 
     case 'LOAD_CONVERSATION':
@@ -93,6 +117,17 @@ export const chatReducer = (state, action) => {
         ...state,
         messages: state.messages.slice(0, -1),
         status: 'waiting_for_response',
+      };
+
+    case 'SET_URL_PROCESSING':
+      return {
+        ...state,
+        urlProcessing: {
+          urls: action.payload.urls || [],
+          status: action.payload.status || 'idle',
+          content: action.payload.content || [],
+          error: action.payload.error || null
+        }
       };
       
     default:
