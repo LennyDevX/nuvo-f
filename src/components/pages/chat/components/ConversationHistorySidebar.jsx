@@ -159,6 +159,16 @@ const ConversationHistorySidebar = ({
     setNewTitle('');
   }, []);
 
+  const handleDeleteAll = useCallback(() => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar TODAS las conversaciones? Esta acción no se puede deshacer.')) {
+      const allConversations = conversationManager.loadConversationsFromStorage();
+      allConversations.forEach(conv => {
+        conversationManager.deleteConversation(conv.id);
+      });
+      fetchConversations();
+    }
+  }, [fetchConversations]);
+
   return (
     <>
       {/* Backdrop with blur effect for mobile */}
@@ -253,7 +263,7 @@ const ConversationHistorySidebar = ({
             </div>
 
         {/* Contenido del historial */}
-        <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
           {conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full p-6 sm:p-8 text-center">
               
@@ -261,111 +271,137 @@ const ConversationHistorySidebar = ({
               <p className="text-gray-500 text-xs sm:text-sm">Start a new conversation to begin</p>
             </div>
           ) : (
-            <div className="p-3 sm:p-4 h-full overflow-y-auto custom-scrollbar">
-              <div className="space-y-2">
-                {conversations.map((conv, index) => {
-                  const isActive = currentConversationId === conv.id;
-                  const timestamp = new Date(conv.timestamp).toLocaleDateString('es-ES', {
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
-                  
-                  return (
-                    <div key={conv.id} className="group relative">
-                      {editingId === conv.id ? (
-                        <div className="flex items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gray-800/80 rounded-xl border border-purple-500/30">
-                          <input
-                            type="text"
-                            value={newTitle}
-                            onChange={(e) => setNewTitle(e.target.value)}
-                            className="flex-1 bg-gray-700/80 text-white text-xs sm:text-sm rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-700 transition-all duration-200"
-                            placeholder="Conversation title"
-                            autoFocus
-                          />
-                          <button 
-                            onClick={() => handleSaveEdit(conv.id)} 
-                            className="p-1.5 sm:p-2 text-green-400 hover:text-green-300 hover:bg-green-400/10 rounded-lg transition-all duration-200 flex-shrink-0"
-                            title="Save"
-                          >
-                            <FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </button>
-                          <button 
-                            onClick={handleCancelEdit} 
-                            className="p-1.5 sm:p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all duration-200 flex-shrink-0"
-                            title="Cancel"
-                          >
-                            <FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="relative">
-                          <button
-                            onClick={() => onLoadConversation(conv)}
-                            className={`w-full text-left p-3 sm:p-4 rounded-xl transition-all duration-200 transform hover:scale-[1.01] sm:hover:scale-[1.02] ${
-                              isActive 
-                                ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/50 shadow-lg shadow-purple-500/20 text-white' 
-                                : 'bg-gray-800/40 hover:bg-gray-700/60 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white'
-                            }`}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1 min-w-0 pr-2">
-                                <h3 className="font-medium text-xs sm:text-sm mb-1 truncate">
-                                  {conv.title || conv.preview || `Conversación ${index + 1}`}
-                                </h3>
-                                <p className="text-xs opacity-70 truncate leading-relaxed">
-                                  {conv.preview && conv.preview.length > 50 
-                                    ? `${conv.preview.substring(0, 50)}...` 
-                                    : conv.preview || 'Sin vista previa'
-                                  }
-                                </p>
-                                <div className="flex items-center mt-1.5 sm:mt-2 text-xs opacity-60">
-                                  <span className="truncate">{timestamp}</span>
-                                  <span className="mx-1 sm:mx-2">•</span>
-                                  <span className="flex-shrink-0">{conv.messages?.length || 0} msg</span>
-                                </div>
-                              </div>
-                              {isActive && (
-                                <div className="ml-1 sm:ml-2 flex-shrink-0">
-                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                                </div>
-                              )}
-                            </div>
-                          </button>
-                          
-                          {/* Botones de acción - Reposicionados debajo del contenido */}
-                          <div className="flex justify-end gap-1 sm:gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <>
+              <div className="flex-1 p-3 sm:p-4 overflow-y-auto custom-scrollbar">
+                <div className="space-y-2">
+                  {conversations.map((conv, index) => {
+                    const isActive = currentConversationId === conv.id;
+                    const timestamp = new Date(conv.timestamp).toLocaleDateString('es-ES', {
+                      day: 'numeric',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+                    
+                    return (
+                      <div key={conv.id} className="group relative">
+                        {editingId === conv.id ? (
+                          <div className="flex items-center gap-1.5 sm:gap-2 p-2.5 sm:p-3 bg-gray-800/80 rounded-xl border border-purple-500/30">
+                            <input
+                              type="text"
+                              value={newTitle}
+                              onChange={(e) => setNewTitle(e.target.value)}
+                              className="flex-1 bg-gray-700/80 text-white text-xs sm:text-sm rounded-lg px-2.5 sm:px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-gray-700 transition-all duration-200"
+                              placeholder="Conversation title"
+                              autoFocus
+                            />
                             <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClick(conv);
-                              }}
-                              className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-all duration-200 flex items-center gap-1"
-                              title="Edit title"
+                              onClick={() => handleSaveEdit(conv.id)} 
+                              className="p-1.5 sm:p-2 text-green-400 hover:text-green-300 hover:bg-green-400/10 rounded-lg transition-all duration-200 flex-shrink-0"
+                              title="Save"
                             >
-                              <FaEdit className="w-3 h-3" />
-                              <span className="hidden sm:inline">Edit</span>
+                              <FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                             <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDelete(conv.id);
-                              }}
-                              className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all duration-200 flex items-center gap-1"
-                              title="Delete conversation"
+                              onClick={handleCancelEdit} 
+                              className="p-1.5 sm:p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all duration-200 flex-shrink-0"
+                              title="Cancel"
                             >
-                              <FaTrash className="w-3 h-3" />
-                              <span className="hidden sm:inline">Delete</span>
+                              <FaTimes className="w-3 h-3 sm:w-4 sm:h-4" />
                             </button>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        ) : (
+                          <div className="relative">
+                            <button
+                              onClick={() => onLoadConversation(conv)}
+                              className={`w-full text-left p-3 sm:p-4 rounded-xl transition-all duration-200 transform hover:scale-[1.01] sm:hover:scale-[1.02] ${
+                                isActive 
+                                  ? 'bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/50 shadow-lg shadow-purple-500/20 text-white' 
+                                  : 'bg-gray-800/40 hover:bg-gray-700/60 border border-gray-700/50 hover:border-gray-600/50 text-gray-300 hover:text-white'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0 pr-2">
+                                  <h3 className="font-medium text-xs sm:text-sm mb-1 truncate">
+                                    {conv.title || conv.preview || `Conversación ${index + 1}`}
+                                  </h3>
+                                  <p className="text-xs opacity-70 truncate leading-relaxed">
+                                    {conv.preview && conv.preview.length > 50 
+                                      ? `${conv.preview.substring(0, 50)}...` 
+                                      : conv.preview || 'Sin vista previa'
+                                    }
+                                  </p>
+                                  <div className="flex items-center mt-1.5 sm:mt-2 text-xs opacity-60">
+                                    <span className="truncate">{timestamp}</span>
+                                    <span className="mx-1 sm:mx-2">•</span>
+                                    <span className="flex-shrink-0">{conv.messages?.length || 0} msg</span>
+                                  </div>
+                                </div>
+                                {isActive && (
+                                  <div className="ml-1 sm:ml-2 flex-shrink-0">
+                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                            
+                            {/* Botones de acción - Reposicionados debajo del contenido */}
+                            <div className="flex justify-end gap-1 sm:gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClick(conv);
+                                }}
+                                className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded-lg transition-all duration-200 flex items-center gap-1"
+                                title="Edit title"
+                              >
+                                <FaEdit className="w-3 h-3" />
+                                <span className="hidden sm:inline">Edit</span>
+                              </button>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(conv.id);
+                                }}
+                                className="px-2 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all duration-200 flex items-center gap-1"
+                                title="Delete conversation"
+                              >
+                                <FaTrash className="w-3 h-3" />
+                                <span className="hidden sm:inline">Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+              
+              {/* Botón para borrar todas las conversaciones */}
+              <div className="flex-shrink-0 p-3 sm:p-4 border-t border-gray-700/50">
+                <button
+                  ref={lastFocusableRef}
+                  onClick={handleDeleteAll}
+                  className="
+                    w-full px-4 py-3 sm:py-2.5
+                    bg-gradient-to-r from-red-600/20 to-red-700/20 hover:from-red-600/30 hover:to-red-700/30
+                    border border-red-500/30 hover:border-red-400/50
+                    text-red-400 hover:text-red-300
+                    rounded-xl transition-all duration-200
+                    flex items-center justify-center gap-2
+                    text-sm font-medium
+                    backdrop-blur-sm
+                    hover:shadow-lg hover:shadow-red-500/10
+                    group
+                  "
+                  title="Borrar todas las conversaciones"
+                >
+                  <FaTrash className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                  <span>Borrar todas</span>
+                </button>
+              </div>
+            </>
           )}
         </div>
       </m.div>
