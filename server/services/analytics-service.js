@@ -506,16 +506,13 @@ class AnalyticsService {
   }
 
   getCostPerToken(model) {
-    // Costos aproximados por token (en USD)
+    // Costos aproximados por token (en USD) - Solo modelos Gemini 2.5+
     const costs = {
-      'gemini-2.5-flash': 0.000001,
-      'gemini-2.0-flash': 0.000001,
-      'gemini-1.5-pro': 0.000003,
-      'gemini-1.5-flash': 0.0000005,
+      'gemini-2.5-flash-lite': 0.0000005, // Optimized cost for lite version
       'text-embedding-004': 0.0000001
     };
     
-    return costs[model] || 0.000001; // Default cost
+    return costs[model] || 0.0000005; // Default cost for gemini-2.5-flash-lite
   }
 
   getTopMapEntry(map) {

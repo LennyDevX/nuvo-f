@@ -264,11 +264,12 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
         
         const urlResult = await extractUrlContent(urls);
         if (urlResult && urlResult.results && urlResult.results.length > 0) {
+          // Usar el contenido formateado del servicio web scraper
           const urlContents = urlResult.results.map(result => 
-            `**Contenido de ${result.title}** (${result.url}):\n${result.excerpt}\n`
-          ).join('\n');
+            result.formatted || result.content
+          ).join('\n\n');
           
-          urlContent = `\n\n**Contenido extraído de URLs:**\n${urlContents}`;
+          urlContent = `\n\n${urlContents}`;
           console.log('Contenido de URLs extraído exitosamente');
           
           // Actualizar estado con URLs procesadas

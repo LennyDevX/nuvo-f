@@ -26,7 +26,7 @@ POST /server/gemini/batch/generate
   "requests": [
     {
       "prompt": "¿Qué es la inteligencia artificial?",
-      "model": "gemini-2.5-flash",
+      "model": "gemini-2.5-flash-lite",
       "temperature": 0.7,
       "maxTokens": 1000
     },
@@ -167,7 +167,7 @@ GET /server/gemini/analytics/metrics
       "failed": 50,
       "successRate": 96.0,
       "byModel": {
-        "gemini-2.5-flash": 800,
+        "gemini-2.5-flash-lite": 800,
         "gemini-pro": 450
       },
       "byEndpoint": {

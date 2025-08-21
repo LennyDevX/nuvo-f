@@ -7,52 +7,15 @@ const ai = new GoogleGenAI({ apiKey: env.geminiApiKey });
 // Fix: Remove extra quote from model name
 export const DEFAULT_MODEL = 'gemini-2.5-flash-lite'; // Keep working model as default
 
-// Available models with compatibility info
+// Available models with compatibility info - Only Gemini 2.5+ models
 export const AVAILABLE_MODELS = {
-  'gemini-2.0-flash': {
-    name: 'gemini-2.0-flash',
-    isStable: true,
-    supportsStreaming: true,
-    maxTokens: 8192
-  },
-  'gemini-1.5-pro': {
-    name: 'gemini-1.5-pro', 
-    isStable: true,
-    supportsStreaming: true,
-    maxTokens: 2048000
-  },
-  'gemini-1.5-flash': {
-    name: 'gemini-1.5-flash',
-    isStable: true,
-    supportsStreaming: true,
-    maxTokens: 1048576
-  },
-  'gemini-2.5-flash': {
-    name: 'gemini-2.5-flash',
-    isStable: false,
-    supportsStreaming: true,
-    maxTokens: 8192,
-    isPreview: true
-  },
   'gemini-2.5-flash-lite': {
     name: 'gemini-2.5-flash-lite',
     isStable: true,
     supportsStreaming: true,
     maxTokens: 8192,
-    isPreview: false
-  },
-
-  'gemma-3n-e4b-it': {
-    name: 'gemma-3n-e4b-it',
-    isStable: true,
-    supportsStreaming: true,
-    maxTokens: 8192
-  },
-  'gemma-3n-e2b-it': {
-    name: 'gemma-3n-e2b-it',
-    isStable: true,
-    supportsStreaming: true,
-    maxTokens: 8192
+    isPreview: false,
+    isDefault: true
   }
 };
 

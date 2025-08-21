@@ -42,7 +42,7 @@ class ContextCacheService {
   /**
    * Crea un context cache en Gemini API
    */
-  async createContextCache(messages, model = 'gemini-2.5-flash', ttlSeconds = 3600) {
+  async createContextCache(messages, model = 'gemini-2.5-flash-lite', ttlSeconds = 3600) {
     try {
       if (!env.geminiApiKey) {
         throw new Error('API key no configurada');

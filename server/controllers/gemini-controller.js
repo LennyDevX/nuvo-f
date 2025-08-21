@@ -465,35 +465,16 @@ export function getAvailableModels(req, res) {
   res.json({
     models: [
       {
-        name: 'gemini-2.0-flash',
-        displayName: 'Gemini 2.0 Flash',
-        isDefault: false,
-        isStable: true,
-        description: 'Latest stable model with fast performance'
-      },
-      {
-        name: 'gemini-1.5-pro', 
-        displayName: 'Gemini 1.5 Pro',
-        isStable: true,
-        description: 'High-quality responses with large context window'
-      },
-      {
-        name: 'gemini-1.5-flash',
-        displayName: 'Gemini 1.5 Flash', 
-        isStable: true,
-        description: 'Fast and efficient for most tasks'
-      },
-      {
-        name: 'gemini-2.5-flash',
-        displayName: 'Gemini 2.5 Flash',
+        name: 'gemini-2.5-flash-lite',
+        displayName: 'Gemini 2.5 Flash Lite',
         isDefault: true,
-        isStable: false,
-        isPreview: true,
-        description: 'Stable model - optimized for speed and quality'
+        isStable: true,
+        isPreview: false,
+        description: 'Optimized stable model for speed and quality - recommended for all use cases'
       }
     ],
-    default: 'gemini-2.5-flash',
-    note: 'Stable models are recommended for production use. Preview models may experience issues and automatically fallback to stable models.'
+    default: 'gemini-2.5-flash-lite',
+    note: 'Using the latest stable Gemini 2.5 Flash Lite model for optimal performance and reliability.'
   });
 }
 
@@ -844,7 +825,7 @@ export async function processBatchGeneration(req, res, next) {
         error: 'Se requiere un array de requests no vacío',
         example: {
           requests: [
-            { prompt: "¿Qué es la IA?", model: "gemini-2.5-flash" },
+            { prompt: "¿Qué es la IA?", model: "gemini-2.5-flash-lite" },
             { prompt: "Explica blockchain", temperature: 0.7 }
           ],
           options: { concurrency: 3, failFast: false }

@@ -10,7 +10,7 @@ class WebScraperService {
   constructor() {
     this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
     this.timeout = 15000; // 15 segundos para sitios más lentos
-    this.maxContentLength = 50000; // Límite de contenido para evitar sobrecarga
+    this.maxContentLength = 100000; // Aumentado para obtener más contexto
   }
 
   /**
@@ -227,9 +227,10 @@ class WebScraperService {
       const reader = new Readability(document, {
         debug: false,
         maxElemsToParse: 0,
-        nbTopCandidates: 5,
-        charThreshold: 500,
-        classesToPreserve: ['highlight', 'code', 'pre']
+        nbTopCandidates: 10, // Aumentado para considerar más candidatos
+        charThreshold: 200, // Reducido para capturar más contenido
+        classesToPreserve: ['highlight', 'code', 'pre', 'content', 'article', 'post', 'entry', 'text'],
+        keepClasses: true // Mantener clases para mejor extracción
       });
 
       const article = reader.parse();
@@ -261,7 +262,15 @@ class WebScraperService {
         }
         
         // Intentar extraer de elementos específicos como último recurso
-        const fallbackSelectors = ['main', 'article', '.content', '.post', '.entry', 'section', 'div[class*="content"]', 'div[class*="post"]', 'div[class*="article"]', 'p'];
+        const fallbackSelectors = [
+          'main', 'article', '.content', '.post', '.entry', 'section', 
+          'div[class*="content"]', 'div[class*="post"]', 'div[class*="article"]',
+          '.article-body', '.post-content', '.entry-content', '.page-content',
+          '[role="main"]', '.main-content', '#content', '#main',
+          '.text', '.description', '.summary', '.excerpt',
+          'div[id*="content"]', 'div[id*="article"]', 'div[id*="post"]',
+          'p', 'div', 'span'
+        ];
         let fallbackContent = '';
         
         console.log(`Intentando extracción con selectores fallback para ${cleanedUrl}`);
@@ -422,20 +431,40 @@ class WebScraperService {
    * @returns {string} Resumen formateado
    */
   formatForChat(extractedContent) {
-    const { title, content, excerpt, metadata } = extractedContent;
+    const { title, content, excerpt, metadata, url } = extractedContent;
     
-    return `**Contenido de: ${title}**
-` +
-           `**Fuente:** ${metadata.domain}
-` +
-           `**Resumen:** ${excerpt}
-
-` +
-           `**Contenido completo:**
-${content}
-
-` +
-           `*Extraído el ${new Date(metadata.extractedAt).toLocaleString('es-ES')}*`;
+    // Formato simplificado que se integra mejor en la conversación
+    let formattedContent = '';
+    
+    // Solo agregar el título si es diferente del contenido
+    if (title && title.trim() && !content.toLowerCase().includes(title.toLowerCase().substring(0, 50))) {
+      formattedContent += `**${title}**\n\n`;
+    }
+    
+    // Usar el resumen ejecutivo si está disponible y es más conciso
+    if (excerpt && excerpt.length > 100 && excerpt.length < content.length * 0.8) {
+      formattedContent += `${excerpt}\n\n`;
+    }
+    
+    // Contenido principal limpio y bien estructurado
+    const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 50);
+    
+    if (paragraphs.length > 1) {
+      paragraphs.forEach((paragraph, index) => {
+        const cleanParagraph = paragraph.trim().replace(/\s+/g, ' ');
+        if (cleanParagraph.length > 50) {
+          formattedContent += `${cleanParagraph}\n\n`;
+        }
+      });
+    } else {
+      // Si no hay párrafos claros, usar el contenido completo
+      formattedContent += `${content}\n\n`;
+    }
+    
+    // Información de fuente al final, de forma discreta
+    formattedContent += `\n*Fuente: ${metadata.domain}*`;
+    
+    return formattedContent.trim();
   }
 }
 

@@ -83,10 +83,11 @@ describe('Gemini Service', () => {
     // Simula la obtención de modelos (mock o llamada directa si tienes endpoint)
     // Aquí solo verifica la función de config
     const { getModelInfo } = await import('../config/ai-config.js');
-    const model = getModelInfo('gemini-2.5-flash');
+    const model = getModelInfo('gemini-2.5-flash-lite');
     expect(model).toBeDefined();
-    expect(model.name).toBe('gemini-2.5-flash');
-    expect(model.isPreview).toBe(true);
+    expect(model.name).toBe('gemini-2.5-flash-lite');
+    expect(model.isPreview).toBe(false);
+    expect(model.isStable).toBe(true);
   });
 
   // Opcional: test de streaming (mock/fake, solo si tienes función de stream)

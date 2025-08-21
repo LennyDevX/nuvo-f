@@ -34,12 +34,44 @@ const CopyButton = memo(({ text }) => {
 });
 
 // New component for rendering code blocks with syntax highlighting
-const CustomParagraph = memo(({ children }) => {
-  const text = React.Children.toArray(children).join('');
-  if (text.toLowerCase().includes('ingredientes:') || text.toLowerCase().includes('instrucciones:')) {
-    return <p className="recipe-section">{children}</p>;
+const CustomParagraph = memo(({ children, ...props }) => {
+  // Convert children to array for analysis
+  const childrenArray = React.Children.toArray(children);
+  const text = childrenArray.join('');
+  
+  // More comprehensive check for complex content that shouldn't be in a paragraph
+  const hasComplexContent = childrenArray.some(child => {
+    // Check if child is an object with a type property
+    if (typeof child === 'object' && child !== null) {
+      // Check for div elements or any block-level HTML element
+      if (child.type === 'div' || 
+          child.type === 'ul' || 
+          child.type === 'ol' || 
+          child.type === 'h1' || 
+          child.type === 'h2' || 
+          child.type === 'h3' || 
+          child.type === 'table' ||
+          (child.props && (child.props.className?.includes('div') || 
+                          child.props.className?.includes('block'))))
+        return true;
+      
+      // Check for nested components that might render divs
+      if (typeof child.type === 'function')
+        return true;
+    }
+    return false;
+  });
+  
+  // Always use div for any content that might contain block elements
+  if (hasComplexContent) {
+    return <div className="markdown-paragraph" {...props}>{children}</div>;
   }
-  return <p>{children}</p>;
+  
+  if (text.toLowerCase().includes('ingredientes:') || text.toLowerCase().includes('instrucciones:')) {
+    return <div className="recipe-section" {...props}>{children}</div>;
+  }
+  
+  return <p {...props}>{children}</p>;
 });
 
 const CodeBlock = memo(({ node, inline, className, children, ...props }) => {
@@ -160,8 +192,29 @@ const MessageItem = memo(
                     remarkPlugins={[remarkGfm]}
                     components={{
                       code: CodeBlock,
-                      p: CustomParagraph,
+                      // Usar un wrapper div en lugar de p para todo el contenido de párrafos
+                      p: ({ node, children, ...props }) => {
+                        // Siempre usar div para contenido de párrafos en ReactMarkdown
+                        return <div className="markdown-paragraph" {...props}>{children}</div>;
+                      },
+                      // Asegurar que los elementos div se rendericen correctamente
+                      div: ({ node, ...props }) => <div className="markdown-div" {...props} />,
+                      // Manejar encabezados para evitar problemas de anidación
+                      h1: ({ node, ...props }) => <div className="text-xl font-bold mt-3 mb-2" {...props} />,
+                      h2: ({ node, ...props }) => <div className="text-lg font-bold mt-3 mb-2" {...props} />,
+                      h3: ({ node, ...props }) => <div className="text-md font-bold mt-2 mb-1" {...props} />,
+                      // Asegurar que las listas se rendericen correctamente
+                      ul: ({ node, ...props }) => <div className="list-disc pl-5 my-2" {...props} />,
+                      ol: ({ node, ...props }) => <div className="list-decimal pl-5 my-2" {...props} />,
+                      li: ({ node, ...props }) => <div className="my-0.5" {...props} />,
+                      // Manejar tablas y otros elementos complejos
+                      table: ({ node, ...props }) => <div className="border-collapse my-3" {...props} />,
+                      tr: ({ node, ...props }) => <div className="border-b border-gray-700" {...props} />,
+                      td: ({ node, ...props }) => <div className="p-2" {...props} />,
+                      th: ({ node, ...props }) => <div className="p-2 font-bold text-left" {...props} />
                     }}
+                    unwrapDisallowed={true}
+                    skipHtml={false}
                   >
                     {message.text}
                   </ReactMarkdown>
