@@ -95,8 +95,8 @@ const MessageItem = memo(
 
     // Refined bubble styles
     const messageBubbleClasses = isUser
-      ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
-      : 'bg-gray-800/95 backdrop-blur-sm text-gray-100';
+      ? 'bg-white/5 backdrop-blur-sm border-white/10 text-white'
+      : 'bg-gray-800/60 backdrop-blur-sm text-gray-100';
 
     // Refined group border radius
     const groupClasses = message.isLastInGroup

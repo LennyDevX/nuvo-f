@@ -26,7 +26,7 @@ const UrlProcessingIndicator = memo(({ urlProcessing }) => {
       case 'processing':
         return `Procesando ${urls.length} URL${urls.length > 1 ? 's' : ''}...`;
       case 'completed':
-        return `${content?.length || 0} URL${content?.length > 1 ? 's' : ''} procesada${content?.length > 1 ? 's' : ''} exitosamente`;
+        return '';
       case 'failed':
         return error ? `Error: ${error}` : 'Error procesando URLs';
       default:

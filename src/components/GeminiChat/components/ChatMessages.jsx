@@ -241,10 +241,10 @@ const ChatMessages = memo(({ messages, isTyping, onRegenerate, isMobile, showReg
                     />
                 ))}
                 
+                {shouldShowTypingIndicator && <TypingIndicator />}
+
                 {/* URL Processing Indicator */}
                 <UrlProcessingIndicator urlProcessing={urlProcessing} />
-                
-                {shouldShowTypingIndicator && <TypingIndicator />}
                 {/* We now show errors on the message itself, but can keep a general error fallback */}
                 {error && typeof error === 'string' && <ErrorMessage error={error} onRetry={handleRetry} />}
                 
