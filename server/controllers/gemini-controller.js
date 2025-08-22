@@ -1143,11 +1143,20 @@ export async function extractUrlContent(req, res, next) {
     
     // Diferentes códigos de estado según el tipo de error
     if (error.message.includes('URL no válida') || error.message.includes('no permitida')) {
+      // Proporcionar mensaje más específico para URLs de OAuth
+      if (error.message.includes('OAuth') || error.message.includes('oauth')) {
+        errorResponse.error = 'Esta URL contiene patrones de autenticación OAuth que pueden causar redirecciones infinitas y no se puede procesar.';
+        errorResponse.suggestion = 'Intenta usar la URL de documentación directa sin parámetros de autenticación.';
+      }
       return res.status(400).json(errorResponse);
     } else if (error.message.includes('Error HTTP: 404') || error.message.includes('no existe')) {
       return res.status(404).json(errorResponse);
     } else if (error.message.includes('timeout') || error.message.includes('AbortError')) {
       return res.status(408).json(errorResponse);
+    } else if (error.message.includes('maximum redirect')) {
+      errorResponse.error = 'La URL causó demasiadas redirecciones. Esto puede ocurrir con URLs de autenticación o páginas que requieren login.';
+      errorResponse.suggestion = 'Verifica que la URL sea accesible públicamente sin requerir autenticación.';
+      return res.status(400).json(errorResponse);
     } else {
       return res.status(500).json(errorResponse);
     }
