@@ -346,9 +346,8 @@ export const useChatState = ({ shouldReduceMotion = false, isLowPerformance = fa
                 .filter(r => r.score > 0.5)
                 .map(r => {
                   const title = r.metadata?.title || 'Contenido sin título';
-                  const url = r.metadata?.url || 'URL no disponible';
                   const content = r.content || '';
-                  return `**${title}** (${url}):\n${content.substring(0, 500)}...`;
+                  return `**${title}**:\n${content.substring(0, 500)}...`;
                 })
                 .join('\n\n');
               

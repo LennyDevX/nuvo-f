@@ -36,7 +36,6 @@
     "express": "^5.1.0",
     "firebase": "^11.3.0",
     "framer-motion": "^12.6.3",
-    "genai": "^0.0.18",
     "github-markdown-css": "^5.8.1",
     "jsdom": "^26.1.0",
     "lodash": "^4.17.21",

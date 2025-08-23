@@ -520,8 +520,8 @@ class WebScraperService {
       formattedContent += `${content}\n\n`;
     }
     
-    // Información de fuente al final, de forma discreta
-    formattedContent += `\n*Fuente: ${metadata.domain}*`;
+    // Eliminar la referencia a la URL para evitar que aparezca en la respuesta del bot
+    // formattedContent += `\n*Fuente: ${metadata.domain}*`;
     
     return formattedContent.trim();
   }
